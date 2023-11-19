@@ -8,136 +8,191 @@ datasource db {
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model events {
-  team            Int     @default(autoincrement()) @db.SmallInt
-  time            Int     @db.SmallInt
-  action          Int?    @db.SmallInt
-  position        Int?    @db.SmallInt
-  points          Int?    @db.SmallInt
-  scouterUuid     String? @db.Uuid
-  match           String?
-  sourceTeam      Int?    @db.SmallInt
-  tournamentKey   String?
-  eventUuid       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scoutReportUuid String? @db.Uuid
+model Event {
+  eventUuid       String      @id @default(uuid())
+  time            Int
+  action          EventAction
+  position        Int
+  points          Int
+  scoutReportUuid String
+  scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
+}
+
+enum EventAction {
+  PICK_UP_CONE
+  PICK_UP_CUBE
+  PLACE_OBJECT
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model featureToggles {
+model FeatureToggle {
   feature String  @id
-  isUsed  Boolean @default(true)
+  enabled Boolean @default(true)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model flaggedMatches {
-  uuid        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scouterName String
-  sourceTeam  Int?
-  match       String?
-  tournament  String?
-  note        String?
+model FlaggedScoutReport {
+  uuid            String      @id @default(uuid())
+  note            String
+  scoutReportUuid String      @unique
+  ScoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model matches {
-  key           String  @id
+model TeamMatchData {
+  key           String        @id
   tournamentKey String
-  matchNumber   Int?    @db.SmallInt
-  teamKey       String?
-  matchType     String?
+  tournament    Tournament    @relation(fields: [tournamentKey], references: [key])
+  matchNumber   Int           @db.SmallInt
+  teamNumber    Int
+  matchType     MatchType
+  ScoutReport   ScoutReport[]
+}
+
+enum MatchType {
+  QUALIFICATION
+  ELIMINATION
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model mutablePicklist {
-  mutablePicklistUuid String  @id @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+model MutablePicklist {
+  mutablePicklistUuid String         @id @default(uuid())
   teams               Int[]
-  team                Int?    @db.SmallInt
+  sourceTeamNumber    Int
+  sourceTeam          RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number]) // TODO: Once we have User accounts, this should be a User and we can get the sourceTeamNumber from there and the username
   username            String?
-  name                String?
+  name                String
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model scoutReport {
-  scoutReportUuid     String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tournamentKey       String
-  match               String? @default("")
-  startTime           Int?    @db.SmallInt
-  notes               String?
-  links               Int?    @db.SmallInt
-  robotRole           Int?    @db.SmallInt
-  autoChallengeResult Int?    @db.SmallInt
-  challengeResult     Int?    @db.SmallInt
-  penaltyCard         Int?    @db.SmallInt
-  driverAbility       Int?    @db.SmallInt
-  sourceTeam          Int?
-  team                Int?
-  scouterUuid         String? @db.Uuid
+model ScoutReport {
+  uuid                    String                @id @default(uuid())
+  teamMatchKey            String
+  teamMatchData           TeamMatchData         @relation(fields: [teamMatchKey], references: [key])
+  startTime               DateTime
+  notes                   String
+  links                   Int
+  robotRole               RobotRole
+  autoChallengeResult     AutoChallengeResult
+  challengeResult         TeleopChallengeResult
+  penaltyCard             PenaltyCard
+  driverAbility           Int
+  teamNumber              Int
+  team                    Team                  @relation(fields: [teamNumber], references: [number])
+  scouterUuid             String
+  scouter                 Scouter               @relation(fields: [scouterUuid], references: [uuid])
+  events                  Event[]
+  flaggedScoutReport      FlaggedScoutReport?
+  RegisteredTeam          RegisteredTeam?       @relation(fields: [registeredTeamTeam], references: [number])
+  registeredTeamTeam      Int?                  @db.SmallInt
+  Tournament              Tournament?           @relation(fields: [tournamentTournamentKey], references: [key])
+  tournamentTournamentKey String?
+}
+
+enum RobotRole {
+  OFFENSE
+  DEFENSE
+  FEEDER
+  IMMOBILE
+}
+
+enum AutoChallengeResult {
+  NONE
+  DOCKED
+  ENGAGED
+  FAILED
+  MOBILITY
+}
+
+enum TeleopChallengeResult {
+  NONE
+  DOCKED
+  ENGAGED
+  FAILED
+  IN_COMMUNITY
+}
+
+enum PenaltyCard {
+  NONE
+  YELLOW
+  RED
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model scouterSchedule {
-  sourceTeam          Int     @db.SmallInt
-  tournamentKey       String
-  startMatch          String?
-  endMatch            String?
-  scouterScheduleUuid String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  team1               Int[]
-  team2               Int[]
-  team3               Int[]
-  team4               Int[]
-  team5               Int[]
-  team6               Int[]
+model ScouterScheduleShift {
+  uuid                    String         @id @default(uuid())
+  sourceTeamNumber        Int            @db.SmallInt
+  sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number])
+  tournamentKey           String
+  tournament              Tournament     @relation(fields: [tournamentKey], references: [key])
+  startMatchOrdinalNumber Int
+  endMatchOrdinalNumber   Int
+  team1                   Int[]
+  team2                   Int[]
+  team3                   Int[]
+  team4                   Int[]
+  team5                   Int[]
+  team6                   Int[]
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model scouters {
-  scouterUuid        String @id @db.Uuid
+model Scouter {
+  uuid               String         @id @default(uuid())
   name               String
-  team               Int?   @db.SmallInt
-  strikes            Int?
-  scouterReliability Int?
+  sourceTeamNumber   Int
+  sourceTeam         RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number])
+  strikes            Int            @default(0)
+  scouterReliability Int            @default(0)
+  scoutReports       ScoutReport[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model sharedPicklist {
-  picklistUuid String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+model SharedPicklist {
+  uuid             String         @id @default(uuid())
+  name             String
+  avgTotal         Int            @db.SmallInt
+  sourceTeamNumber Int
+  sourceTeam       RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number])
+  username         String? // TODO: Once we have User accounts, this should be a User and we can get the sourceTeamNumber from there and the username
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Team {
+  number       Int           @id
   name         String
-  avgTotal     Int?    @db.SmallInt
-  team         Int?    @db.SmallInt
-  username     String?
+  scoutReports ScoutReport[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model teams {
-  key        String  @id
-  teamNumber Int     @db.SmallInt
-  teamName   String?
+model RegisteredTeam {
+  number                Int                    @id
+  code                  Int                    @unique // 6 digit code
+  email                 String
+  emailVerified         Boolean                @default(false)
+  teamApproved          Boolean                @default(false)
+  username              String? // TODO: Once we have User accounts, this should be a User and we can get the username from there
+  mutablePicklists      MutablePicklist[]
+  scoutReports          ScoutReport[]
+  scouterScheduleShifts ScouterScheduleShift[]
+  scouters              Scouter[]
+  sharedPicklists       SharedPicklist[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model teamsRegistered {
-  team          Int     @id @default(autoincrement()) @db.SmallInt
-  teamCode      BigInt?
-  email         String?
-  emailVerified Boolean @default(false)
-  fullyVerified Boolean @default(false)
-  username      String?
+model Tournament {
+  key                   String                 @id
+  name                  String
+  location              String?
+  date                  DateTime?
+  teamMatchData         TeamMatchData[]
+  scoutReports          ScoutReport[]
+  scouterScheduleShifts ScouterScheduleShift[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model tournaments {
-  name          String
-  location      String?
-  date          String?
-  tournamentKey String  @id
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model users {
+model Users {
   team     Int
   email    String  @unique(map: "users_email2_key")
   username String?
 }
-
-
