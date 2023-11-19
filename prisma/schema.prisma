@@ -140,8 +140,4 @@ model users {
   username String?
 }
 
-// enum email_sent_out {
 
-//   // 1 @map("1")
-//   @@map("email sent out")
-// }
