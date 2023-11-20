@@ -7,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Event {
   eventUuid       String      @id @default(uuid())
   time            Int
@@ -24,21 +23,18 @@ enum EventAction {
   PLACE_OBJECT
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model FeatureToggle {
   feature String  @id
   enabled Boolean @default(true)
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model FlaggedScoutReport {
   uuid            String      @id @default(uuid())
   note            String
   scoutReportUuid String      @unique
-  ScoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
+  scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model TeamMatchData {
   key           String        @id
   tournamentKey String
@@ -46,7 +42,7 @@ model TeamMatchData {
   matchNumber   Int           @db.SmallInt
   teamNumber    Int
   matchType     MatchType
-  ScoutReport   ScoutReport[]
+  scoutReports  ScoutReport[]
 }
 
 enum MatchType {
@@ -54,39 +50,31 @@ enum MatchType {
   ELIMINATION
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model MutablePicklist {
-  uuid String         @id @default(uuid())
-  teams               Int[]
-  sourceTeamNumber    Int
-  sourceTeam          RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number]) // TODO: Once we have User accounts, this should be a User and we can get the sourceTeamNumber from there and the username
-  username            String?
-  name                String
+  uuid             String @id @default(uuid())
+  teams            Int[]
+  sourceTeamNumber Int
+  authorId         String
+  author           User   @relation(fields: [authorId], references: [id])
+  name             String
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ScoutReport {
-  uuid                    String                @id @default(uuid())
-  teamMatchKey            String
-  teamMatchData           TeamMatchData         @relation(fields: [teamMatchKey], references: [key])
-  startTime               DateTime
-  notes                   String
-  links                   Int
-  robotRole               RobotRole
-  autoChallengeResult     AutoChallengeResult
-  challengeResult         TeleopChallengeResult
-  penaltyCard             PenaltyCard
-  driverAbility           Int
-  teamNumber              Int
-  team                    Team                  @relation(fields: [teamNumber], references: [number])
-  scouterUuid             String
-  scouter                 Scouter               @relation(fields: [scouterUuid], references: [uuid])
-  events                  Event[]
-  flaggedScoutReport      FlaggedScoutReport?
-  RegisteredTeam          RegisteredTeam?       @relation(fields: [registeredTeamTeam], references: [number])
-  registeredTeamTeam      Int?                  @db.SmallInt
-  Tournament              Tournament?           @relation(fields: [tournamentTournamentKey], references: [key])
-  tournamentTournamentKey String?
+  uuid                String                @id @default(uuid())
+  teamMatchKey        String
+  teamMatchData       TeamMatchData         @relation(fields: [teamMatchKey], references: [key])
+  startTime           DateTime
+  notes               String
+  links               Int
+  robotRole           RobotRole
+  autoChallengeResult AutoChallengeResult
+  challengeResult     TeleopChallengeResult
+  penaltyCard         PenaltyCard
+  driverAbility       Int
+  scouterUuid         String
+  scouter             Scouter               @relation(fields: [scouterUuid], references: [uuid])
+  events              Event[]
+  flaggedScoutReport  FlaggedScoutReport?
 }
 
 enum RobotRole {
@@ -118,10 +106,9 @@ enum PenaltyCard {
   RED
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ScouterScheduleShift {
   uuid                    String         @id @default(uuid())
-  sourceTeamNumber        Int            @db.SmallInt
+  sourceTeamNumber        Int
   sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number])
   tournamentKey           String
   tournament              Tournament     @relation(fields: [tournamentKey], references: [key])
@@ -135,8 +122,6 @@ model ScouterScheduleShift {
   team6                   Int[]
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Scouter {
   uuid               String         @id @default(uuid())
   name               String
@@ -147,56 +132,50 @@ model Scouter {
   scoutReports       ScoutReport[]
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model SharedPicklist {
-  uuid             String         @id @default(uuid())
-  name             String
-  avgTotal         Int            @db.SmallInt
-  sourceTeamNumber Int
-  sourceTeam       RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number])
-  username         String? // TODO: Once we have User accounts, this should be a User and we can get the sourceTeamNumber from there and the username
+  uuid     String @id @default(uuid())
+  name     String
+  avgTotal Int    @db.SmallInt
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Team {
-  number       Int           @id
-  name         String
-  scoutReports ScoutReport[]
+  number Int    @id
+  name   String
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model RegisteredTeam {
   number                Int                    @id
-  code                  Int                    @unique // 6 digit code
+  code                  Int                    @unique // 6 digit alphanumeric, case-insensitive code
   email                 String
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
-  username              String? // TODO: Once we have User accounts, this should be a User and we can get the username from there
-  mutablePicklists      MutablePicklist[]
-  scoutReports          ScoutReport[]
   scouterScheduleShifts ScouterScheduleShift[]
   scouters              Scouter[]
-  sharedPicklists       SharedPicklist[]
+  users                 User[]
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Tournament {
   key                   String                 @id
   name                  String
   location              String?
   date                  String?
   teamMatchData         TeamMatchData[]
-  scoutReports          ScoutReport[]
   scouterScheduleShifts ScouterScheduleShift[]
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model Users {
-  teamNumber     Int
-  email    String  @unique(map: "users_email2_key")
-  username String?
-  role  UserRole
+model User {
+  id               String            @id
+  teamNumber       Int?
+  team             RegisteredTeam?   @relation(fields: [teamNumber], references: [number])
+  email            String            @unique
+  username         String?
+  role             UserRole
+  mutablePicklists MutablePicklist[]
+  sharedPicklists  SharedPicklist[]
 }
+
 enum UserRole {
   ANALYST
   SCOUTING_LEAD
