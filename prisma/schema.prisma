@@ -56,7 +56,7 @@ enum MatchType {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model MutablePicklist {
-  mutablePicklistUuid String         @id @default(uuid())
+  uuid String         @id @default(uuid())
   teams               Int[]
   sourceTeamNumber    Int
   sourceTeam          RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number]) // TODO: Once we have User accounts, this should be a User and we can get the sourceTeamNumber from there and the username
@@ -184,7 +184,7 @@ model Tournament {
   key                   String                 @id
   name                  String
   location              String?
-  date                  DateTime?
+  date                  String?
   teamMatchData         TeamMatchData[]
   scoutReports          ScoutReport[]
   scouterScheduleShifts ScouterScheduleShift[]
@@ -192,7 +192,12 @@ model Tournament {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Users {
-  team     Int
+  teamNumber     Int
   email    String  @unique(map: "users_email2_key")
   username String?
+  role  UserRole
+}
+enum UserRole {
+  ANALYST
+  SCOUTING_LEAD
 }
