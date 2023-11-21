@@ -178,7 +178,7 @@ model User {
   sharedPicklists  SharedPicklist[]
 }
 
-enum UserRole {
+enum UserRole { // Do we want to rename these?
   ANALYST
   SCOUTING_LEAD
 }
