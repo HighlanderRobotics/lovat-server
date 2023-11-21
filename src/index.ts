@@ -30,45 +30,26 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+app.post('/manager/addMutablePicklist', addMutablePicklist); // Should be POST /manager/mutablepicklists
+app.post('/manager/addAPITeams', addAPITeams); // Not needed
+app.post('/manager/addAPITournaments', addAPITournaments); // Not needed
+app.post('/API/manager/addPicklist', addPicklist) // Should be POST /manager/picklists
+app.post('/API/manager/addMutablePicklist', addMutablePicklist) // Should be POST /manager/mutablepicklists (duplicated)
+app.post('/API/manager/addRegisteredTeam', addRegisteredTeam) // Should be POST /manager/registeredteams but this feels like it should be privileged. When is this used?
+app.post('/API/manager/addScouterShift', addScouterShift) // Should be POST /manager/tournament/:tournament/scoutershifts
+app.post('/API/manager/approveRegisteredTeam', approveRegisteredTeam) // Should be POST /manager/registeredteams/:team/approved
+app.get('/API/manager/checkRegisteredTeam', checkRegisteredTeam) // Should be GET /manager/registeredteams/:team/approved
+app.delete('/API/manager/scouterReport/{uuid}', deleteScoutReport) // Should be DELETE /manager/scouterreports/:uuid
+app.delete('/API/manager/deleteMutablePicklist', deleteMutablePicklist) // Should be DELETE /manager/mutablepicklists/:id
+app.delete('/API/manager/deletePicklist', deletePicklist) // Should be DELETE /manager/picklists/:id
+app.delete('/API/manager/deleteScouterShift', deleteScouterShift) // Should be DELETE /manager/scoutershifts/:id
+app.delete('/API/manager/deleteScouterShift', deleteScouterShift) // Should be DELETE /manager/scoutershifts/:id (duplicated)
+app.get('/API/manager/getMutablePicklists', getMutablePicklists) // Should be GET /manager/mutablepicklists
+app.get('/API/manager/getPicklists', getPicklists) // Should be GET /manager/picklists
+app.get('/API/manager/getScouterSchedule', getScouterSchedule) // Should be GET /manager/tournament/:tournament/scoutershifts
+app.get('/API/manager/tournament/{key}/team', getTeamsInTournament) // Should be GET /manager/tournament/:tournament/teams
+app.post('/API/manager/rejectRegisteredTeam', rejectRegisteredTeam) // Should be POST /manager/registeredteams/:team/approved
+app.post('/API/manager/updateScouterShift', updateScouterShift) // Should be POST /manager/scoutershifts/:id
+app.get('/API/tournament', getTournaments) // Should be GET /manager/tournaments
+
 app.listen(port);
-
-app.post('/manager/addMutablePicklist', addMutablePicklist);
-app.post('/manager/addAPITeams', addAPITeams);
-app.post('/manager/addAPITournaments', addAPITournaments);
-app.post('/API/manager/addPicklist', addPicklist)
-app.post('/API/manager/addMutablePicklist', addMutablePicklist)
-app.post('/API/manager/addRegisteredTeam', addRegisteredTeam)
-app.post('/API/manager/addScouterShift', addScouterShift)
-app.post('/API/manager/approveRegisteredTeam', approveRegisteredTeam)
-app.get('/API/manager/checkRegisteredTeam', checkRegisteredTeam)
-app.delete('/API/manager/scouterReport/{uuid}', deleteScoutReport)
-app.delete('/API/manager/deleteMutablePicklist', deleteMutablePicklist)
-app.delete('/API/manager/deletePicklist', deletePicklist)
-app.delete('/API/manager/deleteScouterShift', deleteScouterShift)
-app.delete('/API/manager/deleteScouterShift', deleteScouterShift)
-app.get('/API/manager/getMutablePicklists', getMutablePicklists)
-app.get('/API/manager/getPicklists', getPicklists)
-app.get('/API/manager/getScouterSchedule', getScouterSchedule)
-app.get('/API/manager/tournament/{key}/team', getTeamsInTournament)
-app.post('/API/manager/rejectRegisteredTeam', rejectRegisteredTeam)
-app.post('/API/manager/updateScouterShift', updateScouterShift)
-app.get('/API/tournament', getTournaments)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

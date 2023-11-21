@@ -141,12 +141,14 @@ model SharedPicklist {
 }
 
 model Team {
-  number Int    @id
-  name   String
+  number         Int             @id
+  name           String
+  registeredTeam RegisteredTeam?
 }
 
 model RegisteredTeam {
   number                Int                    @id
+  team                  Team                   @relation(fields: [number], references: [number])
   code                  Int                    @unique // 6 digit alphanumeric, case-insensitive code
   email                 String
   emailVerified         Boolean                @default(false)

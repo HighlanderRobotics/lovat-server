@@ -8,7 +8,7 @@ export const addRegisteredTeam = async (req: Request, res: Response): Promise<vo
             data: {
                 email : req.body.email,
                 number : req.body.number,
-                code : await generateUniqueCode()
+                code : await generateUniqueCode(),
             }
         })
         //TODO send verification email
@@ -21,6 +21,9 @@ export const addRegisteredTeam = async (req: Request, res: Response): Promise<vo
     }
     
 };
+
+// This feels a bit like bogosort, but we're probably not going to have enough teams to make it a problem.
+// Also keep in mind that this should generate an alphanumeric string, not a number.
 async function generateUniqueCode() {
     let unique = false;
     let code : number;
