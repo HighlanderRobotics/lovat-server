@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
 import prisma from "./prismaClient";
 import axios from "axios";
 import { User } from '@prisma/client';
 import { Request as ExpressRequest } from 'express';
+import * as jose from 'jose';
 
 export interface AuthenticatedRequest extends ExpressRequest {
     user: User;
@@ -19,27 +19,27 @@ export const requireAuth = async (req, res, next) => {
         }
 
         try {
-            const token = jwt.verify(
-                tokenString,
-                process.env.JWT_SIGNING_KEY,
-                {
-                    algorithms: ["HS256"], audience: "https://api.lovat.app"
-                }
-            );
+            const JWKS = jose.createRemoteJWKSet(new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`));
+
+            const { payload, protectedHeader } = await jose.jwtVerify(tokenString, JWKS, {
+                issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+                audience: "https://api.lovat.app",
+            });
         } catch (error) {
             res.status(401).send("Invalid authorization token");
             return;
         }
 
         // Update database with info from Auth0
-        const token = jwt.decode(tokenString);
+        const token = jose.decodeJwt(tokenString);
 
-        const userId = token.sub as string;
+        const userId = token.sub;
 
         // Get user info from Auth0
         const authResponse = await axios.get(`https://${process.env.AUTH0_DOMAIN}/userinfo`, {
             headers: {
-                Authorization: `Bearer ${tokenString}`,
+                "Authorization": `Bearer ${tokenString}`,
+                "Content-Type": "application/json",
             },
         });
 
@@ -53,10 +53,12 @@ export const requireAuth = async (req, res, next) => {
             },
             update: {
                 email: authData.email,
+                emailVerified: authData.email_verified,
             },
             create: {
                 id: userId,
                 email: authData.email,
+                emailVerified: authData.email_verified,
                 role: "ANALYST",
             },
         });
