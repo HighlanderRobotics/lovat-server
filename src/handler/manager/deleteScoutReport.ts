@@ -1,22 +1,31 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
+import z from 'zod'
+import { getUser } from "./getUser";
 
 
 export const deleteScoutReport = async (req: Request, res: Response): Promise<void> => {
     try {
-        if (Array.isArray(req.headers.uuid) || !req.headers.uuid) {
-            res.status(400).send("Invalid UUID");
-            return;
+       
+        const uuid = req.params.uuid; 
+        const user = await getUser(req, res)
+        if(user === null)
+        {
+            return
         }
-        const uuid = req.headers.uuid as string; 
-        const userEmail = "place holder"; 
+        const DeleteScoutReportSchema = z.object({
+            uuid : z.string()
+        }) 
+        const deleteScoutReport = {
+            uuid : uuid
+        }
+        const possibleTypeErrorScoutReport = DeleteScoutReportSchema.safeParse(deleteScoutReport)
+        if (!possibleTypeErrorScoutReport.success) {
+            res.status(400).send(possibleTypeErrorScoutReport)
+            return
+        } 
 
-        const deletingUser = await prismaClient.users.findUnique({
-            where: 
-            {
-                email : userEmail
-            } 
-        });
+        
         const scouter = await prismaClient.scoutReport.findUnique({
             where: 
             {
@@ -29,9 +38,15 @@ export const deleteScoutReport = async (req: Request, res: Response): Promise<vo
         });
 
 
-        if (scouter.teamNumber === deletingUser.teamNumber && deletingUser.role === "SCOUTING_LEAD" ) {
-            await prismaClient.mutablePicklist.delete({
-                where: { uuid: uuid }
+        if (scouter.scouter.sourceTeamNumber === user.teamNumber && user.role === "SCOUTING_LEAD" ) {
+            await prismaClient.scoutReport.delete({
+                where: deleteScoutReport
+            });
+            await prismaClient.event.deleteMany
+            ({
+                where: {
+                    scoutReportUuid : uuid
+                }
             });
             res.status(200).send("Data deleted successfully");
         } else {

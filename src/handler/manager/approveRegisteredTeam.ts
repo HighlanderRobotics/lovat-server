@@ -1,14 +1,25 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
+import z from 'zod'
 
 
 export const approveRegisteredTeam = async (req: Request, res: Response): Promise<void> => {
     try {
         //check its coming from Collin
+
+        const ApproveRegisteredTeamSchema = z.object({
+            teamNumber : z.number().gt(-1)
+        }) 
+        const currRegisteredTeam = {
+            number: Number(req.params.team)
+        }
+        const possibleTypeError = ApproveRegisteredTeamSchema.safeParse(currRegisteredTeam)
+        if (!possibleTypeError.success) {
+            res.status(400).send(possibleTypeError)
+            return
+        }
            const rows = await prismaClient.registeredTeam.update({
-               where: {
-                   number: req.body.teamNumber
-               },
+               where: currRegisteredTeam,
                data: {
                 teamApproved : true
                }

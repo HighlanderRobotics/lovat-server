@@ -11,12 +11,15 @@ model Event {
   eventUuid       String      @id @default(uuid())
   time            Int
   action          EventAction
-  position        Int
+  position        Position
   points          Int
   scoutReportUuid String
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
 }
-
+enum Position {
+  NONE
+  PLACE_HOLDER
+}
 enum EventAction {
   PICK_UP_CONE
   PICK_UP_CUBE
@@ -53,7 +56,6 @@ enum MatchType {
 model MutablePicklist {
   uuid             String @id @default(uuid())
   teams            Int[]
-  sourceTeamNumber Int
   authorId         String
   author           User   @relation(fields: [authorId], references: [id])
   name             String
@@ -63,7 +65,7 @@ model ScoutReport {
   uuid                String                @id @default(uuid())
   teamMatchKey        String
   teamMatchData       TeamMatchData         @relation(fields: [teamMatchKey], references: [key])
-  startTime           DateTime
+  startTime           String
   notes               String
   links               Int
   robotRole           RobotRole
@@ -153,6 +155,7 @@ model RegisteredTeam {
   email                 String
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
+  website               String
   scouterScheduleShifts ScouterScheduleShift[]
   scouters              Scouter[]
   users                 User[]

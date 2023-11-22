@@ -1,24 +1,41 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
+import z from 'zod'
+import { getUser } from "./getUser";
 
 
 export const deleteMutablePicklist = async (req: Request, res: Response): Promise<void> => {
     try {
-        if (Array.isArray(req.headers.uuid) || !req.headers.uuid) {
-            res.status(400).send("Invalid UUID");
+        
+        const user = await getUser(req, res); 
+        const MutablePicklistSchema = z.object({
+            uuid: z.string()
+        })
+        const currMutablePicklist = 
+        {
+            uuid : req.params.uuid
+        }
+
+
+        const possibleTypeErrorMutablePicklist = MutablePicklistSchema.safeParse(currMutablePicklist)
+        if (!possibleTypeErrorMutablePicklist.success) {
+            res.status(400).send(possibleTypeErrorMutablePicklist)
+            return
+        }
+        const picklist = await prismaClient.mutablePicklist.findUnique({
+            where: currMutablePicklist,
+            include : {
+                author : true
+            }
+            
+        });
+        if (!user || !picklist) {
+            res.status(404).send("User or picklist not found");
             return;
         }
-        const uuid = req.headers.uuid as string; 
-        const userEmail = "place holder"; 
-
-        const picklist = await prismaClient.mutablePicklist.findUnique({
-            where: { uuid: uuid },
-            include: { sourceTeam: true } 
-        });
-
-        if (picklist && picklist.sourceTeam.email === userEmail) {
+        if (user.teamNumber === picklist.author.teamNumber) {
             await prismaClient.mutablePicklist.delete({
-                where: { uuid: uuid }
+                where: currMutablePicklist
             });
             res.status(200).send("Picklist deleted successfully");
         } else {

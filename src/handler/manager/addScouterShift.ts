@@ -1,54 +1,60 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import { type } from "os";
+import z from 'zod'
+import { scouterShiftSchmea } from "./scouterShiftSchema";
+import { getUser } from "./getUser";
 
 
 export const addScouterShift = async (req: Request, res: Response): Promise<void> => {
     try {
-        let userID = "change later"
-        let tournamentKey = req.body.tournamentKey
-        let startMatchOrdinalNumber = req.body.startMatchOrdinalNumber
-        let endMatchOrdinalNumber = req.body.endMatchOrdinalNumber
-        let team1 = req.body.team1
-        let team2 = req.body.team2
-        let team3 = req.body.team3
-        let team4 = req.body.team4
-        let team5 = req.body.team5
-        let team6 = req.body.team6
 
-        let userId = "change later"
+        const ScouterScheduleShiftSchema = z.object({
+            sourceTeamNumber: z.number(),
+            tournamentKey: z.string(),
+            startMatchOrdinalNumber: z.number(),
+            endMatchOrdinalNumber: z.number(),
+            team1: z.array(z.string()),
+            team2: z.array(z.string()),
+            team3: z.array(z.string()),
+            team4: z.array(z.string()),
+            team5: z.array(z.string()),
+            team6: z.array(z.string())
+        })
 
-        //switch from email
-        const user = await prismaClient.users.findUnique({
-            where: { email: userID }, 
-        });
+        const user = await getUser(req, res)
 
-        if (!user || user.teamNumber === undefined) {
-            res.status(404).send("User or user's team not found");
-            return;
+        const currScouterScheduleShift = {
+            sourceTeamNumber: user.teamNumber,
+            tournamentKey: req.params.tournament,
+            startMatchOrdinalNumber: req.body.startMatchOrdinalNumber,
+            endMatchOrdinalNumber: req.body.endMatchOrdinalNumber,
+            team1: req.body.team1,
+            team2: req.body.team2,
+            team3: req.body.team3,
+            team4: req.body.team4,
+            team5: req.body.team5,
+            team6: req.body.team6,
         }
-        if (typeof tournamentKey === "string" && typeof startMatchOrdinalNumber === 'number' && typeof endMatchOrdinalNumber === 'number' && Array.isArray(team1) && Array.isArray(team2) && Array.isArray(team3) && Array.isArray(team4) && Array.isArray(team5) && Array.isArray(team6)) {
+        const possibleTypeErrorShift = ScouterScheduleShiftSchema.safeParse(currScouterScheduleShift)
+        if (!possibleTypeErrorShift.success) {
+            res.status(400).send(possibleTypeErrorShift)
+            return
+        }
+
+        if (user.role === "SCOUTING_LEAD") {
             const rows = await prismaClient.scouterScheduleShift.create({
-                data: {
-                    sourceTeamNumber: user.teamNumber,
-                    tournamentKey: tournamentKey,
-                    startMatchOrdinalNumber: startMatchOrdinalNumber,
-                    endMatchOrdinalNumber: endMatchOrdinalNumber,
-                    team1: team1,
-                    team2: team2,
-                    team3: team3,
-                    team4: team4,
-                    team5: team5,
-                    team6: team6,
-
-                }
+                data: currScouterScheduleShift
             })
-
             res.status(200).send(rows);
+            
         }
-        else {
-            res.status(400).send("incorrect types")
+        else
+        {
+            res.status(401).send("Not authorized to add scouter shift")
         }
+
+
     }
     catch (error) {
         console.error(error)
