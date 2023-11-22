@@ -53,7 +53,6 @@ enum MatchType {
 model MutablePicklist {
   uuid             String @id @default(uuid())
   teams            Int[]
-  sourceTeamNumber Int
   authorId         String
   author           User   @relation(fields: [authorId], references: [id])
   name             String
