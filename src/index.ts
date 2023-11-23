@@ -29,6 +29,7 @@ import { checkCode } from "./handler/manager/checkCode";
 import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
 import { addScoutReport } from "./handler/manager/addScoutReport";
+import { getScoutReport } from "./handler/manager/getScoutReport";
 
 
 
@@ -52,6 +53,7 @@ app.get('/API/isScouted') //what will be sent, and what should it return
 app.delete('/API/manager/scouterreport/:uuid',requireAuth, deleteScoutReport) 
 app.post('/API/manager/scouterreport',requireAuth, addScoutReport) 
 app.post('/API/manager/scoutreport/:uuid', requireAuth, )
+app.get('/API/manager/scoutReport', getScoutReport )
 
 
 //scouter shift
@@ -79,7 +81,7 @@ app.post('/API/manager/onboarding/username', requireAuth,addUsername) //tested
 app.post('/API/manager/onboarding/teamcode',requireAuth,  checkCode) //tested, rn just returning true/false for if the password is correctt (when true it adds the team number to the user)
 app.post('/API/manager/settings/tournamentsource', requireAuth, addTournamentSource) // tested
 app.post('/API/manager/settings/teamsource', requireAuth, addTeamSource) //tested
-app.post('/API/manager/registeredteam', requireAuth,addRegisteredTeam) //tested
+app.post('/API/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested
 app.post('/API/manager/registeredteam/:team/approved', requireAuth, approveRegisteredTeam) //tested
 app.delete('/API/manager/registeredteam/:team/rejected', requireAuth, rejectRegisteredTeam) // tested, is it weird to have one as post, and one as delete?
 
