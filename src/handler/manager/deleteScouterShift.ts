@@ -12,7 +12,7 @@ export const deleteScouterShift = async (req: AuthenticatedRequest, res: Respons
         }) 
         const deleteScouterShift = 
         {
-            uuid : req.params.headers
+            uuid : req.params.uuid
         }
         const possibleTypeErrorUser =  DeleteScouterShiftSchema.safeParse(deleteScouterShift)
         if (!possibleTypeErrorUser.success) {

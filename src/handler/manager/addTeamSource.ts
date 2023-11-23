@@ -5,18 +5,18 @@ import { AuthenticatedRequest } from "../../requireAuth";
 import { getUser } from "./getUser";
 
 
-export const addTournamentSource = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const addTeamSource = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const user = await getUser(req, res)
         if(user === null)
         {
             return
         }
-        const TournamentSouceSchema = z.object({
-            tournamentSource : z.array(z.string())
+        const TeamSourceSchema = z.object({
+            tournamentSource : z.array(z.number())
         })
-        const currTournamentSouce = {tournamentSource : req.body.tournamentSouce}
-        const possibleTypeErrorShift = TournamentSouceSchema.safeParse(currTournamentSouce)
+        const currTeamSouce = {tournamentSource : req.body.teamSource}
+        const possibleTypeErrorShift = TeamSourceSchema.safeParse(currTeamSouce)
         if (!possibleTypeErrorShift.success) {
             res.status(400).send(possibleTypeErrorShift)
             return
@@ -25,9 +25,9 @@ export const addTournamentSource = async (req: AuthenticatedRequest, res: Respon
             where : {
                 id : user.id
             },
-            data : currTournamentSouce
+            data : currTeamSouce
         })
-        res.status(200).send("tournament source added")
+        res.status(200).send("team source added")
         
     }
     catch(error)

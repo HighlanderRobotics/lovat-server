@@ -3,7 +3,7 @@ import prisma from "../prismaClient";
 
 export default async function fetchTournaments(initialYear?: number, finalYear?: number) {
     // Get tournaments from TBA and upsert them to the database
-    initialYear = initialYear || 2022;
+    initialYear = initialYear || 2023;
     finalYear = finalYear || new Date().getFullYear();
 
     const url = "https://www.thebluealliance.com/api/v3";
