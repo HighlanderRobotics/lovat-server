@@ -115,10 +115,10 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         res.status(200).send('done editing data');
     }
 
-    catch (err) {
-        if (err) {
-            res.status(400).send(err);
-        }
+    catch (error) {
+        console.log(error)
+        res.status(400).send(error);
+        
     }
 }
 

@@ -55,6 +55,6 @@ export const deleteScoutReport = async (req: AuthenticatedRequest, res: Response
         }
     } catch (error) {
         console.error(error);
-        res.status(400).send("Error in deleting data");
+        res.status(400).send(error);
     }
 };

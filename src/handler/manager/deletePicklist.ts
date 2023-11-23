@@ -40,6 +40,6 @@ export const deletePicklist = async (req: AuthenticatedRequest, res: Response): 
         }
     } catch (error) {
         console.error(error);
-        res.status(400).send("Error in deleting picklist");
+        res.status(400).send(error);
     }
 };

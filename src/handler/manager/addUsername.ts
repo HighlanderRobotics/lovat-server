@@ -18,7 +18,7 @@ export const addUsername = async (req: AuthenticatedRequest, res: Response): Pro
             },
             data :
             {
-                username : req.body.username
+                username : String(req.body.username)
             }
         })
         res.status(200).send("username added")

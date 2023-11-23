@@ -44,6 +44,6 @@ export const deleteMutablePicklist = async (req: AuthenticatedRequest, res: Resp
         }
     } catch (error) {
         console.error(error);
-        res.status(400).send("Error in deleting picklist");
+        res.status(400).send(error);
     }
 };

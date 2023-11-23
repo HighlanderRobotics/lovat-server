@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import { type } from "os";
 import z from 'zod'
-import { scouterShiftSchmea } from "./scouterShiftSchema";
 import { getUser } from "./getUser";
 import { AuthenticatedRequest } from "../../requireAuth";
 

@@ -26,6 +26,7 @@ import { addUsername } from "./handler/manager/addUsername";
 import { getTeams } from "./handler/manager/getTeams";
 import {updateScouterShift} from './handler/manager/updateScouterShift'
 import getTBAData from "./lib/getTBAData";
+import { checkCode } from "./handler/manager/checkCode";
 
 
 
@@ -58,9 +59,9 @@ app.get('/API/manger/tournaments', requireAuth, getTournaments)
 app.post('/API/manager/onboarding/username', requireAuth, addUsername)
 app.get('/API/manager/team/:team/registrationstatus', requireAuth, checkRegisteredTeam)
 app.get('/API/manager/onboarding/teamcode', requireAuth, )
-app.post('API/manager/settings/tournamentsource')
-app.post('API/manager/settings/teamsource')
-
+app.post('/API/manager/settings/tournamentsource')
+app.post('/API/manager/settings/teamsource')
+app.post('/API/manager/onboarding/teamcode', requireAuth, checkCode)
 app.get('/API/tournament', requireAuth, getTournaments) // Should be GET /manager/tournaments
 getTBAData();
 
