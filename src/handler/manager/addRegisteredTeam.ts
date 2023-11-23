@@ -10,20 +10,20 @@ export const addRegisteredTeam = async (req: Request, res: Response): Promise<vo
             number: z.number(),
             sourceTeam: z.number()
         })
-        const currRegistedTeam = {
+        const currRegisteredTeam = {
             email: req.body.email,
             number: req.body.number,
             website: req.body.website,
             code: await generateUniqueCode()
         }
-        const possibleTypeError = RegisteredTeamSchema.safeParse(currRegistedTeam)
+        const possibleTypeError = RegisteredTeamSchema.safeParse(currRegisteredTeam)
         if (!possibleTypeError.success) {
             res.status(400).send(possibleTypeError)
             return
         }
 
         const rows = await prismaClient.registeredTeam.create({
-            data: currRegistedTeam
+            data: currRegisteredTeam
         })
         //TODO send verification email
         res.status(200).send(rows);
@@ -35,15 +35,31 @@ export const addRegisteredTeam = async (req: Request, res: Response): Promise<vo
 
 };
 
-// This feels a bit like bogosort, but we're probably not going to have enough teams to make it a problem.
-// Also keep in mind that this should generate an alphanumeric string, not a number.
-async function generateUniqueCode() {
-    let unique = false;
-    let code: number;
-    while (!unique) {
-        code = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit code
-        const exists = await prismaClient.registeredTeam.count({ where: { code: code } });
-        unique = exists === 0;
+
+function generateAlphanumericCode(length: number = 6): string {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
+    return result;
+}
+
+async function generateUniqueCode(): Promise<string> {
+    let unique = false;
+    let code: string;
+
+    while (!unique) {
+        code = generateAlphanumericCode();
+
+        const count = await prismaClient.registeredTeam.count({
+            where: { code: code }
+        });
+
+        if (count === 0) {
+            unique = true;
+        }
+    }
+
     return code;
 }

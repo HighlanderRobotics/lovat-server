@@ -24,6 +24,7 @@ import { rejectRegisteredTeam } from "./handler/manager/rejectRegisteredTeam";
 // import { updateScouterShift } from "./handler/manager/updateScouterShift";
 import { getTournaments } from "./handler/manager/getTournaments";
 import { addUsername } from "./handler/manager/addUsername";
+import { getTeams } from "./handler/manager/getTeams";
 import getTBAData from "./lib/getTBAData";
 
 
@@ -35,8 +36,8 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 app.post('/manager/addMutablePicklist', requireAuth, addMutablePicklist); // Should be POST /manager/mutablepicklists
-app.post('/manager/addAPITeams', requireAuth, addAPITeams); // Not needed
-app.post('/manager/addAPITournaments', requireAuth, addAPITournaments); // Not needed
+// app.post('/manager/addAPITeams', requireAuth, addAPITeams); // Not needed
+// app.post('/manager/addAPITournaments', requireAuth, addAPITournaments); // Not needed
 app.post('/API/manager/picklist', requireAuth, addPicklist) // Should be POST /manager/picklists
 app.post('/API/manager/mutablepicklist', requireAuth, addMutablePicklist) // Should be POST /manager/mutablepicklists (duplicated)
 app.post('/API/manager/addRegisteredTeam', requireAuth,addRegisteredTeam) // Should be POST /manager/registeredteams but this feels like it should be privileged. When is this used?
@@ -51,6 +52,7 @@ app.get('/API/manager/picklists',requireAuth, getPicklists)
 app.get('/API/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) 
 app.get('/API/manager/tournament/:tournament/teams', requireAuth, getTeamsInTournament) 
 app.post('/API/manager/registeredteams/:team/approved', requireAuth, rejectRegisteredTeam)
+app.get('/API/manager/teams', requireAuth, getTeams)
 // app.post('/API/manager/scoutershift/:uuid', updateScouterShift) 
 app.get('/API/manger/tournaments', requireAuth, getTournaments) 
 app.post('/API/manager/onboarding/username', requireAuth, addUsername)

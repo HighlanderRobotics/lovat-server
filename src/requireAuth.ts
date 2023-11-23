@@ -53,7 +53,7 @@ export const requireAuth = async (req, res, next) => {
             },
             update: {
                 email: authData.email,
-                emailVerified: authData.email_verified,
+                emailVerified : authData.email_verified,
             },
             create: {
                 id: userId,
