@@ -23,8 +23,7 @@ import { getTeamsInTournament } from "./handler/manager/getTeamsInTournament";
 import { rejectRegisteredTeam } from "./handler/manager/rejectRegisteredTeam";
 import { updateScouterShift } from "./handler/manager/updateScouterShift";
 import { getTournaments } from "./handler/manager/getTournaments";
-
-
+import getTBAData from "./lib/getTBAData";
 
 const app = express();
 
@@ -53,5 +52,7 @@ app.post('/manager/addMutablePicklist', requireAuth, addMutablePicklist); // Sho
 // app.post('/API/manager/rejectRegisteredTeam', rejectRegisteredTeam) // Should be POST /manager/registeredteams/:team/approved
 // app.post('/API/manager/updateScouterShift', updateScouterShift) // Should be POST /manager/scoutershifts/:id
 app.get('/API/tournament', requireAuth, getTournaments) // Should be GET /manager/tournaments
+
+getTBAData();
 
 app.listen(port);
