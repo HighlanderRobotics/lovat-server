@@ -175,6 +175,7 @@ model User {
   teamNumber       Int?
   team             RegisteredTeam?   @relation(fields: [teamNumber], references: [number])
   email            String            @unique
+  emailVerified    Boolean           @default(false)
   username         String?
   role             UserRole
   mutablePicklists MutablePicklist[]

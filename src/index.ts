@@ -24,8 +24,7 @@ import { rejectRegisteredTeam } from "./handler/manager/rejectRegisteredTeam";
 // import { updateScouterShift } from "./handler/manager/updateScouterShift";
 import { getTournaments } from "./handler/manager/getTournaments";
 import { addUsername } from "./handler/manager/addUsername";
-//import { filterMatches } from "./handler/manager/filterMatches";
-
+import getTBAData from "./lib/getTBAData";
 
 
 
@@ -35,7 +34,7 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
-// app.post('/manager/mutablepicklists', addMutablePicklist);
+app.post('/manager/addMutablePicklist', requireAuth, addMutablePicklist); // Should be POST /manager/mutablepicklists
 app.post('/manager/addAPITeams', requireAuth, addAPITeams); // Not needed
 app.post('/manager/addAPITournaments', requireAuth, addAPITournaments); // Not needed
 app.post('/API/manager/picklist', requireAuth, addPicklist) // Should be POST /manager/picklists
@@ -57,6 +56,7 @@ app.get('/API/manger/tournaments', requireAuth, getTournaments)
 app.post('/API/manager/onboarding/username', requireAuth, addUsername)
 app.get('/API/manager/team/:team/registrationstatus', requireAuth, checkRegisteredTeam)
 app.get('/API/manager/onboarding/teamcode', requireAuth, )
-
+app.get('/API/tournament', requireAuth, getTournaments) // Should be GET /manager/tournaments
+getTBAData();
 
 app.listen(port);
