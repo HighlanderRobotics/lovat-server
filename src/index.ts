@@ -2,7 +2,9 @@ import express from "express";
 import 'dotenv/config';
 import bodyParser from 'body-parser';
 
-// import { addMutablePicklist } from "./handler/manager/addMutablePicklist";
+import { requireAuth } from "./requireAuth";
+
+import { addMutablePicklist } from "./handler/manager/addMutablePicklist";
 import { addAPITeams } from "./handler/manager/addAPITeams";
 import { addAPITournaments } from "./handler/manager/addAPITournaments";
 import { addPicklist } from "./handler/manager/addPicklist";
@@ -21,6 +23,7 @@ import { getTeamsInTournament } from "./handler/manager/getTeamsInTournament";
 import { rejectRegisteredTeam } from "./handler/manager/rejectRegisteredTeam";
 // import { updateScouterShift } from "./handler/manager/updateScouterShift";
 import { getTournaments } from "./handler/manager/getTournaments";
+import { addUsername } from "./handler/manager/addUsername";
 //import { filterMatches } from "./handler/manager/filterMatches";
 
 
@@ -33,24 +36,27 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 // app.post('/manager/mutablepicklists', addMutablePicklist);
-app.post('/manager/addAPITeams', addAPITeams); // Not needed
-app.post('/manager/addAPITournaments', addAPITournaments); // Not needed
-app.post('/API/manager/picklist', addPicklist) // Should be POST /manager/picklists
-// app.post('/API/manager/addMutablePicklist', addMutablePicklist) // Should be POST /manager/mutablepicklists (duplicated)
-app.post('/API/manager/addRegisteredTeam', addRegisteredTeam) // Should be POST /manager/registeredteams but this feels like it should be privileged. When is this used?
-app.post('/API/manager/tournament/:tournament/scoutershift', addScouterShift) 
-app.post('/API/manager/registeredteams/:team/approved', approveRegisteredTeam) 
-app.get('/API/manager/registeredteams/:team/approved', checkRegisteredTeam) 
-app.delete('/API/manager/scouterreport/:uuid', deleteScoutReport) 
-app.delete('/API/manager/mutablepicklist/:uuid', deleteMutablePicklist) 
-app.delete('/API/manager/picklist/:uuid', deletePicklist) 
-app.delete('/API/manager/scoutershift/:uuid', deleteScouterShift) 
-app.get('/API/manager/mutablepicklists', getMutablePicklists) 
-app.get('/API/manager/picklists', getPicklists)
-app.get('/API/manager/tournament/:tournament/scoutershifts', getScouterSchedule) 
-app.get('/API/manager/tournament/:tournament/teams', getTeamsInTournament) 
-app.post('/API/manager/registeredteams/:team/approved', rejectRegisteredTeam)
+app.post('/manager/addAPITeams', requireAuth, addAPITeams); // Not needed
+app.post('/manager/addAPITournaments', requireAuth, addAPITournaments); // Not needed
+app.post('/API/manager/picklist', requireAuth, addPicklist) // Should be POST /manager/picklists
+app.post('/API/manager/mutablepicklist', requireAuth, addMutablePicklist) // Should be POST /manager/mutablepicklists (duplicated)
+app.post('/API/manager/addRegisteredTeam', requireAuth,addRegisteredTeam) // Should be POST /manager/registeredteams but this feels like it should be privileged. When is this used?
+app.post('/API/manager/tournament/:tournament/scoutershift', requireAuth, addScouterShift) 
+app.post('/API/manager/registeredteams/:team/approved', requireAuth, approveRegisteredTeam) 
+app.delete('/API/manager/scouterreport/:uuid',requireAuth, deleteScoutReport) 
+app.delete('/API/manager/mutablepicklist/:uuid', requireAuth, deleteMutablePicklist) 
+app.delete('/API/manager/picklist/:uuid', requireAuth, deletePicklist) 
+app.delete('/API/manager/scoutershift/:uuid', requireAuth,deleteScouterShift) 
+app.get('/API/manager/mutablepicklists', requireAuth,getMutablePicklists) 
+app.get('/API/manager/picklists',requireAuth, getPicklists)
+app.get('/API/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) 
+app.get('/API/manager/tournament/:tournament/teams', requireAuth, getTeamsInTournament) 
+app.post('/API/manager/registeredteams/:team/approved', requireAuth, rejectRegisteredTeam)
 // app.post('/API/manager/scoutershift/:uuid', updateScouterShift) 
-app.get('/API/manger/tournaments', getTournaments) 
+app.get('/API/manger/tournaments', requireAuth, getTournaments) 
+app.post('/API/manager/onboarding/username', requireAuth, addUsername)
+app.get('/API/manager/team/:team/registrationstatus', requireAuth, checkRegisteredTeam)
+app.get('/API/manager/onboarding/teamcode', requireAuth, )
+
 
 app.listen(port);

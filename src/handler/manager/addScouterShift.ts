@@ -4,9 +4,10 @@ import { type } from "os";
 import z from 'zod'
 import { scouterShiftSchmea } from "./scouterShiftSchema";
 import { getUser } from "./getUser";
+import { AuthenticatedRequest } from "../../requireAuth";
 
 
-export const addScouterShift = async (req: Request, res: Response): Promise<void> => {
+export const addScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
 
         const ScouterScheduleShiftSchema = z.object({

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
+import { AuthenticatedRequest } from "../../requireAuth";
 
 const UserSchema = z.object({
     id : z.string(),
@@ -14,10 +15,10 @@ type UserData = z.infer<typeof UserSchema>;
 
 
 
-export const getUser = async (req: Request, res: Response): Promise<UserData> => {
+export const getUser = async (req: AuthenticatedRequest, res: Response): Promise<UserData> => {
     try {
-
-       let userID = req.headers.id
+        console.log(req.user)
+       let userID = req.user.id
 
         if(typeof(userID) !== "string")
         {

@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { getUser } from "./getUser";
+import { AuthenticatedRequest } from "../../requireAuth";
 
 
-export const addPicklist = async (req: Request, res: Response): Promise<void> => {
+export const addPicklist = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const PicklistSchema = z.object({
             name : z.string(),

@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import axios from "axios";
 import z from 'zod'
+import { AuthenticatedRequest } from "../../requireAuth";
 
-export const addAPITournaments = async (req: Request, res: Response): Promise<void> => {
+export const addAPITournaments = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         var url = 'https://www.thebluealliance.com/api/v3';
         const TournamentSchema = z.object({

@@ -1,15 +1,16 @@
 
 import prismaClient from '../../prismaClient'
 import z from 'zod'
+import { Request, Response } from "express";
 
 
-export const checkRegisteredTeam = async (req, res) => {
+export const checkRegisteredTeam = async (req : Request, res : Response) => {
     try {
         const CheckRegisteredTeamSchema = z.object({
             teamNumber : z.number().gt(-1)
         }) 
         const currRegisteredTeam = {
-            number: req.params.team
+            number: Number(req.params.team)
         }
         const possibleTypeError = CheckRegisteredTeamSchema.safeParse(currRegisteredTeam)
         if (!possibleTypeError.success) {

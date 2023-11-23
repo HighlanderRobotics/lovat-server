@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { getUser } from "./getUser";
+import { AuthenticatedRequest } from "../../requireAuth";
 
 
-export const getScouterSchedule = async (req: Request, res: Response): Promise<void> => {
+export const getScouterSchedule = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const user = await getUser(req, res)
         const TournamentSchema = z.object({
