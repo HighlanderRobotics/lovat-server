@@ -8,7 +8,8 @@ export const addRegisteredTeam = async (req: Request, res: Response): Promise<vo
         const RegisteredTeamSchema = z.object({
             email: z.string().email(),
             number: z.number(),
-            sourceTeam: z.number()
+            website: z.string(),
+            code : z.string()
         })
         const currRegisteredTeam = {
             email: req.body.email,
@@ -21,12 +22,20 @@ export const addRegisteredTeam = async (req: Request, res: Response): Promise<vo
             res.status(400).send(possibleTypeError)
             return
         }
-
-        const rows = await prismaClient.registeredTeam.create({
+        const toggleFeatureRow = await prismaClient.featureToggle.create({
+            data: {
+                feature : "fullRegistration"
+            }
+        })
+        if(toggleFeatureRow.enabled)
+        {
+            currRegisteredTeam["teamApproved"] = true
+        }
+        const row = await prismaClient.registeredTeam.create({
             data: currRegisteredTeam
         })
         //TODO send verification email
-        res.status(200).send(rows);
+        res.status(200).send(row);
     }
     catch (error) {
         console.error(error)

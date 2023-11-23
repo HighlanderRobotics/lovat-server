@@ -8,7 +8,7 @@ export const approveRegisteredTeam = async (req: Request, res: Response): Promis
         //check its coming from Collin
 
         const ApproveRegisteredTeamSchema = z.object({
-            teamNumber : z.number().gt(-1)
+            number : z.number().min(0)
         }) 
         const currRegisteredTeam = {
             number: Number(req.params.team)

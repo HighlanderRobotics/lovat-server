@@ -24,6 +24,10 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
         })
 
         const user = await getUser(req, res)
+        if(user === null)
+        {
+            return
+        }
 
         const currScouterScheduleShift = {
             sourceTeamNumber: user.teamNumber,
@@ -47,7 +51,7 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
             const rows = await prismaClient.scouterScheduleShift.create({
                 data: currScouterScheduleShift
             })
-            res.status(200).send(rows);
+            res.status(200).send("done adding scouter shift");
             
         }
         else

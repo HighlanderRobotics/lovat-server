@@ -17,7 +17,6 @@ type UserData = z.infer<typeof UserSchema>;
 
 export const getUser = async (req: AuthenticatedRequest, res: Response): Promise<UserData> => {
     try {
-        console.log(req.user)
        let userID = req.user.id
 
         if(typeof(userID) !== "string")

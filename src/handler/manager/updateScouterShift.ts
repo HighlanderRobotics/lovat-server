@@ -1,63 +1,72 @@
-// import { Request, Response } from "express";
-// import prismaClient from '../../prismaClient'
-// import z from 'zod'
+import { Request, Response } from "express";
+import prismaClient from '../../prismaClient'
+import z from 'zod'
+import { AuthenticatedRequest } from "../../requireAuth";
+import { getUser } from "./getUser";
 
 
-// export const updateScouterShift = async (req: Request, res: Response): Promise<void> => {
-//     try {
-       
-//         const uuid = req.headers.uuid as string;
+export const updateScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
 
-//         let userID = "change later"
-//         let tournamentKey = req.body.tournamentKey
-//         let startMatchOrdinalNumber = req.body.startMatchOrdinalNumber
-//         let endMatchOrdinalNumber = req.body.endMatchOrdinalNumber
-//         let team1 = req.body.team1
-//         let team2 = req.body.team2
-//         let team3 = req.body.team3
-//         let team4 = req.body.team4
-//         let team5 = req.body.team5
-//         let team6 = req.body.team6
+        const uuid = req.params.uuid
 
-//         const user = await prismaClient.users.findUnique(
-//             {
-//                 where:
-//                 {
-//                     email: userID
-//                 }
-//             }
-//         )
+        const ScouterScheduleShiftSchema = z.object({
+            sourceTeamNumber: z.number(),
+            tournamentKey: z.string(),
+            startMatchOrdinalNumber: z.number(),
+            endMatchOrdinalNumber: z.number(),
+            team1: z.array(z.string()),
+            team2: z.array(z.string()),
+            team3: z.array(z.string()),
+            team4: z.array(z.string()),
+            team5: z.array(z.string()),
+            team6: z.array(z.string())
+        })
 
-//         if (user.role === "SCOUTING_LEAD") {
+        const user = await getUser(req, res)
 
-//             if (typeof tournamentKey === "string" && typeof startMatchOrdinalNumber === 'number' && typeof endMatchOrdinalNumber === 'number' && Array.isArray(team1) && Array.isArray(team2) && Array.isArray(team3) && Array.isArray(team4) && Array.isArray(team5) && Array.isArray(team6)) {
-//                 const rows = await prismaClient.scouterScheduleShift.update({
-//                     where:
-//                     {
-//                         uuid: uuid
-//                     },
-//                     data: {
-//                         tournamentKey: tournamentKey,
-//                         startMatchOrdinalNumber: startMatchOrdinalNumber,
-//                         endMatchOrdinalNumber: endMatchOrdinalNumber,
-//                         team1: team1,
-//                         team2: team2,
-//                         team3: team3,
-//                         team4: team4,
-//                         team5: team5,
-//                         team6: team6,
-//                     }
-//                 })
-//             }
-//             res.status(200).send("scouter shift updated successfully");
-//         } else {
-//             res.status(403).send("Unauthorized to delete this picklist");
-//         }
+        if(user === null)
+        {
+            return
+        }
+        const currScouterScheduleShift = {
+            sourceTeamNumber: user.teamNumber,
+            tournamentKey: req.body.tournamentKey,
+            startMatchOrdinalNumber: req.body.startMatchOrdinalNumber,
+            endMatchOrdinalNumber: req.body.endMatchOrdinalNumber,
+            team1: req.body.team1,
+            team2: req.body.team2,
+            team3: req.body.team3,
+            team4: req.body.team4,
+            team5: req.body.team5,
+            team6: req.body.team6,
+        }
+        const possibleTypeErrorShift = ScouterScheduleShiftSchema.safeParse(currScouterScheduleShift)
+        if (!possibleTypeErrorShift.success) {
+            res.status(400).send(possibleTypeErrorShift)
+            return
+        }
 
 
+        if (user.role === "SCOUTING_LEAD") {
+                const rows = await prismaClient.scouterScheduleShift.updateMany({
+                    where:
+                    {
+                        AND : [{ uuid: uuid as string}, {sourceTeamNumber : user.teamNumber}]
+                       
+                    },
+                    data : currScouterScheduleShift
+                })
+            
+            res.status(200).send("scouter shift updated successfully");
+        } else {
+            res.status(403).send("Unauthorized to delete this picklist");
+        }
 
-//     } catch (error) {
-//         console.error(error);
-//         res.status(400).send("Error in deleting data");
-//     }
-// };
+
+
+    } catch (error) {
+        console.error(error);
+        res.status(400).send("Error in deleting data");
+    }
+};

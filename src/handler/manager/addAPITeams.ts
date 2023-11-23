@@ -6,7 +6,7 @@ import z from 'zod'
 export const addAPITeams = async (req: Request, res: Response): Promise<void> => {
     try {
             const TeamSchema = z.object({
-                number : z.number().gt(-1),
+                number : z.number().min(0),
                 name : z.string()
             })
             var url = 'https://www.thebluealliance.com/api/v3';

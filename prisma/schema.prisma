@@ -116,12 +116,12 @@ model ScouterScheduleShift {
   tournament              Tournament     @relation(fields: [tournamentKey], references: [key])
   startMatchOrdinalNumber Int
   endMatchOrdinalNumber   Int
-  team1                   Int[]
-  team2                   Int[]
-  team3                   Int[]
-  team4                   Int[]
-  team5                   Int[]
-  team6                   Int[]
+  team1                   String[]
+  team2                   String[]
+  team3                   String[]
+  team4                   String[]
+  team5                   String[]
+  team6                   String[]
 }
 
 model Scouter {

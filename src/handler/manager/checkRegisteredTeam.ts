@@ -7,7 +7,7 @@ import { Request, Response } from "express";
 export const checkRegisteredTeam = async (req : Request, res : Response) => {
     try {
         const CheckRegisteredTeamSchema = z.object({
-            teamNumber : z.number().gt(-1)
+            number : z.number().min(0)
         }) 
         const currRegisteredTeam = {
             number: Number(req.params.team)

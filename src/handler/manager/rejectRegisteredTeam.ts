@@ -7,10 +7,10 @@ export const rejectRegisteredTeam = async (req: Request, res: Response): Promise
     try {
         //check its coming from Collin
         const RegisteredTeamSchema = z.object({
-            number : z.number().gt(-1)
+            number : z.number().min(0)
         })
         const currRegistedTeam = {
-            number : req.body.teamNumber
+            number : Number(req.params.team)
         }
         const possibleTypeError = RegisteredTeamSchema.safeParse(currRegistedTeam)
         if (!possibleTypeError.success) {
