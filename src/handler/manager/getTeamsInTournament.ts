@@ -24,6 +24,10 @@ export const getTeamsInTournament = async (req: Request, res: Response): Promise
                 teamNumber: true
             }
         });
+        if(!rows)
+        {
+            res.status(404).send("Tournament or teams not found")
+        }
     
 
         const uniqueTeamNumbers = Array.from(new Set(rows.map(row => row.teamNumber)));

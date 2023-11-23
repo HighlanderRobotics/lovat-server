@@ -29,7 +29,7 @@ export const getScoutReport = async (req: AuthenticatedRequest, res: Response): 
         })
         if(!scoutReport)
         {
-            res.status(400).send("Cannot find scoutReport")
+            res.status(404).send("Cannot find scout report")
             return
         }
 

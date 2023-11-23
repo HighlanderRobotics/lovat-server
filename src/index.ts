@@ -30,6 +30,7 @@ import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
 import { addScoutReport } from "./handler/manager/addScoutReport";
 import { getScoutReport } from "./handler/manager/getScoutReport";
+import { getMatches } from "./handler/manager/getMatches";
 
 
 
@@ -46,7 +47,7 @@ app.get('/API/manager/teams', requireAuth, getTeams) //tested
 app.get('/API/manager/tournaments', requireAuth, getTournaments) //tested
 
 //match schedule page
-app.get('/API/manager/matches') // this can include filters, what format will they be in?
+app.get('/API/manager/matches', requireAuth, getMatches) // this can include filters, what format will they be in?
 app.get('/API/isScouted') //what will be sent, and what should it return
 
 //scout report
