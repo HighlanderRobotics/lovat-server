@@ -15,8 +15,8 @@ export const addTournamentSource = async (req: AuthenticatedRequest, res: Respon
         const TournamentSouceSchema = z.object({
             tournamentSource : z.array(z.string())
         })
-        const currTournamentSouce = {tournamentSource : req.body.tournamentSouce}
-        const possibleTypeErrorShift = TournamentSouceSchema.safeParse(currTournamentSouce)
+        const currTournamentSource = {tournamentSource : req.body.tournamentSource}
+        const possibleTypeErrorShift = TournamentSouceSchema.safeParse(currTournamentSource)
         if (!possibleTypeErrorShift.success) {
             res.status(400).send(possibleTypeErrorShift)
             return
@@ -25,7 +25,7 @@ export const addTournamentSource = async (req: AuthenticatedRequest, res: Respon
             where : {
                 id : user.id
             },
-            data : currTournamentSouce
+            data : currTournamentSource
         })
         res.status(200).send("tournament source added")
         

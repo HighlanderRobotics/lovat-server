@@ -21,7 +21,7 @@ export const rejectRegisteredTeam = async (req: Request, res: Response): Promise
                where: currRegistedTeam,
                
            })
-        res.status(200).send(`Team ${req.body.teamNumber} removed`);
+        res.status(200).send(`Team ${req.params.team} removed`);
     }
     catch(error)
     {

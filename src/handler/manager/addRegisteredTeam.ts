@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
+import { getUser } from "./getUser";
+import { AuthenticatedRequest } from "../../requireAuth";
 
 
-export const addRegisteredTeam = async (req: Request, res: Response): Promise<void> => {
+export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const RegisteredTeamSchema = z.object({
             email: z.string().email(),
@@ -20,8 +22,8 @@ export const addRegisteredTeam = async (req: Request, res: Response): Promise<vo
             res.status(400).send(possibleTypeError)
             return
         }
-        const toggleFeatureRow = await prismaClient.featureToggle.create({
-            data: {
+        const toggleFeatureRow = await prismaClient.featureToggle.findUnique({
+            where: {
                 feature : "fullRegistration"
             }
         })
@@ -31,6 +33,21 @@ export const addRegisteredTeam = async (req: Request, res: Response): Promise<vo
         }
         const row = await prismaClient.registeredTeam.create({
             data: currRegisteredTeam
+        })
+        const user = await getUser(req, res)
+        if(user === null)
+        {
+            return
+        }
+        const userRow = await prismaClient.user.update({
+            data: {
+                teamNumber: req.body.number,
+                role : "SCOUTING_LEAD"
+            },
+            where: 
+            {
+                id : user.id
+            }
         })
         //TODO send verification email
         res.status(200).send(row);

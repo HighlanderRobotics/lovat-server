@@ -13,15 +13,15 @@ export const deletePicklist = async (req: AuthenticatedRequest, res: Response): 
         const DeletePicklistSchema = z.object({
             uuid : z.string()
         }) 
-        const deletePicklist = {uuid : uuid}
-        const possibleTypeErrorUser =  DeletePicklistSchema.safeParse(deletePicklist)
+        const currPicklist = {uuid : uuid}
+        const possibleTypeErrorUser =  DeletePicklistSchema.safeParse(currPicklist)
         if (!possibleTypeErrorUser.success) {
             res.status(400).send(possibleTypeErrorUser)
             return
         }
 
         const picklist = await prismaClient.sharedPicklist.findUnique({
-            where: deletePicklist,
+            where: currPicklist,
             include: { author: true } 
         });
         if(!picklist)
@@ -32,11 +32,11 @@ export const deletePicklist = async (req: AuthenticatedRequest, res: Response): 
 
         if ( user.teamNumber === picklist.author.teamNumber) {
             await prismaClient.sharedPicklist.delete({
-                where: { uuid: uuid }
+                where: currPicklist
             });
             res.status(200).send("Picklist deleted successfully");
         } else {
-            res.status(403).send("Unauthorized to delete this picklist");
+            res.status(401).send("Unauthorized to delete this picklist");
         }
     } catch (error) {
         console.error(error);

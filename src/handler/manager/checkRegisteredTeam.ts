@@ -24,6 +24,11 @@ export const checkRegisteredTeam = async (req : Request, res : Response) => {
             }
 
         )
+        if(row === null)
+        {
+            res.status(200).send("team has not started registration process")
+            return
+        }
         res.status(200).send(row)
 
 

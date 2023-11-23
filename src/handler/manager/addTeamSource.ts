@@ -3,6 +3,7 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../requireAuth";
 import { getUser } from "./getUser";
+import { todo } from "node:test";
 
 
 export const addTeamSource = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -12,11 +13,13 @@ export const addTeamSource = async (req: AuthenticatedRequest, res: Response): P
         {
             return
         }
+
+        //CHECK THAT TEAMS ACTUALLY EXIST
         const TeamSourceSchema = z.object({
-            tournamentSource : z.array(z.number())
+            teamSource : z.array(z.number())
         })
-        const currTeamSouce = {tournamentSource : req.body.teamSource}
-        const possibleTypeErrorShift = TeamSourceSchema.safeParse(currTeamSouce)
+        const currTeamSource = {teamSource : req.body.teamSource}
+        const possibleTypeErrorShift = TeamSourceSchema.safeParse(currTeamSource)
         if (!possibleTypeErrorShift.success) {
             res.status(400).send(possibleTypeErrorShift)
             return
@@ -25,7 +28,7 @@ export const addTeamSource = async (req: AuthenticatedRequest, res: Response): P
             where : {
                 id : user.id
             },
-            data : currTeamSouce
+            data : currTeamSource
         })
         res.status(200).send("team source added")
         

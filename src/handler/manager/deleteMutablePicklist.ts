@@ -30,8 +30,8 @@ export const deleteMutablePicklist = async (req: AuthenticatedRequest, res: Resp
             }
             
         });
-        if (!user || !picklist) {
-            res.status(404).send("User or picklist not found");
+        if (!picklist) {
+            res.status(404).send("Picklist not found");
             return;
         }
         if (user.teamNumber === picklist.author.teamNumber) {
@@ -40,7 +40,7 @@ export const deleteMutablePicklist = async (req: AuthenticatedRequest, res: Resp
             });
             res.status(200).send("Picklist deleted successfully");
         } else {
-            res.status(403).send("Unauthorized to delete this picklist");
+            res.status(401).send("Unauthorized to delete this picklist");
         }
     } catch (error) {
         console.error(error);

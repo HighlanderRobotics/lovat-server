@@ -74,14 +74,14 @@ app.get('/API/manager/mutablepicklists', requireAuth,getMutablePicklists) //test
 
 
 //onboarding endpoints
-app.get('/API/manager/team/:team/registrationstatus', requireAuth, checkRegisteredTeam)
-app.post('/API/manager/onboarding/username', requireAuth,addUsername)
-app.post('/API/manager/onboarding/teamcode',requireAuth,  checkCode)
-app.post('/API/manager/settings/tournamentsource', requireAuth, addTournamentSource)
-app.post('/API/manager/settings/teamsource', addTeamSource)
-app.post('/API/manager/registeredteam', requireAuth,addRegisteredTeam)
-app.post('/API/manager/registeredteams/:team/approved', requireAuth, approveRegisteredTeam) 
-app.delete('/API/manager/registeredteams/:team/rejected', requireAuth, rejectRegisteredTeam) //is it weird to have one as post, and one as delete?
+app.get('/API/manager/team/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested, feel free to change the messages being sent back
+app.post('/API/manager/onboarding/username', requireAuth,addUsername) //tested
+app.post('/API/manager/onboarding/teamcode',requireAuth,  checkCode) //tested, rn just returning true/false for if the password is correctt (when true it adds the team number to the user)
+app.post('/API/manager/settings/tournamentsource', requireAuth, addTournamentSource) // tested
+app.post('/API/manager/settings/teamsource', requireAuth, addTeamSource) //tested
+app.post('/API/manager/registeredteam', requireAuth,addRegisteredTeam) //tested
+app.post('/API/manager/registeredteam/:team/approved', requireAuth, approveRegisteredTeam) //tested
+app.delete('/API/manager/registeredteam/:team/rejected', requireAuth, rejectRegisteredTeam) // tested, is it weird to have one as post, and one as delete?
 
 
 
