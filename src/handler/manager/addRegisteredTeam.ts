@@ -8,13 +8,13 @@ export const addRegisteredTeam = async (req: Request, res: Response): Promise<vo
         const RegisteredTeamSchema = z.object({
             email: z.string().email(),
             number: z.number(),
-            website: z.string(),
+            website : req.body.string().nullable(),
             code : z.string()
         })
         const currRegisteredTeam = {
             email: req.body.email,
             number: req.body.number,
-            website: req.body.website,
+            website : req.body.website,
             code: await generateUniqueCode()
         }
         const possibleTypeError = RegisteredTeamSchema.safeParse(currRegisteredTeam)

@@ -155,7 +155,7 @@ model RegisteredTeam {
   email                 String
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
-  website               String
+  website               String?
   scouterScheduleShifts ScouterScheduleShift[]
   scouters              Scouter[]
   users                 User[]
@@ -178,6 +178,8 @@ model User {
   emailVerified    Boolean           @default(false)
   username         String?
   role             UserRole
+  tournamentSource String[]
+  teamSource       Int[]
   mutablePicklists MutablePicklist[]
   sharedPicklists  SharedPicklist[]
 }
