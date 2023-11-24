@@ -56,10 +56,10 @@ app.get('/manager/matches', requireAuth, getMatches) // this can include filters
 // app.get('/API/isScouted') //what will be sent, and what should it return // We can hold off on this until it's time for the collection app
 
 //scout report
-app.delete('/manager/scouterreport/:uuid',requireAuth, deleteScoutReport) // Should be /manager/scouterreport/:uuid
-app.post('/manager/scouterreport',requireAuth, addScoutReport) // Should be /manager/scouterreport
-app.post('/manager/scoutreport/:uuid', requireAuth, ) // Should be /manager/scoutreport/:uuid
-app.get('/manager/scoutReport/:uuid', getScoutReport ) // Should be /manager/scoutReport
+app.delete('/manager/scouterreports/:uuid',requireAuth, deleteScoutReport) // Should be /manager/scouterreport/:uuid
+app.post('/manager/scouterreports',requireAuth, addScoutReport) // Should be /manager/scouterreport
+app.post('/manager/scoutreports/:uuid', requireAuth, ) // Should be /manager/scoutreport/:uuid
+app.get('/manager/scoutreports/:uuid', getScoutReport ) // Should be /manager/scoutReport
 
 
 //scouter shift
@@ -69,21 +69,21 @@ app.post('/manager/scoutershifts/:uuid', requireAuth,updateScouterShift) //teste
 app.delete('/manager/scoutershifts/:uuid', requireAuth, deleteScouterShift) //tested
 
 //picklist (waiting to fully finish testing when I have a second user to play with)
-app.post('/manager/picklist', requireAuth, addPicklist) //tested // Should be 
-app.get('/manager/picklists',requireAuth, getPicklists) //tested // Should be 
+app.post('/manager/picklists', requireAuth, addPicklist) //tested 
+app.get('/manager/picklists',requireAuth, getPicklists) //tested 
 app.delete('/manager/picklists/:uuid', requireAuth, deletePicklist) //tested 
 app.get('/manager/picklists/:uuid', requireAuth, getSinglePicklist) //tested
-app.post('/manager/picklist/:uuid', requireAuth, updatePicklist) //tested
+app.post('/manager/picklists/:uuid', requireAuth, updatePicklist) //tested
 
 
 
 
 //mutable picklist (waiting to fully finish testing when I have a second user to play with)
-app.post('/manager/mutablepicklist', requireAuth, addMutablePicklist) // tested
-app.delete('/manager/mutablepicklist/:uuid', requireAuth, deleteMutablePicklist) //tested
+app.post('/manager/mutablepicklists', requireAuth, addMutablePicklist) // tested
+app.delete('/manager/mutablepicklists/:uuid', requireAuth, deleteMutablePicklist) //tested
 app.get('/manager/mutablepicklists', requireAuth,getMutablePicklists) //tested
 app.get('/manager/mutablepicklists/:uuid', requireAuth, getSingleMutablePicklist) //tested
-app.post('/manager/mutablepicklist/:uuid', requireAuth, updateMutablePicklist) //tested
+app.post('/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) //tested
 
 // Also it would be nice to have an endpoint to subscribe to a mutable picklist, so that the client can get updates when it changes
 // Websocket time? lol, ill add to wish list items, after this break yes
