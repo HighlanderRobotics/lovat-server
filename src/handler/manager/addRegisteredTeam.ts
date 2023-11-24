@@ -32,7 +32,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             currRegisteredTeam["teamApproved"] = true
         }
         const row = await prismaClient.registeredTeam.create({
-            data: currRegisteredTeam
+            data: currRegisteredTeam // This isn't compiling. The way I would handle this file is by using zod to validate the request body, then constructing the team object here. You shouldn't need to include what you generate server side in your zod schema. If the server generated an invalid code for some reason that wouldn't be the client's fault. Also it improves readability if you see what's being sent to the database in one place.
         })
         const user = await getUser(req, res)
         if(user === null)
