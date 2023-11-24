@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { Request, Response } from "express";
 
-export const sendSlackVerification = async (req : Request, res : Response, teamNumber : number, teamEmail : string) => {
+export const sendSlackVerification = async (res : Response, teamNumber : number, teamEmail : string, website : string) => {
     const body = {
         "blocks": [
             {
@@ -19,7 +19,7 @@ export const sendSlackVerification = async (req : Request, res : Response, teamN
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": `*Number*\n${teamNumber}\n\n*Website*\n${req.body.website || '_None_'}\n\n*Team Email*\n${teamEmail}`
+                    "text": `*Number*\n${teamNumber}\n\n*Website*\n${website || '_None_'}\n\n*Team Email*\n${teamEmail}`
                 }
             },
             {

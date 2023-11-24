@@ -28,7 +28,7 @@ export const addWebsite = async (req: AuthenticatedRequest, res: Response): Prom
             data : currWebsite
         })
 
-        await sendSlackVerification(req, res, row.number, row.email)        
+        await sendSlackVerification(res, row.number, row.email, req.body.website)        
     }
     catch(error)
     {
