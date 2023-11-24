@@ -24,7 +24,6 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
         })
 
         const user = await getUser(req, res)
-
         if(user === null)
         {
             return
@@ -58,7 +57,11 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
                     },
                     data : currScouterScheduleShift
                 })
-            
+            if(!rows)
+            {
+                res.status(400).send("cannot find scouter shift")
+                return
+            }
             res.status(200).send("scouter shift updated successfully");
         } else {
             res.status(403).send("Unauthorized to delete this picklist");
