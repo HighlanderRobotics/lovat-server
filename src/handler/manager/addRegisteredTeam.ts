@@ -3,6 +3,8 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { getUser } from "./getUser";
 import { AuthenticatedRequest } from "../../requireAuth";
+import { Resend } from 'resend';
+
 
 
 export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -32,7 +34,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             currRegisteredTeam["teamApproved"] = true
         }
         const row = await prismaClient.registeredTeam.create({
-            data: currRegisteredTeam // This isn't compiling. The way I would handle this file is by using zod to validate the request body, then constructing the team object here. You shouldn't need to include what you generate server side in your zod schema. If the server generated an invalid code for some reason that wouldn't be the client's fault. Also it improves readability if you see what's being sent to the database in one place.
+            data: currRegisteredTeam 
         })
         const user = await getUser(req, res)
         if(user === null)
@@ -49,7 +51,15 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
                 id : user.id
             }
         })
-        //TODO send verification email
+    //sending email
+    const resend = new Resend(process.env.RESEND_KEY);
+        
+        resend.emails.send({
+          from: 'onboarding@resend.dev',
+          to: req.body.email,
+          subject: 'Hello World',
+          html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
+        });
         res.status(200).send(row);
     }
     catch (error) {

@@ -4,7 +4,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../requireAuth";
 import { getUser } from "./getUser";
 
-export const addMutablePicklist = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const updateMutablePicklist = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
 
     try {
         const user = await getUser(req, res)
@@ -31,11 +31,22 @@ export const addMutablePicklist = async (req: AuthenticatedRequest, res: Respons
             return
         }
 
-           const row = await prismaClient.mutablePicklist.create({
+           const row = await prismaClient.mutablePicklist.update({
+            where : {
+                uuid : req.params.uuid,
+                author : {
+                    teamNumber : user.teamNumber
+                }
+            },
             data: currMutablePicklist
         });
+        if(!row)
+        {
+            res.status(401).send("Not authorized to update this picklist")
+            return
+        }
 
-        res.status(200).send("mutable picklist added");
+        res.status(200).send("mutable picklist updated");
     } catch(error) {
         console.error(error);
         res.status(400).send(error);

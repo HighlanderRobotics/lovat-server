@@ -11,39 +11,33 @@ export const checkCode = async (req: AuthenticatedRequest, res: Response): Promi
         if (user === null) {
             return
         }
-        const CodeSchema = z.object({
-            code: z.string()
+        const TeamSchema = z.object({
+            number: z.number().min(0)
         })
-        const currCode = { code: req.query.code }
-        const possibleTypeError = CodeSchema.safeParse(currCode)
+        const currTeam = { number: Number(req.query.team) }
+        const possibleTypeError = TeamSchema.safeParse(currTeam)
         if (!possibleTypeError.success) {
             res.status(400).send(possibleTypeError)
             return
         }
-        const teamWithCode = await prismaClient.registeredTeam.findUnique({
-            where: 
-            {
-                code : String(req.query.code)
-            }
+        const teamRegistered = await prismaClient.registeredTeam.findUnique({
+            where: currTeam
         })
-        if (teamWithCode) {
+        if (teamRegistered) {
+            if(teamRegistered.code === req.query.code)
+            {
+                res.status(200).send(true)
+            }
+            else
+            {
+                res.status(401).send(false)
+            }
 
-
-            const row = await prismaClient.user.update({
-                where: {
-                    id: user.id
-                },
-                data:
-                {
-                    teamNumber: teamWithCode.number
-                }
-            })
-            res.status(200).send(true)
 
         }
         else
         {
-            res.status(200).send(false)
+            res.status(401).send("team not found")
 
         }
 
