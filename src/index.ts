@@ -56,8 +56,8 @@ app.get('/manager/matches', requireAuth, getMatches) // this can include filters
 // app.get('/API/isScouted') //what will be sent, and what should it return // We can hold off on this until it's time for the collection app
 
 //scout report
-app.delete('/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // Should be /manager/scouterreport/:uuid
-app.post('/manager/scoutreports',requireAuth, addScoutReport) // Should be /manager/scouterreport
+app.delete('/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // Should be 
+app.post('/manager/scoutreports',requireAuth, addScoutReport) // Should be
 app.post('/manager/scoutreports/:uuid', requireAuth, ) // Should be /manager/scoutreport/:uuid
 app.get('/manager/scoutreports/:uuid', getScoutReport ) // Should be /manager/scoutReport
 

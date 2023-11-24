@@ -32,7 +32,7 @@ export const sendSlackVerification = async (req : Request, res : Response, teamN
                             "text": "Approve",
                             "emoji": true
                         },
-                        "value": `approve_${req.body.team}`,
+                        "value": `approve_${teamNumber}`,
                         "action_id": "verify_action"
                     },
                     {
@@ -42,7 +42,7 @@ export const sendSlackVerification = async (req : Request, res : Response, teamN
                             "text": "Reject",
                             "emoji": true
                         },
-                        "value": `reject_${req.body.team}`,
+                        "value": `reject_${teamNumber}`,
                         "action_id": "reject_action"
                     }
                 ]
