@@ -95,8 +95,8 @@ app.post('/manager/onboarding/username', requireAuth,addUsername) //tested
 app.post('/manager/onboarding/teamcode',requireAuth,  checkCode) //tested
 app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
 app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
-app.post('/manager/registeredteams/:team/approved', approveRegisteredTeam) //tested waiting for new middle ware
-app.post('/manager/registeredteams/:team/rejected', rejectRegisteredTeam) // tested, waiting for new middle ware
+app.post('/manager/registeredteams/:team/approve', approveRegisteredTeam) //tested waiting for new middle ware
+app.post('/manager/registeredteams/:team/reject', rejectRegisteredTeam) // tested, waiting for new middle ware
 app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite)
 
 
