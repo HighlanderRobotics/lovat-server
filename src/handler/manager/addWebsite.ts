@@ -3,6 +3,7 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../requireAuth";
 import { getUser } from "./getUser";
+import { sendSlackVerification } from "./sendSlackVerification";
 
 
 export const addWebsite = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -26,8 +27,8 @@ export const addWebsite = async (req: AuthenticatedRequest, res: Response): Prom
             },
             data : currWebsite
         })
-        res.status(200).send("website added")
-        
+
+        await sendSlackVerification(req, res, row.number, row.email)        
     }
     catch(error)
     {

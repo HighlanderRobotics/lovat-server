@@ -35,6 +35,7 @@ import { getSinglePicklist } from "./handler/manager/getSinglePicklist";
 import { getSingleMutablePicklist } from "./handler/manager/getSingleMutablePicklist";
 import { updatePicklist } from "./handler/manager/updatePicklist";
 import { updateMutablePicklist } from "./handler/manager/updateMutablePicklist";
+import { addWebsite } from "./handler/manager/addWebsite";
 
 
 
@@ -96,6 +97,7 @@ app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
 app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
 app.post('/manager/registeredteam/:team/approved', approveRegisteredTeam) //tested waiting for new middle ware
 app.post('/manager/registeredteam/:team/rejected', rejectRegisteredTeam) // tested, waiting for new middle ware
+app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite)
 
 
 

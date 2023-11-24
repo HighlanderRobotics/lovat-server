@@ -4,6 +4,7 @@ import z from 'zod'
 import { getUser } from "./getUser";
 import { AuthenticatedRequest } from "../../requireAuth";
 import { Resend } from 'resend';
+import { sendSlackVerification } from "./sendSlackVerification";
 
 
 
@@ -29,7 +30,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
                 feature : "fullRegistration"
             }
         })
-        if(toggleFeatureRow.enabled)
+        if(!toggleFeatureRow.enabled)
         {
             currRegisteredTeam["teamApproved"] = true
         }
@@ -58,10 +59,12 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
         resend.emails.send({
           from: 'onboarding@resend.dev',
           to: req.body.email,
-          subject: 'Hello World',
+          subject: 'Lovat Email Verification',
           html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`
         });
-        res.status(200).send(row);
+       
+            res.status(200).send("verification email sent")
+        
     }
     catch (error) {
         console.error(error)
