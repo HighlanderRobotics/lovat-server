@@ -52,13 +52,14 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             }
         })
     //sending email
+    let verificationUrl = `lovat.app/verify/${currRegisteredTeam.code}`
     const resend = new Resend(process.env.RESEND_KEY);
         
         resend.emails.send({
           from: 'onboarding@resend.dev',
           to: req.body.email,
           subject: 'Hello World',
-          html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
+          html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`
         });
         res.status(200).send(row);
     }
