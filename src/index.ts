@@ -90,13 +90,13 @@ app.post('/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) 
 
 
 //onboarding endpoints
-app.get('/manager/team/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested
+app.get('/manager/registeredteams/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested
 app.post('/manager/onboarding/username', requireAuth,addUsername) //tested
 app.post('/manager/onboarding/teamcode',requireAuth,  checkCode) //tested
 app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
 app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
-app.post('/manager/registeredteam/:team/approved', approveRegisteredTeam) //tested waiting for new middle ware
-app.post('/manager/registeredteam/:team/rejected', rejectRegisteredTeam) // tested, waiting for new middle ware
+app.post('/manager/registeredteams/:team/approved', approveRegisteredTeam) //tested waiting for new middle ware
+app.post('/manager/registeredteams/:team/rejected', rejectRegisteredTeam) // tested, waiting for new middle ware
 app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite)
 
 
