@@ -23,7 +23,8 @@ export const getScouterSchedule = async (req: AuthenticatedRequest, res: Respons
         }
         const rows = await prismaClient.scouterScheduleShift.findMany({
             where: {
-                AND :([{ sourceTeamNumber : user.teamNumber}, currTournament])
+                sourceTeamNumber : user.teamNumber,
+                tournamentKey : currTournament.tournamentKey
                
             }
         })

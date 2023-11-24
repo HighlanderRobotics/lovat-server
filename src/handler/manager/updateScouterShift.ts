@@ -52,7 +52,8 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
                 const rows = await prismaClient.scouterScheduleShift.updateMany({
                     where:
                     {
-                        AND : [{ uuid: uuid as string}, {sourceTeamNumber : user.teamNumber}]
+                         uuid: uuid as string ,
+                         sourceTeamNumber : user.teamNumber
                        
                     },
                     data : currScouterScheduleShift
