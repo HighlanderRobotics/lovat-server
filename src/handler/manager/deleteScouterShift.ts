@@ -13,9 +13,9 @@ export const deleteScouterShift = async (req: AuthenticatedRequest, res: Respons
         {
             uuid: req.params.uuid
         }
-        const possibleTypeErrorUser = DeleteScouterShiftSchema.safeParse(currScouterShift)
-        if (!possibleTypeErrorUser.success) {
-            res.status(400).send(possibleTypeErrorUser)
+        const possibleTypeError = DeleteScouterShiftSchema.safeParse(currScouterShift)
+        if (!possibleTypeError.success) {
+            res.status(400).send(possibleTypeError)
             return
         }
         const user = req.user

@@ -15,7 +15,7 @@ import { deleteScoutReport } from "./handler/manager/deleteScoutReport";
 import { deleteMutablePicklist } from "./handler/manager/deleteMutablePicklist";
 import { deletePicklist } from "./handler/manager/deletePicklist";
 import { deleteScouterShift } from "./handler/manager/deleteScouterShift";
-import { getMutablePicklists } from "./handler/manager/getMutablePicklist";
+import { getMutablePicklists } from "./handler/manager/getMutablePicklists";
 import { getPicklists } from "./handler/manager/getPicklists";
 import { getScouterSchedule } from "./handler/manager/getScouterSchedule";
 import { getTeamsInTournament } from "./handler/manager/getTeamsInTournament";
@@ -37,6 +37,7 @@ import { updatePicklist } from "./handler/manager/updatePicklist";
 import { updateMutablePicklist } from "./handler/manager/updateMutablePicklist";
 import { addWebsite } from "./handler/manager/addWebsite";
 import { addTournamentMatches } from "./handler/manager/addTournamentMatches";
+import fetchMatches from "./lib/fetchMatches";
 
 
 
@@ -100,7 +101,6 @@ app.post('/manager/registeredteam/:team/approved', approveRegisteredTeam) //test
 app.post('/manager/registeredteam/:team/rejected', rejectRegisteredTeam) // tested, waiting for new middle ware
 app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
 
-app.post('/manager/addMatches', addTournamentMatches)
 
 
 

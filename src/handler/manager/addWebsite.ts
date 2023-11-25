@@ -13,9 +13,9 @@ export const addWebsite = async (req: AuthenticatedRequest, res: Response): Prom
             website : z.string()
         })
         const currWebsite = {website : req.body.website}
-        const possibleTypeErrorShift = WebsiteSchema.safeParse(currWebsite)
-        if (!possibleTypeErrorShift.success) {
-            res.status(400).send(possibleTypeErrorShift)
+        const possibleTypeError = WebsiteSchema.safeParse(currWebsite)
+        if (!possibleTypeError.success) {
+            res.status(400).send(possibleTypeError)
             return
         }        const row = await prismaClient.registeredTeam.update({
             where : {

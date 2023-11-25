@@ -1,6 +1,7 @@
 import prisma from "../prismaClient";
 import fetchTournaments from "./fetchTournaments";
 import fetchTeams from "./fetchTeams";
+import fetchMatches from "./fetchMatches";
 
 
 export default async function getTBAData() {
@@ -22,7 +23,8 @@ export default async function getTBAData() {
         console.log("Done fetching teams from TBA.");
     }
 
-    // Repeat this daily
+
+    // Repeat this daily //could we do hourly? So that elim matches update in a timly manner, we could do it seperatly too
     setInterval(async () => {
         console.log("Fetching tournaments from TBA...");
         await fetchTournaments();
@@ -30,6 +32,11 @@ export default async function getTBAData() {
 
         console.log("Fetching teams from TBA...");
         await fetchTeams();
-        console.log("Done fetching teams from TBA.");
+        console.log("Done fetching teams from TBA.")
+        
+        console.log("Fetching matches from TBA...");
+        await fetchMatches();
+        console.log("Done fetching matches from TBA.");
+
     }, 1000 * 60 * 60 * 24);
 }

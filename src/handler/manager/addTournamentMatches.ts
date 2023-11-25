@@ -4,14 +4,13 @@ import { Request, Response } from "express";
 import axios from "axios";
 
 
-export const addTournamentMatches = async (req: Request, res: Response) => {
+export const addTournamentMatches = async (tournamentKey) => {
 
     try {
 
-        const tournamentKey = req.body.tournament
         if(tournamentKey === undefined)
         {
-            res.status(400).send("invalid tournament key")
+            throw("tournament key is undefined")
             return
         }
         const MatchSchema = z.object({
@@ -30,8 +29,7 @@ export const addTournamentMatches = async (req: Request, res: Response) => {
             }
         })
         if (tournamentRow === null) {
-            res.status(400).send("tournament not found when trying to insert tournament matches");
-            return;
+            throw("tournament not found when trying to insert tournament matches");
         }
 
 
@@ -45,7 +43,6 @@ export const addTournamentMatches = async (req: Request, res: Response) => {
                 if (response.data[i].comp_level == 'qm') {
                     //all teams in the match
                     var teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];
-                    console.log(response.data[i].alliances.red)
                     let matchesString = ``;
                     //make matches with trailing _0, _1, _2 etc
                     for (var k = 0; k < teams.length; k++) {
@@ -59,14 +56,14 @@ export const addTournamentMatches = async (req: Request, res: Response) => {
                             teamNumber: currTeam,
                             matchType: 'QUALIFICATION'
                         }
-                        const possibleTypeErrorMutablePicklist = MatchSchema.safeParse(currMatch)
-                        if (!possibleTypeErrorMutablePicklist.success) {
-                            res.status(400).send(possibleTypeErrorMutablePicklist)
+                        const possibleTypeError = MatchSchema.safeParse(currMatch)
+                        if (!possibleTypeError.success) {
+                            throw(possibleTypeError)
                             return
                         }
 
                         //cant use currMatch key bc theres an issue with the enum
-                        const currMatchRow = await prismaClient.teamMatchData.upsert({
+                        await prismaClient.teamMatchData.upsert({
                             where : {
                                 key : currMatchKey
                             },
@@ -101,27 +98,27 @@ export const addTournamentMatches = async (req: Request, res: Response) => {
                             teamNumber: currTeam,
                             matchType: "ELIMINATION"
                         }
-                        const possibleTypeErrorMutablePicklist = MatchSchema.safeParse(currMatch)
-                        if (!possibleTypeErrorMutablePicklist.success) {
-                            res.status(400).send(possibleTypeErrorMutablePicklist)
+                        const possibleTypeError = MatchSchema.safeParse(currMatch)
+                        if (!possibleTypeError.success) {
+                            throw(possibleTypeError)
                             return
                         }
                         //cant use currMatch key bc theres an issue with the enum
-                        const currMatchRow = await prismaClient.teamMatchData.upsert({
+                        await prismaClient.teamMatchData.upsert({
                             where : {
                                 key : currMatchKey
                             },
                             update: {
                                 tournamentKey : tournamentKey,
                                 matchNumber : nonQM,
-                                teamNumber : teams[k],
+                                teamNumber : currTeam,
                                 matchType : 'ELIMINATION'
                             },
                             create: {
                                 key : currMatchKey,
                                 tournamentKey : tournamentKey,
                                 matchNumber : nonQM,
-                                teamNumber : teams[k],
+                                teamNumber : currTeam,
                                 matchType : 'ELIMINATION'
                             }
                         })
@@ -130,12 +127,13 @@ export const addTournamentMatches = async (req: Request, res: Response) => {
                 }
             }
         });
+        return
 
 
     }
     catch (error) {
         console.log(error)
-        res.status(400).send('Error adding tournament matches')
+        throw("Error adding tournament matches")
     }
 }
 

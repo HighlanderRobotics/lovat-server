@@ -13,9 +13,9 @@ export const deletePicklist = async (req: AuthenticatedRequest, res: Response): 
             uuid : z.string()
         }) 
         const currPicklist = {uuid : uuid}
-        const possibleTypeErrorUser =  DeletePicklistSchema.safeParse(currPicklist)
-        if (!possibleTypeErrorUser.success) {
-            res.status(400).send(possibleTypeErrorUser)
+        const possibleTypeError =  DeletePicklistSchema.safeParse(currPicklist)
+        if (!possibleTypeError.success) {
+            res.status(400).send(possibleTypeError)
             return
         }
 

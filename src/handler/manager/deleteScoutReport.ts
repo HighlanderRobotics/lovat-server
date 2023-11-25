@@ -16,9 +16,9 @@ export const deleteScoutReport = async (req: AuthenticatedRequest, res: Response
         const deleteScoutReport = {
             uuid: uuid
         }
-        const possibleTypeErrorScoutReport = DeleteScoutReportSchema.safeParse(deleteScoutReport)
-        if (!possibleTypeErrorScoutReport.success) {
-            res.status(400).send(possibleTypeErrorScoutReport)
+        const possibleTypeError = DeleteScoutReportSchema.safeParse(deleteScoutReport)
+        if (!possibleTypeError.success) {
+            res.status(400).send(possibleTypeError)
             return
         }
 

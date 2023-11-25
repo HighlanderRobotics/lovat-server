@@ -36,9 +36,9 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
             team5: req.body.team5,
             team6: req.body.team6,
         }
-        const possibleTypeErrorShift = ScouterScheduleShiftSchema.safeParse(currScouterScheduleShift)
-        if (!possibleTypeErrorShift.success) {
-            res.status(400).send(possibleTypeErrorShift)
+        const possibleTypeError = ScouterScheduleShiftSchema.safeParse(currScouterScheduleShift)
+        if (!possibleTypeError.success) {
+            res.status(400).send(possibleTypeError)
             return
         }
 

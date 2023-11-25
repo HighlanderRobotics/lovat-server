@@ -12,9 +12,9 @@ export const addTournamentSource = async (req: AuthenticatedRequest, res: Respon
             tournamentSource : z.array(z.string())
         })
         const currTournamentSource = {tournamentSource : req.body.tournamentSource}
-        const possibleTypeErrorShift = TournamentSouceSchema.safeParse(currTournamentSource)
-        if (!possibleTypeErrorShift.success) {
-            res.status(400).send(possibleTypeErrorShift)
+        const possibleTypeError = TournamentSouceSchema.safeParse(currTournamentSource)
+        if (!possibleTypeError.success) {
+            res.status(400).send(possibleTypeError)
             return
         }  
         const row = await prismaClient.user.update({
