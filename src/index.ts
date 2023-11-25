@@ -53,14 +53,14 @@ app.get('/manager/teams', requireAuth, getTeams) //tested
 app.get('/manager/tournaments', requireAuth, getTournaments) //tested 
 
 //match schedule page
-app.get('/manager/matches', requireAuth, getMatches) // this can include filters, what format will they be in? // Should be /manager/matches, should be able to filter by tournament, team, and whether or not they have been scouted. That will be in a different match schedule endpoint, though, so we can include warnings and scheduled scouters
+app.get('/manager/matches', requireAuth, getMatches) // should be able to filter by tournament, team, and whether or not they have been scouted. 
 // app.get('/API/isScouted') //what will be sent, and what should it return // We can hold off on this until it's time for the collection app
 
 //scout report
-app.delete('/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // Should be 
-app.post('/manager/scoutreports',requireAuth, addScoutReport) // Should be
-app.put('/manager/scoutreports/:uuid', requireAuth, ) // Should be /manager/scoutreport/:uuid
-app.get('/manager/scoutreports/:uuid', getScoutReport ) // Should be /manager/scoutReport
+app.delete('/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // tested
+app.post('/manager/scoutreports',requireAuth, addScoutReport) //
+app.put('/manager/scoutreports/:uuid', requireAuth, ) //
+app.get('/manager/scoutreports/:uuid', getScoutReport ) //tested
 
 
 //scouter shift

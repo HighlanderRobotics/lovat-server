@@ -54,9 +54,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 data: currScoutReport
             }
         )
-        //     .insert([
-        //     { 'team': team, 'sourceTeam': sourceTeam, 'tournamentKey': tournamentKey, 'match': match, 'scouterUuid': matchData.scouterUuid, 'startTime': matchData.startTime, 'notes': matchData.notes, 'links': matchData.links, 'robotRole': matchData.robotRole, 'autoChallengeResult': matchData.autoChallengeResult, 'challengeResult': matchData.challengeResult, 'penaltyCard': matchData.penaltyCard, 'driverAbility': matchData.driverAbility },
-        // ])
+   
 
         let events = matchData.events;
         for (let i = 0; i < events.length; i++) {

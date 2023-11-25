@@ -5,9 +5,7 @@ import { AuthenticatedRequest } from "../../requireAuth";
  
 
 export const checkCode = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    try {
-        const user = req.user
-    
+    try {    
         const TeamSchema = z.object({
             number: z.number().min(0)
         })

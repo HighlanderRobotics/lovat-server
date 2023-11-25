@@ -2,7 +2,6 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { Request, Response } from "express";
 import axios from "axios";
-import { unwatchFile } from 'fs';
 
 
 export const addTournamentMatches = async (req: Request, res: Response) => {
