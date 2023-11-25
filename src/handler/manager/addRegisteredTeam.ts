@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { getUser } from "./getUser";
-import { AuthenticatedRequest } from "../../requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { Resend } from 'resend';
 import { sendSlackVerification } from "./sendSlackVerification";
 

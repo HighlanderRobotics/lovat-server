@@ -2,7 +2,7 @@ import express from "express";
 import 'dotenv/config';
 import bodyParser from 'body-parser';
 
-import { requireAuth } from "./requireAuth";
+import { requireAuth } from "./lib/middleware/requireAuth";
 
 import { addMutablePicklist } from "./handler/manager/addMutablePicklist";
 

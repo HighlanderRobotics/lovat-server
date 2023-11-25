@@ -3,7 +3,7 @@ import prismaClient from '../../prismaClient'
 import { type } from "os";
 import z from 'zod'
 import { getUser } from "./getUser";
-import { AuthenticatedRequest } from "../../requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
 export const addScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
