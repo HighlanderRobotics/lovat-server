@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { getUser } from "./getUser";
-import { AuthenticatedRequest } from "../../requireAuth";
+ import { AuthenticatedRequest } from "../../requireAuth";
 
 
 export const getScouterSchedule = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        const user = await getUser(req, res)
+        const user = req.user
         const TournamentSchema = z.object({
             tournamentKey : z.string()
         })
@@ -17,10 +16,8 @@ export const getScouterSchedule = async (req: AuthenticatedRequest, res: Respons
             res.status(400).send(possibleTypeError)
             return
         }
-        if(user === null)
-        {
-            return
-        }
+         
+
         const rows = await prismaClient.scouterScheduleShift.findMany({
             where: {
                 sourceTeamNumber : user.teamNumber,

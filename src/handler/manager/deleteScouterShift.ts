@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { getUser } from "./getUser";
-import { AuthenticatedRequest } from "../../requireAuth";
+ import { AuthenticatedRequest } from "../../requireAuth";
 
 
 export const deleteScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -19,10 +18,7 @@ export const deleteScouterShift = async (req: AuthenticatedRequest, res: Respons
             res.status(400).send(possibleTypeErrorUser)
             return
         }
-        const user = await getUser(req, res)
-        if (user === null) {
-            return
-        }
+        const user = req.user
         const scouterShift = await prismaClient.scouterScheduleShift.findUnique({
             where: currScouterShift,
         });

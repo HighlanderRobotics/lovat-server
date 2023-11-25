@@ -2,16 +2,12 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../requireAuth";
-import { getUser } from "./getUser";
-
+ 
 
 export const addTournamentSource = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        const user = await getUser(req, res)
-        if(user === null)
-        {
-            return
-        }
+        const user = req.user
+
         const TournamentSouceSchema = z.object({
             tournamentSource : z.array(z.string())
         })

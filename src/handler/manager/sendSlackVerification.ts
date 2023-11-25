@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { Request, Response } from "express";
 
-export const sendSlackVerification = async (res : Response, teamNumber : number, teamEmail : string, website : string) => {
+export const sendSlackVerification = async (teamNumber : number, teamEmail : string, website : string) => {
     const body = {
         "blocks": [
             {
@@ -49,8 +49,8 @@ export const sendSlackVerification = async (res : Response, teamNumber : number,
             }
         ]
     };
-    if (process.env.SLACK_WEBHOOK == undefined) {
-        res.status(500).send("We weren't able to get your message through.");
+    if (process.env.SLACK_WEBHOOK === undefined) {
+        throw("Slack webhook doesn't exist");
     }
     else {
         const response = await fetch(process.env.SLACK_WEBHOOK, {
@@ -61,10 +61,10 @@ export const sendSlackVerification = async (res : Response, teamNumber : number,
             body: JSON.stringify(body),
         });
         if (!response.ok) {
-            res.status(500).send("We weren't able to get your message through.");
+            throw(response);
         }
         else {
-            res.status(200).send('Verification message sent');
+            throw(response);
         }
     }
 };

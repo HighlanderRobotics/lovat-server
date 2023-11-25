@@ -2,17 +2,13 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../requireAuth";
-import { getUser } from "./getUser";
-import { sendSlackVerification } from "./sendSlackVerification";
+ import { sendSlackVerification } from "./sendSlackVerification";
 
 
 export const addWebsite = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        const user = await getUser(req, res)
-        if(user === null)
-        {
-            return
-        }
+        const user = req.user
+
         const WebsiteSchema = z.object({
             website : z.string()
         })
@@ -28,7 +24,7 @@ export const addWebsite = async (req: AuthenticatedRequest, res: Response): Prom
             data : currWebsite
         })
 
-        await sendSlackVerification(res, row.number, row.email, req.body.website)        
+        await sendSlackVerification(row.number, row.email, req.body.website)        
     }
     catch(error)
     {

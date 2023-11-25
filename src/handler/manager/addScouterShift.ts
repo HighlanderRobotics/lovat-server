@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import { type } from "os";
 import z from 'zod'
-import { getUser } from "./getUser";
-import { AuthenticatedRequest } from "../../requireAuth";
+ import { AuthenticatedRequest } from "../../requireAuth";
 
 
 export const addScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -22,12 +21,8 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
             team6: z.array(z.string())
         })
 
-        const user = await getUser(req, res)
-        if(user === null)
-        {
-            return
-        }
-
+        const user = req.user
+   
         const currScouterScheduleShift = {
             sourceTeamNumber: user.teamNumber,
             tournamentKey: req.params.tournament,

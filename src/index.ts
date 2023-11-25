@@ -36,6 +36,7 @@ import { getSingleMutablePicklist } from "./handler/manager/getSingleMutablePick
 import { updatePicklist } from "./handler/manager/updatePicklist";
 import { updateMutablePicklist } from "./handler/manager/updateMutablePicklist";
 import { addWebsite } from "./handler/manager/addWebsite";
+import { addTournamentMatches } from "./handler/manager/addTournamentMatches";
 
 
 
@@ -58,7 +59,7 @@ app.get('/manager/matches', requireAuth, getMatches) // this can include filters
 //scout report
 app.delete('/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // Should be 
 app.post('/manager/scoutreports',requireAuth, addScoutReport) // Should be
-app.post('/manager/scoutreports/:uuid', requireAuth, ) // Should be /manager/scoutreport/:uuid
+app.put('/manager/scoutreports/:uuid', requireAuth, ) // Should be /manager/scoutreport/:uuid
 app.get('/manager/scoutreports/:uuid', getScoutReport ) // Should be /manager/scoutReport
 
 
@@ -73,7 +74,7 @@ app.post('/manager/picklists', requireAuth, addPicklist) //tested
 app.get('/manager/picklists',requireAuth, getPicklists) //tested 
 app.delete('/manager/picklists/:uuid', requireAuth, deletePicklist) //tested 
 app.get('/manager/picklists/:uuid', requireAuth, getSinglePicklist) //tested
-app.post('/manager/picklists/:uuid', requireAuth, updatePicklist) //tested
+app.put('/manager/picklists/:uuid', requireAuth, updatePicklist) //tested
 
 
 
@@ -83,7 +84,7 @@ app.post('/manager/mutablepicklists', requireAuth, addMutablePicklist) // tested
 app.delete('/manager/mutablepicklists/:uuid', requireAuth, deleteMutablePicklist) //tested
 app.get('/manager/mutablepicklists', requireAuth,getMutablePicklists) //tested
 app.get('/manager/mutablepicklists/:uuid', requireAuth, getSingleMutablePicklist) //tested
-app.post('/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) //tested
+app.put('/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) //tested
 
 // Also it would be nice to have an endpoint to subscribe to a mutable picklist, so that the client can get updates when it changes
 // Websocket time? lol, ill add to wish list items, after this break yes
@@ -97,7 +98,9 @@ app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
 app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
 app.post('/manager/registeredteam/:team/approved', approveRegisteredTeam) //tested waiting for new middle ware
 app.post('/manager/registeredteam/:team/rejected', rejectRegisteredTeam) // tested, waiting for new middle ware
-app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite)
+app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
+
+app.post('/manager/addMatches', addTournamentMatches)
 
 
 

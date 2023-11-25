@@ -1,14 +1,13 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { getUser } from "./getUser";
-import { AuthenticatedRequest } from "../../requireAuth";
+ import { AuthenticatedRequest } from "../../requireAuth";
 
 
 export const deleteMutablePicklist = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         
-        const user = await getUser(req, res); 
+        const user = req.user; 
         const MutablePicklistSchema = z.object({
             uuid: z.string()
         })

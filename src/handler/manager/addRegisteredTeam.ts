@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { getUser } from "./getUser";
-import { AuthenticatedRequest } from "../../requireAuth";
+ import { AuthenticatedRequest } from "../../requireAuth";
 import { Resend } from 'resend';
 import { sendSlackVerification } from "./sendSlackVerification";
 
@@ -37,11 +36,8 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
         const row = await prismaClient.registeredTeam.create({
             data: currRegisteredTeam 
         })
-        const user = await getUser(req, res)
-        if(user === null)
-        {
-            return
-        }
+        const user = req.user
+
         const userRow = await prismaClient.user.update({
             data: {
                 teamNumber: req.body.number,

@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z, { number } from 'zod'
-import { getUser } from "./getUser";
-import { AuthenticatedRequest } from "../../requireAuth";
+ import { AuthenticatedRequest } from "../../requireAuth";
 
 
 export const getMatches = async (req: AuthenticatedRequest, res: Response): Promise<void> => {

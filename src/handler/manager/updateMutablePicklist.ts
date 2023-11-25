@@ -2,17 +2,11 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../requireAuth";
-import { getUser } from "./getUser";
-
+ 
 export const updateMutablePicklist = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
 
     try {
-        const user = await getUser(req, res)
-
-        if(user === null)
-        {
-            return
-        }
+        const user = req.user
         const MutablePicklistSchema = z.object({
             name : z.string(),
             teams : z.array(z.number().min(0)),

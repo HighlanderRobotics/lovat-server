@@ -1,19 +1,15 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { getUser } from "./getUser";
-import { AuthenticatedRequest } from "../../requireAuth";
+ import { AuthenticatedRequest } from "../../requireAuth";
 
 
 export const deleteScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
        
         const uuid = req.params.uuid; 
-        const user = await getUser(req, res)
-        if(user === null)
-        {
-            return
-        }
+        const user = req.user
+         
         const DeleteScoutReportSchema = z.object({
             uuid : z.string()
         }) 
