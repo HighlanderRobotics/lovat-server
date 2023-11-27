@@ -1,4 +1,4 @@
-import prisma from "./prismaClient";
+import prisma from "../../prismaClient";
 import axios from "axios";
 import { User } from '@prisma/client';
 import { Request as ExpressRequest } from 'express';

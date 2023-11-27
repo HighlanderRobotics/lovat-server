@@ -1,19 +1,19 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
- import { AuthenticatedRequest } from "../../requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
 export const deleteMutablePicklist = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        
-        const user = req.user; 
+
+        const user = req.user;
         const MutablePicklistSchema = z.object({
             uuid: z.string()
         })
-        const currMutablePicklist = 
+        const currMutablePicklist =
         {
-            uuid : req.params.uuid
+            uuid: req.params.uuid
         }
 
 
@@ -24,10 +24,10 @@ export const deleteMutablePicklist = async (req: AuthenticatedRequest, res: Resp
         }
         const picklist = await prismaClient.mutablePicklist.findUnique({
             where: currMutablePicklist,
-            include : {
-                author : true
+            include: {
+                author: true
             }
-            
+
         });
         if (!picklist) {
             res.status(404).send("Picklist not found");

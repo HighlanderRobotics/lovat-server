@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
- import { AuthenticatedRequest } from "../../requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { Resend } from 'resend';
 import { sendSlackVerification } from "./sendSlackVerification";
 
@@ -12,7 +12,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
         const RegisteredTeamSchema = z.object({
             email: z.string().email(),
             number: z.number(),
-            code : z.string()
+            code: z.string()
         })
         const currRegisteredTeam = {
             email: req.body.email,
@@ -26,41 +26,40 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
         }
         const toggleFeatureRow = await prismaClient.featureToggle.findUnique({
             where: {
-                feature : "fullRegistration"
+                feature: "fullRegistration"
             }
         })
-        if(!toggleFeatureRow.enabled)
-        {
+        if (!toggleFeatureRow.enabled) {
             currRegisteredTeam["teamApproved"] = true
         }
         const row = await prismaClient.registeredTeam.create({
-            data: currRegisteredTeam 
+            data: currRegisteredTeam
         })
         const user = req.user
 
         const userRow = await prismaClient.user.update({
             data: {
                 teamNumber: req.body.number,
-                role : "SCOUTING_LEAD"
+                role: "SCOUTING_LEAD"
             },
-            where: 
+            where:
             {
-                id : user.id
+                id: user.id
             }
         })
-    //sending email
-    let verificationUrl = `lovat.app/verify/${currRegisteredTeam.code}`
-    const resend = new Resend(process.env.RESEND_KEY);
-        
+        //sending email
+        let verificationUrl = `lovat.app/verify/${currRegisteredTeam.code}`
+        const resend = new Resend(process.env.RESEND_KEY);
+
         resend.emails.send({
-          from: 'onboarding@resend.dev',
-          to: req.body.email,
-          subject: 'Lovat Email Verification',
-          html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`
+            from: 'onboarding@resend.dev',
+            to: req.body.email,
+            subject: 'Lovat Email Verification',
+            html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`
         });
-       
-            res.status(200).send("verification email sent")
-        
+
+        res.status(200).send("verification email sent")
+
     }
     catch (error) {
         console.error(error)

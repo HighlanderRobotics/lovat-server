@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../requireAuth";
- import { sendSlackVerification } from "./sendSlackVerification";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { sendSlackVerification } from "./sendSlackVerification";
 
 
 export const addWebsite = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -10,28 +10,27 @@ export const addWebsite = async (req: AuthenticatedRequest, res: Response): Prom
         const user = req.user
 
         const WebsiteSchema = z.object({
-            website : z.string()
+            website: z.string()
         })
-        const currWebsite = {website : req.body.website}
-        const possibleTypeError = WebsiteSchema.safeParse(currWebsite)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
+        const currWebsite = { website: req.body.website }
+        const possibleTypeErrorShift = WebsiteSchema.safeParse(currWebsite)
+        if (!possibleTypeErrorShift.success) {
+            res.status(400).send(possibleTypeErrorShift)
             return
-        }        const row = await prismaClient.registeredTeam.update({
-            where : {
-                number : user.teamNumber
+        } const row = await prismaClient.registeredTeam.update({
+            where: {
+                number: user.teamNumber
             },
-            data : currWebsite
+            data: currWebsite
         })
 
-        await sendSlackVerification(row.number, row.email, req.body.website)        
+        await sendSlackVerification(row.number, row.email, req.body.website)
     }
-    catch(error)
-    {
+    catch (error) {
         console.error(error)
         res.status(400).send(error)
     }
-    
+
 };
 
 

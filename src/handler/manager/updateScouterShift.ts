@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../requireAuth";
- 
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+
 
 export const updateScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {

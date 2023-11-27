@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
- import { AuthenticatedRequest } from "../../requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+
 
 
 export const getMutablePicklists = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const user = req.user
-
            const rows = await prismaClient.mutablePicklist.findMany({
             where: {
                 author :

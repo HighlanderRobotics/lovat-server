@@ -12,38 +12,38 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         let matchKey = req.body.matchKey;
         let scoutReportUuid = req.body.uuid
         const ScoutReportSchema = z.object({
-            uuid : z.string(),
-            teamMatchKey : z.string(),
-            startTime : z.string(),
+            uuid: z.string(),
+            teamMatchKey: z.string(),
+            startTime: z.string(),
             notes: z.string(),
-            links : z.number(),
-            robotRole : z.enum(["OFFENSE",
+            links: z.number(),
+            robotRole: z.enum(["OFFENSE",
                 "DEFENSE",
                 "FEEDER",
                 "IMMOBILE"]),
-            autoChallengeResult : z.enum([ "NONE",
+            autoChallengeResult: z.enum(["NONE",
                 "DOCKED",
                 "ENGAGED",
                 "FAILED",
                 "MOBILITY"]),
-            teleopChallengeResult : z.enum([ "NONE",
+            teleopChallengeResult: z.enum(["NONE",
                 "DOCKED",
                 "ENGAGED",
                 "FAILED",
                 "IN_COMMUNITY"]),
-            penaltyCard : z.enum(["NONE", "YELLOW", "RED"]),
-            driverAbility : z.number(),
-            scouterUuid : z.string()
-        }) 
+            penaltyCard: z.enum(["NONE", "YELLOW", "RED"]),
+            driverAbility: z.number(),
+            scouterUuid: z.string()
+        })
         const EventSchema = z.object({
-            time : z.number(),
-            action : z.enum(["PICK_UP_CONE", "PICK_UP_CUBE", "PLACE_OBJECT"]),
-            position : z.enum(["NONE", "PLACE_HOLDER"]),
-            points : z.number(),
-            scoutReportUuid : z.string()
+            time: z.number(),
+            action: z.enum(["PICK_UP_CONE", "PICK_UP_CUBE", "PLACE_OBJECT"]),
+            position: z.enum(["NONE", "PLACE_HOLDER"]),
+            points: z.number(),
+            scoutReportUuid: z.string()
         })
 
-        const currScoutReport = {teamMatchKey: matchKey, scouterUuid: matchData.scouterUuid, startTime: matchData.startTime, notes: matchData.notes, links: matchData.links, robotRole: matchData.robotRole, autoChallengeResult: matchData.autoChallengeResult, challengeResult: matchData.challengeResult, penaltyCard: matchData.penaltyCard, driverAbility: matchData.driverAbility}
+        const currScoutReport = { teamMatchKey: matchKey, scouterUuid: matchData.scouterUuid, startTime: matchData.startTime, notes: matchData.notes, links: matchData.links, robotRole: matchData.robotRole, autoChallengeResult: matchData.autoChallengeResult, challengeResult: matchData.challengeResult, penaltyCard: matchData.penaltyCard, driverAbility: matchData.driverAbility }
         const possibleTypeError = ScoutReportSchema.safeParse(currScoutReport)
         if (!possibleTypeError.success) {
             res.status(400).send(possibleTypeError)
@@ -54,7 +54,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 data: currScoutReport
             }
         )
-   
+
 
         let events = matchData.events;
         for (let i = 0; i < events.length; i++) {
@@ -87,7 +87,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 }
             }
             {
-                let currEvent =  
+                let currEvent =
                 {
                     scoutReportUuid: scoutReportUuid,
                     time: events[i][0],
@@ -103,7 +103,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 }
                 const row = await prismaClient.event.create(
                     {
-                       data : currEvent
+                        data: currEvent
                     }
                 )
 
@@ -116,7 +116,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
     catch (error) {
         console.log(error)
         res.status(400).send(error);
-        
+
     }
 }
 

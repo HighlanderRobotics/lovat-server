@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import { type } from "os";
 import z from 'zod'
- import { AuthenticatedRequest } from "../../requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
 export const addScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -22,7 +22,7 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
         })
 
         const user = req.user
-   
+
         const currScouterScheduleShift = {
             sourceTeamNumber: user.teamNumber,
             tournamentKey: req.params.tournament,
@@ -46,10 +46,9 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
                 data: currScouterScheduleShift
             })
             res.status(200).send("done adding scouter shift");
-            
+
         }
-        else
-        {
+        else {
             res.status(401).send("Not authorized to add scouter shift")
         }
 

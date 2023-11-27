@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
- import { AuthenticatedRequest } from "../../requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
 export const getScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -9,11 +9,11 @@ export const getScoutReport = async (req: AuthenticatedRequest, res: Response): 
         const user = req.user
 
         const ScoutReportSchema = z.object({
-            uuid : z.string()
+            uuid: z.string()
         })
-        const currScoutReport = 
+        const currScoutReport =
         {
-            uuid : req.params.uuid
+            uuid: req.params.uuid
         }
         const possibleTypeError = ScoutReportSchema.safeParse(currScoutReport)
         if (!possibleTypeError.success) {
@@ -21,25 +21,23 @@ export const getScoutReport = async (req: AuthenticatedRequest, res: Response): 
             return
         }
         const scoutReport = await prismaClient.scoutReport.findUnique({
-            where :  currScoutReport
+            where: currScoutReport
         })
-        if(!scoutReport)
-        {
+        if (!scoutReport) {
             res.status(404).send("Cannot find scout report")
             return
         }
 
         const events = await prismaClient.event.findMany({
-            where :  {
-                scoutReportUuid : req.params.uuid
+            where: {
+                scoutReportUuid: req.params.uuid
             }
         })
-        res.status(200).send({"scoutReport" : scoutReport, "events" : events});
+        res.status(200).send({ "scoutReport": scoutReport, "events": events });
     }
-    catch(error)
-    {
+    catch (error) {
         console.error(error)
         res.status(400).send(error)
     }
-    
+
 };

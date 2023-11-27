@@ -2,7 +2,7 @@ import express from "express";
 import 'dotenv/config';
 import bodyParser from 'body-parser';
 
-import { requireAuth } from "./requireAuth";
+import { requireAuth } from "./lib/middleware/requireAuth";
 
 import { addMutablePicklist } from "./handler/manager/addMutablePicklist";
 
@@ -36,8 +36,7 @@ import { getSingleMutablePicklist } from "./handler/manager/getSingleMutablePick
 import { updatePicklist } from "./handler/manager/updatePicklist";
 import { updateMutablePicklist } from "./handler/manager/updateMutablePicklist";
 import { addWebsite } from "./handler/manager/addWebsite";
-import { addTournamentMatches } from "./handler/manager/addTournamentMatches";
-import fetchMatches from "./lib/fetchMatches";
+import requireLovatSignature from "./lib/middleware/requireLovatSignature";
 
 
 
@@ -92,15 +91,14 @@ app.put('/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) /
 
 
 //onboarding endpoints
-app.get('/manager/team/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested
+app.get('/manager/registeredteams/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested
 app.post('/manager/onboarding/username', requireAuth,addUsername) //tested
 app.post('/manager/onboarding/teamcode',requireAuth,  checkCode) //tested
 app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
 app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
-app.post('/manager/registeredteam/:team/approved', approveRegisteredTeam) //tested waiting for new middle ware
-app.post('/manager/registeredteam/:team/rejected', rejectRegisteredTeam) // tested, waiting for new middle ware
-app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
-
+app.post('/manager/registeredteams/:team/approve', requireLovatSignature, approveRegisteredTeam) //tested waiting for new middle ware
+app.post('/manager/registeredteams/:team/reject', requireLovatSignature, rejectRegisteredTeam) // tested, waiting for new middle ware
+app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite)
 
 
 
