@@ -2,16 +2,28 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z, { number } from 'zod'
  import { AuthenticatedRequest } from "../../requireAuth";
+import { addTournamentMatches } from "./addTournamentMatches";
 
 
 export const getMatches = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
+        let tournamentKey = req.params.tournament
+        const matchRows = await prismaClient.teamMatchData.findMany({
+            where : 
+            {
+                tournamentKey : tournamentKey
+            }
+        })
+        if(matchRows.length === 0)
+        {
+            await addTournamentMatches(tournamentKey)
+        }
         const MatchesFilterSchema = z.object({
             tournamentKey: z.string(),
             teamNumber: z.array(z.number()),
         })
         const currMatchesFilter = {
-            tournamentKey: req.params.tournament,
+            tournamentKey: tournamentKey,
             // teamNumber: req.query.teams
         }
         const possibleTypeError = MatchesFilterSchema.safeParse(currMatchesFilter)
@@ -21,7 +33,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         }
         const rows = await prismaClient.teamMatchData.findMany({
             where: {
-                tournamentKey : req.params.tournament,
+                tournamentKey : tournamentKey,
                 // teamNumber : {
                 //     in : teams
                 // }
