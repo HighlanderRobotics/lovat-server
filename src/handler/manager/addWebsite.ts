@@ -12,6 +12,7 @@ export const addWebsite = async (req: AuthenticatedRequest, res: Response): Prom
         const WebsiteSchema = z.object({
             website: z.string()
         })
+        
         const currWebsite = { website: req.body.website }
         const possibleTypeErrorShift = WebsiteSchema.safeParse(currWebsite)
         if (!possibleTypeErrorShift.success) {

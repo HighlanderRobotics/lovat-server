@@ -30,7 +30,7 @@ import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
 import { addScoutReport } from "./handler/manager/addScoutReport";
 import { getScoutReport } from "./handler/manager/getScoutReport";
-import { getMatches } from "./handler/manager/getMatches";
+// import { getMatches } from "./handler/manager/getMatches";
 import { getSinglePicklist } from "./handler/manager/getSinglePicklist";
 import { getSingleMutablePicklist } from "./handler/manager/getSingleMutablePicklist";
 import { updatePicklist } from "./handler/manager/updatePicklist";
@@ -53,7 +53,7 @@ app.get('/manager/teams', requireAuth, getTeams) //tested
 app.get('/manager/tournaments', requireAuth, getTournaments) //tested 
 
 //match schedule page
-app.get('/manager/matches', requireAuth, getMatches) // should be able to filter by tournament, team, and whether or not they have been scouted. 
+// app.get('/manager/matches', requireAuth, getMatches) // should be able to filter by tournament, team, and whether or not they have been scouted. 
 // app.get('/API/isScouted') //what will be sent, and what should it return // We can hold off on this until it's time for the collection app
 
 //scout report

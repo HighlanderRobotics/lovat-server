@@ -6,21 +6,22 @@ import z from 'zod'
 
 export const deleteScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        const DeleteScouterShiftSchema = z.object({
+       
+        const params = z.object({
             uuid: z.string()
-        })
-        const currScouterShift =
-        {
+        }).safeParse({
             uuid: req.params.uuid
-        }
-        const possibleTypeError = DeleteScouterShiftSchema.safeParse(currScouterShift)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+        })
+
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
         const user = req.user
         const scouterShift = await prismaClient.scouterScheduleShift.findUnique({
-            where: currScouterShift,
+            where: {
+                uuid : params.data.uuid
+            },
         });
 
         if(!scouterShift)
@@ -31,7 +32,9 @@ export const deleteScouterShift = async (req: AuthenticatedRequest, res: Respons
 
         if ( user.teamNumber === scouterShift.sourceTeamNumber) {
             await prismaClient.scouterScheduleShift.delete({
-                where: currScouterShift
+                where: {
+                    uuid : params.data.uuid
+                }
             });
             res.status(200).send("scouter shift deleted successfully");
         } else {

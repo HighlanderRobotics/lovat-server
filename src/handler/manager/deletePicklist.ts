@@ -7,20 +7,22 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 export const deletePicklist = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
 
-        const uuid = req.params.uuid;
         const user = req.user
-        const DeletePicklistSchema = z.object({
-            uuid: z.string()
+     
+
+        const params = z.object({
+            uuid: z.string(),
+        }).safeParse({
+            uuid: req.params.uuid,
         })
-        const currPicklist = { uuid: uuid }
-        const possibleTypeError = DeletePicklistSchema.safeParse(currPicklist)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
 
         const picklist = await prismaClient.sharedPicklist.findUnique({
-            where: currPicklist,
+            where: {uuid :  params.data.uuid},
             include: { author: true }
         });
         if (!picklist) {
@@ -30,7 +32,7 @@ export const deletePicklist = async (req: AuthenticatedRequest, res: Response): 
 
         if (user.teamNumber === picklist.author.teamNumber) {
             await prismaClient.sharedPicklist.delete({
-                where: currPicklist
+                where: {uuid : params.data.uuid}
             });
             res.status(200).send("Picklist deleted successfully");
         } else {

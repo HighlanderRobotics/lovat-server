@@ -7,19 +7,21 @@ export const approveRegisteredTeam = async (req: Request, res: Response): Promis
     try {
         //check its coming from Collin
 
-        const ApproveRegisteredTeamSchema = z.object({
+        
+        const params = z.object({
             number : z.number().min(0)
-        }) 
-        const currRegisteredTeam = {
+        }).safeParse({
             number: Number(req.params.team)
-        }
-        const possibleTypeError = ApproveRegisteredTeamSchema.safeParse(currRegisteredTeam)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+        })
+
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
            const rows = await prismaClient.registeredTeam.update({
-               where: currRegisteredTeam,
+               where: {
+                number : params.data.number
+               },
                data: {
                 teamApproved : true
                }

@@ -11,20 +11,24 @@ export const addTeamSource = async (req: AuthenticatedRequest, res: Response): P
 
 
         //CHECK THAT TEAMS ACTUALLY EXIST
-        const TeamSourceSchema = z.object({
+
+        const params = z.object({
             teamSource: z.array(z.number())
+        }).safeParse({
+            teamSource: req.body.teamSource
         })
-        const currTeamSource = { teamSource: req.body.teamSource }
-        const possibleTypeError = TeamSourceSchema.safeParse(currTeamSource)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
         const row = await prismaClient.user.update({
             where: {
                 id: user.id
             },
-            data: currTeamSource
+            data: {
+                teamSource : params.data.teamSource
+            }
         })
         res.status(200).send("team source added")
 

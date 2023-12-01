@@ -9,31 +9,34 @@ import { sendSlackVerification } from "./sendSlackVerification";
 
 export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        const RegisteredTeamSchema = z.object({
+        const params = z.object({
             email: z.string().email(),
             number: z.number(),
             code: z.string()
-        })
-        const currRegisteredTeam = {
+        }).safeParse({
             email: req.body.email,
             number: req.body.number,
             code: await generateUniqueCode()
-        }
-        const possibleTypeError = RegisteredTeamSchema.safeParse(currRegisteredTeam)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+        })
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
+   
         const toggleFeatureRow = await prismaClient.featureToggle.findUnique({
             where: {
                 feature: "fullRegistration"
             }
         })
         if (!toggleFeatureRow.enabled) {
-            currRegisteredTeam["teamApproved"] = true
+            params.data["teamApproved"] = true
         }
         const row = await prismaClient.registeredTeam.create({
-            data: currRegisteredTeam
+            data: {
+                email : params.data.email,
+                number : params.data.number,
+                code : params.data.code
+            }
         })
         const user = req.user
 
@@ -48,7 +51,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             }
         })
         //sending email
-        let verificationUrl = `lovat.app/verify/${currRegisteredTeam.code}`
+        let verificationUrl = `lovat.app/verify/${params.data.code}`
         const resend = new Resend(process.env.RESEND_KEY);
 
         resend.emails.send({

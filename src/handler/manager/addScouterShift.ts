@@ -8,7 +8,7 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 export const addScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
 
-        const ScouterScheduleShiftSchema = z.object({
+        const params = z.object({
             sourceTeamNumber: z.number(),
             tournamentKey: z.string(),
             startMatchOrdinalNumber: z.number(),
@@ -19,12 +19,8 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
             team4: z.array(z.string()),
             team5: z.array(z.string()),
             team6: z.array(z.string())
-        })
-
-        const user = req.user
-
-        const currScouterScheduleShift = {
-            sourceTeamNumber: user.teamNumber,
+        }).safeParse({
+            sourceTeamNumber: req.user.teamNumber,
             tournamentKey: req.params.tournament,
             startMatchOrdinalNumber: req.body.startMatchOrdinalNumber,
             endMatchOrdinalNumber: req.body.endMatchOrdinalNumber,
@@ -33,17 +29,26 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
             team3: req.body.team3,
             team4: req.body.team4,
             team5: req.body.team5,
-            team6: req.body.team6,
-        }
-        const possibleTypeErrorShift = ScouterScheduleShiftSchema.safeParse(currScouterScheduleShift)
-        if (!possibleTypeErrorShift.success) {
-            res.status(400).send(possibleTypeErrorShift)
-            return
-        }
-
-        if (user.role === "SCOUTING_LEAD") {
+            team6: req.body.team6
+        })
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
+        if (req.user.role === "SCOUTING_LEAD") {
             const rows = await prismaClient.scouterScheduleShift.create({
-                data: currScouterScheduleShift
+                data: {
+                    sourceTeamNumber : params.data.sourceTeamNumber,
+                    tournamentKey : params.data.tournamentKey,
+                    startMatchOrdinalNumber : params.data.startMatchOrdinalNumber,
+                    endMatchOrdinalNumber : params.data.endMatchOrdinalNumber,
+                    team1 : params.data.team1,
+                    team2 : params.data.team2,
+                    team3 : params.data.team3,
+                    team4 : params.data.team4,
+                    team5 : params.data.team5,
+                    team6 : params.data.team6,
+                }
             })
             res.status(200).send("done adding scouter shift");
 

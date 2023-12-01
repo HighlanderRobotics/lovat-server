@@ -6,17 +6,21 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 export const checkCode = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {    
-        const TeamSchema = z.object({
+
+        const params = z.object({
             number: z.number().min(0)
+        }).safeParse({
+            number: Number(req.query.team) 
         })
-        const currTeam = { number: Number(req.query.team) }
-        const possibleTypeError = TeamSchema.safeParse(currTeam)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
         const teamRegistered = await prismaClient.registeredTeam.findUnique({
-            where: currTeam
+            where: {
+                number : params.data.number
+            }
         })
         if (teamRegistered) {
             if(teamRegistered.code === req.query.code)

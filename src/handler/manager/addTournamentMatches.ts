@@ -13,13 +13,7 @@ export const addTournamentMatches = async (tournamentKey) => {
             throw("tournament key is undefined")
             return
         }
-        const MatchSchema = z.object({
-            matchNumber: z.number(),
-            matchType: z.enum(["QUALIFICATION", "ELIMINATION"]),
-            tournamentKey: z.string(),
-            key: z.string(),
-            teamNumber: z.number()
-        })
+       
         var url = 'https://www.thebluealliance.com/api/v3';
         var nonQM = 1;
         const tournamentRow = await prismaClient.tournament.findUnique({
@@ -49,18 +43,24 @@ export const addTournamentMatches = async (tournamentKey) => {
                         matchesString = matchesString + `('${response.data[i].key}_${k}', '${tournamentKey}', ${response.data[i].match_number}, '${teams[k]}', '${response.data[i].comp_level}'), `;
                         let currMatchKey = `${response.data[i].key}_${k}`;
                         let currTeam = Number(teams[k].substring(3))
-                        let currMatch = {
+                        
+                        const params = z.object({
+                            matchNumber: z.number(),
+                            matchType: z.enum(["QUALIFICATION", "ELIMINATION"]),
+                            tournamentKey: z.string(),
+                            key: z.string(),
+                            teamNumber: z.number()
+                        }).safeParse({
                             key: currMatchKey,
                             tournamentKey: tournamentKey,
                             matchNumber: response.data[i].match_number,
                             teamNumber: currTeam,
                             matchType: 'QUALIFICATION'
-                        }
-                        const possibleTypeError = MatchSchema.safeParse(currMatch)
-                        if (!possibleTypeError.success) {
-                            throw(possibleTypeError)
-                            return
-                        }
+                        })
+                
+                        if (!params.success) {
+                            throw(params)
+                        };
 
                         //cant use currMatch key bc theres an issue with the enum
                         await prismaClient.teamMatchData.upsert({
@@ -68,16 +68,16 @@ export const addTournamentMatches = async (tournamentKey) => {
                                 key : currMatchKey
                             },
                             update : {
-                                tournamentKey : tournamentKey,
-                                matchNumber : response.data[i].match_number,
-                                teamNumber : currTeam,
+                                tournamentKey : params.data.tournamentKey,
+                                matchNumber : params.data.matchNumber,
+                                teamNumber : params.data.teamNumber,
                                 matchType : 'QUALIFICATION'
                             },
                             create: {
-                                key : currMatchKey,
-                                tournamentKey : tournamentKey,
-                                matchNumber : response.data[i].match_number,
-                                teamNumber : currTeam,
+                                key : params.data.key,
+                                tournamentKey : params.data.tournamentKey,
+                                matchNumber : params.data.matchNumber,
+                                teamNumber : params.data.teamNumber,
                                 matchType : 'QUALIFICATION'
                             }
                         })
@@ -91,34 +91,42 @@ export const addTournamentMatches = async (tournamentKey) => {
                         let currTeam = Number(teams[k].substring(3))
 
                         let currMatchKey = `${tournamentKey}_em${nonQM}_${k}`;
-                        let currMatch = {
+                        
+                        const params = z.object({
+                            matchNumber: z.number(),
+                            matchType: z.enum(["QUALIFICATION", "ELIMINATION"]),
+                            tournamentKey: z.string(),
+                            key: z.string(),
+                            teamNumber: z.number()
+                        }).safeParse({
                             key: currMatchKey,
                             tournamentKey: tournamentKey,
                             matchNumber: nonQM,
                             teamNumber: currTeam,
-                            matchType: "ELIMINATION"
-                        }
-                        const possibleTypeError = MatchSchema.safeParse(currMatch)
-                        if (!possibleTypeError.success) {
-                            throw(possibleTypeError)
-                            return
-                        }
+                            matchType: 'ELIINATION'
+                        })
+                
+                        if (!params.success) {
+                            throw(params)
+                        };
+
+                       
                         //cant use currMatch key bc theres an issue with the enum
                         await prismaClient.teamMatchData.upsert({
                             where : {
                                 key : currMatchKey
                             },
                             update: {
-                                tournamentKey : tournamentKey,
-                                matchNumber : nonQM,
-                                teamNumber : currTeam,
+                                tournamentKey : params.data.tournamentKey,
+                                matchNumber : params.data.matchNumber,
+                                teamNumber : params.data.teamNumber,
                                 matchType : 'ELIMINATION'
                             },
                             create: {
-                                key : currMatchKey,
-                                tournamentKey : tournamentKey,
-                                matchNumber : nonQM,
-                                teamNumber : currTeam,
+                                key : params.data.key,
+                                tournamentKey : params.data.tournamentKey,
+                                matchNumber : params.data.matchNumber,
+                                teamNumber : params.data.teamNumber,
                                 matchType : 'ELIMINATION'
                             }
                         })

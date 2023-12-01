@@ -8,22 +8,22 @@ export const deleteMutablePicklist = async (req: AuthenticatedRequest, res: Resp
     try {
 
         const user = req.user;
-        const MutablePicklistSchema = z.object({
-            uuid: z.string()
+        const params = z.object({
+            uuid: z.string(),
+        }).safeParse({
+            uuid: req.params.uuid,
         })
-        const currMutablePicklist =
-        {
-            uuid: req.params.uuid
-        }
+
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
 
 
-        const possibleTypeErrorMutablePicklist = MutablePicklistSchema.safeParse(currMutablePicklist)
-        if (!possibleTypeErrorMutablePicklist.success) {
-            res.status(400).send(possibleTypeErrorMutablePicklist)
-            return
-        }
         const picklist = await prismaClient.mutablePicklist.findUnique({
-            where: currMutablePicklist,
+            where: {
+                uuid : params.data.uuid
+            },
             include: {
                 author: true
             }
@@ -35,7 +35,9 @@ export const deleteMutablePicklist = async (req: AuthenticatedRequest, res: Resp
         }
         if (user.teamNumber === picklist.author.teamNumber) {
             await prismaClient.mutablePicklist.delete({
-                where: currMutablePicklist
+                where: {
+                    uuid : params.data.uuid
+                }
             });
             res.status(200).send("Picklist deleted successfully");
         } else {

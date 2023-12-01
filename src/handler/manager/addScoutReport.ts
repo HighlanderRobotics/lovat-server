@@ -11,7 +11,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         let matchData = req.body.data;
         let matchKey = req.body.matchKey;
         let scoutReportUuid = req.body.uuid
-        const ScoutReportSchema = z.object({
+        const paramsScoutReport = z.object({
             uuid: z.string(),
             teamMatchKey: z.string(),
             startTime: z.string(),
@@ -34,24 +34,37 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             penaltyCard: z.enum(["NONE", "YELLOW", "RED"]),
             driverAbility: z.number(),
             scouterUuid: z.string()
+        }).safeParse({
+            teamMatchKey: matchKey, 
+            scouterUuid: matchData.scouterUuid, 
+            startTime: matchData.startTime, 
+            notes: matchData.notes, 
+            links: matchData.links, 
+            robotRole: matchData.robotRole, 
+            autoChallengeResult: matchData.autoChallengeResult, 
+            teleopChallengeResult: matchData.challengeResult, 
+            penaltyCard: matchData.penaltyCard, 
+            driverAbility: matchData.driverAbility 
         })
-        const EventSchema = z.object({
-            time: z.number(),
-            action: z.enum(["PICK_UP_CONE", "PICK_UP_CUBE", "PLACE_OBJECT"]),
-            position: z.enum(["NONE", "PLACE_HOLDER"]),
-            points: z.number(),
-            scoutReportUuid: z.string()
-        })
-
-        const currScoutReport = { teamMatchKey: matchKey, scouterUuid: matchData.scouterUuid, startTime: matchData.startTime, notes: matchData.notes, links: matchData.links, robotRole: matchData.robotRole, autoChallengeResult: matchData.autoChallengeResult, challengeResult: matchData.challengeResult, penaltyCard: matchData.penaltyCard, driverAbility: matchData.driverAbility }
-        const possibleTypeError = ScoutReportSchema.safeParse(currScoutReport)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+        if (!paramsScoutReport.success) {
+            res.status(400).send(paramsScoutReport);
+            return;
+        };
+       
         const row = await prismaClient.scoutReport.create(
             {
-                data: currScoutReport
+                data: {
+                    teamMatchKey : paramsScoutReport.data.teamMatchKey,
+                    scouterUuid : paramsScoutReport.data.scouterUuid,
+                    startTime : paramsScoutReport.data.startTime,
+                    notes : paramsScoutReport.data.notes,
+                    links : paramsScoutReport.data.links,
+                    robotRole : paramsScoutReport.data.robotRole,
+                    autoChallengeResult : paramsScoutReport.data.autoChallengeResult,
+                    challengeResult : paramsScoutReport.data.teleopChallengeResult,
+                    penaltyCard : paramsScoutReport.data.penaltyCard,
+                    driverAbility : paramsScoutReport.data.driverAbility
+                }
             }
         )
 
@@ -86,29 +99,23 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     }
                 }
             }
-            {
-                let currEvent =
-                {
-                    scoutReportUuid: scoutReportUuid,
-                    time: events[i][0],
-                    action: events[i][1],
-                    position: events[i][2],
-                    points: points
-
-                }
-                const possibleTypeError = EventSchema.safeParse(currEvent)
-                if (!possibleTypeError.success) {
-                    res.status(400).send(possibleTypeError)
-                    return
-                }
-                const row = await prismaClient.event.create(
-                    {
-                        data: currEvent
-                    }
-                )
-
-
-            }
+            const paramsEvents = z.object({
+                time: z.number(),
+                action: z.enum(["PICK_UP_CONE", "PICK_UP_CUBE", "PLACE_OBJECT"]),
+                position: z.enum(["NONE", "PLACE_HOLDER"]),
+                points: z.number(),
+                scoutReportUuid: z.string()
+            }).safeParse({
+                scoutReportUuid: scoutReportUuid,
+                time: events[i][0],
+                action: events[i][1],
+                position: events[i][2],
+                points: points
+            })
+            if (!paramsEvents.success) {
+                res.status(400).send(paramsEvents);
+                return;
+            };
         }
         res.status(200).send('done editing data');
     }
