@@ -8,10 +8,19 @@ export const getSinglePicklist = async (req: AuthenticatedRequest, res: Response
     try {
         const user = req.user
 
+        const params = z.object({
+            uuid: z.string()
+        }).safeParse({
+            uuid: req.params.uuid
+        })
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
 
         const row = await prismaClient.sharedPicklist.findUnique({
             where: {
-                uuid: req.params.uuid,
+                uuid: params.data.uuid,
                 author: {
                     teamNumber: user.teamNumber
                 }

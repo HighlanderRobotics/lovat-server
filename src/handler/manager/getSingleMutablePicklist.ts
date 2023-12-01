@@ -8,10 +8,18 @@ export const getSingleMutablePicklist = async (req: AuthenticatedRequest, res: R
     try {
         const user = req.user
         
-       
+        const params = z.object({
+            uuid: z.string()
+        }).safeParse({
+            uuid: req.params.uuid
+        })
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
         const row = await prismaClient.mutablePicklist.findUnique({
            where : {
-            uuid : req.params.uuid,
+            uuid : params.data.uuid,
             author: {
                 teamNumber : user.teamNumber
             }

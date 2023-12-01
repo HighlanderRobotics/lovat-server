@@ -7,21 +7,22 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 export const getScouterSchedule = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const user = req.user
-        const TournamentSchema = z.object({
+      
+        const params = z.object({
             tournamentKey: z.string()
+        }).safeParse({
+            tournamentKey: req.params.tournament 
         })
-        const currTournament = { tournamentKey: req.params.tournament }
-        const possibleTypeError = TournamentSchema.safeParse(currTournament)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
 
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
 
         const rows = await prismaClient.scouterScheduleShift.findMany({
             where: {
                 sourceTeamNumber: user.teamNumber,
-                tournamentKey: currTournament.tournamentKey
+                tournamentKey: params.data.tournamentKey
 
             }
         })

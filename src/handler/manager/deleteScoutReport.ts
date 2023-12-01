@@ -7,25 +7,23 @@ import z from 'zod'
 export const deleteScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
 
-        const uuid = req.params.uuid;
         const user = req.user
 
-        const DeleteScoutReportSchema = z.object({
+        const params = z.object({
             uuid: z.string()
+        }).safeParse({
+            uuid: req.params.uuid
         })
-        const deleteScoutReport = {
-            uuid: uuid
-        }
-        const possibleTypeError = DeleteScoutReportSchema.safeParse(deleteScoutReport)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
 
         const scouter = await prismaClient.scoutReport.findUnique({
             where:
             {
-                uuid: uuid
+                uuid: params.data.uuid
             },
             include: {
                 scouter: true
@@ -42,13 +40,13 @@ export const deleteScoutReport = async (req: AuthenticatedRequest, res: Response
             await prismaClient.event.deleteMany
                 ({
                     where: {
-                        scoutReportUuid: uuid
+                        scoutReportUuid: params.data.uuid
                     }
                 });
             await prismaClient.scoutReport.delete({
                 where:
                 {
-                    uuid: uuid
+                    uuid: params.data.uuid
                 }
             })
             res.status(200).send("Data deleted successfully");

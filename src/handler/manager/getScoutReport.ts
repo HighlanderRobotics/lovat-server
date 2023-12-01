@@ -7,22 +7,24 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 export const getScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const user = req.user
-
-        const ScoutReportSchema = z.object({
+       
+        const params = z.object({
             uuid: z.string()
-        })
-        const currScoutReport =
-        {
+        }).safeParse({
             uuid: req.params.uuid
-        }
-        const possibleTypeError = ScoutReportSchema.safeParse(currScoutReport)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
-        const scoutReport = await prismaClient.scoutReport.findUnique({
-            where: currScoutReport
         })
+        
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
+        const scoutReport = await prismaClient.scoutReport.findUnique({
+            where: 
+            {
+                uuid : params.data.uuid
+            }
+        })
+        
         if (!scoutReport) {
             res.status(404).send("Cannot find scout report")
             return

@@ -6,19 +6,21 @@ import z from 'zod'
 export const rejectRegisteredTeam = async (req: Request, res: Response): Promise<void> => {
     try {
         //check its coming from Collin
-        const RegisteredTeamSchema = z.object({
+       
+        const params = z.object({
             number : z.number().min(0)
-        })
-        const currRegistedTeam = {
+        }).safeParse({
             number : Number(req.params.team)
-        }
-        const possibleTypeError = RegisteredTeamSchema.safeParse(currRegistedTeam)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+
+        })
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
            const rows = await prismaClient.registeredTeam.delete({
-               where: currRegistedTeam,
+               where: {
+                number : params.data.number
+               },
                
            })
         res.status(200).send(`Team ${req.params.team} removed`);

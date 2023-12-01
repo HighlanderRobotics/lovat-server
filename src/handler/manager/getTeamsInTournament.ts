@@ -5,21 +5,22 @@ import z from 'zod'
 
 export const getTeamsInTournament = async (req: Request, res: Response): Promise<void> => {
     try {
-        const TournamentSchema = z.object({
-            tournament : z.string()
-        })
-        const currTournament = 
-        {
+    
+
+        const params = z.object({
+            tournamentKey : z.string()
+        }).safeParse({
             tournamentKey : req.params.key
-        }
-        const possibleTypeError = TournamentSchema.safeParse(currTournament)
-        if (!possibleTypeError.success) {
-            res.status(400).send(possibleTypeError)
-            return
-        }
+        })
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
         
         const rows = await prismaClient.teamMatchData.findMany({
-            where: currTournament,
+            where: {
+                tournamentKey : params.data.tournamentKey
+            },
             select: {
                 teamNumber: true
             }

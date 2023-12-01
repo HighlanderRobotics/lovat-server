@@ -7,41 +7,43 @@ export const updateMutablePicklist = async (req: AuthenticatedRequest, res: Resp
 
     try {
         const user = req.user
-        const MutablePicklistSchema = z.object({
-            name : z.string(),
-            teams : z.array(z.number().min(0)),
-            authorId : z.string()
-        }) 
 
-        const currMutablePicklist = {
+        const params = z.object({
+            name: z.string(),
+            teams: z.array(z.number().min(0)),
+            authorId: z.string()
+        }).safeParse({
             name: req.body.name,
             teams: req.body.teams,
             authorId : user.id
-        }
-        const possibleTypeError = MutablePicklistSchema.safeParse(currMutablePicklist)
-        if(!possibleTypeError.success)
-        {
-            res.status(400).send(possibleTypeError)
-            return
-        }
 
-           const row = await prismaClient.mutablePicklist.update({
-            where : {
-                uuid : req.params.uuid,
-                author : {
-                    teamNumber : user.teamNumber
+        })
+        if (!params.success) {
+            res.status(400).send(params);
+            return;
+        };
+      
+
+        const row = await prismaClient.mutablePicklist.update({
+            where: {
+                uuid: req.params.uuid,
+                author: {
+                    teamNumber: user.teamNumber
                 }
             },
-            data: currMutablePicklist
+            data: {
+                name : params.data.name,
+                teams : params.data.teams,
+                authorId : params.data.authorId
+            }
         });
-        if(!row)
-        {
+        if (!row) {
             res.status(401).send("Not authorized to update this picklist")
             return
         }
 
         res.status(200).send("mutable picklist updated");
-    } catch(error) {
+    } catch (error) {
         console.error(error);
         res.status(400).send(error);
     }
