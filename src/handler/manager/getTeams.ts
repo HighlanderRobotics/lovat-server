@@ -41,7 +41,7 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
                         res.status(400).send(params);
                         return;
                     };
-                    rows =                     rows =  await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'} OR name ILIKE ${params.data.filter + '%'}`;
+                    rows = await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'} OR name ILIKE ${params.data.filter + '%'}`;
 
                 }
             }
