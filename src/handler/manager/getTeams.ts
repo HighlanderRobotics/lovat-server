@@ -22,6 +22,11 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
         const rows = await prismaClient.team.findMany({
             take : params.data.take,
             skip : params.data.skip,
+            // where : 
+            // {
+            //     OR : [{name : {contains : params.data.filter}},
+            //     // {number : {starstWith : 0}}]
+            // }
         })
         res.status(200).send(rows);
     }
