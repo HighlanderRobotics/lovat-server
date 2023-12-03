@@ -91,7 +91,7 @@ app.put('/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) /
 
 
 //onboarding endpoints
-app.get('/manager/registeredteams/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested
+app.get('/manager/registeredteams/:team/registrationstatus', checkRegisteredTeam) //tested
 app.post('/manager/onboarding/username', requireAuth,addUsername) //tested
 app.post('/manager/onboarding/teamcode',requireAuth,  checkCode) //tested
 app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
