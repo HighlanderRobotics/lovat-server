@@ -24,6 +24,10 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         res.status(400).send(params);
                         return;
                     };
+                    if (!params.success) {
+                        res.status(400).send(params);
+                        return;
+                    };
                     const rows = await prismaClient.tournament.findMany({
                         take: params.data.take,
                         skip: params.data.skip,
@@ -47,6 +51,10 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         skip: Number(req.query.skip),
                         filter: req.query.filter
                     })
+                    if (!params.success) {
+                        res.status(400).send(params);
+                        return;
+                    };
                     if (!params.success) {
                         res.status(400).send(params);
                         return;

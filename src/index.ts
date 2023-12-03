@@ -50,7 +50,7 @@ app.use(bodyParser.json());
 //general endpoints
 app.get('/manager/tournament/:tournament/teams', requireAuth, getTeamsInTournament) 
 app.get('/manager/teams', requireAuth, getTeams) //tested 
-app.get('/manager/tournaments', getTournaments) //tested 
+app.get('/manager/tournaments', requireAuth, getTournaments) //tested 
 
 //match schedule page
 // app.get('/manager/matches', requireAuth, getMatches) // should be able to filter by tournament, team, and whether or not they have been scouted. 
