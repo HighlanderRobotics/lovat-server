@@ -5,6 +5,7 @@ import z from 'zod'
 
 export const getTeams = async (req: Request, res: Response): Promise<void> => {
     try {
+        let rows = []
         if (req.query.filter != undefined) {
             if (req.query.skip != undefined) {
                 if (req.query.take != undefined) {
@@ -22,10 +23,9 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'} OR name ILIKE ${params.data.filter  + '%'}  LIMIT ${params.data.take} OFFSET ${params.data.skip}`;
+                    rows = await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'} OR name ILIKE ${params.data.filter  + '%'}  LIMIT ${params.data.take} OFFSET ${params.data.skip}`;
 
         
-                    res.status(200).send(rows);
 
                 }
                 else {
@@ -41,9 +41,8 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'} OR name ILIKE ${params.data.filter  + '%'} OFFSET ${params.data.skip}`;
+                    rows =                     rows =  await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'} OR name ILIKE ${params.data.filter + '%'}`;
 
-                    res.status(200).send(rows);
                 }
             }
             else {
@@ -60,9 +59,8 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
                         res.status(400).send(params);
                         return;
                     };
-                    const rows =  await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'}  OR name ILIKE ${params.data.filter + '%'} LIMIT ${params.data.take}`;
+                    rows =  await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'}  OR name ILIKE ${params.data.filter + '%'} LIMIT ${params.data.take}`;
 
-                    res.status(200).send(rows);
 
                 }
                 else {
@@ -75,9 +73,8 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
                         res.status(400).send(params);
                         return;
                     };
-                    const rows =  await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'} OR name ILIKE ${params.data.filter + '%'}`;
+                    rows =  await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${params.data.filter + '%'} OR name ILIKE ${params.data.filter + '%'}`;
 
-                    res.status(200).send(rows);
                 }
             }
         }
@@ -95,12 +92,11 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.team.findMany({
+                    rows = await prismaClient.team.findMany({
                         take: params.data.take,
                         skip: params.data.skip
 
                     })
-                    res.status(200).send(rows);
                 }
                 else {
                     const params = z.object({
@@ -113,10 +109,9 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
                         return;
                     };
 
-                    const rows = await prismaClient.team.findMany({
+                    rows = await prismaClient.team.findMany({
                         take: params.data.take,
                     })
-                    res.status(200).send(rows);
                 }
 
             }
@@ -131,18 +126,27 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.team.findMany({
+                    rows = await prismaClient.team.findMany({
                         skip: params.data.skip
                     })
-                    res.status(200).send(rows);
                 }
                 else {
-                    const rows = await prismaClient.team.findMany({})
-                    res.status(200).send(rows);
+                    rows = await prismaClient.team.findMany({})
 
                 }
             }
         }
+        let count = 0
+        if(req.query.filter != undefined)
+        {
+            let tempRows : Array<any> = await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${req.query.filter + '%'} OR name ILIKE ${req.query.filter + '%'}`;
+            count = tempRows.length
+        }
+        else
+        {
+            count = (await prismaClient.team.findMany({})).length
+        }
+        res.status(200).send({teams : rows, count : count})
     }
     catch(error)
     {

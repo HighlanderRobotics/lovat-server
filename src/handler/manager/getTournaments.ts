@@ -6,7 +6,7 @@ import { unwatchFile } from "fs";
 
 export const getTournaments = async (req: Request, res: Response): Promise<void> => {
     try {
-
+        let rows = []
         if (req.query.filter != undefined) {
             if (req.query.skip != undefined) {
                 if (req.query.take != undefined) {
@@ -28,7 +28,7 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.tournament.findMany({
+                     rows = await prismaClient.tournament.findMany({
                         take: params.data.take,
                         skip: params.data.skip,
                         where:
@@ -39,7 +39,6 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
 
 
                     })
-                    res.status(200).send(rows);
 
                 }
                 else {
@@ -59,7 +58,7 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.tournament.findMany({
+                     rows = await prismaClient.tournament.findMany({
                         skip: params.data.skip,
                         where:
                         {
@@ -69,7 +68,6 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
 
 
                     })
-                    res.status(200).send(rows);
                 }
             }
             else {
@@ -86,7 +84,7 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.tournament.findMany({
+                     rows = await prismaClient.tournament.findMany({
                         take: params.data.take,
                         where:
                         {
@@ -96,7 +94,6 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
 
 
                     })
-                    res.status(200).send(rows);
 
                 }
                 else {
@@ -109,7 +106,7 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.tournament.findMany({
+                     rows = await prismaClient.tournament.findMany({
                         where:
                         {
                             OR: [{ key: { contains: params.data.filter } },
@@ -118,7 +115,6 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
 
 
                     })
-                    res.status(200).send(rows);
                 }
             }
         }
@@ -136,12 +132,11 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.tournament.findMany({
+                     rows = await prismaClient.tournament.findMany({
                         take: params.data.take,
                         skip: params.data.skip
 
                     })
-                    res.status(200).send(rows);
                 }
                 else {
                     const params = z.object({
@@ -154,10 +149,9 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         return;
                     };
 
-                    const rows = await prismaClient.tournament.findMany({
+                     rows = await prismaClient.tournament.findMany({
                         take: params.data.take,
                     })
-                    res.status(200).send(rows);
                 }
 
             }
@@ -172,18 +166,36 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.tournament.findMany({
+                    rows = await prismaClient.tournament.findMany({
                         skip: params.data.skip
                     })
-                    res.status(200).send(rows);
                 }
                 else {
-                    const rows = await prismaClient.tournament.findMany({})
-                    res.status(200).send(rows);
+                    rows = await prismaClient.tournament.findMany({})
 
                 }
             }
         }
+        let count = 0
+        if(req.query.filter != undefined)
+        {
+            let tempRows = await prismaClient.tournament.findMany({
+                where:
+                {
+                    OR: [{ key: { contains: req.query.filter as string} },
+                    { name: { contains: req.query.filter as string } }]
+                }
+
+
+            }) 
+            count = tempRows.length
+        }
+        else
+        {
+            count = (await prismaClient.tournament.findMany({})).length
+        }
+        res.status(200).send({tournaments : rows, count : count})
+
     }
     catch (error) {
         console.error(error)
