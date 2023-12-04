@@ -63,7 +63,14 @@ export const checkRegisteredTeam = async (req: AuthenticatedRequest, res: Respon
         }
         else {
             if (row.emailVerified && row.teamApproved) {
-                res.status(200).send("REGISTERED")
+                if(req.user.teamNumber === row.number)
+                {
+                    res.status(200).send("REGISTERED_ON_TEAM")
+                }
+                else
+                {
+                    res.status(200).send("REGISTERED_OFF_TEAM")
+                }
             }
             else {
                 res.status(200).send("PENDING")
