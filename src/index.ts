@@ -38,6 +38,14 @@ import { updateMutablePicklist } from "./handler/manager/updateMutablePicklist";
 import { addWebsite } from "./handler/manager/addWebsite";
 import requireLovatSignature from "./lib/middleware/requireLovatSignature";
 import { approveTeamEmail } from "./handler/manager/approveTeamEmail";
+import rateLimit from 'express-rate-limit';
+import { resendEmail } from "./handler/manager/resendEmail";
+
+const resendEmailLimiter = rateLimit({
+  windowMs: 2 * 60 * 1000,
+  max: 2, 
+  message: 'Too many emails sent from this IP, please try again after 2 minutes'
+});
 
 
 
@@ -100,7 +108,8 @@ app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is
 app.post('/manager/registeredteams/:team/approve', requireLovatSignature, approveRegisteredTeam) //tested waiting for new middle ware
 app.post('/manager/registeredteams/:team/reject', requireLovatSignature, rejectRegisteredTeam) // tested, waiting for new middle ware
 app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
-app.post('/manager/registeredteams/verifyemail', requireLovatSignature, approveTeamEmail)
+app.post('/manager/registeredteams/verifyemail', requireLovatSignature, approveTeamEmail) // tested
+app.post('/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail)
 
 
 

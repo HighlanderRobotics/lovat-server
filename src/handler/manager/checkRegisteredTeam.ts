@@ -47,7 +47,7 @@ export const checkRegisteredTeam = async (req: AuthenticatedRequest, res: Respon
                         res.status(200).send("REGISTERED")
                     }
                     else {
-                        res.status(200).send("PENDING_TEAM_VERIFICATION")
+                        res.status(200).send({status : "PENDING_TEAM_VERIFICATION", teamEmail : row.email})
                     }
                 }
                 else
