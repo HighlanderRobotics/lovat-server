@@ -25,11 +25,11 @@ export const approveTeamEmail = async (req: Request, res: Response): Promise<voi
            })
            if(row === null)
            {
-            res.status(404).send("Team has not begun registration procsess or code is not correct")
+            res.status(404).send("CODE_NOT_RECOGNIZED")
            }
            else if(row.emailVerified)
            {
-            res.status(400).send("Team email already verified")
+            res.status(400).send("EMAIL_ALREADY_VERIFIED")
            }
            else
            {
