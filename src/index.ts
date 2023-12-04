@@ -37,6 +37,7 @@ import { updatePicklist } from "./handler/manager/updatePicklist";
 import { updateMutablePicklist } from "./handler/manager/updateMutablePicklist";
 import { addWebsite } from "./handler/manager/addWebsite";
 import requireLovatSignature from "./lib/middleware/requireLovatSignature";
+import { approveTeamEmail } from "./handler/manager/approveTeamEmail";
 
 
 
@@ -98,7 +99,8 @@ app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
 app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
 app.post('/manager/registeredteams/:team/approve', requireLovatSignature, approveRegisteredTeam) //tested waiting for new middle ware
 app.post('/manager/registeredteams/:team/reject', requireLovatSignature, rejectRegisteredTeam) // tested, waiting for new middle ware
-app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite)
+app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
+app.post('/manager/registeredteams/:team/verifyemail', requireLovatSignature, approveTeamEmail)
 
 
 
