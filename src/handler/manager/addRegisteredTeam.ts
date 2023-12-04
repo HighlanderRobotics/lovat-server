@@ -22,22 +22,32 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             res.status(400).send(params);
             return;
         };
-   
+
         const toggleFeatureRow = await prismaClient.featureToggle.findUnique({
             where: {
                 feature: "fullRegistration"
             }
         })
         if (!toggleFeatureRow.enabled) {
-            params.data["teamApproved"] = true
+            const row = await prismaClient.registeredTeam.create({
+                data: {
+                    email: params.data.email,
+                    number: params.data.number,
+                    code: params.data.code,
+                    teamApproved : true,
+                }
+            })
         }
-        const row = await prismaClient.registeredTeam.create({
-            data: {
-                email : params.data.email,
-                number : params.data.number,
-                code : params.data.code
-            }
-        })
+        else {
+            const row = await prismaClient.registeredTeam.create({
+                data: {
+                    email: params.data.email,
+                    number: params.data.number,
+                    code: params.data.code
+                }
+            })
+        }
+
         const user = req.user
 
         const userRow = await prismaClient.user.update({
