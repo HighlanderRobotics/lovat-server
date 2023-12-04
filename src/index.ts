@@ -108,7 +108,7 @@ app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is
 app.post('/manager/registeredteams/:team/approve', requireLovatSignature, approveRegisteredTeam) //tested waiting for new middle ware
 app.post('/manager/registeredteams/:team/reject', requireLovatSignature, rejectRegisteredTeam) // tested, waiting for new middle ware
 app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
-app.post('/manager/registeredteams/verifyemail', requireLovatSignature, approveTeamEmail) // tested
+app.post('/manager/onboarding/verifyemail', requireLovatSignature, approveTeamEmail)
 app.post('/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail)
 
 
