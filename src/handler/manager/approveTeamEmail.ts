@@ -18,15 +18,33 @@ export const approveTeamEmail = async (req: Request, res: Response): Promise<voi
             res.status(400).send(params);
             return;
         };
-           const rows = await prismaClient.registeredTeam.update({
+           const row = await prismaClient.registeredTeam.findUnique({
                where: {
                 code : params.data.code
-               },
-               data: {
-                emailVerified : true
                }
            })
-        res.status(200).send(rows);
+           if(row === null)
+           {
+            res.status(404).send("Team has not begun registration procsess or code is not correct")
+           }
+           else if(row.emailVerified)
+           {
+            res.status(400).send("Team email already verified")
+           }
+           else
+           {
+                const changeRow = await prismaClient.registeredTeam.update({
+                    where : {
+                        code : params.data.code
+                    },
+                    data : 
+                    {
+                        emailVerified : true
+                    }
+                })
+                res.status(200).send("Team email sucsessfully verified")
+
+           }
     }
     catch(error)
     {
