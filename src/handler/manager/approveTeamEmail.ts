@@ -9,9 +9,9 @@ export const approveTeamEmail = async (req: Request, res: Response): Promise<voi
 
         
         const params = z.object({
-            number : z.number().min(0)
+            code : z.string()
         }).safeParse({
-            number: Number(req.params.team)
+            code: req.body.code
         })
 
         if (!params.success) {
@@ -20,7 +20,7 @@ export const approveTeamEmail = async (req: Request, res: Response): Promise<voi
         };
            const rows = await prismaClient.registeredTeam.update({
                where: {
-                number : params.data.number
+                code : params.data.code
                },
                data: {
                 emailVerified : true
