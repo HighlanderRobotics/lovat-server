@@ -25,6 +25,16 @@ export const checkCode = async (req: AuthenticatedRequest, res: Response): Promi
         if (teamRegistered) {
             if(teamRegistered.code === req.query.code)
             {
+                await prismaClient.user.update({
+                    where : 
+                    {
+                        id : req.user.id
+                    },
+                    data :
+                    {
+                        teamNumber : teamRegistered.number
+                    }
+                })
                 res.status(200).send(true)
             }
             else
