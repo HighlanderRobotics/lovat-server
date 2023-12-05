@@ -36,7 +36,7 @@ export const checkCode = async (req: AuthenticatedRequest, res: Response): Promi
         }
         else
         {
-            res.status(401).send("team not found")
+            res.status(404).send("team not found")
 
         }
 
