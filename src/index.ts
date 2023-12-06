@@ -40,6 +40,7 @@ import requireLovatSignature from "./lib/middleware/requireLovatSignature";
 import { approveTeamEmail } from "./handler/manager/approveTeamEmail";
 import rateLimit from 'express-rate-limit';
 import { resendEmail } from "./handler/manager/resendEmail";
+import { getProfile } from "./handler/manager/getProfile";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -110,6 +111,7 @@ app.post('/manager/registeredteams/:team/reject', requireLovatSignature, rejectR
 app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
 app.post('/manager/onboarding/verifyemail', requireLovatSignature, approveTeamEmail)
 app.post('/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail)
+app.get('/manager/profile', requireAuth, getProfile)
 
 
 
