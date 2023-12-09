@@ -103,7 +103,7 @@ export const addTournamentMatches = async (tournamentKey) => {
                             tournamentKey: tournamentKey,
                             matchNumber: nonQM,
                             teamNumber: currTeam,
-                            matchType: 'ELIINATION'
+                            matchType: 'ELIMINATION'
                         })
                 
                         if (!params.success) {
@@ -140,7 +140,7 @@ export const addTournamentMatches = async (tournamentKey) => {
 
     }
     catch (error) {
-        console.log(error)
+        console.log(error.error)
         throw("Error adding tournament matches")
     }
 }
