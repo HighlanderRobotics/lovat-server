@@ -47,6 +47,10 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 where:
                 {
                     tournamentKey: params.data.tournamentKey,
+                },
+                orderBy : 
+                {
+                    teamNumber : 'asc'
                 }
             })
             if (!matches) {
@@ -70,7 +74,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                             }
                         }
                     }
+                },
+                orderBy : 
+                {
+                    teamNumber : 'asc'
                 }
+                
             })
         }
         //find non scouted matches (not scouted from user.sourceTeam)
@@ -91,6 +100,10 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                             }
                         }
                     }
+                },
+                orderBy : 
+                {
+                    teamNumber : 'asc'
                 }
             })
 
@@ -106,7 +119,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 }
             },
         })
-        //filter out matches by if they include all the teams or not
+        //filter out matches by if they include all the teams the user wants to see or not
         let finalMatches = []
         if (params.data.teamNumbers !== null && params.data.teamNumbers.length > 0 && params.data.teamNumbers.length <= 6) {
             for (let i = 0; i < matchKeyAndNumber.length; i++) {
@@ -140,7 +153,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     matchNumber: element.matchNumber,
                     matchType: element.matchType,
                     tournamentKey: params.data.tournamentKey
-                }
+                },
             })
             if (currMatch.length != 6) {
                 res.status(400).send(`Matches not added correctly, does not have 6 teams for match ${element.matchNumber} of type ${element.matchType}`)
@@ -148,16 +161,61 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             }
             let currData = {
                 tournamentKey: params.data.tournamentKey, matchNumber: element.matchNumber, matchType: element.matchType,
-                teamOne: { number: currMatch[0].teamNumber, alliance: "red" },
-                teamTwo: { number: currMatch[1].teamNumber, alliance: "red" },
-                teamThree: { number: currMatch[2].teamNumber, alliance: "red" },
-                teamFour: { number: currMatch[3].teamNumber, alliance: "blue" },
-                teamFive: { number: currMatch[4].teamNumber, alliance: "blue" },
-                teamSix: { number: currMatch[5].teamNumber, alliance: "blue" },
+                team1: { number: currMatch[0].teamNumber, alliance: "red", scouters: [] },
+                team2: { number: currMatch[1].teamNumber, alliance: "red", scouters: [] },
+                team3: { number: currMatch[2].teamNumber, alliance: "red", scouters: [] },
+                team4: { number: currMatch[3].teamNumber, alliance: "blue", scouters: [] },
+                team5: { number: currMatch[4].teamNumber, alliance: "blue", scouters: [] },
+                team6: { number: currMatch[5].teamNumber, alliance: "blue", scouters: [] },
 
             }
             finalFormatedMatches.push(currData)
         };
+        finalFormatedMatches.sort((a, b) => a.matchNumber - b.matchNumber);
+        if (user.teamNumber != null) {
+            const scouterShifts = await prismaClient.scouterScheduleShift.findMany({
+                where:
+                {
+                    tournamentKey: params.data.tournamentKey,
+                    sourceTeamNumber: user.teamNumber
+                }
+            })
+            let currIndex = 0
+            if (scouterShifts.length !== 0) {
+
+
+                for (const element of finalFormatedMatches) {
+                    let scoutersExist = true
+
+                    while (scouterShifts[currIndex].endMatchOrdinalNumber < element.matchNumber) {
+                        currIndex += 1
+                        if (currIndex >= scouterShifts.length) {
+                            scoutersExist = false
+                            break
+                        }
+
+                    }
+                    if(scoutersExist)
+                    {
+                        await addScoutedTeam(scouterShifts, currIndex, "team1", element)
+                        await addScoutedTeam(scouterShifts, currIndex, "team2", element)
+                        await addScoutedTeam(scouterShifts, currIndex, "team3", element)
+                        await addScoutedTeam(scouterShifts, currIndex, "team4", element)
+                        await addScoutedTeam(scouterShifts, currIndex, "team5", element)
+                        await addScoutedTeam(scouterShifts, currIndex, "team6", element)
+                    }
+                    else
+                    {
+                        break
+                    }
+                   
+
+                }
+            }
+
+
+
+        }
         res.status(200).send(finalFormatedMatches);
     }
     catch (error) {
@@ -166,3 +224,16 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
     }
 
 };
+
+
+async function addScoutedTeam(scouterShifts, currIndex, team, match) {
+    for (const scouterUuid of scouterShifts[currIndex][team]) {
+        const scouter = await prismaClient.scouter.findUnique({
+            where:
+            {
+                uuid: scouterUuid
+            }
+        })
+        match[team].scouters.push(scouter.name)
+    }
+}
