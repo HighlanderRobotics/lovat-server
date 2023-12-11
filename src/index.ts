@@ -42,6 +42,8 @@ import rateLimit from 'express-rate-limit';
 import { resendEmail } from "./handler/manager/resendEmail";
 import { getProfile } from "./handler/manager/getProfile";
 import { deleteUser } from "./handler/manager/deleteUser";
+import { getUsers } from "./handler/manager/getUsers";
+import { updateRoleToScoutingLead } from "./handler/manager/updateRoleToScoutingLead";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -114,7 +116,10 @@ app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
 app.post('/manager/onboarding/verifyemail', requireLovatSignature, approveTeamEmail) //tested
 app.post('/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail) //tested
 app.get('/manager/profile', requireAuth, getProfile) //tested
-app.delete('/manager/user', requireAuth, deleteUser)
+app.delete('/manager/user', requireAuth, deleteUser) // tested
+app.get('/manager/users', requireAuth, getUsers) //tested
+app.post('/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
+
 
 
 

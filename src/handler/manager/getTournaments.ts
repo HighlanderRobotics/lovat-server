@@ -2,11 +2,13 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z, { ZodNumber } from 'zod'
 import { unwatchFile } from "fs";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { userInfo } from "os";
 
 
-export const getTournaments = async (req: Request, res: Response): Promise<void> => {
+export const getTournaments = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        let rows = []
+        let rows = await prismaClient.tournament.findMany({})
         if (req.query.filter != undefined) {
             if (req.query.skip != undefined) {
                 if (req.query.take != undefined) {
@@ -28,7 +30,7 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
                         res.status(400).send(params);
                         return;
                     };
-                     rows = await prismaClient.tournament.findMany({
+                    let rows = await prismaClient.tournament.findMany({
                         take: params.data.take,
                         skip: params.data.skip,
                         where:
@@ -193,6 +195,29 @@ export const getTournaments = async (req: Request, res: Response): Promise<void>
         else
         {
             count = (await prismaClient.tournament.findMany({})).length
+        }
+        if(req.user.teamNumber !== null)
+        {
+
+            const teamTournaments = await prismaClient.teamMatchData.groupBy({
+                by : ['tournamentKey'],
+                where : 
+                {
+                    teamNumber : req.user.teamNumber
+                }
+              
+            })
+            const presentTeamTournaments = []
+            for(let i = 0; i < rows.length; i ++)
+            {
+                if(teamTournaments.some(obj => obj.tournamentKey === rows[i].key))
+                {
+                    presentTeamTournaments.push(rows[i])
+                    rows.splice(i, 1)
+                    i--;
+                }
+            }
+            rows = presentTeamTournaments.concat(rows)
         }
         res.status(200).send({tournaments : rows, count : count})
 
