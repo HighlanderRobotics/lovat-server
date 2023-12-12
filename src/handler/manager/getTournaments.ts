@@ -8,7 +8,12 @@ import { userInfo } from "os";
 
 export const getTournaments = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        let rows = await prismaClient.tournament.findMany({})
+        let rows = await prismaClient.tournament.findMany({
+            orderBy : 
+            {
+                date : 'asc'
+            }
+        })
         if (req.query.filter != undefined) {
             if (req.query.skip != undefined) {
                 if (req.query.take != undefined) {
@@ -37,6 +42,10 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
                         {
                             OR: [{ key: { contains: params.data.filter } },
                             { name: { contains: params.data.filter } }]
+                        },
+                        orderBy : 
+                        {
+                            date : 'asc'
                         }
 
 
@@ -66,6 +75,10 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
                         {
                             OR: [{ key: { contains: params.data.filter } },
                             { name: { contains: params.data.filter } }]
+                        },
+                        orderBy : 
+                        {
+                            date : 'asc'
                         }
 
 
@@ -92,6 +105,10 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
                         {
                             OR: [{ key: { contains: params.data.filter } },
                             { name: { contains: params.data.filter } }]
+                        },
+                        orderBy : 
+                        {
+                            date : 'asc'
                         }
 
 
@@ -113,6 +130,10 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
                         {
                             OR: [{ key: { contains: params.data.filter } },
                             { name: { contains: params.data.filter } }]
+                        },
+                        orderBy : 
+                        {
+                            date : 'asc'
                         }
 
 
@@ -136,7 +157,11 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
                     };
                      rows = await prismaClient.tournament.findMany({
                         take: params.data.take,
-                        skip: params.data.skip
+                        skip: params.data.skip,
+                        orderBy : 
+                        {
+                            date : 'asc'
+                        }
 
                     })
                 }
@@ -153,6 +178,10 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
 
                      rows = await prismaClient.tournament.findMany({
                         take: params.data.take,
+                        orderBy : 
+                        {
+                            date : 'asc'
+                        }
                     })
                 }
 
@@ -169,13 +198,14 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
                         return;
                     };
                     rows = await prismaClient.tournament.findMany({
-                        skip: params.data.skip
+                        skip: params.data.skip,
+                        orderBy : 
+                        {
+                            date : 'asc'
+                        }
                     })
                 }
-                else {
-                    rows = await prismaClient.tournament.findMany({})
-
-                }
+               
             }
         }
         let count = 0
@@ -186,6 +216,10 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
                 {
                     OR: [{ key: { contains: req.query.filter as string} },
                     { name: { contains: req.query.filter as string } }]
+                },
+                orderBy : 
+                {
+                    date : 'asc'
                 }
 
 
@@ -204,7 +238,8 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
                 where : 
                 {
                     teamNumber : req.user.teamNumber
-                }
+                },
+                
               
             })
             const presentTeamTournaments = []

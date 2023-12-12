@@ -1,11 +1,13 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
-export const getTeams = async (req: Request, res: Response): Promise<void> => {
+export const getTeams = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         let rows = []
+        //get teams based on the query parmeters: take, skip, and filter (some may be null)
         if (req.query.filter != undefined) {
             if (req.query.skip != undefined) {
                 if (req.query.take != undefined) {
@@ -136,6 +138,7 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
                 }
             }
         }
+        //get count
         let count = 0
         if(req.query.filter != undefined)
         {
@@ -145,6 +148,17 @@ export const getTeams = async (req: Request, res: Response): Promise<void> => {
         else
         {
             count = (await prismaClient.team.findMany({})).length
+        }
+        //put users team on top
+        if(req.user.teamNumber !== null)
+        {
+            if(rows.some(obj => obj.number === req.user.teamNumber))
+            {
+                let indexOfTeamNumber = rows.findIndex(obj => obj.number === req.user.teamNumber);
+                rows.unshift(rows[indexOfTeamNumber]); 
+                rows.splice(indexOfTeamNumber + 1, 1)
+                console.log(rows)
+            }
         }
         res.status(200).send({teams : rows, count : count})
     }
