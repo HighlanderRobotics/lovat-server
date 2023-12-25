@@ -2,9 +2,11 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import { match } from "assert";
 import z from 'zod'
+import { singleMatchSingleScouter } from "../analysis/singleMatchSingleScouter";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
-export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
+export const addScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
 
 
     try {
@@ -117,7 +119,20 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 return;
             };
         }
-        res.status(200).send('done editing data');
+        const totalPoints = await singleMatchSingleScouter(req,  "", true, matchKey, matchData.scouterUuid)
+        //recalibrate the max resonable points for every year 
+        if(totalPoints === 0 || totalPoints > 80)
+        {
+           await prismaClient.flaggedScoutReport.create({
+                data :
+                {
+                    note : `${totalPoints} recorded`,
+                    scoutReportUuid : scoutReportUuid
+                }
+                
+            })
+        }
+        res.status(200).send('done adding data');
     }
 
     catch (error) {
