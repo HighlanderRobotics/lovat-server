@@ -3,7 +3,7 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { arrayAndAverage } from "./arrayAndAverage";
+import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 
 
 export const nonEventMetric = async (req: AuthenticatedRequest, team : number, metric: string): Promise<Object> => {

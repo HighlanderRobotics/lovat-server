@@ -2,12 +2,10 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { arrayAndAverage } from "./arrayAndAverage";
 import { nonEventMetric } from "./nonEventMetric";
 
 
-export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response): Promise<Object> => {
+export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response) => {
     try {
         const params = z.object({
            team : z.number()
@@ -23,6 +21,7 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
         metrics.forEach(async element => {
             result[element] = await nonEventMetric(req, params.data.team, element )
         });
+        res.status(200).send(metrics)
     }
     catch (error) {
        res.status(400).send(error)

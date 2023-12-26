@@ -44,6 +44,9 @@ import { getProfile } from "./handler/manager/getProfile";
 import { deleteUser } from "./handler/manager/deleteUser";
 import { getUsers } from "./handler/manager/getUsers";
 import { updateRoleToScoutingLead } from "./handler/manager/updateRoleToScoutingLead";
+import { detailsPage } from "./handler/analysis/detailsPage";
+import { categoryMetrics } from "./handler/analysis/categoryMetrics";
+import { breakdownMetrics } from "./handler/analysis/breakdownMetrics";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -119,6 +122,13 @@ app.get('/manager/profile', requireAuth, getProfile) //tested
 app.delete('/manager/user', requireAuth, deleteUser) // tested
 app.get('/manager/users', requireAuth, getUsers) //tested
 app.post('/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
+
+
+
+//analysis
+app.get('/analysis/metric/:metric/team/:team', requireAuth, detailsPage)
+app.get('/analysis/team/:team', requireAuth, categoryMetrics)
+app.get('/analysis/breakdown/team/:team', breakdownMetrics) //change name ??
 
 
 

@@ -53,6 +53,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
 
                 }
             })
+            //should be null if the data doesnt exist
             return sumOfMatches._avg.driverAbility
         }
         else if (isPointAverage) {
