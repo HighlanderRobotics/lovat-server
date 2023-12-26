@@ -6,18 +6,32 @@ import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverage } from "./arrayAndAverage";
 
 
-export const categoryMetrics = async (req: AuthenticatedRequest, metric: string, team : number): Promise<Object> => {
+export const categoryMetrics = async (req: AuthenticatedRequest, res: Response): Promise<Object> => {
     try {
-       const metricNameArray = ["teleopPoints", "autoPoints", "totalPoints", "driverAbility", "defense"]
-       let result = {}
-       metricNameArray.forEach(async element => {
-            result[element] = await arrayAndAverage(req, element, team)
-       });
-        return {metricNameArray}
+        const params = z.object({
+            team : z.number()
+         }).safeParse({
+             team : req.params.team
+         })
+         if (!params.success) {
+             res.status(400).send(params);
+             return;
+         };
+        const eventMetricArray = ["teleopPoints", "autoPoints", "totalPoints", "defense"]
+        const nonEventMetricArray = ["driverAbility"]
+        let result = {}
+        eventMetricArray.forEach(async element => {
+            result[element] = await arrayAndAverage(req, element, params.data.team)
+        })
+        nonEventMetricArray.forEach(async element => {
+            //update if statments in arrayAndAverage if the metric needs to look at scoutReport instead of events table
+            result[element] = await arrayAndAverage(req, element, params.data.team)
+        })
+        return result
     }
     catch (error) {
         console.error(error)
-        throw (error)
+        res.status(400).send(error)
     }
 
 };

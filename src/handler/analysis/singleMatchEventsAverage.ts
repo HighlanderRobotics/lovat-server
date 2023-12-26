@@ -4,10 +4,59 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
-export const singleMatchEventsAverage = async (req: AuthenticatedRequest, metric, isPointAverage: boolean, matchKey: string, team: number): Promise<number> => {
+export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric : string): Promise<number> => {
     try {
+        //DO SOME GAME SPECIFIC PROCESSING THAT CONVERTS THE METRIC TO THE ENUM/OTHER NAME
 
-        if (isPointAverage) {
+
+        const params = z.object({
+            metric: z.enum(["PICK_UP_CONE",
+                "PICK_UP_CUBE",
+                "PLACE_OBJECT",]),
+            team : z.number()
+        }).safeParse({
+            metric: metric,
+            team : team
+        })
+        if (!params.success) {
+            throw (params)
+        };
+
+        if (metric === "driverAbility") {
+            
+         
+            const sumOfMatches = await prismaClient.scoutReport.aggregate({
+                _avg:
+                {
+                    driverAbility: true
+                },
+                where:
+                {
+                    teamMatchKey: matchKey,
+                    teamMatchData:
+                    {
+                        //shouldnt be looking at tournaments not in their data set but im just checking
+                        //maybe if they are delibratly looking at a tournament not in their fata set we should give a notification or something?
+                        tournamentKey: {
+                            in: req.user.tournamentSource
+                        },
+                        teamNumber : params.data.team
+                    },
+                    scouter:
+                    {
+                        sourceTeamNumber:
+                        {
+                            in: req.user.teamSource
+                        }
+                    },
+
+
+                }
+            })
+            return sumOfMatches._avg.driverAbility
+        }
+        else if (isPointAverage) {
+       
             let timeMin = 0
             //could be 150, but putting more for buffer for now
             let timeMax = 200
@@ -16,13 +65,12 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest, metric
                 //18 and not 17 so it doesnt double count things that happen on the 17 mark when calculating teleop/auto averages (see primsa below)
                 timeMin = 18
             }
-            else if(metric === "autoPoints")
-            {
+            else if (metric === "autoPoints") {
                 timeMax = 17
             }
-           
-            else {
 
+            else {
+               
 
                 const sumOfMatches = await prismaClient.event.groupBy({
                     by: ["scoutReportUuid"],
@@ -36,12 +84,12 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest, metric
                             teamMatchKey: matchKey,
                             teamMatchData:
                             {
-                                teamNumber: team,
                                 //shouldnt be looking at tournaments not in their data set but im just checking
                                 //maybe if they are delibratly looking at a tournament not in their fata set we should give a notification or something?
                                 tournamentKey: {
                                     in: req.user.tournamentSource
-                                }
+                                },
+                                teamNumber : params.data.team
                             },
                             scouter:
                             {
@@ -52,10 +100,10 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest, metric
                             },
 
                         },
-                        action: metric,
-                        time : {
-                          gte : timeMin,
-                          lte : timeMax
+                        action: params.data.metric,
+                        time: {
+                            gte: timeMin,
+                            lte: timeMax
                         }
 
                     }
@@ -63,10 +111,11 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest, metric
                 const average = sumOfMatches.reduce((acc, val) => acc + val._sum.points, 0) / sumOfMatches.length;
                 return average
             }
-            
+
 
         }
         else {
+            
             const sumOfMatches = await prismaClient.event.groupBy({
                 by: ["scoutReportUuid"],
                 _count:
@@ -79,12 +128,12 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest, metric
                         teamMatchKey: matchKey,
                         teamMatchData:
                         {
-                            teamNumber: team,
                             //shouldnt be looking at tournaments not in their data set but im just checking
                             //maybe if they are delibratly looking at a tournament not in their fata set we should give a notification or something?
                             tournamentKey: {
                                 in: req.user.tournamentSource
-                            }
+                            },
+                            teamNumber : params.data.team
                         },
                         scouter:
                         {
@@ -95,7 +144,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest, metric
                         },
 
                     },
-                    action: metric
+                    action: params.data.metric
 
                 }
             })

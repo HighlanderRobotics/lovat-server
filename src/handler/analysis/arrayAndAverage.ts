@@ -6,8 +6,16 @@ import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { time } from "console";
 
 
-export const arrayAndAverage = async (req: AuthenticatedRequest, metric: string, team : number): Promise<Object> => {
+export const arrayAndAverage = async (req: AuthenticatedRequest, metric : string, team : number): Promise<Object> => {
     try {
+        const params = z.object({
+            team : z.number()
+         }).safeParse({
+             team : team
+         })
+         if (!params.success) {
+             throw(params)
+         };
         const matchKeys = await prismaClient.teamMatchData.findMany({
             where : {
                 tournamentKey : 
@@ -29,7 +37,7 @@ export const arrayAndAverage = async (req: AuthenticatedRequest, metric: string,
         })
         const timeLineArray = []
         matchKeys.forEach(element => {
-            timeLineArray.push( {match : element.key, dataPoint : singleMatchEventsAverage(req, metric,  metric.includes("point") ||  metric.includes("points"), element.key, team )})
+            timeLineArray.push( {match : element.key, dataPoint : singleMatchEventsAverage(req, metric.includes("point") ||  metric.includes("points"), element.key, team, metric)})
         });
         const average = timeLineArray.reduce((acc, cur) => acc + cur.dataPoint, 0) / timeLineArray.length;
         return {
