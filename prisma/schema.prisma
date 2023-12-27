@@ -126,7 +126,7 @@ model ScouterScheduleShift {
 
 model Scouter {
   uuid               String         @id @default(uuid())
-  name               String
+  name               String?
   sourceTeamNumber   Int
   sourceTeam         RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number])
   strikes            Int            @default(0)

@@ -25,7 +25,7 @@ import { addUsername } from "./handler/manager/addUsername";
 import { getTeams } from "./handler/manager/getTeams";
 import {updateScouterShift} from './handler/manager/updateScouterShift'
 import getTBAData from "./lib/getTBAData";
-import { checkCode } from "./handler/manager/checkCode";
+import { getCode } from "./handler/manager/getCode";
 import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
 import { addScoutReport } from "./handler/manager/addScoutReport";
@@ -47,6 +47,8 @@ import { updateRoleToScoutingLead } from "./handler/manager/updateRoleToScouting
 import { detailsPage } from "./handler/analysis/detailsPage";
 import { categoryMetrics } from "./handler/analysis/categoryMetrics";
 import { breakdownMetrics } from "./handler/analysis/breakdownMetrics";
+import { checkCodeScouter } from "./handler/manager/checkCodeScouter";
+import { addNameScouter } from "./handler/manager/addNameScouter";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -109,7 +111,7 @@ app.put('/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) /
 //onboarding endpoints
 app.get('/manager/registeredteams/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested
 app.post('/manager/onboarding/username', requireAuth,addUsername) //tested
-app.post('/manager/onboarding/teamcode',requireAuth,  checkCode) //tested
+app.post('/manager/onboarding/teamcode',requireAuth,  getCode) //tested
 app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
 app.post('/manager/settings/tournamentsource', requireAuth, addTournamentSource)
 app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
@@ -124,11 +126,16 @@ app.get('/manager/users', requireAuth, getUsers) //tested
 app.post('/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
 
 
+//scouter onboarding
+app.get('/manager/scouter/checkcode', checkCodeScouter) //change name/where request data is coming from/response format as needed 
+app.post('/manager/name', addNameScouter) //change name/where request data is coming from/response format as needed 
+
 
 //analysis
 app.get('/analysis/metric/:metric/team/:team', requireAuth, detailsPage)
 app.get('/analysis/team/:team', requireAuth, categoryMetrics)
 app.get('/analysis/breakdown/team/:team', breakdownMetrics) //change name ??
+
 
 
 
