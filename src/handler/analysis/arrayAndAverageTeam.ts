@@ -6,7 +6,7 @@ import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { time } from "console";
 
 
-export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric : string, team : number): Promise<{average : number, timeLine : Array<number>}> => {
+export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric : string, team : number): Promise<{average : number, timeLine : Array<{match : string, dataPoint : number}>}> => {
     try {
         const params = z.object({
             team : z.number(),
@@ -36,8 +36,8 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric : st
             }
         })
         const timeLineArray = []
-        matchKeys.forEach(element => {
-            const currData = singleMatchEventsAverage(req, metric.includes("point") ||  metric.includes("points"), element.key, team, metric)
+        matchKeys.forEach(async element => {
+            const currData = await singleMatchEventsAverage(req, metric.includes("point") ||  metric.includes("points"), element.key, team, metric)
             if(currData !== null)
             {
                 timeLineArray.push( {match : element.key, dataPoint : currData})
