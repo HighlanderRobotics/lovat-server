@@ -23,6 +23,7 @@ export const checkCodeScouter = async (req: Request, res: Response): Promise<voi
                 code: params.data.code
             }
         })
+        console.log(teamWithCode)
         if(teamWithCode === null)
         {
             //not a valid code
@@ -30,13 +31,7 @@ export const checkCodeScouter = async (req: Request, res: Response): Promise<voi
         }
         else
         {
-            const newScouter = await prismaClient.scouter.create({
-                data : 
-                {
-                    sourceTeamNumber : teamWithCode.number,
-                }
-            })
-            res.status(200).send(newScouter)
+            res.status(200).send(teamWithCode)
         }
 
     }

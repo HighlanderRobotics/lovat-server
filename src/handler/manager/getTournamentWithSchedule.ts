@@ -4,33 +4,30 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
-export const addNameScouter = async (req: Request, res: Response): Promise<void> => {
+export const getTournamentsWithSchedule = async (req: Request, res: Response): Promise<void> => {
     try {
-
         const params = z.object({
-            uuid: z.string(),
-            name : z.string()
+            uuid: z.string()
         }).safeParse({
-            uuid: req.body.uuid,
-            name : req.body.name
+            uuid: req.params.uuid
         })
         if (!params.success) {
             res.status(400).send(params);
             return;
         };
-        const user = await prismaClient.scouter.update({
-            where : 
-            {
+        const scouter = await prismaClient.scouter.findUnique({
+            where : {
                 uuid : params.data.uuid
-            },
-            data :
-            {
-                name : params.data.name
             }
         })
-        res.status(200).send("done adding name to provided scouter")
-    
-
+        const rows = await prismaClient.scouterScheduleShift.groupBy({
+           by : ["tournamentKey"],
+           where : 
+           {
+                sourceTeamNumber : scouter.sourceTeamNumber
+           }
+        })
+        res.status(200).send(rows);
     }
     catch (error) {
         console.error(error)
@@ -38,5 +35,3 @@ export const addNameScouter = async (req: Request, res: Response): Promise<void>
     }
 
 };
-
-

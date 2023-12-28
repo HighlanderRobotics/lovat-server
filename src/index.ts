@@ -48,8 +48,11 @@ import { detailsPage } from "./handler/analysis/detailsPage";
 import { categoryMetrics } from "./handler/analysis/categoryMetrics";
 import { breakdownMetrics } from "./handler/analysis/breakdownMetrics";
 import { checkCodeScouter } from "./handler/manager/checkCodeScouter";
-import { addNameScouter } from "./handler/manager/addNameScouter";
-import { getScouters } from "./handler/manager/getScouters";
+import { changeNameScouter } from "./handler/manager/changeNameScouter";
+import { getScoutersOnTeam } from "./handler/manager/getScoutersOnTeam";
+import { getTournamentsWithSchedule } from "./handler/manager/getTournamentWithSchedule";
+import { getScheduleForScouter } from "./handler/manager/getScheduleForScouter";
+import { addNewScouter } from "./handler/manager/addNewScouter";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -128,14 +131,18 @@ app.post('/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested
 
 
 //scouter onboarding
-app.get('/manager/scouter/checkcode', checkCodeScouter) //change name/where request data is coming from/response format as needed 
-app.post('/manager/name', addNameScouter) //change name/where request data is coming from/response format as needed 
-app.get('/manager/scouters', getScouters)
+app.get('/manager/scouter/checkcode', checkCodeScouter) //tested change name/where request data is coming from/response format as needed 
+app.post('/manager/name/uuid/:uuid', changeNameScouter) // tested, change name/where request data is coming from/response format as needed 
+app.get('/manager/scouters/team/:team', getScoutersOnTeam) //tested
+app.post('/manager/scouter', addNewScouter) //tested
+//collection app homepage (feel free to change request/response format as needed)
+app.get('/manager/scouters/tournaments/uuid/:uuid', getTournamentsWithSchedule) //tested
+app.get('/manager/scouters/schedules/uuid/:uuid/tournament/:tournament', getScheduleForScouter) //tested
 
 
 //analysis
 app.get('/analysis/metric/:metric/team/:team', requireAuth, detailsPage)
-app.get('/analysis/team/:team', requireAuth, categoryMetrics)
+app.get('/analysis/team/:team', requireAuth, categoryMetrics) 
 app.get('/analysis/breakdown/team/:team', breakdownMetrics) //change name ??
 
 

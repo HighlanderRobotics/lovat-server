@@ -4,28 +4,23 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
-export const getScouters = async (req: Request, res: Response): Promise<void> => {
+export const getScoutersOnTeam = async (req: Request, res: Response): Promise<void> => {
     try {
       
         const params = z.object({
-            scouterUuid: z.string()
+            team : z.number()
         }).safeParse({
-            scouterUuid: req.query.scouterUuid 
+            team : Number(req.params.team)
         })
 
         if (!params.success) {
             res.status(400).send(params);
             return;
         };
-        const team = await prismaClient.scouter.findUnique({
-            where : 
-            {
-                uuid : params.data.scouterUuid
-            }
-        })
+
         const rows = await prismaClient.scouter.findMany({
             where: {
-                sourceTeamNumber : team.sourceTeamNumber
+                sourceTeamNumber : params.data.team
             }
         })
         res.status(200).send(rows);
