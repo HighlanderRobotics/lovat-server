@@ -3,7 +3,6 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { time } from "console";
 
 
 export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric : string): Promise<{average : number, timeLine : Array<number>}> => {

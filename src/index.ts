@@ -49,6 +49,7 @@ import { categoryMetrics } from "./handler/analysis/categoryMetrics";
 import { breakdownMetrics } from "./handler/analysis/breakdownMetrics";
 import { checkCodeScouter } from "./handler/manager/checkCodeScouter";
 import { addNameScouter } from "./handler/manager/addNameScouter";
+import { getScouters } from "./handler/manager/getScouters";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -129,6 +130,7 @@ app.post('/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested
 //scouter onboarding
 app.get('/manager/scouter/checkcode', checkCodeScouter) //change name/where request data is coming from/response format as needed 
 app.post('/manager/name', addNameScouter) //change name/where request data is coming from/response format as needed 
+app.get('/manager/scouters', getScouters)
 
 
 //analysis
