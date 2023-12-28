@@ -15,9 +15,9 @@ export const alliancePageResponse = async (req: AuthenticatedRequest, res : Resp
             team2 : z.number(),
             team3 : z.number()
         }).safeParse({
-            team1 : req.query.teamOne,
-            team2 : req.query.teamTwo,
-            team3 : req.query.teamThree
+            team1 : Number(req.query.teamOne),
+            team2 : Number(req.query.teamTwo),
+            team3 : Number(req.query.teamThree)
         })
         if (!params.success) {
             res.status(400).send(params);

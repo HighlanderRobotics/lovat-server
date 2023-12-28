@@ -13,7 +13,7 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric :
                 tournamentKey : 
                 {
                     in : req.user.tournamentSource
-                }
+                },
             },
             orderBy :
             {

@@ -12,7 +12,7 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             team: z.number(),
             metric: z.enum(["all avaiable metric options", "go in this array"])
         }).safeParse({
-            team: req.params.team,
+            team: Number(req.params.team),
             metric: req.params.metric
 
         })

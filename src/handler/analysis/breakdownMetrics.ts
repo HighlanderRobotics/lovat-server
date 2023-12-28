@@ -10,7 +10,7 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
         const params = z.object({
            team : z.number()
         }).safeParse({
-            team : req.params.team
+            team : Number(req.params.team)
         })
         if (!params.success) {
             res.status(400).send(params);
