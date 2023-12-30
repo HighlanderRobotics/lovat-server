@@ -53,6 +53,7 @@ import { getScoutersOnTeam } from "./handler/manager/getScoutersOnTeam";
 import { getTournamentsWithSchedule } from "./handler/manager/getTournamentWithSchedule";
 import { getScheduleForScouter } from "./handler/manager/getScheduleForScouter";
 import { addNewScouter } from "./handler/manager/addNewScouter";
+import { updateNotes } from "./handler/manager/updateNotes";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -80,8 +81,8 @@ app.get('/manager/matches/:tournament', requireAuth, getMatches) // should be ab
 
 //scout report
 app.delete('/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // tested
-app.post('/manager/scoutreports',requireAuth, addScoutReport) //
-app.put('/manager/scoutreports/:uuid', requireAuth, ) //
+app.post('/manager/scoutreports',requireAuth, addScoutReport) //tested
+app.put('/manager/notes/:uuid', requireAuth, updateNotes) 
 app.get('/manager/scoutreports/:uuid', getScoutReport ) //tested
 
 
@@ -125,9 +126,12 @@ app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
 app.post('/manager/onboarding/verifyemail', requireLovatSignature, approveTeamEmail) //tested
 app.post('/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail) //tested
 app.get('/manager/profile', requireAuth, getProfile) //tested
-app.delete('/manager/user', requireAuth, deleteUser) // tested
 app.get('/manager/users', requireAuth, getUsers) //tested
 app.post('/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
+
+//dashboard app settings
+app.delete('/manager/user', requireAuth, deleteUser) //tested, is there more to do with Auth0
+
 
 
 //scouter onboarding
@@ -135,6 +139,8 @@ app.get('/manager/scouter/checkcode', checkCodeScouter) //tested change name/whe
 app.post('/manager/name/uuid/:uuid', changeNameScouter) // tested, change name/where request data is coming from/response format as needed 
 app.get('/manager/scouters/team/:team', getScoutersOnTeam) //tested
 app.post('/manager/scouter', addNewScouter) //tested
+
+
 //collection app homepage (feel free to change request/response format as needed)
 app.get('/manager/scouters/tournaments/uuid/:uuid', getTournamentsWithSchedule) //tested
 app.get('/manager/scouters/schedules/uuid/:uuid/tournament/:tournament', getScheduleForScouter) //tested

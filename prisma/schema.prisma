@@ -24,6 +24,7 @@ enum EventAction {
   PICK_UP_CONE
   PICK_UP_CUBE
   PLACE_OBJECT
+  DEFENSE
 }
 
 model FeatureToggle {

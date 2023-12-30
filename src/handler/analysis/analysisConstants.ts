@@ -1,6 +1,13 @@
-const metrics =  ["PICK_UP_CONE",
-"PICK_UP_CUBE",
-"PLACE_OBJECT",]
-const picklistSliders = ["put", "slicerNames", "here"]
+// const metrics =  ["PICK_UP_CONE",
+// "PICK_UP_CUBE",
+// "PLACE_OBJECT",]
+// const picklistSliders = ["put", "slicerNames", "here"]
 
-export { metrics, picklistSliders };
+// export { metrics, picklistSliders };
+
+// metric names:
+
+//totalPointsTeleop
+//totalPointsAuto
+//totalPoints
+//defense

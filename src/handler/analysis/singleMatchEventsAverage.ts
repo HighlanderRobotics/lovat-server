@@ -4,10 +4,10 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
-export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric : string): Promise<number> => {
+export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric : string, timeMin: number = 0, timeMax : number = 300): Promise<number> => {
     try {
         //DO SOME GAME SPECIFIC PROCESSING THAT CONVERTS THE METRIC TO THE ENUM/OTHER NAME
-
+        const mapMetricsToEnums = {defense : "DEFENSE"}
 
         const params = z.object({
             metric: z.enum(["PICK_UP_CONE",
@@ -58,18 +58,10 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
         }
         else if (isPointAverage) {
        
-            let timeMin = 0
-            //could be 150, but putting more for buffer for now
-            let timeMax = 200
-            if (metric === "teleopPoints") {
-                //3 sec inbetween teleop and auto where things are still counted, I will put a 3 sec buffer for now
-                //18 and not 17 so it doesnt double count things that happen on the 17 mark when calculating teleop/auto averages (see primsa below)
-                timeMin = 18
-            }
-            else if (metric === "autoPoints") {
-                timeMax = 17
-            }
+           if(metric === "totalPointsTeleop")
+           {
 
+           }
             else {
                
 
@@ -102,9 +94,10 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
 
                         },
                         action: params.data.metric,
-                        time: {
-                            gte: timeMin,
-                            lte: timeMax
+                        time : 
+                        {
+                            lt : timeMax,
+                            gt : timeMin
                         }
 
                     }
@@ -145,7 +138,12 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                         },
 
                     },
-                    action: params.data.metric
+                    action: params.data.metric,
+                    time : 
+                    {
+                        lt : timeMax,
+                        gt : timeMin
+                    }
 
                 }
             })
