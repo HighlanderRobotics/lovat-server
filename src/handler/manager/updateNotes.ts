@@ -27,6 +27,7 @@ export const updateNotes = async (req: AuthenticatedRequest, res: Response): Pro
         if(userRow.role !== "SCOUTING_LEAD")
         {
             res.status(401).send("Not authorized to edit this note")
+            return
         }
         const row = await prismaClient.scoutReport.update({
             where : 

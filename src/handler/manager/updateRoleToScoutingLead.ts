@@ -34,7 +34,12 @@ export const updateRoleToScoutingLead = async (req: AuthenticatedRequest, res: R
             res.status(404).send("The user that you are trying to upgrade does not exist")
             return
         }
-        if (user.id === params.data.upgradedUserId || user.role !== "SCOUTING_LEAD" || user.teamNumber !== upgradingUser.teamNumber) {
+        if(user.id === params.data.upgradedUserId)
+        {
+            res.status(200).send("The user you are trying to upgrade is yourself")
+            return
+        }
+        if ( user.role !== "SCOUTING_LEAD" || user.teamNumber !== upgradingUser.teamNumber) {
             res.status(404).send("Not authorized to upgrade the given user")
             return
 

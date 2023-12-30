@@ -4,7 +4,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
   
 
-export const getCode = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const checkCode = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {    
 
         const params = z.object({

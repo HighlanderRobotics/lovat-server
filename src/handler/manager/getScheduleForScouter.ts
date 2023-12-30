@@ -26,7 +26,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
             where:
             {
                 sourceTeamNumber : scouter.sourceTeamNumber,
-                tournamentKey : params.data.tournament
+                tournamentKey : params.data.tournament,
             }
 
         })

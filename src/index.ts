@@ -25,7 +25,7 @@ import { addUsername } from "./handler/manager/addUsername";
 import { getTeams } from "./handler/manager/getTeams";
 import {updateScouterShift} from './handler/manager/updateScouterShift'
 import getTBAData from "./lib/getTBAData";
-import { getCode } from "./handler/manager/getCode";
+import { checkCode } from "./handler/manager/checkCode";
 import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
 import { addScoutReport } from "./handler/manager/addScoutReport";
@@ -54,6 +54,9 @@ import { getTournamentsWithSchedule } from "./handler/manager/getTournamentWithS
 import { getScheduleForScouter } from "./handler/manager/getScheduleForScouter";
 import { addNewScouter } from "./handler/manager/addNewScouter";
 import { updateNotes } from "./handler/manager/updateNotes";
+import { getTeamCode } from "./handler/manager/getTeamCode";
+import { getAnalysts } from "./handler/manager/getAnalysts";
+import { updateSettings } from "./handler/manager/updateSettings";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -116,7 +119,7 @@ app.put('/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) /
 //onboarding endpoints
 app.get('/manager/registeredteams/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested
 app.post('/manager/onboarding/username', requireAuth,addUsername) //tested
-app.post('/manager/onboarding/teamcode',requireAuth,  getCode) //tested
+app.post('/manager/onboarding/teamcode',requireAuth,  checkCode) //tested
 app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
 app.post('/manager/settings/tournamentsource', requireAuth, addTournamentSource)
 app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
@@ -127,10 +130,16 @@ app.post('/manager/onboarding/verifyemail', requireLovatSignature, approveTeamEm
 app.post('/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail) //tested
 app.get('/manager/profile', requireAuth, getProfile) //tested
 app.get('/manager/users', requireAuth, getUsers) //tested
-app.post('/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
 
 //dashboard app settings
 app.delete('/manager/user', requireAuth, deleteUser) //tested, is there more to do with Auth0
+app.post('/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
+app.get('/manger/analysts', requireAuth, getAnalysts) //use for list of people eligable to upgrade ^^^
+app.put('/manager/settings', requireAuth, updateSettings)
+
+
+//get code dahsboard app
+app.get('/manager/code', requireAuth, getTeamCode )
 
 
 
