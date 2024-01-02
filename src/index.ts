@@ -152,7 +152,7 @@ app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterS
 //scouter onboarding
 app.get('/manager/scouter/checkcode', checkCodeScouter) //tested change name/where request data is coming from/response format as needed 
 app.post('/manager/name/uuid/:uuid', changeNameScouter) // tested, change name/where request data is coming from/response format as needed 
-app.get('/manager/scouters/team/:team', getScoutersOnTeam) //tested
+app.get('/manager/teams/:team/scouters', getScoutersOnTeam) //tested
 app.post('/manager/scouter', addNewScouter) //tested
 
 
