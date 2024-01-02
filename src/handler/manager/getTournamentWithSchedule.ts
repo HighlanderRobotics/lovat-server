@@ -25,9 +25,18 @@ export const getTournamentsWithSchedule = async (req: Request, res: Response): P
            where : 
            {
                 sourceTeamNumber : scouter.sourceTeamNumber
-           }
+           },
         })
-        res.status(200).send(rows);
+        const tournamentKeys = rows.map(row => row.tournamentKey);
+        const tournamentInfo = await prismaClient.tournament.findMany({
+            where :
+            {
+                key : {
+                    in : tournamentKeys
+                }             
+            }
+        })
+        res.status(200).send(tournamentInfo);
     }
     catch (error) {
         console.error(error)

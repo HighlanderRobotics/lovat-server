@@ -44,7 +44,7 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
         const uniqueTeamsArray : Array<number> = Array.from(uniqueTeams);
         const timeLineArray = []
         for (const element of uniqueTeamsArray) {
-            timeLineArray.push( (await arrayAndAverageTeam(req, metric, element)).timeLine )
+            timeLineArray.concat((await arrayAndAverageTeam(req, metric, element)).timeLine )
         };
         const average = timeLineArray.reduce((acc, cur) => acc + cur.dataPoint, 0) / timeLineArray.length;
         return {

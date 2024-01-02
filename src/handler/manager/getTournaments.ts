@@ -230,7 +230,7 @@ export const getTournaments = async (req: AuthenticatedRequest, res: Response): 
         {
             count = (await prismaClient.tournament.findMany({})).length
         }
-        if(req.user.teamNumber !== null)
+        if(req.user.teamNumber)
         {
 
             const teamTournaments = await prismaClient.teamMatchData.groupBy({

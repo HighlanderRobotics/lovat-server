@@ -82,7 +82,7 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
     }
     const allTeams = await prismaClient.team.findMany({})
     let includedTeamNumbers: number[] = allTeams.map(team => team.number);
-    if (params.data.tournamentKey !== null) {
+    if (params.data.tournamentKey) {
         const teamsAtTournament = await prismaClient.teamMatchData.groupBy({
             by: ["teamNumber"],
             where:

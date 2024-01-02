@@ -16,7 +16,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric : st
          if (!params.success) {
              throw(params)
          };
-        const matchKeys = await prismaClient.teamMatchData.findMany({
+        let matchKeys = await prismaClient.teamMatchData.findMany({
             where : {
                 tournamentKey : 
                 {
@@ -25,16 +25,21 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric : st
                 teamNumber : team
             },
             orderBy :
-            {
-                tournament :
+            [
                 {
-                    date : "asc"
+                    tournament :{
+                        date : "asc"
+                    } 
                 },
                 //aplhabetical with QUALIFICATION first, then ELIMINATION
-                matchType : "desc",
-                matchNumber : "asc"
-            }
+
+                {matchType : "asc"},
+                {matchNumber : "asc"},
+
+            ]
         })
+       
+        console.log(matchKeys)
         const timeLineArray = []
         for (const element of matchKeys) {
             let currData = null
@@ -51,8 +56,9 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric : st
             {
                 currData = await singleMatchEventsAverage(req, metric.includes("point") ||  metric.includes("Point"), element.key, team, metric)
             }
-            if(currData !== null)
+            if(currData)
             {
+                console.log(currData)
                 timeLineArray.push( {match : element.key, dataPoint : currData})
             }
         };

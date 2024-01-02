@@ -42,7 +42,7 @@ export const checkRegisteredTeam = async (req: AuthenticatedRequest, res: Respon
         else if (row.users[0].id === req.user.id) {
 
             if (row.emailVerified) {
-                if (featureToggle.enabled && row.website != null || featureToggle.enabled === false) {
+                if (featureToggle.enabled && row.website || featureToggle.enabled === false) {
                     if (row.teamApproved) {
                         if(req.user.teamNumber === row.number)
                         {

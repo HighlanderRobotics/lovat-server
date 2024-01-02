@@ -8,20 +8,6 @@ import { driverAbility, matchTimeEnd } from "../analysisConstants";
 export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric : string, timeMin: number = 0, timeMax : number = matchTimeEnd): Promise<number> => {
     try {
         //DO SOME GAME SPECIFIC PROCESSING THAT CONVERTS THE METRIC TO THE ENUM/OTHER NAME
-        const mapMetricsToEnums = {defense : "DEFENSE"}
-
-        const params = z.object({
-            metric: z.enum(["PICK_UP_CONE",
-                "PICK_UP_CUBE",
-                "PLACE_OBJECT",]),
-            team : z.number()
-        }).safeParse({
-            metric: metric,
-            team : team
-        })
-        if (!params.success) {
-            throw (params)
-        };
 
         if (metric === driverAbility) {
             
@@ -41,7 +27,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                         tournamentKey: {
                             in: req.user.tournamentSource
                         },
-                        teamNumber : params.data.team
+                        teamNumber : team
                     },
                     scouter:
                     {
@@ -65,7 +51,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
            }
             else {
                
-
+                const pointMetrics = []
                 const sumOfMatches = await prismaClient.event.groupBy({
                     by: ["scoutReportUuid"],
                     _sum:
@@ -83,7 +69,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                                 tournamentKey: {
                                     in: req.user.tournamentSource
                                 },
-                                teamNumber : params.data.team
+                                teamNumber : team
                             },
                             scouter:
                             {
@@ -94,7 +80,9 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                             },
 
                         },
-                        action: params.data.metric,
+                        action:{
+                            in : pointMetrics
+                        },
                         time : 
                         {
                             lt : timeMax,
@@ -110,6 +98,20 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
 
         }
         else {
+            const mapMetricsToEnums = {defense : "DEFENSE"}
+
+            const params = z.object({
+                metric: z.enum(["PICK_UP_CONE",
+                    "PICK_UP_CUBE",
+                    "PLACE_OBJECT",]),
+                team : z.number()
+            }).safeParse({
+                metric: metric,
+                team : team
+            })
+            if (!params.success) {
+                throw (params)
+            };
             
             const sumOfMatches = await prismaClient.event.groupBy({
                 by: ["scoutReportUuid"],

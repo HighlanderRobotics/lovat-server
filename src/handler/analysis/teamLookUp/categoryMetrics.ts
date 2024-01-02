@@ -8,6 +8,7 @@ import { metricsCategory } from "../analysisConstants";
 
 export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) => {
     try {
+        console.log(req.user)
         const params = z.object({
             team : z.number()
          }).safeParse({
@@ -22,6 +23,7 @@ export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) 
          for (const element of metricsCategory) {
             result[element] = await arrayAndAverageTeam(req, element, params.data.team);
         }
+        console.log(result)
        
         res.status(200).send(result)
     }

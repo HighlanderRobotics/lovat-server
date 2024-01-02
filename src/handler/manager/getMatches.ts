@@ -18,10 +18,11 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         }
         const params = z.object({
             tournamentKey: z.string(),
-            teamNumbers: z.array(z.number()),
+            teamNumbers: z.array(z.number()).nullable(),
             isScouted: z.boolean().nullable()
         }).safeParse({
             tournamentKey: req.params.tournament,
+            //must send team numbers, just make it empty
             teamNumbers: JSON.parse(req.query.teams as string),
             isScouted: isScouted
         })
@@ -157,7 +158,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         })
         //filter out matches by if they include all the teams the user wants to see or not
         let finalMatches = []
-        if (params.data.teamNumbers !== null && params.data.teamNumbers.length > 0 && params.data.teamNumbers.length <= 6) {
+        if (params.data.teamNumbers && params.data.teamNumbers.length > 0 && params.data.teamNumbers.length <= 6) {
             for (let i = 0; i < matchKeyAndNumber.length; i++) {
                 let currMatch = await prismaClient.teamMatchData.findMany({
                     where: {
@@ -208,16 +209,17 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             finalFormatedMatches.push(currData)
         };
         finalFormatedMatches.sort((a, b) => a.matchNumber - b.matchNumber);
-        if (user.teamNumber != null) {
+        if (user.teamNumber) {
             const scouterShifts = await prismaClient.scouterScheduleShift.findMany({
                 where:
                 {
                     tournamentKey: params.data.tournamentKey,
                     sourceTeamNumber: user.teamNumber
                 },
-                orderBy: {
-                    startMatchOrdinalNumber: 'asc'
-                }
+                orderBy: [
+                    
+                    {startMatchOrdinalNumber: 'asc'},
+                ]
             })
             if (scouterShifts.length !== 0) {
 

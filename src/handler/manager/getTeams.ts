@@ -150,7 +150,7 @@ export const getTeams = async (req: AuthenticatedRequest, res: Response): Promis
             count = (await prismaClient.team.findMany({})).length
         }
         //put users team on top
-        if(req.user.teamNumber !== null)
+        if(req.user.teamNumber)
         {
             if(rows.some(obj => obj.number === req.user.teamNumber))
             {
