@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
-import prismaClient from '../../prismaClient'
+import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { driverAbility, matchTimeEnd } from "../analysisConstants";
 
 
-export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric : string, timeMin: number = 0, timeMax : number = 300): Promise<number> => {
+export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric : string, timeMin: number = 0, timeMax : number = matchTimeEnd): Promise<number> => {
     try {
         //DO SOME GAME SPECIFIC PROCESSING THAT CONVERTS THE METRIC TO THE ENUM/OTHER NAME
         const mapMetricsToEnums = {defense : "DEFENSE"}
@@ -22,7 +23,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
             throw (params)
         };
 
-        if (metric === "driverAbility") {
+        if (metric === driverAbility) {
             
          
             const sumOfMatches = await prismaClient.scoutReport.aggregate({

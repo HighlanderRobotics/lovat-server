@@ -23,16 +23,17 @@
 // }
 
 import { Request, Response } from "express";
-import prismaClient from '../../prismaClient'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { arrayAndAverageAllTeam } from "./arrayAndAverageAllTeams";
+import prismaClient from '../../../prismaClient'
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 import ss from 'simple-statistics';
-import prisma from '../../prismaClient';
+import prisma from '../../../prismaClient';
 import z from 'zod'
 import { all } from "axios";
 import { zScoreTeam } from "./zScoreTeam";
 import { match } from "assert";
-import { addTournamentMatches } from "../manager/addTournamentMatches";
+import { addTournamentMatches } from "../../manager/addTournamentMatches";
+import { picklistSliders } from "../analysisConstants";
 
 
 
@@ -48,12 +49,12 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
         defense: z.number()
 
     }).safeParse({
-        tournnamentKey: req.query.tournamentKey,
-        totalPoints: req.query.totalPoints,
-        autoPoints: req.query.autoPoints,
-        teleopPoints: req.query.teleopPoints,
-        driverAbility: req.query.driverAbility,
-        defense: req.query.defense
+        tournnamentKey: Number(req.query.tournamentKey),
+        totalPoints: Number(req.query.totalPoints),
+        autoPoints: Number(req.query.autoPoints),
+        teleopPoints: Number(req.query.teleopPoints),
+        driverAbility: Number(req.query.driverAbility),
+        defense: Number(req.query.defense)
 
     })
     if (!params.success) {
@@ -71,13 +72,14 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
     {
         await addTournamentMatches(params.data.tournamentKey)
     }
-    const sliderOptions = ["put", "slider/metric", "names", "here"]
     const allTeamAvgSTD = {}
-        sliderOptions.forEach(async element => {
-            //under the ssumption that all sliderOPtions will be valid metrics in the arrayAndAverageAllTeam
-            const currData = await arrayAndAverageAllTeam(req, element)
-            allTeamAvgSTD[element] = { "allAvg": currData.average, "arraySTD": ss.standardDeviation(currData.timeLine) }
-        });
+    for (const element of picklistSliders) {
+        const currData = await arrayAndAverageAllTeam(req, element);
+        allTeamAvgSTD[element] = { 
+            "allAvg": currData.average, 
+            "arraySTD": ss.standardDeviation(currData.timeLine) 
+        };
+    }
     const allTeams = await prismaClient.team.findMany({})
     let includedTeamNumbers: number[] = allTeams.map(team => team.number);
     if (params.data.tournamentKey !== null) {
@@ -92,14 +94,14 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
 
     }
     let arr = []
-    includedTeamNumbers.forEach(async element => {
+    for (const element of includedTeamNumbers) {
         const currZscores = await zScoreTeam(req, allTeamAvgSTD)
         //flags go here, wehn added
         if (!isNaN(currZscores.zScore)) {
             let temp = { "team": element, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted}
             arr.push(temp)
         }
-    });
+    };
     const resultArr = arr.sort((a, b) => b.result - a.result)
     res.status(400).send(resultArr)
 

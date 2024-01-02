@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-import prismaClient from '../../prismaClient'
+import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
+import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
 
 
 export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric : string, team : number): Promise<{average : number, timeLine : Array<{match : string, dataPoint : number}>}> => {
@@ -35,13 +36,26 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric : st
             }
         })
         const timeLineArray = []
-        matchKeys.forEach(async element => {
-            const currData = await singleMatchEventsAverage(req, metric.includes("point") ||  metric.includes("points"), element.key, team, metric)
+        for (const element of matchKeys) {
+            let currData = null
+            //add time constraints if nessissary
+            if(metric.includes("teleop") || metric.includes("Teleop"))
+            {
+                currData = await singleMatchEventsAverage(req, metric.includes("point") ||  metric.includes("Point"), element.key, team, metric, teleopStart, matchTimeEnd)
+            }
+            else if(metric.includes("auto") || metric.includes("Auto"))
+            {
+                currData = await singleMatchEventsAverage(req, metric.includes("point") ||  metric.includes("Point"), element.key, team, metric, 0, autoEnd)
+            }
+            else
+            {
+                currData = await singleMatchEventsAverage(req, metric.includes("point") ||  metric.includes("Point"), element.key, team, metric)
+            }
             if(currData !== null)
             {
                 timeLineArray.push( {match : element.key, dataPoint : currData})
             }
-        });
+        };
         const average = timeLineArray.reduce((acc, cur) => acc + cur.dataPoint, 0) / timeLineArray.length;
         return {
             average : average,

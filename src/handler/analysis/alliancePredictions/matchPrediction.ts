@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import prismaClient from '../../prismaClient'
+import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
+import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import ss from 'simple-statistics';
 import { alliancePage } from "./alliancePage";
 
@@ -29,7 +29,6 @@ export const matchPrediction = async (req: AuthenticatedRequest, res: Response):
         })
         if (!params.success) {
             throw (params)
-            return;
         };
         var redArr1 = (await arrayAndAverageTeam(req, "totalPoints", params.data.red1)).timeLine.map(item => item.dataPoint);
         var redArr2 = (await arrayAndAverageTeam(req, "totalPoints", params.data.red2)).timeLine.map(item => item.dataPoint)
@@ -38,7 +37,8 @@ export const matchPrediction = async (req: AuthenticatedRequest, res: Response):
 
         if (redArr1.length <= 1 || redArr2.length <= 1 || redArr3.length <= 1) {
             //not enough data
-            return null
+            res.status(200).send("not enough data")
+            return
         }
         let red1SDV = ss.standardDeviation(redArr1)
         let red2SDV = ss.standardDeviation(redArr2)
@@ -53,7 +53,8 @@ export const matchPrediction = async (req: AuthenticatedRequest, res: Response):
 
         if (blueArr1.length <= 1 || blueArr2.length <= 1 || blueArr3.length <= 1) {
             //not enough data
-            return null
+            res.status(200).send("not enough data")
+            return
         }
         let blue1SDV = ss.standardDeviation(blueArr1)
         let blue2SDV = ss.standardDeviation(blueArr2)

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import { match } from "assert";
 import z from 'zod'
-import { singleMatchSingleScouter } from "../analysis/singleMatchSingleScouter";
+import { singleMatchSingleScouter } from "../analysis/coreAnalysis/singleMatchSingleScouter";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 

@@ -44,9 +44,9 @@ import { getProfile } from "./handler/manager/getProfile";
 import { deleteUser } from "./handler/manager/deleteUser";
 import { getUsers } from "./handler/manager/getUsers";
 import { updateRoleToScoutingLead } from "./handler/manager/updateRoleToScoutingLead";
-import { detailsPage } from "./handler/analysis/detailsPage";
-import { categoryMetrics } from "./handler/analysis/categoryMetrics";
-import { breakdownMetrics } from "./handler/analysis/breakdownMetrics";
+import { detailsPage } from "./handler/analysis/teamLookUp/detailsPage";
+import { categoryMetrics } from "./handler/analysis/teamLookUp/categoryMetrics";
+import { breakdownMetrics } from "./handler/analysis/teamLookUp/breakdownMetrics";
 import { checkCodeScouter } from "./handler/manager/checkCodeScouter";
 import { changeNameScouter } from "./handler/manager/changeNameScouter";
 import { getScoutersOnTeam } from "./handler/manager/getScoutersOnTeam";
@@ -57,6 +57,10 @@ import { updateNotes } from "./handler/manager/updateNotes";
 import { getTeamCode } from "./handler/manager/getTeamCode";
 import { getAnalysts } from "./handler/manager/getAnalysts";
 import { updateSettings } from "./handler/manager/updateSettings";
+import { getNotes } from "./handler/analysis/teamLookUp/getNotes";
+import { alliancePage } from "./handler/analysis/alliancePredictions/alliancePage";
+import { alliancePageResponse } from "./handler/analysis/alliancePredictions/alliancePageResponse";
+import { matchPrediction } from "./handler/analysis/alliancePredictions/matchPrediction";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -91,7 +95,7 @@ app.get('/manager/scoutreports/:uuid', getScoutReport ) //tested
 
 //scouter shift
 app.post('/manager/tournament/:tournament/scoutershifts', requireAuth, addScouterShift) //tested , expecting only 1 at a time
-app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
+// app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
 app.post('/manager/scoutershifts/:uuid', requireAuth,updateScouterShift) //tested 
 app.delete('/manager/scoutershifts/:uuid', requireAuth, deleteScouterShift) //tested
 
@@ -138,8 +142,10 @@ app.get('/manger/analysts', requireAuth, getAnalysts) //use for list of people e
 app.put('/manager/settings', requireAuth, updateSettings)
 
 
-//get code dahsboard app
+//scouting lead information/QR codes
 app.get('/manager/code', requireAuth, getTeamCode )
+app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
+
 
 
 
@@ -152,13 +158,23 @@ app.post('/manager/scouter', addNewScouter) //tested
 
 //collection app homepage (feel free to change request/response format as needed)
 app.get('/manager/scouters/tournaments/uuid/:uuid', getTournamentsWithSchedule) //tested
-app.get('/manager/scouters/schedules/uuid/:uuid/tournament/:tournament', getScheduleForScouter) //tested
+app.get('/manager/scouters/schedules/team/:team/tournament/:tournament', getScheduleForScouter) //tested
 
 
 //analysis
+
+
+//team look up page
 app.get('/analysis/metric/:metric/team/:team', requireAuth, detailsPage)
-app.get('/analysis/team/:team', requireAuth, categoryMetrics) 
+app.get('/analysis/category/team/:team', requireAuth, categoryMetrics) 
 app.get('/analysis/breakdown/team/:team', breakdownMetrics) //change name ??
+app.get('/analysis/notes/team/:team', requireAuth, getNotes)
+
+//my alliance page
+app.get('/analysis/alliance', requireAuth, alliancePageResponse)
+
+//match prediction
+app.get('/analysis/matchprediction', requireAuth, matchPrediction)
 
 
 

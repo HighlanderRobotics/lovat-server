@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-import prismaClient from '../../prismaClient'
+import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
+import { metricsCategory } from "../analysisConstants";
 
 
 export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) => {
@@ -16,12 +17,11 @@ export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) 
              res.status(400).send(params);
              return;
          };
-        const eventMetricArray = ["teleopPoints", "autoPoints", "totalPoints", "defense", "driverAbility"]
         let result = {}
-        eventMetricArray.forEach(async element => {
-            //update if statments in arrayAndAverage if the metric needs to look at scoutReport instead of events table
-            result[element] = await arrayAndAverageTeam(req, element, params.data.team)
-        })
+         //update if statments in arrayAndAverage if the metric needs to look at scoutReport instead of events table
+         for (const element of metricsCategory) {
+            result[element] = await arrayAndAverageTeam(req, element, params.data.team);
+        }
        
         res.status(200).send(result)
     }

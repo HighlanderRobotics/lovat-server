@@ -7,25 +7,20 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 export const getScheduleForScouter = async (req: Request, res: Response): Promise<void> => {
     try {
         const params = z.object({
-            uuid: z.string(),
+            team: z.number(),
             tournament : z.string()
         }).safeParse({
-            uuid: req.params.uuid,
+            team: Number(req.params.team),
             tournament : req.params.tournament
         })
         if (!params.success) {
             res.status(400).send(params);
             return;
         };
-        const scouter = await prismaClient.scouter.findUnique({
-            where : {
-                uuid : params.data.uuid
-            }
-        })
         const rows = await prismaClient.scouterScheduleShift.findMany({
             where:
             {
-                sourceTeamNumber : scouter.sourceTeamNumber,
+                sourceTeamNumber : params.data.team,
                 tournamentKey : params.data.tournament,
             }
 

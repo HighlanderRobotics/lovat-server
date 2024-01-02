@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import prismaClient from '../../prismaClient'
+import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
+import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { alliancePage } from "./alliancePage";
 
 

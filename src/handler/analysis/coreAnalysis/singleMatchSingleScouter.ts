@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import prismaClient from '../../prismaClient'
+import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 
 
 
@@ -105,8 +105,8 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, metric
 
                 }
             })
-            const average = sumOfMatches.reduce((acc, val) => acc + val._count._all, 0) / sumOfMatches.length;
-            return average
+            const sum = sumOfMatches.reduce((acc, val) => acc + val._count._all, 0) / sumOfMatches.length;
+            return sum
 
         }
     }

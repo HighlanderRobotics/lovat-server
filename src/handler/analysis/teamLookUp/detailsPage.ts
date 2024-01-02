@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import prismaClient from '../../prismaClient'
+import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
-import { arrayAndAverageAllTeam } from "./arrayAndAverageAllTeams";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
+import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 
 
 export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
