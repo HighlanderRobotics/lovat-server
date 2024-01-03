@@ -6,6 +6,8 @@ const teleopStart = 18
 const matchTimeEnd = 300
 const specificMatchPageMetrics = ["defense"]
 const driverAbility = "driverability"
-export { metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown};
+
+const multiplerBaseAnalysis = 4
+export { metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis};
 
 
