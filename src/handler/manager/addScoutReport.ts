@@ -18,22 +18,19 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             teamMatchKey: z.string(),
             startTime: z.string(),
             notes: z.string(),
-            links: z.number(),
             robotRole: z.enum(["OFFENSE",
                 "DEFENSE",
                 "FEEDER",
                 "IMMOBILE"]),
-            autoChallengeResult: z.enum(["NONE",
-                "DOCKED",
-                "ENGAGED",
-                "FAILED",
-                "MOBILITY"]),
-            teleopChallengeResult: z.enum(["NONE",
-                "DOCKED",
-                "ENGAGED",
-                "FAILED",
-                "IN_COMMUNITY"]),
-            penaltyCard: z.enum(["NONE", "YELLOW", "RED"]),
+            stage : z.enum([ "NOTHING",
+                "PARK",
+                "ONSTAGE",
+                "ONSTAGE_HARMONY"
+              ]),
+            highNote : z.enum(["YES", "NO"]),
+            trap : z.enum(["YES", "NO"]),
+            pickUp : z.enum(["GROUND", "CHUTE", "BOTH"]),
+
             driverAbility: z.number(),
             scouterUuid: z.string()
         }).safeParse({
@@ -46,7 +43,11 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             autoChallengeResult: matchData.autoChallengeResult, 
             teleopChallengeResult: matchData.challengeResult, 
             penaltyCard: matchData.penaltyCard, 
-            driverAbility: matchData.driverAbility 
+            driverAbility: matchData.driverAbility,
+            highNote : matchData.highNote,
+            pickUp : matchData.pickUp,
+            stage : matchData.stage,
+            trap : matchData.trap
         })
         if (!paramsScoutReport.success) {
             res.status(400).send(paramsScoutReport);
@@ -56,16 +57,18 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
         const row = await prismaClient.scoutReport.create(
             {
                 data: {
+                    //constants
                     teamMatchKey : paramsScoutReport.data.teamMatchKey,
                     scouterUuid : paramsScoutReport.data.scouterUuid,
                     startTime : paramsScoutReport.data.startTime,
                     notes : paramsScoutReport.data.notes,
-                    links : paramsScoutReport.data.links,
                     robotRole : paramsScoutReport.data.robotRole,
-                    autoChallengeResult : paramsScoutReport.data.autoChallengeResult,
-                    challengeResult : paramsScoutReport.data.teleopChallengeResult,
-                    penaltyCard : paramsScoutReport.data.penaltyCard,
-                    driverAbility : paramsScoutReport.data.driverAbility
+                    driverAbility : paramsScoutReport.data.driverAbility,
+                    //game specfific
+                    highNote : paramsScoutReport.data.highNote,
+                    trap : paramsScoutReport.data.trap,
+                    stage : paramsScoutReport.data.stage,
+                    pickUp : paramsScoutReport.data.pickUp
                 }
             }
         )

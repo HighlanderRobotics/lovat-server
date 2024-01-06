@@ -68,11 +68,11 @@ model ScoutReport {
   teamMatchData       TeamMatchData         @relation(fields: [teamMatchKey], references: [key])
   startTime           String
   notes               String
-  links               Int
   robotRole           RobotRole
-  autoChallengeResult AutoChallengeResult
-  challengeResult     TeleopChallengeResult
-  penaltyCard         PenaltyCard
+  stage               StageResult
+  highNote            HighNoteResult
+  trap                TrapResult
+  pickUp              PickUp
   driverAbility       Int
   scouterUuid         String
   scouter             Scouter               @relation(fields: [scouterUuid], references: [uuid])
@@ -87,26 +87,27 @@ enum RobotRole {
   IMMOBILE
 }
 
-enum AutoChallengeResult {
-  NONE
-  DOCKED
-  ENGAGED
-  FAILED
-  MOBILITY
+enum TrapResult {
+  YES
+  NO
+}
+enum HighNoteResult{
+  YES
+  NO
 }
 
-enum TeleopChallengeResult {
-  NONE
-  DOCKED
-  ENGAGED
-  FAILED
-  IN_COMMUNITY
+enum StageResult {
+  NOTHING
+  PARK
+  ONSTAGE
+  ONSTAGE_HARMONY
+
 }
 
-enum PenaltyCard {
-  NONE
-  YELLOW
-  RED
+enum PickUp {
+  GROUND
+  CHUTE
+  BOTH
 }
 
 model ScouterScheduleShift {

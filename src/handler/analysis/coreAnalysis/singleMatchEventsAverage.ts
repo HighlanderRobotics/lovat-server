@@ -45,12 +45,21 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
         }
         else if (isPointAverage) {
        
-           if(metric === "totalPointsTeleop")
-           {
+            if(metric === "totalPoints")
+            {
 
-           }
-            else {
-               
+            }
+            else if(metric === "totalPointsAuto")
+            {
+
+            }
+            else if(metric === "totalPointsTeleop")
+            {
+
+            }
+            else{
+
+            
                 const pointMetrics = []
                 const sumOfMatches = await prismaClient.event.groupBy({
                     by: ["scoutReportUuid"],
@@ -91,12 +100,14 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
 
                     }
                 })
+            
                 const average = sumOfMatches.reduce((acc, val) => acc + val._sum.points, 0) / sumOfMatches.length;
                 return average
             }
+            }
 
 
-        }
+        
         else {
             const mapMetricsToEnums = {defense : "DEFENSE"}
 
