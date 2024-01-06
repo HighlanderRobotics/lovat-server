@@ -21,6 +21,7 @@ enum Position {
   PLACE_HOLDER
 }
 enum EventAction {
+  LEAVE
   PICK_UP
   SCORE_AMP
   SCORE_SPEAKER

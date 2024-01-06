@@ -112,9 +112,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
             const mapMetricsToEnums = {defense : "DEFENSE"}
 
             const params = z.object({
-                metric: z.enum(["PICK_UP_CONE",
-                    "PICK_UP_CUBE",
-                    "PLACE_OBJECT",]),
+                metric: z.enum(["LEAVE", "DEFENSE", "SCORE_AMP", "SCORE_SPEAKER", "PICK_UP"]),
                 team : z.number()
             }).safeParse({
                 metric: metric,
