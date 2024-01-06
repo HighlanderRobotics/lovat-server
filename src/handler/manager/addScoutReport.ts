@@ -4,6 +4,8 @@ import { match } from "assert";
 import z from 'zod'
 import { singleMatchSingleScouter } from "../analysis/coreAnalysis/singleMatchSingleScouter";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { EventAction } from "@prisma/client";
+import { ADDRGETNETWORKPARAMS } from "dns";
 
 
 export const addScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -75,52 +77,78 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
 
 
         let events = matchData.events;
+        let ampOn = false
         for (let i = 0; i < events.length; i++) {
             let points = 0;
             let time = events[i][0];
             let position = events[i][2];
-            if (events[i][1] === 2) {
-                let level = Math.ceil(position / 3);
-                if (time <= 17) {
-                    if (level === 1) {
-                        points = 3;
-                    }
-                    else if (level === 2) {
-                        points = 4;
-                    }
-                    else if (level === 3) {
-                        points = 6;
-                    }
+            let action = events[i][1]
+            if(action === "AMP_ON")
+            {
+                ampOn = true
+            }
+            else if (action === "AMP_OFF")
+            {
+                ampOn = false
+            }
+            else if(time <= 17)
+            {
+                if(action === "SCORE_AMP")
+                {
+                    points = 2
                 }
-                else {
-                    if (level === 1) {
-                        points = 2;
-                    }
-                    else if (level === 2) {
-                        points = 3;
-                    }
-                    else if (level === 3) {
-                        points = 5;
-                    }
+                else if(action === "SCORE_SPEAKER")
+                {
+                    points = 5
+                }
+                else if(action === "LEAVE")
+                {
+                    points = 2
+                }
+            }
+            else
+            {
+                if(action === "SCORE_AMP")
+                {
+                   points = 1
+                }
+                else if(action === "SCORE_SPEAKER" && ampOn)
+                {
+                    points = 5
+                } 
+                else if(action === "SCORE_SPEAKER")
+                {
+                    points = 2   
                 }
             }
             const paramsEvents = z.object({
                 time: z.number(),
-                action: z.enum(["PICK_UP_CONE", "PICK_UP_CUBE", "PLACE_OBJECT"]),
-                position: z.enum(["NONE", "PLACE_HOLDER"]),
+                action: z.enum(["DEFENSE", "SCORE_AMP", "SCORE_SPEAKER", "PICK_UP"]),
+                position: z.enum(["NONE"]),
                 points: z.number(),
                 scoutReportUuid: z.string()
             }).safeParse({
                 scoutReportUuid: scoutReportUuid,
-                time: events[i][0],
-                action: events[i][1],
-                position: events[i][2],
+                time: time,
+                action: action,
+                position: position,
                 points: points
             })
             if (!paramsEvents.success) {
                 res.status(400).send(paramsEvents);
                 return;
             };
+            const currEventRow = await prismaClient.event.create({
+                data:
+                {
+                    time : paramsEvents.data.time,
+                    action : paramsEvents.data.action,
+                    position : paramsEvents.data.position,
+                    points : paramsEvents.data.points,
+                    scoutReportUuid : scoutReportUuid
+
+                }
+            })
         }
         const totalPoints = await singleMatchSingleScouter(req,  "", true, matchKey, matchData.scouterUuid)
         //recalibrate the max resonable points for every year 

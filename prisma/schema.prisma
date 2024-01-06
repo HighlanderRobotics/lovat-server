@@ -21,9 +21,9 @@ enum Position {
   PLACE_HOLDER
 }
 enum EventAction {
-  PICK_UP_CONE
-  PICK_UP_CUBE
-  PLACE_OBJECT
+  PICK_UP
+  SCORE_AMP
+  SCORE_SPEAKER
   DEFENSE
 }
 
