@@ -1,4 +1,4 @@
-const metricsCategory =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores"]
+const metricsCategory =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores"]
 const metricsBreakdown = ["robotRole", "pickUp", "trap", "highNote"]
 const picklistSliders = ["put", "slicerNames", "here"]
 const autoEnd = 17

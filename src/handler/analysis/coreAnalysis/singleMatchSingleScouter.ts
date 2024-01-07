@@ -2,84 +2,118 @@ import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
+import { sum } from "simple-statistics";
 
 
 
-export const singleMatchSingleScouter = async (req: AuthenticatedRequest, metric: string, isPointAverage: boolean, matchKey: string, scouterUuid: string): Promise<number> => {
+export const singleMatchSingleScouter = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string,  metric1 : string,  scouterUuid : string, timeMin: number = 0, timeMax : number = matchTimeEnd): Promise<number> => {
     try {
 
-        if (isPointAverage) {
-            let timeMin = 0
-            //could be 150, but putting more for buffer for now
-            let timeMax = 200
-            if (metric === "teleopPoints") {
-                //3 sec inbetween teleop and auto where things are still counted, I will put a 3 sec buffer for now
-                //18 and not 17 so it doesnt double count things that happen on the 17 mark when calculating teleop/auto averages (see primsa below)
-                timeMin = 18
-                metric = "PLACE_OBJECT"
-            }
-            else if (metric === "autoPoints") {
-                timeMax = 17
-                metric = "PLACE_OBJECT"
-            }
-
-            const params = z.object({
-                metric: z.enum(["PICK_UP_CONE",
-                    "PICK_UP_CUBE",
-                    "PLACE_OBJECT",])
-            }).safeParse({
-                metric: metric
-            })
-            if (!params.success) {
-                throw (params)
-            };
-            const sumOfPoints = await prismaClient.event.aggregate({
-                _sum:
+        const metric = metricToEvent[metric1]
+        if (metric === driverAbility) {
+            
+            const sumOfMatches = await prismaClient.scoutReport.aggregate({
+                _avg:
                 {
-                    points: true
+                    driverAbility: true
                 },
                 where:
                 {
-                    scoutReport: {
-                        teamMatchKey: matchKey,
-                        teamMatchData:
-                        {
-                            //shouldnt be looking at tournaments not in their data set but im just checking
-                            //maybe if they are delibratly looking at a tournament not in their fata set we should give a notification or something?
-                            tournamentKey: {
-                                in: req.user.tournamentSource
-                            }
-                        },
-                        scouterUuid: scouterUuid
-                    },
-                    //switch if theirs multiple ways to score (for teleopPoints/autoPoints/totalPoints)
-                    action: params.data.metric,
-                    time: {
-                        gte: timeMin,
-                        lte: timeMax
-                    }
-
+                    teamMatchKey: matchKey,                    
+                    scouterUuid: scouterUuid
                 }
             })
-            //check this is right
-            return sumOfPoints[0]._sum
+            //avg could be multiple results from one scout
+            return sumOfMatches._avg.driverAbility
         }
+        else if (isPointAverage) {
+            
+                const sumOfMatches = await prismaClient.event.groupBy({
+                    by: ["scoutReportUuid"],
+                    _sum:
+                    {
+                        points: true
+                    },
+                    where:
+                    {
+                        scoutReport: {
+                            teamMatchKey: matchKey,
+                            scouterUuid : scouterUuid
+
+                        },
+                        //no need for action, either has points or has 0
+                        // action:{
+                        //     in : pointMetrics
+                        // },
+                        time : 
+                        {
+                            lt : timeMax,
+                            gt : timeMin
+                        }
+
+                    }
+                })
+                if(sumOfMatches.length === 0)
+                {
+                    return 0
+                }
+                const eventsAverage = sumOfMatches.reduce((acc, val) => acc + val._sum.points, 0) / sumOfMatches.length;
+                //adds endgame/climbing points if nessisary
+                if(metric === "totalpoints" || metric === "teleoppoints")
+                {
+                    let stagePoints = []
+                    const scoutReports = await prismaClient.scoutReport.findMany({
+                        where :
+                        {
+                            teamMatchData:
+                            {
+                               
+                                tournamentKey: {
+                                    in: req.user.tournamentSource
+                                },
+                            },
+                            scouter:
+                            {
+                                sourceTeamNumber:
+                                {
+                                    in: req.user.teamSource
+                                }
+                            },
+                        }
+                    })
+                    for(let element of scoutReports)
+                    {
+                        let currStagePoints = stageMap[element.stage] + highNoteMap[element.highNote]
+                        stagePoints.push(currStagePoints)
+                    }
+                    let  stagePointsAverage = 0
+                    if (stagePoints.length > 0) {
+                        stagePointsAverage = stagePoints.reduce((acc, val) => acc + val, 0) / stagePoints.length;
+                    }
+                    return eventsAverage + stagePointsAverage
+                }
+                
+            return eventsAverage
 
 
+            
+            }
 
+
+        
         else {
-            //keep update to date with the EventAction in schema.prisma
+            const mapMetricsToEnums = {defense : "DEFENSE"}
 
             const params = z.object({
-                metric: z.enum(["PICK_UP_CONE",
-                    "PICK_UP_CUBE",
-                    "PLACE_OBJECT",])
+                metric: z.enum(["LEAVE", "DEFENSE", "SCORE_AMP", "SCORE_SPEAKER", "PICK_UP", "DROP_RING", "TRAP"]),
             }).safeParse({
-                metric: metric
+                metric: metric,
             })
             if (!params.success) {
                 throw (params)
             };
+            
             const sumOfMatches = await prismaClient.event.groupBy({
                 by: ["scoutReportUuid"],
                 _count:
@@ -90,23 +124,24 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, metric
                 {
                     scoutReport: {
                         teamMatchKey: matchKey,
-                        teamMatchData:
-                        {
-                            //shouldnt be looking at tournaments not in their data set but im just checking
-                            //maybe if they are delibratly looking at a tournament not in their fata set we should give a notification or something?
-                            tournamentKey: {
-                                in: req.user.tournamentSource
-                            }
-                        },
-                        scouterUuid: scouterUuid
+                        scouterUuid : scouterUuid
 
                     },
-                    action: params.data.metric
+                    action: params.data.metric,
+                    time : 
+                    {
+                        lt : timeMax,
+                        gt : timeMin
+                    }
 
                 }
             })
-            const sum = sumOfMatches.reduce((acc, val) => acc + val._count._all, 0) / sumOfMatches.length;
-            return sum
+            if(sumOfMatches.length === 0)
+            {
+                return 0
+            }
+            const average = sumOfMatches.reduce((acc, val) => acc + val._count._all, 0) / sumOfMatches.length;
+            return average
 
         }
     }

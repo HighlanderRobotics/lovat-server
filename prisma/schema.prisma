@@ -23,6 +23,8 @@ enum Position {
 enum EventAction {
   LEAVE
   PICK_UP
+  DROP_RING
+  TRAP
   SCORE_AMP
   SCORE_SPEAKER
   DEFENSE
@@ -72,7 +74,6 @@ model ScoutReport {
   robotRole           RobotRole
   stage               StageResult
   highNote            HighNoteResult
-  trap                TrapResult
   pickUp              PickUp
   driverAbility       Int
   scouterUuid         String
@@ -88,11 +89,6 @@ enum RobotRole {
   IMMOBILE
 }
 
-enum TrapResult {
-  NOT_ATTEMPTED
-  FAILED
-  SUCCESSFUL
-}
 enum HighNoteResult{
   NOT_ATTEMPTED
   FAILED

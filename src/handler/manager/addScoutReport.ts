@@ -68,7 +68,6 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                     driverAbility : paramsScoutReport.data.driverAbility,
                     //game specfific
                     highNote : paramsScoutReport.data.highNote,
-                    trap : paramsScoutReport.data.trap,
                     stage : paramsScoutReport.data.stage,
                     pickUp : paramsScoutReport.data.pickUp
                 }
@@ -120,6 +119,10 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                 {
                     points = 2   
                 }
+                if(action === "TRAP")
+                {
+                    points = 5
+                }
             }
             const paramsEvents = z.object({
                 time: z.number(),
@@ -150,7 +153,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                 }
             })
         }
-        const totalPoints = await singleMatchSingleScouter(req,  "", true, matchKey, matchData.scouterUuid)
+        const totalPoints = await singleMatchSingleScouter(req,true,matchKey,"totalpoints", matchData.scouterUuid)
         //recalibrate the max resonable points for every year 
         if(totalPoints === 0 || totalPoints > 80)
         {
