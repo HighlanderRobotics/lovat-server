@@ -94,6 +94,7 @@ export const matchPrediction = async (req: AuthenticatedRequest, res: Response):
             redWinning: redWinning,
             blueWinning: blueWiinning,
             winningAlliance: winningAlliance,
+            //dont display auto path stuff
             redAlliance: redAlliance,
             blueAlliance: blueAlliance
         })
