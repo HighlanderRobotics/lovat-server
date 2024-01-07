@@ -32,13 +32,13 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             }
         })
         let data = {
-            totalPoints: await singleMatchSingleScouter(req, "totalPoints", true, params.data.matchKey, params.data.scouterUuid),
+            totalPoints: await singleMatchSingleScouter(req, true, params.data.matchKey, "totalpoints", params.data.scouterUuid),
             driverAbility: scoutReport.driverAbility,
             role : scoutReport.robotRole,
             autoPath : await autoPathSingleMatchSingleScouter(req, params.data.matchKey, params.data.scouterUuid)
         }
         for (const element of specificMatchPageMetrics) {
-            data[element] = await singleMatchSingleScouter(req, element, false, params.data.matchKey, params.data.scouterUuid)
+            data[element] = await singleMatchSingleScouter(req, false, params.data.matchKey, "totalpoints", params.data.scouterUuid)
         };
 
         res.status(200).send(data)

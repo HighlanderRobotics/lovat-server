@@ -167,8 +167,8 @@ app.get('/manager/scouters/schedules/team/:team/tournament/:tournament', getSche
 //team look up page
 app.get('/analysis/metric/:metric/team/:team', requireAuth, detailsPage)
 app.get('/analysis/category/team/:team', requireAuth, categoryMetrics) 
-app.get('/analysis/breakdown/team/:team', breakdownMetrics) //change name ??
-app.get('/analysis/notes/team/:team', requireAuth, getNotes)
+app.get('/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested
+app.get('/analysis/notes/team/:team', requireAuth, getNotes) //tested
 
 //my alliance page
 app.get('/analysis/alliance', requireAuth, alliancePageResponse)

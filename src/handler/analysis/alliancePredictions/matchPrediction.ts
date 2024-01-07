@@ -30,9 +30,9 @@ export const matchPrediction = async (req: AuthenticatedRequest, res: Response):
         if (!params.success) {
             throw (params)
         };
-        var redArr1 = (await arrayAndAverageTeam(req, "totalPoints", params.data.red1)).timeLine.map(item => item.dataPoint);
-        var redArr2 = (await arrayAndAverageTeam(req, "totalPoints", params.data.red2)).timeLine.map(item => item.dataPoint)
-        var redArr3 = (await arrayAndAverageTeam(req, "totalPoints", params.data.red3)).timeLine.map(item => item.dataPoint)
+        var redArr1 = (await arrayAndAverageTeam(req, "totalpoints", params.data.red1)).timeLine.map(item => item.dataPoint);
+        var redArr2 = (await arrayAndAverageTeam(req, "totalpoints", params.data.red2)).timeLine.map(item => item.dataPoint)
+        var redArr3 = (await arrayAndAverageTeam(req, "totalpoints", params.data.red3)).timeLine.map(item => item.dataPoint)
 
 
         if (redArr1.length <= 1 || redArr2.length <= 1 || redArr3.length <= 1) {
@@ -47,9 +47,9 @@ export const matchPrediction = async (req: AuthenticatedRequest, res: Response):
         let redAllianceSDV = Math.sqrt(Math.pow(red1SDV, 2) + Math.pow(red2SDV, 2) + Math.pow(red3SDV, 2))
         let redAllianceMean = await getMean(redArr1) + await getMean(redArr2) + await getMean(redArr3)
 
-        var blueArr1 = (await arrayAndAverageTeam(req, "totalPoints", params.data.blue1)).timeLine.map(item => item.dataPoint);
-        var blueArr2 = (await arrayAndAverageTeam(req, "totalPoints", params.data.blue2)).timeLine.map(item => item.dataPoint)
-        var blueArr3 = (await arrayAndAverageTeam(req, "totalPoints", params.data.blue3)).timeLine.map(item => item.dataPoint)
+        var blueArr1 = (await arrayAndAverageTeam(req, "totalpoints", params.data.blue1)).timeLine.map(item => item.dataPoint);
+        var blueArr2 = (await arrayAndAverageTeam(req, "totalpoints", params.data.blue2)).timeLine.map(item => item.dataPoint)
+        var blueArr3 = (await arrayAndAverageTeam(req, "totalpoints", params.data.blue3)).timeLine.map(item => item.dataPoint)
 
         if (blueArr1.length <= 1 || blueArr2.length <= 1 || blueArr3.length <= 1) {
             //not enough data

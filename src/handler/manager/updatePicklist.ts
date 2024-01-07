@@ -9,11 +9,31 @@ export const updatePicklist = async (req: AuthenticatedRequest, res: Response): 
         const user = req.user
         const params = z.object({
             name: z.string(),
-            avgTotal : z.number(),
+            totalPoints: z.number(),
+            defense: z.number(),
+            pickUps :z.number() ,
+            stage : z.number(),
+            highNote : z.number(),
+            autoPoints : z.number(),
+            driverAbility :z.number() ,
+            speakerScores : z.number(),
+            ampScores : z.number(),
+            teleopPoints : z.number(),
+            trapScores :z.number(),                   
             authorId: z.string()
         }).safeParse({
             name: req.body.name,
-            avgTotal: req.body.avgTotal,
+            totalPoints: req.body.totalPoints,
+            defense: req.body.defense,
+            pickUps : req.body.pickUps,
+            stage : req.body.stage,
+            highNote : req.body.highNote,
+            autoPoints : req.body.autoPoints,
+            driverAbility : req.body.driverAbility,
+            speakerScores : req.body.speakerScores,
+            ampScores : req.body.ampScores,
+            teleopPoints : req.body.teleopPoints,
+            trapScores : req.body.trapScores,           
             authorId : user.id
 
         })
@@ -31,7 +51,17 @@ export const updatePicklist = async (req: AuthenticatedRequest, res: Response): 
             },
             data: {
                 name : params.data.name,
-                avgTotal : params.data.avgTotal,
+                totalPoints: params.data.totalPoints,
+                defense: params.data.defense,
+                pickUps : params.data.pickUps,
+                stage : params.data.stage,
+                highNote : params.data.highNote,
+                autoPoints : params.data.autoPoints,
+                driverAbility : params.data.driverAbility,
+                speakerScores : params.data.speakerScores,
+                ampScores : params.data.ampScores,
+                teleopPoints : params.data.teleopPoints,
+                trapScores : params.data.trapScores,
                 authorId : params.data.authorId
             }
         })

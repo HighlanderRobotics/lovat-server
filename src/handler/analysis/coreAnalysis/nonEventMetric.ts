@@ -21,6 +21,7 @@ export const nonEventMetric = async (req: AuthenticatedRequest, team : number, m
         if (!params.success) {
             throw (params)
         };
+
         const countArray = await prismaClient.scoutReport.groupBy({
             _count:
             {

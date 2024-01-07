@@ -4,6 +4,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
+import { all } from "axios";
 
 
 export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
@@ -17,23 +18,81 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             res.status(400).send(params);
             return;
         };
-        const notes = await prismaClient.scoutReport.findMany({
-            where : 
-            {
-                teamMatchData :
+        if (req.user.teamNumber !== null) {
+            const notesOnTeam = await prismaClient.scoutReport.findMany({
+                where:
                 {
-                    teamNumber : params.data.team
+                    teamMatchData:
+                    {
+                        teamNumber: params.data.team
+                    },
+                    scouter:
+                    {
+                        sourceTeamNumber: req.user.teamNumber
+                    }
                 },
-                scouter : 
+                include:
                 {
-                    sourceTeamNumber : {
-                        in : req.user.teamSource
+                    scouter: true
+                }
+            })
+            const notesOffTeam = await prismaClient.scoutReport.findMany({
+                where:
+                {
+                    teamMatchData:
+                    {
+                        teamNumber: params.data.team
+                    },
+                    scouter:
+                    {
+                        sourceTeamNumber:
+                        {
+                            in: req.user.teamSource,
+                            not: req.user.teamNumber
+                        }
+
                     }
                 }
+            })
+            const notesAndMatches = notesOffTeam.map(item => ({
+                notes: item.notes,
+                match: item.teamMatchKey
+            }));
+            const notesAndMatchesAndNames = notesOnTeam.map(item => ({
+                notes: item.notes,
+                match: item.teamMatchKey,
+                name: item.scouter.name
+            }));
+            const allNotes = notesAndMatches.concat(notesAndMatchesAndNames)
+            res.status(200).send(allNotes)
 
-            }
-        })
-        res.status(200).send(notes)
+        }
+        else
+        {
+            const notesOffTeam = await prismaClient.scoutReport.findMany({
+                where:
+                {
+                    teamMatchData:
+                    {
+                        teamNumber: params.data.team
+                    },
+                    scouter:
+                    {
+                        sourceTeamNumber:
+                        {
+                            in: req.user.teamSource,
+                        }
+
+                    }
+                }
+            })
+            const notesAndMatches = notesOffTeam.map(item => ({
+                notes: item.notes,
+                match: item.teamMatchKey
+            }));
+            res.status(200).send(notesAndMatches)
+
+        }
     }
     catch (error) {
         console.error(error)

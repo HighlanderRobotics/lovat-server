@@ -32,7 +32,7 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
             driverAbility : req.body.driverAbility,
             speakerScores : req.body.speakerScores,
             ampScores : req.body.ampScores,
-            teleopScores : req.body.teleopScores,
+            teleopPoints : req.body.teleopPoints,
             trapScores : req.body.trapScores,
             authorId: req.user.id
         })
