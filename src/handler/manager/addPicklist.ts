@@ -8,11 +8,32 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
     try {
         const params = z.object({
             name: z.string(),
-            avgTotal: z.number(),
+            totalPoints: z.number(),
+            defense : z.number(),
+            pickUps : z.number(),
+            stage : z.number(),
+            highNote : z.number(),
+            autoPoints : z.number(),
+            driveAbility : z.number(),
+            speakerScores : z.number(),
+            ampScores : z.number(),
+            teleopPoints : z.number(),
+            trapScores : z.number(),
             authorId: z.string()
         }).safeParse({
             name: req.body.name,
-            avgTotal: req.body.avgTotal,
+            totalPoints: req.body.totalPoints,
+            defense: req.body.defense,
+            pickUps : req.body.pickUps,
+            stage : req.body.stage,
+            //only cant do high note rn
+            highNote : req.body.highNote,
+            autoPoints : req.body.autoPoints,
+            driverAbility : req.body.driverAbility,
+            speakerScores : req.body.speakerScores,
+            ampScores : req.body.ampScores,
+            teleopScores : req.body.teleopScores,
+            trapScores : req.body.trapScores,
             authorId: req.user.id
         })
         if (!params.success) {
@@ -23,7 +44,17 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
         const rows = await prismaClient.sharedPicklist.create({
             data: {
                 name : params.data.name,
-                avgTotal : params.data.avgTotal,
+                totalPoints : params.data.totalPoints,
+                stage : params.data.stage,
+                defense : params.data.defense,
+                pickUps : params.data.pickUps,
+                highNote : params.data.highNote,
+                autoPoints : params.data.autoPoints,
+                driverAbility : params.data.driveAbility,
+                speakerScores : params.data.speakerScores,
+                ampScores : params.data.ampScores,
+                teleopPoints : params.data.teleopPoints,
+                trapScores : params.data.trapScores,
                 authorId : params.data.authorId
             }
         })

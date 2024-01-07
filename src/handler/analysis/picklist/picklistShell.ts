@@ -1,27 +1,4 @@
 
-
-// constructor(db, tourmentKey, coneOneScore, coneTwoScore, coneThreeScore, cubeOneScore, cubeTwoScore, cubeThreeScore, autoCargo, teleOp, defense, autoClimb, feedCone, feedCube, avgTotal, teleppClimb, driverAbility, flags) {
-//     super(db)
-//     this.tourmentKey = tourmentKey
-//     this.cubeOneScore = cubeOneScore
-//     this.cubeTwoScore = cubeTwoScore
-//     this.cubeThreeScore = cubeThreeScore
-//     this.autoCargo = autoCargo
-//     this.teleOp = teleOp
-//     this.result = []
-//     this.coneOneScore = coneOneScore
-//     this.coneTwoScore = coneTwoScore
-//     this.coneThreeScore = coneThreeScore
-//     this.defense = defense
-//     this.autoClimb = autoClimb
-//     this.feedingCone = feedCone
-//     this.feedingCube = feedCube
-//     this.avgTotal = avgTotal
-//     this.teleppClimb = teleppClimb
-//     this.driverAbility = driverAbility
-//     this.flag = flags
-// }
-
 import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
@@ -33,7 +10,7 @@ import { all } from "axios";
 import { zScoreTeam } from "./zScoreTeam";
 import { match } from "assert";
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
-import { picklistSliders } from "../analysisConstants";
+import { allMetrics } from "../analysisConstants";
 
 
 
@@ -43,18 +20,33 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
     const params = z.object({
         tournamentKey: z.string().nullable(),
         totalPoints: z.number(),
+        pickUps : z.number(),
+        stage : z.number(),
+        highNote : z.number(),
+        trapScore : z.number(),
         autoPoints: z.number(),
         teleopPoints: z.number(),
         driverAbility: z.number(),
-        defense: z.number()
+        defense: z.number(),
+        speakerScores : z.number(),
+        ampScores : z.number(),
+        cooperation : z.number()
+
 
     }).safeParse({
         tournnamentKey: Number(req.query.tournamentKey),
         totalPoints: Number(req.query.totalPoints),
+        pickUps :  Number(req.query.pickUps),
+        stage :  Number(req.query.stage),
+        highNote :  Number(req.query.highNote),
+        trapScore :  Number(req.query.trap),
         autoPoints: Number(req.query.autoPoints),
         teleopPoints: Number(req.query.teleopPoints),
         driverAbility: Number(req.query.driverAbility),
-        defense: Number(req.query.defense)
+        defense: Number(req.query.defense),
+        speakerScores :  Number(req.query.speakerScores),
+        ampScores :  Number(req.query.totalPoints),
+        cooperation :  Number(req.query.cooperation),
 
     })
     if (!params.success) {
@@ -73,7 +65,7 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
         await addTournamentMatches(params.data.tournamentKey)
     }
     const allTeamAvgSTD = {}
-    for (const element of picklistSliders) {
+    for (const element of allMetrics) {
         const currData = await arrayAndAverageAllTeam(req, element);
         allTeamAvgSTD[element] = { 
             "allAvg": currData.average, 

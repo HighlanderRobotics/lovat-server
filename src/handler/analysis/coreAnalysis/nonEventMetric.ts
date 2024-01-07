@@ -11,7 +11,7 @@ export const nonEventMetric = async (req: AuthenticatedRequest, team : number, m
         const params = z.object({
             //UPDATE WITH COLUMNS IN THE SCHEMA EACH YEAR
             column: z.enum([
-                "robotRole"
+                "robotRole", "pickUp", "highNote"
             ]),
             team: z.number()
         }).safeParse({

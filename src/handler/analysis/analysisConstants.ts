@@ -1,41 +1,54 @@
+import { EventAction, HighNoteResult, RobotRole, StageResult } from "@prisma/client"
+//add cooperation
+
+
 const metricsCategory =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores"]
-const metricsBreakdown = ["robotRole", "pickUp", "trap", "highNote"]
-const picklistSliders = ["put", "slicerNames", "here"]
+const metricsBreakdown = ["robotRole", "pickUp", "highNote"]
+//includes picklist sliders
+const allMetrics =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "cooperation"]
 const autoEnd = 17
 const teleopStart = 18
 const matchTimeEnd = 300
-const specificMatchPageMetrics = ["defense"]
+const specificMatchPageMetrics = ["defense", "ampscores", "speakerscores", "trapscores", "pickups"] 
 const driverAbility = "driverability"
+const exludedAutoEvents = [EventAction.DROP_RING]
+
 
 const stageMap = {
-    "NOTHING" : 0,
-    "PARK" : 1,
-    "ONSTAGE" : 3,
-    "ONSTAGE_HARMONY" : 5
+    [StageResult.NOTHING]: 0,
+    [StageResult.PARK] : 1,
+    [StageResult.ONSTAGE] : 3,
+    [StageResult.ONSTAGE_HARMONY] : 5
 
 }
-const trapMap = {
-    "NOT_ATTEMPTED" :0,
-    "FAILED" : 0,
-    "SUCCESSFUL" : 5
-}
+// const trapMap = {
+//     [] :0,
+//     "FAILED" : 0,
+//     "SUCCESSFUL" : 5
+// }
 const highNoteMap = {
-    "NOT_ATTEMPTED" :0,
-    "FAILED" : 0,
-    "SUCCESSFUL" : 1
+    [HighNoteResult.NOT_ATTEMPTED] :0,
+    [HighNoteResult.FAILED] : 0,
+    [HighNoteResult.SUCCESSFUL] : 1
 }
+
+RobotRole.OFFENSE
+
 const metricToEvent = {
     "totalpoints" : "totalpoints",
     "teleoppoints" : "teleoppoints",
     "driverability" : "driverability",
     "autopoints" : "autopoints",
-    "pickups" : "PICK_UP",
-    "ampscores" : "SCORE_AMP",
-    "speakerscores" : "SCORE_SPEAKER"
+    "pickups" : [EventAction.PICK_UP],
+    "ampscores" : [EventAction.SCORE_AMP],
+    "speakerscores" : [EventAction.SCORE_SPEAKER],
+    "trapscores" : [EventAction.SCORE_TRAP],
+    "stage" : "stage",
+    "cooperation" : "cooperation"
 
 }
 
 const multiplerBaseAnalysis = 4
-export { metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, trapMap, highNoteMap, metricToEvent};
+export { metricsCategory, allMetrics, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents};
 
 

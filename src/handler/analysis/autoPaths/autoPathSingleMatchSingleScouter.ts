@@ -3,7 +3,7 @@ import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
-import { autoEnd } from "../analysisConstants";
+import { autoEnd, exludedAutoEvents } from "../analysisConstants";
 
 
 export const autoPathSingleMatchSingleScouter = async (req: AuthenticatedRequest, matchKey : string, scouterUuid : string) => {
@@ -29,8 +29,12 @@ export const autoPathSingleMatchSingleScouter = async (req: AuthenticatedRequest
                 time : 
                 {
                     lte : autoEnd
-                }
+                },
                 //ADD OTHER FILTERS ON WHAT EVENT ENUMS COUNT
+                action :
+                {
+                    notIn : exludedAutoEvents
+                }
             
             },
 

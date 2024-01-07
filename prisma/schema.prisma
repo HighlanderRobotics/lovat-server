@@ -24,7 +24,7 @@ enum EventAction {
   LEAVE
   PICK_UP
   DROP_RING
-  TRAP
+  SCORE_TRAP
   SCORE_AMP
   SCORE_SPEAKER
   DEFENSE
@@ -138,7 +138,18 @@ model Scouter {
 model SharedPicklist {
   uuid     String @id @default(uuid())
   name     String
-  avgTotal Int    @db.SmallInt
+  totalPoints  Int    @db.SmallInt
+  defense     Int 
+  pickUps     Int
+  stage       Int
+  highNote    Int
+  autoPoints  Int
+  driverAbility  Int
+  speakerScores   Int
+  ampScores      Int
+  teleopPoints  Int
+  trapScores    Int
+
   authorId String
   author   User   @relation(fields: [authorId], references: [id])
 }
