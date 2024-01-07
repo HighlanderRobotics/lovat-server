@@ -4,6 +4,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
+import { metricsCategory } from "../analysisConstants";
 
 
 export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
@@ -11,7 +12,7 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
         const params = z.object({
             team: z.number(),
             //add more, game specfic
-            metric: z.enum(["driverAbility", "totalPoints"])
+            metric: z.enum(["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores"])
         }).safeParse({
             team: Number(req.params.team),
             metric: req.params.metric

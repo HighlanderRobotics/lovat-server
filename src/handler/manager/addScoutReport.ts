@@ -29,8 +29,8 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                 "ONSTAGE",
                 "ONSTAGE_HARMONY"
               ]),
-            highNote : z.enum(["YES", "NO"]),
-            trap : z.enum(["YES", "NO"]),
+            highNote : z.enum(["NOT_ATTEMPTED", "FAILED", "SUCCESSFUL"]),
+            trap : z.enum(["NOT_ATTEMPTED", "FAILED", "SUCCESSFUL"]),
             pickUp : z.enum(["GROUND", "CHUTE", "BOTH"]),
 
             driverAbility: z.number(),

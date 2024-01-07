@@ -2,16 +2,15 @@ import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { driverAbility, matchTimeEnd } from "../analysisConstants";
+import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap, trapMap } from "../analysisConstants";
 
 
-export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric : string, timeMin: number = 0, timeMax : number = matchTimeEnd): Promise<number> => {
+export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric1 : string, timeMin: number = 0, timeMax : number = matchTimeEnd): Promise<number> => {
     try {
         //DO SOME GAME SPECIFIC PROCESSING THAT CONVERTS THE METRIC TO THE ENUM/OTHER NAME
-
+        const metric = metricToEvent[metric1]
         if (metric === driverAbility) {
             
-         
             const sumOfMatches = await prismaClient.scoutReport.aggregate({
                 _avg:
                 {
@@ -44,23 +43,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
             return sumOfMatches._avg.driverAbility
         }
         else if (isPointAverage) {
-       
-            if(metric === "totalPoints")
-            {
-
-            }
-            else if(metric === "totalPointsAuto")
-            {
-
-            }
-            else if(metric === "totalPointsTeleop")
-            {
-
-            }
-            else{
-
             
-                const pointMetrics = []
                 const sumOfMatches = await prismaClient.event.groupBy({
                     by: ["scoutReportUuid"],
                     _sum:
@@ -89,9 +72,10 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                             },
 
                         },
-                        action:{
-                            in : pointMetrics
-                        },
+                        //no need for action, either has points or has 0
+                        // action:{
+                        //     in : pointMetrics
+                        // },
                         time : 
                         {
                             lt : timeMax,
@@ -101,9 +85,47 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                     }
                 })
             
-                const average = sumOfMatches.reduce((acc, val) => acc + val._sum.points, 0) / sumOfMatches.length;
-                return average
-            }
+                const eventsAverage = sumOfMatches.reduce((acc, val) => acc + val._sum.points, 0) / sumOfMatches.length;
+                //adds endgame/climbing points if nessisary
+                if(metric === "totalpoints" || metric === "teleoppoints")
+                {
+                    let stagePoints = []
+                    const scoutReports = await prismaClient.scoutReport.findMany({
+                        where :
+                        {
+                            teamMatchData:
+                            {
+                               
+                                tournamentKey: {
+                                    in: req.user.tournamentSource
+                                },
+                                teamNumber : team
+                            },
+                            scouter:
+                            {
+                                sourceTeamNumber:
+                                {
+                                    in: req.user.teamSource
+                                }
+                            },
+                        }
+                    })
+                    for(let element of scoutReports)
+                    {
+                        let currStagePoints = stageMap[element.stage] + trapMap[element.trap] + highNoteMap[element.highNote]
+                        stagePoints.push(currStagePoints)
+                    }
+                    let  stagePointsAverage = 0
+                    if (stagePoints.length > 0) {
+                        stagePointsAverage = stagePoints.reduce((acc, val) => acc + val, 0) / stagePoints.length;
+                    }
+                    return eventsAverage + stagePointsAverage
+                }
+                
+            return eventsAverage
+
+
+            
             }
 
 

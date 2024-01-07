@@ -89,12 +89,14 @@ enum RobotRole {
 }
 
 enum TrapResult {
-  YES
-  NO
+  NOT_ATTEMPTED
+  FAILED
+  SUCCESSFUL
 }
 enum HighNoteResult{
-  YES
-  NO
+  NOT_ATTEMPTED
+  FAILED
+  SUCCESSFUL
 }
 
 enum StageResult {
