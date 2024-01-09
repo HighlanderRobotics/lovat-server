@@ -158,7 +158,7 @@ app.post('/manager/scouter', addNewScouter) //tested
 
 //collection app homepage (feel free to change request/response format as needed)
 app.get('/manager/scouters/:uuid/tournaments', getTournamentsWithSchedule) //tested
-app.get('/manager/scouters/schedules/team/:team/tournament/:tournament', getScheduleForScouter) //tested
+app.get('/manager/registeredteams/:team/scouterschedules/:tournament', getScheduleForScouter) //tested
 
 
 //analysis
