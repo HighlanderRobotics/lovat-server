@@ -10,7 +10,7 @@ import { all } from "axios";
 import { zScoreTeam } from "./zScoreTeam";
 import { match } from "assert";
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
-import { allMetrics } from "../analysisConstants";
+import { picklistSliders } from "../analysisConstants";
 
 
 
@@ -30,7 +30,8 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
         defense: z.number(),
         speakerScores : z.number(),
         ampScores : z.number(),
-        cooperation : z.number()
+        cooperation : z.number(),
+        feeds : z.number()
 
 
     }).safeParse({
@@ -47,6 +48,7 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
         speakerScores :  Number(req.query.speakerScores),
         ampScores :  Number(req.query.totalPoints),
         cooperation :  Number(req.query.cooperation),
+        feeds : Number(req.query.feeds)
 
     })
     if (!params.success) {
@@ -65,7 +67,7 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
         await addTournamentMatches(params.data.tournamentKey)
     }
     const allTeamAvgSTD = {}
-    for (const element of allMetrics) {
+    for (const element of picklistSliders) {
         const currData = await arrayAndAverageAllTeam(req, element);
         allTeamAvgSTD[element] = { 
             "allAvg": currData.average, 

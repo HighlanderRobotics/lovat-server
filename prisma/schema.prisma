@@ -28,6 +28,7 @@ enum EventAction {
   SCORE_AMP
   SCORE_SPEAKER
   DEFENSE
+  FEED_RING
 }
 
 model FeatureToggle {
@@ -149,6 +150,7 @@ model SharedPicklist {
   ampScores      Int
   teleopPoints  Int
   trapScores    Int
+  feeds         Int
 
   authorId String
   author   User   @relation(fields: [authorId], references: [id])

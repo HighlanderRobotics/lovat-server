@@ -126,7 +126,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             }
             const paramsEvents = z.object({
                 time: z.number(),
-                action: z.enum(["DEFENSE", "SCORE_AMP", "SCORE_SPEAKER", "PICK_UP", "LEAVE"]),
+                action: z.enum(["DEFENSE", "SCORE_AMP", "SCORE_SPEAKER", "PICK_UP", "LEAVE", "DROP_RING", "FEED_RING"]),
                 position: z.enum(["NONE"]),
                 points: z.number(),
                 scoutReportUuid: z.string()

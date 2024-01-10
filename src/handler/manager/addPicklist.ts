@@ -19,7 +19,8 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
             ampScores : z.number(),
             teleopPoints : z.number(),
             trapScores : z.number(),
-            authorId: z.string()
+            authorId: z.string(),
+            feeds : z.number()
         }).safeParse({
             name: req.body.name,
             totalPoints: req.body.totalPoints,
@@ -34,6 +35,7 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
             ampScores : req.body.ampScores,
             teleopPoints : req.body.teleopPoints,
             trapScores : req.body.trapScores,
+            feeds : req.body.feeds,
             authorId: req.user.id
         })
         if (!params.success) {
@@ -55,6 +57,7 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
                 ampScores : params.data.ampScores,
                 teleopPoints : params.data.teleopPoints,
                 trapScores : params.data.trapScores,
+                feeds : params.data.feeds,
                 authorId : params.data.authorId
             }
         })

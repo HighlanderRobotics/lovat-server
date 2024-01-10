@@ -2,10 +2,11 @@ import { EventAction, HighNoteResult, RobotRole, StageResult } from "@prisma/cli
 //add cooperation
 
 
-const metricsCategory =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores"]
+const metricsCategory =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "feeds", "drops"]
 const metricsBreakdown = ["robotRole", "pickUp", "highNote"]
 //includes picklist sliders
-const allMetrics =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "cooperation"]
+//havent done stage or highnote yet 
+const picklistSliders =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "cooperation", "feeds"]
 const autoEnd = 17
 const teleopStart = 18
 const matchTimeEnd = 300
@@ -44,11 +45,13 @@ const metricToEvent = {
     "speakerscores" : [EventAction.SCORE_SPEAKER],
     "trapscores" : [EventAction.SCORE_TRAP],
     "stage" : "stage",
-    "cooperation" : "cooperation"
+    "cooperation" : "cooperation",
+    "feeds" : [EventAction.FEED_RING],
+    "drops" : [EventAction.DROP_RING]
 
 }
 
 const multiplerBaseAnalysis = 4
-export { metricsCategory, allMetrics, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents};
+export { metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents};
 
 
