@@ -8,7 +8,6 @@ import { metricsCategory } from "../analysisConstants";
 
 export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        console.log(req.user)
         const params = z.object({
             team : z.number()
          }).safeParse({

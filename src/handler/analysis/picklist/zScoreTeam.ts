@@ -4,14 +4,14 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
-import { allMetrics } from "../analysisConstants";
+import { picklistSliders } from "../analysisConstants";
 
 
 export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Object) : Promise<{zScore : number, adjusted : Array<Object>, unadjusted : Array<Object>}>=> {
     try {
         let adj = []
         let unAdj = []
-        for (const element of allMetrics) {
+        for (const element of picklistSliders) {
             const currData = await arrayAndAverageAllTeam(req, element)
             let zScore = (currData.average - allTeamAvgSTD[element].allAvg) / allTeamAvgSTD[element].arraySTD
             if (isNaN(zScore)) { zScore = 0 }

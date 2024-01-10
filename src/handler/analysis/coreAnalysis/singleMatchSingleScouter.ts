@@ -4,6 +4,8 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
 import { sum } from "simple-statistics";
+import { EventAction } from "@prisma/client";
+import { match } from "assert";
 
 
 
@@ -91,7 +93,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                     time:
                     {
                         lt: timeMax,
-                        gt: timeMin
+                        gte: timeMin
                     }
 
                 }
@@ -108,7 +110,6 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                     {
                         teamMatchData:
                         {
-
                             tournamentKey: {
                                 in: req.user.tournamentSource
                             },
@@ -139,15 +140,11 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
 
         }
 
-
-
         else {
-            const mapMetricsToEnums = { defense: "DEFENSE" }
-
             const params = z.object({
-                metric: z.enum(["LEAVE", "DEFENSE", "SCORE_AMP", "SCORE_SPEAKER", "PICK_UP", "DROP_RING", "SCORE_TRAP"]),
+                metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE_TRAP, EventAction.SCORE_SPEAKER, EventAction.SCORE_AMP]),
             }).safeParse({
-                metric: metric,
+                metric: metric[0],
             })
             if (!params.success) {
                 throw (params)
@@ -164,13 +161,12 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                     scoutReport: {
                         teamMatchKey: matchKey,
                         scouterUuid: scouterUuid
-
                     },
                     action: params.data.metric,
                     time:
                     {
                         lt: timeMax,
-                        gt: timeMin
+                        gte: timeMin
                     }
 
                 }
@@ -184,7 +180,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
         }
     }
     catch (error) {
-        console.error(error)
+        console.error(error.error)
         throw (error)
     }
 

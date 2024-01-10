@@ -37,6 +37,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
         else
         {
             let matchDataArray = []
+
             for(const element of scoutReports)
             {
                 const currData = await singleMatchSingleScouter(req, isPointAverage, matchKey, metric1, element.scouterUuid, timeMin, timeMax)
