@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
+import { time } from "console";
 
 
 export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string): Promise<{ average: number, timeLine: Array<number> }> => {
@@ -42,9 +43,10 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
         };
 
         const uniqueTeamsArray : Array<number> = Array.from(uniqueTeams);
-        const timeLineArray = []
+        let timeLineArray = []
         for (const element of uniqueTeamsArray) {
-            timeLineArray.concat((await arrayAndAverageTeam(req, metric, element)).timeLine )
+            const currArr =  (await arrayAndAverageTeam(req, metric, element)).timeLine
+            timeLineArray = timeLineArray.concat(currArr )
         };
         const average = timeLineArray.reduce((acc, cur) => acc + cur.dataPoint, 0) / timeLineArray.length;
         return {

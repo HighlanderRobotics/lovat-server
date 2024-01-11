@@ -12,7 +12,7 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
         const params = z.object({
             team: z.number(),
             //add more, game specfic
-            metric: z.enum(["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores"])
+            metric: z.enum(["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "feeds",, "drops"])
         }).safeParse({
             team: Number(req.params.team),
             metric: req.params.metric

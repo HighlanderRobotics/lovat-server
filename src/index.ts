@@ -165,8 +165,8 @@ app.get('/manager/registeredteams/:team/scouterschedules/:tournament', getSchedu
 
 
 //team look up page
-app.get('/analysis/metric/:metric/team/:team', requireAuth, detailsPage)
-app.get('/analysis/category/team/:team', requireAuth, categoryMetrics) 
+app.get('/analysis/metric/:metric/team/:team', requireAuth, detailsPage) //tested
+app.get('/analysis/category/team/:team', requireAuth, categoryMetrics) //tested
 app.get('/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested
 app.get('/analysis/notes/team/:team', requireAuth, getNotes) //tested
 
