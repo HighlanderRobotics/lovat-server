@@ -18,15 +18,15 @@ model Event {
 }
 enum Position {
   NONE
-  PLACE_HOLDER
+  AMP
+  SPEAKER
+  TRAP
 }
 enum EventAction {
   LEAVE
   PICK_UP
   DROP_RING
-  SCORE_TRAP
-  SCORE_AMP
-  SCORE_SPEAKER
+  SCORE
   DEFENSE
   FEED_RING
 }

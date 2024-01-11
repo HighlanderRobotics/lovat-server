@@ -4,13 +4,30 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
 import { sum } from "simple-statistics";
-import { EventAction } from "@prisma/client";
+import { EventAction, Position } from "@prisma/client";
 import { match } from "assert";
 
 
 
 export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPointAverage: boolean, matchKey: string, metric1: string, scouterUuid: string, timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
+        let position = null
+        if(metric1 === "ampscores" )
+        {
+            position = Position.AMP
+        }
+        else if(metric1 === "speakerscores" )
+        {
+            position = Position.SPEAKER
+        }
+        if(metric1 === "trapscores" )
+        {
+            position = Position.TRAP
+        }
+        else
+        {
+            position = Position.NONE
+        }
         const params = z.object({
             matchKey: z.string(),
             //metric enums are same as allMetrics
@@ -142,9 +159,11 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
 
         else {
             const params = z.object({
-                metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE_TRAP, EventAction.SCORE_SPEAKER, EventAction.SCORE_AMP]),
+                metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE]),
+                position : z.enum([Position.NONE, Position.AMP, Position.TRAP, Position.SPEAKER])
             }).safeParse({
                 metric: metric[0],
+                position : position
             })
             if (!params.success) {
                 throw (params)
@@ -167,7 +186,8 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                     {
                         lt: timeMax,
                         gte: timeMin
-                    }
+                    },
+                    position : params.data.position
 
                 }
             })

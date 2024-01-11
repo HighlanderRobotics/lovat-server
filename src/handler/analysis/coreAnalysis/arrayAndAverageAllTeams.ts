@@ -6,6 +6,7 @@ import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { time } from "console";
+import { Position } from "@prisma/client";
 
 
 export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string): Promise<{ average: number, timeLine: Array<number> }> => {
