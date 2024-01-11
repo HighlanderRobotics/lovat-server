@@ -20,7 +20,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
         {
             position = Position.SPEAKER
         }
-        if(metric1 === "trapscores" )
+        else if(metric1 === "trapscores" )
         {
             position = Position.TRAP
         }
@@ -28,14 +28,15 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
         {
             position = Position.NONE
         }
-        const params = z.object({
-            matchKey: z.string(),
-            //metric enums are same as allMetrics
-            metric: z.enum(["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "cooperation"])
-        }).safeParse({
-            matchKey: matchKey,
-            metric: metric1
-        })
+
+        // const params = z.object({
+        //     matchKey: z.string(),
+        //     //metric enums are same as allMetrics
+        //     metric: z.enum(["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "cooperation"])
+        // }).safeParse({
+        //     matchKey: matchKey,
+        //     metric: metric1
+        // })
         const metric = metricToEvent[metric1]
         if (metric === "stage") {
             const scoutReports = await prismaClient.scoutReport.findMany({
@@ -152,9 +153,6 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
             }
 
             return eventsAverage
-
-
-
         }
 
         else {
