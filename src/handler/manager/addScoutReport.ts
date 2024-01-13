@@ -6,6 +6,8 @@ import { singleMatchSingleScouter } from "../analysis/coreAnalysis/singleMatchSi
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { EventAction } from "@prisma/client";
 import { ADDRGETNETWORKPARAMS } from "dns";
+import { PickUpMap, PositionMap } from "./managerConstants";
+import { highNoteMap, stageMap } from "../analysis/analysisConstants";
 
 
 export const addScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -38,11 +40,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             scouterUuid: req.body.scouterUuid,
             startTime: req.body.startTime,
             notes: req.body.notes,
-            links:  req.body.links,
             robotRole:  req.body.robotRole,
-            autoChallengeResult:  req.body.autoChallengeResult,
-            teleopChallengeResult:  req.body.challengeResult,
-            penaltyCard:  req.body.penaltyCard,
             driverAbility:  req.body.driverAbility,
             highNote:  req.body.highNote,
             pickUp:  req.body.pickUp,
@@ -65,9 +63,9 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
                     //game specfific
-                    highNote: paramsScoutReport.data.highNote,
-                    stage: paramsScoutReport.data.stage,
-                    pickUp: paramsScoutReport.data.pickUp
+                    highNote: highNoteMap[paramsScoutReport.data.highNote][0],
+                    stage: stageMap[paramsScoutReport.data.stage][0],
+                    pickUp: PickUpMap[paramsScoutReport.data.pickUp][0]
                 }
             }
         )
@@ -78,8 +76,8 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
         for (let i = 0; i < events.length; i++) {
             let points = 0;
             let time = events[i][0];
-            let position = events[i][2];
-            let action = events[i][1]
+            let position = PositionMap[events[i][2]][0];
+            let action = EventAction[events[i][1]][0]
             if (action === "AMP_ON") {
                 ampOn = true
             }
