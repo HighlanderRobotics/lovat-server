@@ -12,7 +12,6 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
 
 
     try {
-        let matchData = req.body.data;
         let matchKey = req.body.matchKey;
         let scoutReportUuid = req.body.uuid
         const paramsScoutReport = z.object({
@@ -37,19 +36,19 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             scouterUuid: z.string()
         }).safeParse({
             teamMatchKey: matchKey,
-            scouterUuid: matchData.scouterUuid,
-            startTime: matchData.startTime,
-            notes: matchData.notes,
-            links: matchData.links,
-            robotRole: matchData.robotRole,
-            autoChallengeResult: matchData.autoChallengeResult,
-            teleopChallengeResult: matchData.challengeResult,
-            penaltyCard: matchData.penaltyCard,
-            driverAbility: matchData.driverAbility,
-            highNote: matchData.highNote,
-            pickUp: matchData.pickUp,
-            stage: matchData.stage,
-            trap: matchData.trap
+            scouterUuid: req.body.scouterUuid,
+            startTime: req.body.startTime,
+            notes: req.body.notes,
+            links:  req.body.links,
+            robotRole:  req.body.robotRole,
+            autoChallengeResult:  req.body.autoChallengeResult,
+            teleopChallengeResult:  req.body.challengeResult,
+            penaltyCard:  req.body.penaltyCard,
+            driverAbility:  req.body.driverAbility,
+            highNote:  req.body.highNote,
+            pickUp:  req.body.pickUp,
+            stage:  req.body.stage,
+            trap:  req.body.trap
         })
         if (!paramsScoutReport.success) {
             res.status(400).send(paramsScoutReport);
@@ -75,7 +74,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
         )
 
 
-        let events = matchData.events;
+        let events = req.body.events;
         let ampOn = false
         for (let i = 0; i < events.length; i++) {
             let points = 0;
@@ -152,7 +151,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                 })
             }
         }
-        const totalPoints = await singleMatchSingleScouter(req, true, matchKey, "totalpoints", matchData.scouterUuid)
+        const totalPoints = await singleMatchSingleScouter(req, true, matchKey, "totalpoints", req.body.scouterUuid)
         //recalibrate the max resonable points for every year 
         if (totalPoints === 0 || totalPoints > 80) {
             await prismaClient.flaggedScoutReport.create({
