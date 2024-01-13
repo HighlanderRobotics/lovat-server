@@ -10,7 +10,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
             uuid: z.string(),
             tournament : z.string()
         }).safeParse({
-            uuid: req.params.scouters,
+            uuid: req.params.uuid,
             tournament : req.params.tournament
         })
         if (!params.success) {
@@ -26,6 +26,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
         if(!scouter)
         {
             res.status(401).send("Uuid does not exist")
+            return
         }
         const rows = await prismaClient.scouterScheduleShift.findMany({
             where:
