@@ -12,7 +12,6 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
 
 
     try {
-        let matchKey = req.body.matchKey;
         let scoutReportUuid = req.body.uuid
         const paramsScoutReport = z.object({
             uuid: z.string(),
@@ -35,7 +34,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             driverAbility: z.number(),
             scouterUuid: z.string()
         }).safeParse({
-            teamMatchKey: matchKey,
+            teamMatchKey: req.body.matchKey,
             scouterUuid: req.body.scouterUuid,
             startTime: req.body.startTime,
             notes: req.body.notes,
@@ -151,7 +150,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                 })
             }
         }
-        const totalPoints = await singleMatchSingleScouter(req, true, matchKey, "totalpoints", req.body.scouterUuid)
+        const totalPoints = await singleMatchSingleScouter(req, true, req.body.matchKey, "totalpoints", req.body.scouterUuid)
         //recalibrate the max resonable points for every year 
         if (totalPoints === 0 || totalPoints > 80) {
             await prismaClient.flaggedScoutReport.create({
