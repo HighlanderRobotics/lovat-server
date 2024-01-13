@@ -30,7 +30,6 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                 "ONSTAGE_HARMONY"
             ]),
             highNote: z.enum(["NOT_ATTEMPTED", "FAILED", "SUCCESSFUL"]),
-            trap: z.enum(["NOT_ATTEMPTED", "FAILED", "SUCCESSFUL"]),
             pickUp: z.enum(["GROUND", "CHUTE", "BOTH"]),
 
             driverAbility: z.number(),
@@ -42,10 +41,9 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             notes: req.body.notes,
             robotRole:  req.body.robotRole,
             driverAbility:  req.body.driverAbility,
-            highNote:  req.body.highNote,
-            pickUp:  req.body.pickUp,
-            stage:  req.body.stage,
-            trap:  req.body.trap
+            highNote:  highNoteMap[req.body.highNote][0],
+            pickUp:  PickUpMap[req.body.pickUp][0],
+            stage:  stageMap[req.body.stage][0],
         })
         if (!paramsScoutReport.success) {
             res.status(400).send(paramsScoutReport);
@@ -63,9 +61,10 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
                     //game specfific
-                    highNote: highNoteMap[paramsScoutReport.data.highNote][0],
-                    stage: stageMap[paramsScoutReport.data.stage][0],
-                    pickUp: PickUpMap[paramsScoutReport.data.pickUp][0]
+                    highNote: paramsScoutReport.data.highNote,
+                    stage: paramsScoutReport.data.stage,
+                    pickUp: paramsScoutReport.data.pickUp
+                
                 }
             }
         )

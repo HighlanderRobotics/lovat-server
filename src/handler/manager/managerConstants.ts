@@ -33,6 +33,12 @@ const EventActionMap = {
     1 : [PickUp.CHUTE],
     2 : [PickUp.BOTH]
   }
-export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap}
+  const HighNoteMap = 
+  {
+    0 : [HighNoteResult.NOT_ATTEMPTED],
+    1 : [HighNoteResult.FAILED],
+    2 : [HighNoteResult.SUCCESSFUL]
+  }
+export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap}
 
   
