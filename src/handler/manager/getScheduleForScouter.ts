@@ -7,23 +7,23 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 export const getScheduleForScouter = async (req: Request, res: Response): Promise<void> => {
     try {
         const params = z.object({
-            uuid: z.string(),
+            teamCode: z.string(),
             tournament : z.string()
         }).safeParse({
-            uuid: req.params.uuid,
+            teamCode: req.headers['x-team-code'],
             tournament : req.params.tournament
         })
         if (!params.success) {
             res.status(400).send(params);
             return;
         };
-        const scouter = await prismaClient.scouter.findUnique({
+        const teamRow = await prismaClient.registeredTeam.findUnique({
             where :
             {
-                uuid : params.data.uuid
+                code : params.data.teamCode
             }
         })
-        if(!scouter)
+        if(!teamRow)
         {
             res.status(401).send("Uuid does not exist")
             return
@@ -31,7 +31,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
         const rows = await prismaClient.scouterScheduleShift.findMany({
             where:
             {
-                sourceTeamNumber : scouter.sourceTeamNumber,
+                sourceTeamNumber : teamRow.number,
                 tournamentKey : params.data.tournament,
             }
 
