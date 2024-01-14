@@ -77,10 +77,10 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             let time = events[i][0];
             let position = PositionMap[events[i][2]][0];
             let action = EventAction[events[i][1]][0]
-            if (action === "AMP_ON") {
+            if (action === "START") {
                 ampOn = true
             }
-            else if (action === "AMP_OFF") {
+            else if (action === "STOP") {
                 ampOn = false
             }
             else if (time <= 17) {
