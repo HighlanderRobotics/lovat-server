@@ -55,11 +55,11 @@ const EventActionMap = {
     1 : [HighNoteResult.FAILED],
     2 : [HighNoteResult.SUCCESSFUL]
   }
-  const matchTypeMap = 
+  const MatchTypeMap = 
   {
     0 : [MatchType.QUALIFICATION],
     1 : [MatchType.ELIMINATION]
   }
-export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, matchTypeMap}
+export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, MatchTypeMap}
 
   

@@ -83,7 +83,7 @@ model ScoutReport {
   uuid                String                @id @default(uuid())
   teamMatchKey        String
   teamMatchData       TeamMatchData         @relation(fields: [teamMatchKey], references: [key])
-  startTime           String
+  startTime           Int
   notes               String
   robotRole           RobotRole
   stage               StageResult

@@ -6,19 +6,15 @@ import { singleMatchSingleScouter } from "../analysis/coreAnalysis/singleMatchSi
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { EventAction } from "@prisma/client";
 import { ADDRGETNETWORKPARAMS } from "dns";
-import { PickUpMap, PositionMap, matchTypeMap } from "./managerConstants";
-import { highNoteMap, stageMap } from "../analysis/analysisConstants";
+import { PickUpMap, PositionMap, MatchTypeMap, HighNoteMap, StageResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 
 
-export const addScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
 
 
     try {
-        let scoutReportUuid = req.body.uuid
         const paramsScoutReport = z.object({
-            uuid: z.string(),
-            teamMatchKey: z.string(),
-            startTime: z.string(),
+            startTime: z.number(),
             notes: z.string(),
             robotRole: z.enum(["OFFENSE",
                 "DEFENSE",
@@ -39,16 +35,15 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             tournamentKey : z.string(),
             teamNumber : z.number()
         }).safeParse({
-            teamMatchKey: req.body.matchKey,
             scouterUuid: req.body.scouterUuid,
             startTime: req.body.startTime,
             notes: req.body.notes,
-            robotRole:  req.body.robotRole,
+            robotRole:  RobotRoleMap[req.body.robotRole][0],
             driverAbility:  req.body.driverAbility,
-            highNote:  highNoteMap[req.body.highNote][0],
+            highNote:  HighNoteMap[req.body.highNote][0],
             pickUp:  PickUpMap[req.body.pickUp][0],
-            stage:  stageMap[req.body.stage][0],
-            matchType : matchTypeMap[req.body.matchType][0],
+            stage:  StageResultMap[req.body.stage][0],
+            matchType : MatchTypeMap[req.body.matchType][0],
             matchNumber : req.body.matchNumber,
             teamNumber : req.body.teamNumber,
             tournamentKey : req.body.tournamentKey
@@ -85,7 +80,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                 }
             }
         )
-
+        const scoutReportUuid = row.uuid
 
         let events = req.body.events;
         let ampOn = false
@@ -93,7 +88,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             let points = 0;
             let time = events[i][0];
             let position = PositionMap[events[i][2]][0];
-            let action = EventAction[events[i][1]][0]
+            let action = EventActionMap[events[i][1]][0]
             if (action === "START") {
                 ampOn = true
             }
@@ -137,7 +132,7 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                 const paramsEvents = z.object({
                     time: z.number(),
                     action: z.enum(["DEFENSE", "SCORE", "PICK_UP", "LEAVE", "DROP_RING", "FEED_RING"]),
-                    position: z.enum(["NONE"]),
+                    position: z.enum(["NONE", "AMP", "SPEAKER", "TRAP", "WING_NEAR_AMP", "WING_FRONT_OF_SPEAKER", "WING_CENTER", "WING_NEAR_SOURCE", "GROUND_NOTE_ALLIANCE_NEAR_AMP", "GROUND_NOTE_ALLIANCE_FRONT_OF_SPEAKER", "GROUND_NOTE_ALLIANCE_BY_SPEAKER", "GROUND_NOTE_CENTER_FARTHEST_AMP_SIDE", "GROUND_NOTE_CENTER_TOWARD_AMP_SIDE", "GROUND_NOTE_CENTER_CENTER", "GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE", "GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE"]),
                     points: z.number(),
                     scoutReportUuid: z.string()
                 }).safeParse({
@@ -164,18 +159,18 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
                 })
             }
         }
-        const totalPoints = await singleMatchSingleScouter(req, true, req.body.matchKey, "totalpoints", req.body.scouterUuid)
-        //recalibrate the max resonable points for every year 
-        if (totalPoints === 0 || totalPoints > 80) {
-            await prismaClient.flaggedScoutReport.create({
-                data:
-                {
-                    note: `${totalPoints} recorded`,
-                    scoutReportUuid: scoutReportUuid
-                }
+        // const totalPoints = await singleMatchSingleScouter(req, true, req.body.matchKey, "totalpoints", req.body.scouterUuid)
+        // //recalibrate the max resonable points for every year 
+        // if (totalPoints === 0 || totalPoints > 80) {
+        //     await prismaClient.flaggedScoutReport.create({
+        //         data:
+        //         {
+        //             note: `${totalPoints} recorded`,
+        //             scoutReportUuid: scoutReportUuid
+        //         }
 
-            })
-        }
+        //     })
+        // }
         res.status(200).send('done adding data');
     }
 

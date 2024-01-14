@@ -88,12 +88,12 @@ app.get('/manager/matches/:tournament', requireAuth, getMatches) // should be ab
 
 //scout report
 app.delete('/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // tested
-app.post('/manager/scoutreports',requireAuth, addScoutReport) //tested
+app.post('/manager/scoutreports', addScoutReport) //tested
 app.put('/manager/notes/:uuid', requireAuth, updateNotes) 
 app.get('/manager/scoutreports/:uuid', getScoutReport ) //tested
 
 
-//scouter shift
+//scouter shiftaf
 app.post('/manager/tournament/:tournament/scoutershifts', requireAuth, addScouterShift) //tested , expecting only 1 at a time
 // app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
 app.post('/manager/scoutershifts/:uuid', requireAuth,updateScouterShift) //tested 
