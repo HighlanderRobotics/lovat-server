@@ -7,6 +7,7 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { EventAction } from "@prisma/client";
 import { ADDRGETNETWORKPARAMS } from "dns";
 import { PickUpMap, PositionMap, MatchTypeMap, HighNoteMap, StageResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
+import { addTournamentMatches } from "./addTournamentMatches";
 
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
@@ -14,6 +15,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
 
     try {
         const paramsScoutReport = z.object({
+            uuid : z.string(),
             startTime: z.number(),
             notes: z.string(),
             robotRole: z.enum(["OFFENSE",
@@ -35,6 +37,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             tournamentKey : z.string(),
             teamNumber : z.number()
         }).safeParse({
+            uuid : req.body.uuid,
             scouterUuid: req.body.scouterUuid,
             startTime: req.body.startTime,
             notes: req.body.notes,
@@ -52,6 +55,28 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             res.status(400).send(paramsScoutReport);
             return;
         };
+        const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
+            where :
+            {
+                uuid : paramsScoutReport.data.uuid
+            }
+        })
+        if(scoutReportUuidRow)
+        {
+            res.status(400).send("Scout report already uploaded")
+            return
+        }
+
+        const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
+            where :
+            {
+                tournamentKey : paramsScoutReport.data.tournamentKey
+            }
+        })
+        if(tournamentMatchRows === null || tournamentMatchRows.length === 0)
+        {
+            await addTournamentMatches(paramsScoutReport.data.tournamentKey)
+        }
         const matchRow = await prismaClient.teamMatchData.findFirst({
             where :
             {
@@ -62,10 +87,16 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             }
         })
         let matchKey = matchRow.key
+        if(!matchRow)
+        {
+            res.status(400).send("Match does not exist")
+            return
+        }
         const row = await prismaClient.scoutReport.create(
             {
                 data: {
                     //constants
+                    uuid : paramsScoutReport.data.uuid,
                     teamMatchKey: matchKey,
                     scouterUuid: paramsScoutReport.data.scouterUuid,
                     startTime: paramsScoutReport.data.startTime,
