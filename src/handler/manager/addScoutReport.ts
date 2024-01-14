@@ -54,6 +54,17 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             res.status(400).send(paramsScoutReport);
             return;
         };
+        const scouter = await prismaClient.scouter.findUnique({
+            where :
+            {
+                uuid : paramsScoutReport.data.scouterUuid
+            }
+        })
+        if(!scouter)
+        {
+            res.status(400).send("Scouter does not exist")
+            return
+        }
         const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
             where :
             {
@@ -85,20 +96,21 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 teamNumber : paramsScoutReport.data.teamNumber
             }
         })
-        let matchKey = matchRow.key
         if(!matchRow)
         {
             res.status(400).send("Match does not exist")
             return
         }
+        let matchKey = matchRow.key
+        
         const row = await prismaClient.scoutReport.create(
             {
                 data: {
                     //constants
                     uuid : paramsScoutReport.data.uuid,
                     teamMatchKey: matchKey,
-                    scouterUuid: paramsScoutReport.data.scouterUuid,
                     startTime: new Date(paramsScoutReport.data.startTime),
+                    scouterUuid: paramsScoutReport.data.scouterUuid,
                     notes: paramsScoutReport.data.notes,
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
@@ -111,7 +123,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             }
         )
         const scoutReportUuid = row.uuid
-
+        let eventDataArray = []
         let events = req.body.events;
         let ampOn = false
         for (let i = 0; i < events.length; i++) {
@@ -161,7 +173,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
 
                 const paramsEvents = z.object({
                     time: z.number(),
-                    action: z.enum(["DEFENSE", "SCORE", "PICK_UP", "LEAVE", "DROP_RING", "FEED_RING"]),
+                    action: z.enum(["DEFENSE", "SCORE", "PICK_UP", "LEAVE", "DROP_RING", "FEED_RING", "STARTING_POSITION"]),
                     position: z.enum(["NONE", "AMP", "SPEAKER", "TRAP", "WING_NEAR_AMP", "WING_FRONT_OF_SPEAKER", "WING_CENTER", "WING_NEAR_SOURCE", "GROUND_NOTE_ALLIANCE_NEAR_AMP", "GROUND_NOTE_ALLIANCE_FRONT_OF_SPEAKER", "GROUND_NOTE_ALLIANCE_BY_SPEAKER", "GROUND_NOTE_CENTER_FARTHEST_AMP_SIDE", "GROUND_NOTE_CENTER_TOWARD_AMP_SIDE", "GROUND_NOTE_CENTER_CENTER", "GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE", "GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE"]),
                     points: z.number(),
                     scoutReportUuid: z.string()
@@ -176,19 +188,19 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     res.status(400).send(paramsEvents);
                     return;
                 };
-                const currEventRow = await prismaClient.event.create({
-                    data:
-                    {
+                eventDataArray.push( {
                         time: paramsEvents.data.time,
                         action: paramsEvents.data.action,
                         position: paramsEvents.data.position,
                         points: paramsEvents.data.points,
                         scoutReportUuid: scoutReportUuid
-
-                    }
                 })
+                
             }
         }
+        const rows = await prismaClient.event.createMany({
+            data : eventDataArray
+        })
         // const totalPoints = await singleMatchSingleScouter(req, true, req.body.matchKey, "totalpoints", req.body.scouterUuid)
         // //recalibrate the max resonable points for every year 
         // if (totalPoints === 0 || totalPoints > 80) {
