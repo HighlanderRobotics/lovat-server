@@ -98,7 +98,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     uuid : paramsScoutReport.data.uuid,
                     teamMatchKey: matchKey,
                     scouterUuid: paramsScoutReport.data.scouterUuid,
-                    startTime: paramsScoutReport.data.startTime,
+                    startTime: new Date(paramsScoutReport.data.startTime),
                     notes: paramsScoutReport.data.notes,
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
