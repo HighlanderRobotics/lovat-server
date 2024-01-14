@@ -42,6 +42,7 @@ enum EventAction {
   SCORE
   DEFENSE
   FEED_RING
+  STARTING_POSITION
 }
 
 model FeatureToggle {

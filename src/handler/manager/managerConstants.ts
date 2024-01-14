@@ -9,7 +9,8 @@ const EventActionMap = {
     4 : [EventAction.DEFENSE],
     5 : [EventAction.FEED_RING],
     6 : ["START"],
-    7 : ["STOP"]
+    7 : ["STOP"],
+    8 : [EventAction.STARTING_POSITION]
 
   }
   const PositionMap = {
