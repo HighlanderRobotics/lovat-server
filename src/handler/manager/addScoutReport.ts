@@ -6,7 +6,7 @@ import { singleMatchSingleScouter } from "../analysis/coreAnalysis/singleMatchSi
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { EventAction } from "@prisma/client";
 import { ADDRGETNETWORKPARAMS } from "dns";
-import { PickUpMap, PositionMap } from "./managerConstants";
+import { PickUpMap, PositionMap, matchTypeMap } from "./managerConstants";
 import { highNoteMap, stageMap } from "../analysis/analysisConstants";
 
 
@@ -33,7 +33,11 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             pickUp: z.enum(["GROUND", "CHUTE", "BOTH"]),
 
             driverAbility: z.number(),
-            scouterUuid: z.string()
+            scouterUuid: z.string(),
+            matchType : z.enum(["QUALIFICATION", "ELIMINATION"]),
+            matchNumber : z.number(),
+            tournamentKey : z.string(),
+            teamNumber : z.number()
         }).safeParse({
             teamMatchKey: req.body.matchKey,
             scouterUuid: req.body.scouterUuid,
@@ -44,17 +48,30 @@ export const addScoutReport = async (req: AuthenticatedRequest, res: Response): 
             highNote:  highNoteMap[req.body.highNote][0],
             pickUp:  PickUpMap[req.body.pickUp][0],
             stage:  stageMap[req.body.stage][0],
+            matchType : matchTypeMap[req.body.matchType][0],
+            matchNumber : req.body.matchNumber,
+            teamNumber : req.body.teamNumber,
+            tournamentKey : req.body.tournamentKey
         })
         if (!paramsScoutReport.success) {
             res.status(400).send(paramsScoutReport);
             return;
         };
-
+        const matchRow = await prismaClient.teamMatchData.findFirst({
+            where :
+            {
+                tournamentKey : paramsScoutReport.data.tournamentKey,
+                matchNumber : paramsScoutReport.data.matchNumber,
+                matchType : paramsScoutReport.data.matchType,
+                teamNumber : paramsScoutReport.data.teamNumber
+            }
+        })
+        let matchKey = matchRow.key
         const row = await prismaClient.scoutReport.create(
             {
                 data: {
                     //constants
-                    teamMatchKey: paramsScoutReport.data.teamMatchKey,
+                    teamMatchKey: matchKey,
                     scouterUuid: paramsScoutReport.data.scouterUuid,
                     startTime: paramsScoutReport.data.startTime,
                     notes: paramsScoutReport.data.notes,

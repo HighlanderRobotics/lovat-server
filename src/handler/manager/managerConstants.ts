@@ -1,4 +1,4 @@
-import { EventAction, Position, HighNoteResult, RobotRole, StageResult, PickUp } from "@prisma/client"
+import { EventAction, Position, HighNoteResult, RobotRole, StageResult, PickUp, MatchType } from "@prisma/client"
 import { robotRole } from "../analysis/coreAnalysis/robotRole"
 
 const EventActionMap = {
@@ -55,6 +55,11 @@ const EventActionMap = {
     1 : [HighNoteResult.FAILED],
     2 : [HighNoteResult.SUCCESSFUL]
   }
-export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap}
+  const matchTypeMap = 
+  {
+    0 : [MatchType.QUALIFICATION],
+    1 : [MatchType.ELIMINATION]
+  }
+export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, matchTypeMap}
 
   
