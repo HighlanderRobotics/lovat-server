@@ -12,7 +12,6 @@ import { addTournamentMatches } from "./addTournamentMatches";
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
 
-
     try {
         const paramsScoutReport = z.object({
             uuid : z.string(),
