@@ -168,7 +168,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 }
 
             }
-            if (action !== "AMP_ON" && action !== "AMP_OFF") {
+            if (action !== "START" && action !== "STOP") {
 
 
                 const paramsEvents = z.object({
