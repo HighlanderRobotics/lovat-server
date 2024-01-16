@@ -1,18 +1,25 @@
+
+
+
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { match } from "node:assert";
+import { MatchTypeMap, ScouterScheduleMap } from "./managerConstants";
 
 
 export const getScheduleForScouter = async (req: Request, res: Response): Promise<void> => {
     try {
+
         const params = z.object({
-            teamCode: z.string(),
-            tournament : z.string()
+            code : z.string(),
+            tournamentKey: z.string()
         }).safeParse({
-            teamCode: req.headers['x-team-code'],
-            tournament : req.params.tournament
+            code : req.headers['x-team-code'],
+            tournamentKey: req.params.tournament
         })
+
         if (!params.success) {
             res.status(400).send(params);
             return;
@@ -20,23 +27,93 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
         const teamRow = await prismaClient.registeredTeam.findUnique({
             where :
             {
-                code : params.data.teamCode
+                code : params.data.code
             }
         })
         if(!teamRow)
         {
-            res.status(401).send("Uuid does not exist")
+            res.status(400).send("Provided code is not affiliated with a team")
             return
         }
         const rows = await prismaClient.scouterScheduleShift.findMany({
+            where: {
+                sourceTeamNumber: teamRow.number,
+                tournamentKey: params.data.tournamentKey
+
+            }
+        })
+        const maxQualifierRow = await prismaClient.teamMatchData.findFirst({
             where:
             {
-                sourceTeamNumber : teamRow.number,
-                tournamentKey : params.data.tournament,
+                tournamentKey: params.data.tournamentKey,
+                matchType: "QUALIFICATION"
+            },
+            orderBy:
+            {
+                matchNumber: "desc",
             }
-
         })
-        res.status(200).send(rows);
+        const highestQualificationMatchNumber = maxQualifierRow.matchNumber
+        let finalArr = []
+        for (const element of rows) {
+            for (let i = element.startMatchOrdinalNumber; i <= element.endMatchOrdinalNumber; i++) {
+                
+                let matchNumber = i
+                let matchType = 0
+                if (i > highestQualificationMatchNumber) {
+                    matchNumber = i - highestQualificationMatchNumber
+                    matchType = 1
+                }
+
+                let currData = {
+                    tournamentKey: params.data.tournamentKey,
+                    matchType : matchType,
+                    matchNumber : matchNumber
+                }
+
+                
+                const matchRows = await prismaClient.teamMatchData.findMany({
+                    where:
+                    {
+                        tournamentKey: params.data.tournamentKey,
+                        matchNumber: matchNumber,
+                        matchType : MatchTypeMap[matchType][0]
+                    }
+                })
+                //if its 0 just skipp over 
+                if(matchRows.length !== 6 && matchRows.length > 0)
+                {
+                    //could be a server issue or an ordinal number problem
+                    res.status(400).send("Match has not imported correctly")
+                    return
+                }
+                if(matchRows.length === 6 )
+                {
+                    const scouterArr = []
+                    for(let j = 0; j < 6; j ++)
+                    {
+                        for(const scouterUuid of element[ScouterScheduleMap[j]])
+                        {
+                            if(j <= 2)
+                            {
+                                //check that this is red
+                                let map = {}    
+                                map[scouterUuid] = { team : matchRows[j].teamNumber, alliance : "red"}                   
+                                scouterArr.push(map)
+                            }
+                            else
+                            {  let map = {}    
+                                map[scouterUuid] = { team : matchRows[j].teamNumber, alliance : "blue"}                   
+                                scouterArr.push(map)
+                            }
+                        }
+                    }
+                    currData["scouters"] = scouterArr
+                    finalArr.push(currData)
+                }
+            }
+        }
+        res.status(200).send(finalArr);
     }
     catch (error) {
         console.error(error)

@@ -61,6 +61,15 @@ const EventActionMap = {
     0 : [MatchType.QUALIFICATION],
     1 : [MatchType.ELIMINATION]
   }
-export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, MatchTypeMap}
+  const ScouterScheduleMap = 
+  {
+    0 : "team1",
+    1 : "team2",
+    2 : "team3",
+    3 : "team4",
+    4 : "team5",
+    5 : "team6"
+  }
+export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, MatchTypeMap, ScouterScheduleMap}
 
   
