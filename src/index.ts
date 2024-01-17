@@ -78,103 +78,103 @@ app.use(bodyParser.json());
 
 
 //general endpoints
-app.get('/manager/tournament/:tournament/teams', requireAuth, getTeamsInTournament) 
-app.get('/manager/teams', requireAuth, getTeams) //tested 
-app.get('/manager/tournaments', requireAuth, getTournaments) //tested 
+app.get('/v1/manager/tournament/:tournament/teams', requireAuth, getTeamsInTournament) 
+app.get('/v1.manager/teams', requireAuth, getTeams) //tested 
+app.get('/v1/manager/tournaments', requireAuth, getTournaments) //tested 
 
 //match schedule page
-app.get('/manager/matches/:tournament', requireAuth, getMatches) // should be able to filter by tournament, team, and whether or not they have been scouted. 
+app.get('/v1/manager/matches/:tournament', requireAuth, getMatches) // should be able to filter by tournament, team, and whether or not they have been scouted. 
 // app.get('/API/isScouted') //what will be sent, and what should it return // We can hold off on this until it's time for the collection app
 
 //scout report
-app.delete('/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // tested
-app.post('/manager/scoutreports', addScoutReport) //tested
-app.put('/manager/notes/:uuid', requireAuth, updateNotes) 
-app.get('/manager/scoutreports/:uuid', getScoutReport ) //tested
+app.delete('/v1/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // tested
+app.post('/v1/manager/scoutreports', addScoutReport) //tested
+app.put('/v1/manager/notes/:uuid', requireAuth, updateNotes) 
+app.get('/v1/manager/scoutreports/:uuid', getScoutReport ) //tested
 
 
 //scouter shiftaf
-app.post('/manager/tournament/:tournament/scoutershifts', requireAuth, addScouterShift) //tested , expecting only 1 at a time
+app.post('/v1/manager/tournament/:tournament/scoutershifts', requireAuth, addScouterShift) //tested , expecting only 1 at a time
 // app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
-app.post('/manager/scoutershifts/:uuid', requireAuth,updateScouterShift) //tested 
-app.delete('/manager/scoutershifts/:uuid', requireAuth, deleteScouterShift) //tested
+app.post('/v1/manager/scoutershifts/:uuid', requireAuth,updateScouterShift) //tested 
+app.delete('/v1/manager/scoutershifts/:uuid', requireAuth, deleteScouterShift) //tested
 
 //picklist (waiting to fully finish testing when I have a second user to play with)
-app.post('/manager/picklists', requireAuth, addPicklist) //tested 
-app.get('/manager/picklists',requireAuth, getPicklists) //tested 
-app.delete('/manager/picklists/:uuid', requireAuth, deletePicklist) //tested 
-app.get('/manager/picklists/:uuid', requireAuth, getSinglePicklist) //tested
-app.put('/manager/picklists/:uuid', requireAuth, updatePicklist) //tested
+app.post('/v1/manager/picklists', requireAuth, addPicklist) //tested 
+app.get('/v1/manager/picklists',requireAuth, getPicklists) //tested 
+app.delete('/v1/manager/picklists/:uuid', requireAuth, deletePicklist) //tested 
+app.get('/v1/manager/picklists/:uuid', requireAuth, getSinglePicklist) //tested
+app.put('/v1/manager/picklists/:uuid', requireAuth, updatePicklist) //tested
 
 
 
 
 //mutable picklist (waiting to fully finish testing when I have a second user to play with)
-app.post('/manager/mutablepicklists', requireAuth, addMutablePicklist) // tested
-app.delete('/manager/mutablepicklists/:uuid', requireAuth, deleteMutablePicklist) //tested
-app.get('/manager/mutablepicklists', requireAuth,getMutablePicklists) //tested
-app.get('/manager/mutablepicklists/:uuid', requireAuth, getSingleMutablePicklist) //tested
-app.put('/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) //tested
+app.post('/v1/manager/mutablepicklists', requireAuth, addMutablePicklist) // tested
+app.delete('/v1/manager/mutablepicklists/:uuid', requireAuth, deleteMutablePicklist) //tested
+app.get('/v1/manager/mutablepicklists', requireAuth,getMutablePicklists) //tested
+app.get('/v1/manager/mutablepicklists/:uuid', requireAuth, getSingleMutablePicklist) //tested
+app.put('/v1/manager/mutablepicklists/:uuid', requireAuth, updateMutablePicklist) //tested
 
 // Also it would be nice to have an endpoint to subscribe to a mutable picklist, so that the client can get updates when it changes
 // Websocket time? lol, ill add to wish list items, after this break yes
 
 
 //onboarding endpoints
-app.get('/manager/registeredteams/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested
-app.post('/manager/onboarding/username', requireAuth,addUsername) //tested
-app.post('/manager/onboarding/teamcode',requireAuth,  checkCode) //tested
-app.post('/manager/settings/teamsource', requireAuth, addTeamSource) //tested
-app.post('/manager/settings/tournamentsource', requireAuth, addTournamentSource)
-app.post('/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
-app.post('/manager/registeredteams/:team/approve', requireLovatSignature, approveRegisteredTeam) //tested waiting for new middle ware
-app.post('/manager/registeredteams/:team/reject', requireLovatSignature, rejectRegisteredTeam) // tested, waiting for new middle ware
-app.post('/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
-app.post('/manager/onboarding/verifyemail', requireLovatSignature, approveTeamEmail) //tested
-app.post('/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail) //tested
-app.get('/manager/profile', requireAuth, getProfile) //tested
-app.get('/manager/users', requireAuth, getUsers) //tested
+app.get('/v1/manager/registeredteams/:team/registrationstatus', requireAuth, checkRegisteredTeam) //tested
+app.post('/v1/manager/onboarding/username', requireAuth,addUsername) //tested
+app.post('/v1/manager/onboarding/teamcode',requireAuth,  checkCode) //tested
+app.post('/v1/manager/settings/teamsource', requireAuth, addTeamSource) //tested
+app.post('/v1/manager/settings/tournamentsource', requireAuth, addTournamentSource)
+app.post('/v1/manager/onboarding/team', requireAuth,addRegisteredTeam) //tested, is the link correct?
+app.post('/v1/manager/registeredteams/:team/approve', requireLovatSignature, approveRegisteredTeam) //tested waiting for new middle ware
+app.post('/v1/manager/registeredteams/:team/reject', requireLovatSignature, rejectRegisteredTeam) // tested, waiting for new middle ware
+app.post('/v1/manager/onboarding/teamwebsite', requireAuth, addWebsite) //tested
+app.post('/v1/manager/onboarding/verifyemail', requireLovatSignature, approveTeamEmail) //tested
+app.post('/v1/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail) //tested
+app.get('/v1/manager/profile', requireAuth, getProfile) //tested
+app.get('/v1/manager/users', requireAuth, getUsers) //tested
 
 //dashboard app settings
-app.delete('/manager/user', requireAuth, deleteUser) //tested, is there more to do with Auth0
-app.post('/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
-app.get('/manger/analysts', requireAuth, getAnalysts) //use for list of people eligable to upgrade ^^^
-app.put('/manager/settings', requireAuth, updateSettings)
+app.delete('/v1/manager/user', requireAuth, deleteUser) //tested, is there more to do with Auth0
+app.post('/v1/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
+app.get('/v1/manger/analysts', requireAuth, getAnalysts) //use for list of people eligable to upgrade ^^^
+app.put('/v1/manager/settings', requireAuth, updateSettings)
 
 
 //scouting lead information/QR codes
-app.get('/manager/code', requireAuth, getTeamCode )
-app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
+app.get('/v1/manager/code', requireAuth, getTeamCode )
+app.get('v1/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
 
 
 
 
 //scouter onboarding
-app.get('/manager/scouter/checkcode', checkCodeScouter) //tested change name/where request data is coming from/response format as needed 
-app.post('/manager/name/uuid/:uuid', changeNameScouter) // tested, change name/where request data is coming from/response format as needed 
-app.get('/manager/scouters', getScoutersOnTeam) //tested
-app.post('/manager/scouter', addNewScouter) //tested
+app.get('/v1/manager/scouter/checkcode', checkCodeScouter) //tested change name/where request data is coming from/response format as needed 
+app.post('/v1/manager/name/uuid/:uuid', changeNameScouter) // tested, change name/where request data is coming from/response format as needed 
+app.get('/v1/manager/scouters', getScoutersOnTeam) //tested
+app.post('/v1/manager/scouter', addNewScouter) //tested
 
 
 //collection app homepage (feel free to change request/response format as needed)
-app.get('/manager/scouters/:uuid/tournaments', getTournamentsWithSchedule) //tested
-app.get('/manager/scouterschedules/:tournament', getScheduleForScouter) //tested
+app.get('/v1/manager/scouters/:uuid/tournaments', getTournamentsWithSchedule) //tested
+app.get('/v1/manager/scouterschedules/:tournament', getScheduleForScouter) //tested
 
 
 //analysis
 
 
 //team look up page
-app.get('/analysis/metric/:metric/team/:team', requireAuth, detailsPage) //tested
-app.get('/analysis/category/team/:team', requireAuth, categoryMetrics) //tested
-app.get('/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested
-app.get('/analysis/notes/team/:team', requireAuth, getNotes) //tested
+app.get('/v1/analysis/metric/:metric/team/:team', requireAuth, detailsPage) //tested
+app.get('/v1/analysis/category/team/:team', requireAuth, categoryMetrics) //tested
+app.get('/v1/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested
+app.get('/v1/analysis/notes/team/:team', requireAuth, getNotes) //tested
 
 //my alliance page
-app.get('/analysis/alliance', requireAuth, alliancePageResponse)
+app.get('/v1/analysis/alliance', requireAuth, alliancePageResponse)
 
 //match prediction
-app.get('/analysis/matchprediction', requireAuth, matchPrediction)
+app.get('/v1/analysis/matchprediction', requireAuth, matchPrediction)
 
 
 
