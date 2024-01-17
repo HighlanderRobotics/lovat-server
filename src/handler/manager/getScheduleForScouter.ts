@@ -1,12 +1,14 @@
 
 
 
-import { Request, Response } from "express";
+import { Request, Response, json } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { match } from "node:assert";
 import { MatchTypeMap, ScouterScheduleMap } from "./managerConstants";
+import { SHA256 } from 'crypto-js';
+
 
 
 export const getScheduleForScouter = async (req: Request, res: Response): Promise<void> => {
@@ -113,7 +115,9 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                 }
             }
         }
-        res.status(200).send(finalArr);
+       
+
+        res.status(200).send({hash : hashJsonObject(finalArr), data : finalArr});
     }
     catch (error) {
         console.error(error)
@@ -121,3 +125,10 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
     }
 
 };
+function hashJsonObject(json: object): string {
+    const jsonString = JSON.stringify(json);
+
+    const hash = SHA256(jsonString);
+
+    return hash.toString();
+}
