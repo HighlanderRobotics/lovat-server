@@ -68,7 +68,6 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                 }
 
                 let currData = {
-                    tournamentKey: params.data.tournamentKey,
                     matchType : matchType,
                     matchNumber : matchNumber
                 }
@@ -91,7 +90,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                 }
                 if(matchRows.length === 6 )
                 {
-                    const scouterArr = []
+                    const scouterMap = {}
                     for(let j = 0; j < 6; j ++)
                     {
                         for(const scouterUuid of element[ScouterScheduleMap[j]])
@@ -100,17 +99,15 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                             {
                                 //check that this is red
                                 let map = {}    
-                                map[scouterUuid] = { team : matchRows[j].teamNumber, alliance : "red"}                   
-                                scouterArr.push(map)
+                                scouterMap[scouterUuid] = { team : matchRows[j].teamNumber, alliance : "red"}                   
                             }
                             else
                             {  let map = {}    
-                                map[scouterUuid] = { team : matchRows[j].teamNumber, alliance : "blue"}                   
-                                scouterArr.push(map)
-                            }
+                            scouterMap[scouterUuid] = { team : matchRows[j].teamNumber, alliance : "blue"}                   
+                        }
                         }
                     }
-                    currData["scouters"] = scouterArr
+                    currData["scouters"] = scouterMap
                     finalArr.push(currData)
                 }
             }
