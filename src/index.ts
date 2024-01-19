@@ -165,9 +165,9 @@ app.get('/v1/manager/scouterschedules/:tournament', getScheduleForScouter) //tes
 
 
 //team look up page
-app.get('/v1/analysis/metric/:metric/team/:team', requireAuth, detailsPage) //tested
+app.get('/v1/analysis/metric/:metric/team/:team', requireAuth, detailsPage) //tested, same format
 app.get('/v1/analysis/category/team/:team', requireAuth, categoryMetrics) //tested, same format
-app.get('/v1/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested
+app.get('/v1/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested, same format
 app.get('/v1/analysis/notes/team/:team', requireAuth, getNotes) //tested
 
 //my alliance page

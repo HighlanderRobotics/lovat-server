@@ -88,7 +88,9 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             })
             const notesAndMatches = notesOffTeam.map(item => ({
                 notes: item.notes,
-                match: item.teamMatchKey
+                matchKey : item.teamMatchKey,
+                
+
             }));
             res.status(200).send(notesAndMatches)
 
