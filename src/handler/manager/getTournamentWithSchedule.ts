@@ -12,7 +12,7 @@ export const getTournamentsWithSchedule = async (req: Request, res: Response): P
             uuid: req.params.uuid
         })
         if (!params.success) {
-            res.status(400).send(params);
+            res.status(400).send({"error" : params, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
         const scouter = await prismaClient.scouter.findUnique({
@@ -40,7 +40,7 @@ export const getTournamentsWithSchedule = async (req: Request, res: Response): P
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(400).send({"error" : error, "displayError" : "Error"})
     }
 
 };

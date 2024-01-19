@@ -23,7 +23,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
         })
 
         if (!params.success) {
-            res.status(400).send(params);
+            res.status(400).send({"error" : params, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
         const teamRow = await prismaClient.registeredTeam.findUnique({
@@ -119,7 +119,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(400).send({"error" : error, "displayError" : "error"})
     }
 
 };

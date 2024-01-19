@@ -93,7 +93,7 @@ app.put('/v1/manager/notes/:uuid', requireAuth, updateNotes)
 app.get('/v1/manager/scoutreports/:uuid', getScoutReport ) //tested
 
 
-//scouter shiftaf
+//scouter shift
 app.post('/v1/manager/tournament/:tournament/scoutershifts', requireAuth, addScouterShift) //tested , expecting only 1 at a time
 // app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
 app.post('/v1/manager/scoutershifts/:uuid', requireAuth,updateScouterShift) //tested 

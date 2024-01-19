@@ -51,7 +51,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             tournamentKey : req.body.tournamentKey
         })
         if (!paramsScoutReport.success) {
-            res.status(400).send(paramsScoutReport);
+            res.status(400).send({"error" : paramsScoutReport, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
         const scouter = await prismaClient.scouter.findUnique({
@@ -62,7 +62,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         })
         if(!scouter)
         {
-            res.status(400).send("Scouter does not exist")
+            res.status(400).send({"error" : `${paramsScoutReport.data.scouterUuid} does not an existing scouter UUID`, "displayError" : "Scouter does not exist"})
             return
         }
         const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
@@ -73,7 +73,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         })
         if(scoutReportUuidRow)
         {
-            res.status(400).send("Scout report already uploaded")
+            res.status(400).send({"error" : `The scout report uuid ${paramsScoutReport.data.uuid} already exists.`, "displayText" : "Scout report already uploaded"})
             return
         }
 
@@ -98,7 +98,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         })
         if(!matchRow)
         {
-            res.status(400).send("Match does not exist")
+            res.status(400).send({"error" : `There are no matches that meet these requirements. ${paramsScoutReport.data.tournamentKey}, ${paramsScoutReport.data.matchNumber}, ${paramsScoutReport.data.matchType}, ${paramsScoutReport.data.teamNumber}`, "displayError" : "Match does not exist"})
             return
         }
         let matchKey = matchRow.key
@@ -185,7 +185,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     points: points
                 })
                 if (!paramsEvents.success) {
-                    res.status(400).send(paramsEvents);
+                    res.status(400).send({"error" : paramsEvents, "displayError" : "Invalid input. Make sure you are using the correct input."});
                     return;
                 };
                 eventDataArray.push( {
@@ -218,7 +218,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
 
     catch (error) {
         console.log(error)
-        res.status(400).send(error);
+        res.status(400).send({"error" : error, "displayError" : "Error"});
 
     }
 }

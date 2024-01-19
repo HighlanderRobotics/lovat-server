@@ -14,7 +14,7 @@ export const getScoutersOnTeam = async (req: Request, res: Response): Promise<vo
         })
 
         if (!params.success) {
-            res.status(400).send(params);
+            res.status(400).send({"error" : params, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
         const teamRow = await prismaClient.registeredTeam.findUnique({
@@ -25,7 +25,7 @@ export const getScoutersOnTeam = async (req: Request, res: Response): Promise<vo
         })
         if(!teamRow)
         {
-            res.status(400).send("Team code does not exist")
+            res.status(400).send({"error" : `The team code ${params.data.teamCode}`, "displayError" : "Team code does not exist"})
             return
         }
         const rows = await prismaClient.scouter.findMany({
@@ -37,7 +37,7 @@ export const getScoutersOnTeam = async (req: Request, res: Response): Promise<vo
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(400).send({"error" : error, "displayError" : "Error"})
     }
 
 };

@@ -13,7 +13,7 @@ export const checkCodeScouter = async (req: Request, res: Response): Promise<voi
             code: req.query.code
         })
         if (!params.success) {
-            res.status(400).send(params);
+            res.status(400).send({"error" : params, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
 
@@ -37,9 +37,7 @@ export const checkCodeScouter = async (req: Request, res: Response): Promise<voi
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
-    }
+        res.status(400).send({"error" : error, "displayError" : "Error"})
+        }
 
 };
-
-

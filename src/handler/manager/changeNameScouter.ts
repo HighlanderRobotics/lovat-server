@@ -15,7 +15,7 @@ export const changeNameScouter = async (req: Request, res: Response): Promise<vo
             name : req.body.name
         })
         if (!params.success) {
-            res.status(400).send(params);
+            res.status(400).send({"error" : params, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
         const user = await prismaClient.scouter.update({
@@ -34,7 +34,7 @@ export const changeNameScouter = async (req: Request, res: Response): Promise<vo
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(400).send({"error" : error, "displayError" : "Error"})
     }
 
 };
