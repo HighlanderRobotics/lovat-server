@@ -144,7 +144,7 @@ app.put('/v1/manager/settings', requireAuth, updateSettings)
 
 //scouting lead information/QR codes
 app.get('/v1/manager/code', requireAuth, getTeamCode )
-app.get('v1/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
+app.get('/v1/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
 
 
 

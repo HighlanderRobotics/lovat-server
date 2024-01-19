@@ -113,6 +113,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
             }
         }
        
+        console.log(finalArr)
 
         res.status(200).send({hash : hashJsonObject(finalArr), data : finalArr});
     }
