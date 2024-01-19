@@ -84,15 +84,25 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                         }
 
                     }
+                },
+                include :
+                {
+                    scouter : true,
+                    teamMatchData : true
                 }
+            
             })
             const notesAndMatches = notesOffTeam.map(item => ({
                 notes: item.notes,
-                matchKey : item.teamMatchKey,
-                
-
+                uuid : item.uuid,
+                scouterName : item.scouter.name,
+                matchNumber : item.teamMatchData.matchNumber,
+                matchType : item.teamMatchData.matchType,
+                tournamentKey : item.teamMatchData.tournamentKey,
+                matchKey : item.teamMatchKey
             }));
             res.status(200).send(notesAndMatches)
+            return
 
         }
     }
