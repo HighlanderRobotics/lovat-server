@@ -79,7 +79,7 @@ app.use(bodyParser.json());
 
 //general endpoints
 app.get('/v1/manager/tournament/:tournament/teams', requireAuth, getTeamsInTournament) 
-app.get('/v1.manager/teams', requireAuth, getTeams) //tested 
+app.get('/v1/manager/teams', requireAuth, getTeams) //tested 
 app.get('/v1/manager/tournaments', requireAuth, getTournaments) //tested 
 
 //match schedule page
