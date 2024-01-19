@@ -42,15 +42,16 @@ export const nonEventMetric = async (req: AuthenticatedRequest, team : number, m
                 }
             },
             by: [params.data.column]
-
-
         })
         const totalCount = countArray.reduce((acc, group) => acc + group._count.scouterUuid, 0);
-
-        const transformedData = countArray.map(group => ({
-            columnValue: group[params.data.column],
-            percentage: group._count.scouterUuid / totalCount
-        }));
+        console.log(countArray)
+        const transformedData = countArray.reduce((acc, group) => {
+            const columnValue = group[params.data.column];
+            const percentage = group._count.scouterUuid / totalCount;
+            acc[columnValue] = percentage;
+            return acc;
+        }, {});
+        console.log(transformedData)
         return transformedData
     } 
     catch (error) {
