@@ -25,10 +25,11 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
         let teamAverageAndTimeLine = await arrayAndAverageTeam(req, params.data.metric, params.data.team)
         let allTeamAverage = await arrayAndAverageAllTeam(req, params.data.metric)
         let result = {
-            timeLine: teamAverageAndTimeLine.timeLine,
-            average : teamAverageAndTimeLine.average,
-            allTeamAverage : allTeamAverage.average,
-            difference : teamAverageAndTimeLine.average - allTeamAverage.average
+            array: teamAverageAndTimeLine.timeLine,
+            result : teamAverageAndTimeLine.average,
+            all : allTeamAverage.average,
+            difference : teamAverageAndTimeLine.average - allTeamAverage.average,
+            team : params.data.team
         }
         res.status(200).send(result)
     }
