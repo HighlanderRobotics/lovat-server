@@ -39,7 +39,7 @@ export const checkRegisteredTeam = async (req: AuthenticatedRequest, res: Respon
         if (row === null) {
             res.status(200).send("NOT_STARTED")
         }
-        else if (row.users[0].id === req.user.id) {
+        else if (row.users[0]?.id === req.user.id) {
 
             if (row.emailVerified) {
                 if (featureToggle.enabled && row.website || featureToggle.enabled === false) {
