@@ -12,7 +12,6 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
             defense : z.number(),
             pickUps : z.number(),
             stage : z.number(),
-            highNote : z.number(),
             autoPoints : z.number(),
             driveAbility : z.number(),
             speakerScores : z.number(),
@@ -28,7 +27,6 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
             pickUps : req.body.pickUps,
             stage : req.body.stage,
             //only cant do high note rn
-            highNote : req.body.highNote,
             autoPoints : req.body.autoPoints,
             driverAbility : req.body.driverAbility,
             speakerScores : req.body.speakerScores,
@@ -50,7 +48,6 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
                 stage : params.data.stage,
                 defense : params.data.defense,
                 pickUps : params.data.pickUps,
-                highNote : params.data.highNote,
                 autoPoints : params.data.autoPoints,
                 driverAbility : params.data.driveAbility,
                 speakerScores : params.data.speakerScores,

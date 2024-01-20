@@ -55,7 +55,6 @@ export const updatePicklist = async (req: AuthenticatedRequest, res: Response): 
                 defense: params.data.defense,
                 pickUps : params.data.pickUps,
                 stage : params.data.stage,
-                highNote : params.data.highNote,
                 autoPoints : params.data.autoPoints,
                 driverAbility : params.data.driverAbility,
                 speakerScores : params.data.speakerScores,

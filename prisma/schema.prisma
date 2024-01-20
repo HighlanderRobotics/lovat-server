@@ -157,7 +157,6 @@ model SharedPicklist {
   defense     Int 
   pickUps     Int
   stage       Int
-  highNote    Int
   autoPoints  Int
   driverAbility  Int
   speakerScores   Int
