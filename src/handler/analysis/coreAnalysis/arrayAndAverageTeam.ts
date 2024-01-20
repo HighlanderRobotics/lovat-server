@@ -63,6 +63,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
             for (const match of tournament) {
                 let currData = null
                 //add time constraints if nessissary
+            
                 if (metric.includes("teleop") || metric.includes("Teleop")) {
                     currData = await singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric, teleopStart, matchTimeEnd)
                 }
