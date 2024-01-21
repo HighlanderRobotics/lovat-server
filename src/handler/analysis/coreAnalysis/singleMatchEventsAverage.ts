@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
 import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
 import { singleMatchSingleScouter } from "./singleMatchSingleScouter";
+// import { cooperationSingleMatch } from "./cooperationSingleMatch";
 
 
 export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric1 : string, timeMin: number = 0, timeMax : number = matchTimeEnd): Promise<number> => {
@@ -40,10 +41,15 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
 
             for(const element of scoutReports)
             {
-                const currData = await singleMatchSingleScouter(req, isPointAverage, matchKey, metric1, element.scouterUuid, timeMin, timeMax)
-                if(currData !== null && currData !== 0)
+                let data = null
+                // if(metric1 === "coooperation")
+                // {
+                //     data = await cooperationSingleMatch(req, matchKey, team)
+                // }
+                data = await singleMatchSingleScouter(req, isPointAverage, matchKey, metric1, element.scouterUuid, timeMin, timeMax)
+                if(data !== null)
                 {
-                    matchDataArray.push(currData)
+                    matchDataArray.push(data)
                 }
             }
           return matchDataArray.reduce((acc, val) => acc + val, 0) / matchDataArray.length;

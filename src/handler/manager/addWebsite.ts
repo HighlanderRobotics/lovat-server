@@ -26,6 +26,7 @@ export const addWebsite = async (req: AuthenticatedRequest, res: Response): Prom
         })
 
         await sendSlackVerification(row.number, row.email, req.body.website)
+        res.status(200).send("Slack verification sent")
     }
     catch (error) {
         console.error(error)

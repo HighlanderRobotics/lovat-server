@@ -37,7 +37,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
         //     matchKey: matchKey,
         //     metric: metric1
         // })
-        const metric = metricToEvent[metric1]
+        const metric = metricToEvent[metric1][0]
         if (metric === "stage") {
             const scoutReports = await prismaClient.scoutReport.findMany({
                 where:
@@ -69,10 +69,10 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
             }
             return stagePointsAverage
         }
+        //done in a seperate file for now
+        // else if (metric === "cooperation") {
 
-        else if (metric === "cooperation") {
-
-        }
+        // }
         else if (metric === driverAbility) {
 
             const sumOfMatches = await prismaClient.scoutReport.aggregate({
@@ -117,7 +117,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                 }
             })
             if (sumOfMatches.length === 0) {
-                return 0
+                return null
             }
             const eventsAverage = sumOfMatches.reduce((acc, val) => acc + val._sum.points, 0) / sumOfMatches.length;
             //adds endgame/climbing points if nessisary
@@ -160,7 +160,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                 metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE]),
                 position : z.enum([Position.NONE, Position.AMP, Position.TRAP, Position.SPEAKER])
             }).safeParse({
-                metric: metric[0],
+                metric: metric,
                 position : position
             })
             if (!params.success) {
@@ -190,7 +190,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                 }
             })
             if (sumOfMatches.length === 0) {
-                return 0
+                return null
             }
             const average = sumOfMatches.reduce((acc, val) => acc + val._count._all, 0) / sumOfMatches.length;
             return average
