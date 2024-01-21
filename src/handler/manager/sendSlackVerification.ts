@@ -63,8 +63,8 @@ export const sendSlackVerification = async (teamNumber : number, teamEmail : str
         if (!response.ok) {
             throw(response);
         }
-        else {
-            throw(response);
+        else {            
+            return
         }
     }
 };
