@@ -2,7 +2,7 @@
   "name": "lovat-server",
   "version": "0.1.0",
   "prisma": {
-    "seed": "ts-node seed.ts"
+    "seed": "node dist/seed.ts"
   },
   "description": "",
   "scripts": {
