@@ -37,7 +37,7 @@ export const checkRegisteredTeam = async (req: AuthenticatedRequest, res: Respon
             }
         })
         if (row === null) {
-            res.status(200).send("NOT_STARTED")
+            res.status(200).send({status : "NOT_STARTED"})
         }
         else if (row.users[0]?.id === req.user.id) {
 
@@ -46,11 +46,11 @@ export const checkRegisteredTeam = async (req: AuthenticatedRequest, res: Respon
                     if (row.teamApproved) {
                         if(req.user.teamNumber === row.number)
                         {
-                            res.status(200).send("REGISTERED_ON_TEAM")
+                            res.status(200).send({status : "REGISTERED_ON_TEAM"})
                         }
                         else
                         {
-                            res.status(200).send("REGISTERED_OFF_TEAM")
+                            res.status(200).send({status : "REGISTERED_OFF_TEAM"})
                         }
                     }
                     else {
@@ -59,28 +59,28 @@ export const checkRegisteredTeam = async (req: AuthenticatedRequest, res: Respon
                 }
                 else
                 {
-                    res.status(200).send("PENDING_WEBSITE")
+                    res.status(200).send({status : "PENDING_WEBSITE"})
 
                 }
             }
             else {
 
-                res.status(200).send("PENDING_EMAIL_VERIFICATION")
+                res.status(200).send({ status : "PENDING_EMAIL_VERIFICATION"})
             }
         }
         else {
             if (row.emailVerified && row.teamApproved) {
                 if(req.user.teamNumber === row.number)
                 {
-                    res.status(200).send("REGISTERED_ON_TEAM")
+                    res.status(200).send({ status: "REGISTERED_ON_TEAM"})
                 }
                 else
                 {
-                    res.status(200).send("REGISTERED_OFF_TEAM")
+                    res.status(200).send({ status: "REGISTERED_OFF_TEAM"})
                 }
             }
             else {
-                res.status(200).send("PENDING")
+                res.status(200).send({ status : "PENDING"})
             }
         }
 
