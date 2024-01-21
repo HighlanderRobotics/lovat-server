@@ -25,7 +25,7 @@ export const resendEmail = async (req: AuthenticatedRequest, res: Response): Pro
         const resend = new Resend(process.env.RESEND_KEY);
 
         resend.emails.send({
-            from: 'onboarding@resend.dev',
+            from: 'noreply@lovat.app',
             to: req.body.email,
             subject: 'Lovat Email Verification',
             html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`
