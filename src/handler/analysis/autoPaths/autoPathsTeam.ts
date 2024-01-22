@@ -5,16 +5,15 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { autoPathSingleMatchSingleScouter } from "./autoPathSingleMatchSingleScouter";
 
 
-export const autoPathsTeam = async (req: AuthenticatedRequest, res: Response) => {
+export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : number) => {
     try {
         const params = z.object({
             team: z.number(),
         }).safeParse({
-            team: Number(req.params.team),
+            team: teamNumber
         })
         if (!params.success) {
-            res.status(400).send(params);
-            return;
+            throw(params)
         };
 
         type Position = {
@@ -91,10 +90,10 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, res: Response) =>
             }
         }
         const groupedAutoPaths = groupAutoData(autoPaths)
-        res.status(200).send(groupedAutoPaths)
+        return groupAutoData
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        throw(error)
     }
 };
