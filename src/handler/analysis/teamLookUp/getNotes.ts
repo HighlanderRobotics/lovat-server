@@ -33,7 +33,8 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                 },
                 include:
                 {
-                    scouter: true
+                    scouter: true,
+                    teamMatchData : true
                 }
             })
             const notesOffTeam = await prismaClient.scoutReport.findMany({
@@ -52,16 +53,28 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                         }
 
                     }
+                },
+                include :
+                {
+                    teamMatchData : true,
                 }
             })
             const notesAndMatches = notesOffTeam.map(item => ({
                 notes: item.notes,
-                match: item.teamMatchKey
+                match: item.teamMatchKey,
+                matchNumber : item.teamMatchData.matchNumber,
+                matchType : item.teamMatchData.matchType,
+                tournamentKey : item.teamMatchData.tournamentKey,
+                matchKey : item.teamMatchKey
             }));
             const notesAndMatchesAndNames = notesOnTeam.map(item => ({
                 notes: item.notes,
                 match: item.teamMatchKey,
-                name: item.scouter.name
+                scouterName: item.scouter.name,
+                matchNumber : item.teamMatchData.matchNumber,
+                matchType : item.teamMatchData.matchType,
+                tournamentKey : item.teamMatchData.tournamentKey,
+                matchKey : item.teamMatchKey
             }));
             const allNotes = notesAndMatches.concat(notesAndMatchesAndNames)
             res.status(200).send(allNotes)

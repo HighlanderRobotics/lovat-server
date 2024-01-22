@@ -3,7 +3,7 @@ import { EventAction, HighNoteResult, RobotRole, StageResult } from "@prisma/cli
 
 
 const metricsCategory =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "feeds", "drops"]
-const metricsBreakdown = ["robotRole", "pickUp", "highNote"]
+const metricsBreakdown = ["robotRole", "pickUp", "highNote", "stage"]
 //includes picklist sliders
 //havent done stage or highnote yet 
 const picklistSliders =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "cooperation", "feeds"]
