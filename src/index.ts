@@ -61,6 +61,8 @@ import { getNotes } from "./handler/analysis/teamLookUp/getNotes";
 import { alliancePage } from "./handler/analysis/alliancePredictions/alliancePage";
 import { alliancePageResponse } from "./handler/analysis/alliancePredictions/alliancePageResponse";
 import { matchPrediction } from "./handler/analysis/alliancePredictions/matchPrediction";
+import { getTeamSource } from "./handler/manager/getTeamSource";
+import { getTournamentSource } from "./handler/manager/getTournamentSource";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -140,6 +142,9 @@ app.delete('/v1/manager/user', requireAuth, deleteUser) //tested, is there more 
 app.post('/v1/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
 app.get('/v1/manger/analysts', requireAuth, getAnalysts) //use for list of people eligable to upgrade ^^^
 app.put('/v1/manager/settings', requireAuth, updateSettings)
+app.get('/v1/manager/settings/teamsource', requireAuth, getTeamSource)
+app.get('/v1/manager/settings/tournamentsource', requireAuth, getTournamentSource)
+
 
 
 //scouting lead information/QR codes
