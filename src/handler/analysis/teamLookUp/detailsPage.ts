@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 import { metricsCategory } from "../analysisConstants";
+import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 
 
 export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
@@ -22,6 +23,12 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             res.status(400).send(params);
             return;
         };
+        // temporary, decide on metric name later
+        if(params.data.metric === "autopoints")
+        {
+            const autoPaths = await autoPathsTeam(req, params.data.team)
+            res.status(200).send(autoPaths)
+        }
         let teamAverageAndTimeLine = await arrayAndAverageTeam(req, params.data.metric, params.data.team)
         let allTeamAverage = await arrayAndAverageAllTeam(req, params.data.metric)
         let result = {
