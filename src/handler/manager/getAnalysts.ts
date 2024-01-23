@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { UserRole } from "@prisma/client";
 
 
 export const getAnalysts = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -17,11 +18,14 @@ export const getAnalysts = async (req: AuthenticatedRequest, res: Response): Pro
             return
         }
         const analystsOnTeam = await prismaClient.user.findMany({
-            where : 
-            {
+            select: {
+                id: true,
+                username: true,
+            },
+            where: {
                 teamNumber : req.user.teamNumber,
-                role : "ANALYST"
-            }
+                role: UserRole.ANALYST,
+            },
         })
         res.status(200).send(analystsOnTeam)
     } catch (error) {
