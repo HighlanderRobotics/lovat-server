@@ -21,6 +21,7 @@ export const getAnalysts = async (req: AuthenticatedRequest, res: Response): Pro
             select: {
                 id: true,
                 username: true,
+                email: true,
             },
             where: {
                 teamNumber : req.user.teamNumber,
