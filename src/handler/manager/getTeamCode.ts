@@ -19,7 +19,7 @@ export const getTeamCode = async (req: AuthenticatedRequest, res: Response): Pro
         };
         if(user.role !== "SCOUTING_LEAD")
         {
-            res.status(401).send("Not authorized to get the team code")
+            res.status(403).send("Not authorized to get the team code")
             return
         }
         const row = await prismaClient.registeredTeam.findUnique({
