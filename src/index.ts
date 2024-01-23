@@ -140,7 +140,7 @@ app.get('/v1/manager/users', requireAuth, getUsers) //tested
 //dashboard app settings
 app.delete('/v1/manager/user', requireAuth, deleteUser) //tested, is there more to do with Auth0
 app.post('/v1/manager/upgradeuser', requireAuth, updateRoleToScoutingLead) //tested, idk what to name, u can change
-app.get('/v1/manger/analysts', requireAuth, getAnalysts) //use for list of people eligable to upgrade ^^^
+app.get('/v1/manager/analysts', requireAuth, getAnalysts) //use for list of people eligable to upgrade ^^^
 app.put('/v1/manager/settings', requireAuth, updateSettings)
 app.get('/v1/manager/settings/teamsource', requireAuth, getTeamSource)
 app.get('/v1/manager/settings/tournamentsource', requireAuth, getTournamentSource)
