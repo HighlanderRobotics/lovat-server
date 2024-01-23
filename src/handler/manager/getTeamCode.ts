@@ -8,15 +8,6 @@ export const getTeamCode = async (req: AuthenticatedRequest, res: Response): Pro
     try {
         const user = req.user
 
-        const params = z.object({
-            uuid: z.string()
-        }).safeParse({
-            uuid: req.params.uuid
-        })
-        if (!params.success) {
-            res.status(400).send(params);
-            return;
-        };
         if(user.role !== "SCOUTING_LEAD")
         {
             res.status(403).send("Not authorized to get the team code")
