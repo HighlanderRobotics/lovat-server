@@ -16,6 +16,7 @@ export const getProfile = async (req: AuthenticatedRequest, res: Response): Prom
             {
                 id : true,
                 username : true,
+                email : true,
                 team : {
                     select : {
                        team  : {
