@@ -14,7 +14,7 @@ export const getAnalysts = async (req: AuthenticatedRequest, res: Response): Pro
         }
         if(req.user.role !== "SCOUTING_LEAD")
         {
-            res.status(404).send("Not a scouting lead")
+            res.status(403).send("Not a scouting lead")
             return
         }
         const analystsOnTeam = await prismaClient.user.findMany({
