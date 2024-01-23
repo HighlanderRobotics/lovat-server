@@ -6,15 +6,30 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 export const getProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-
-        const rows = await prismaClient.user.findUnique({
-            where:
+        //email, user, id, 
+        const row = await prismaClient.user.findUnique({
+            where :
             {
-                id: req.user.id
-            }
-
+                id : req.user.id
+            },
+            select :
+            {
+                id : true,
+                username : true,
+                team : {
+                    select : {
+                       team  : {
+                        select : {
+                            number : true,
+                            name : true
+                        }
+                       } 
+                    }
+                }
+            },
+            
         })
-        res.status(200).send(rows);
+        res.status(200).send(row);
     }
     catch (error) {
         console.error(error)
