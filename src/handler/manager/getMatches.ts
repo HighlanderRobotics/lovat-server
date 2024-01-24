@@ -23,7 +23,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         }).safeParse({
             tournamentKey: req.params.tournament,
             //must send team numbers, just make it empty
-            teamNumbers: JSON.parse(req.query.teams as string),
+            teamNumbers: req.query.teams ? JSON.parse(req.query.teams as string) : undefined,
             isScouted: isScouted
         })
         if (!params.success) {
