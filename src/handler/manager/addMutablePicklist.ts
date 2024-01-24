@@ -8,18 +8,16 @@ export const addMutablePicklist = async (req: AuthenticatedRequest, res: Respons
     try {
         const user = req.user
 
-
-
         const params = z.object({
             name: z.string(),
             teams: z.array(z.number().min(0)),
             authorId: z.string(),
-            tournamentKey : z.string()
+            tournamentKey : z.string().optional()
         }).safeParse({
             name: req.body.name,
             teams: req.body.teams,
             authorId: user.id,
-            tournamentKey : req.body.tournamentKey
+            tournamentKey :  req.body.tournamentKey ? JSON.parse(req.body.tournamentKey as string) : undefined,
         })
 
         if (!params.success) {

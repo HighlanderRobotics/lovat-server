@@ -78,8 +78,8 @@ model MutablePicklist {
   authorId         String
   author           User   @relation(fields: [authorId], references: [id])
   name             String
-  tournamentKey   String
-  tournament      Tournament @relation(fields: [tournamentKey], references: [key])
+  tournamentKey   String?
+  tournament      Tournament? @relation(fields: [tournamentKey], references: [key])
 }
 
 model ScoutReport {
