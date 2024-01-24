@@ -18,10 +18,8 @@ import { picklistSliders } from "../analysisConstants";
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
 
-
-        //MAKE IT WORK FOR NO TOURNAMENT
-        const params = z.object({
-            tournamentKey: z.string(),
+            const params = z.object({
+            tournamentKey: z.string().optional(),
             totalPoints: z.number(),
             pickUps: z.number(),
             stage: z.number(),

@@ -11,14 +11,29 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
     try {
         let adj = []
         let unAdj = []
+        let hasData = true
+        let isFirst = true
         for (const element of picklistSliders) {
-            const currData = await arrayAndAverageTeam(req, element, teamNumber)
-            let zScore = (currData.average - allTeamAvgSTD[element].allAvg) / allTeamAvgSTD[element].arraySTD
-            if (isNaN(zScore)) { 
-                zScore = 0 
+            if (hasData) {
+                const currData = await arrayAndAverageTeam(req, element, teamNumber)
+                let zScore = (currData.average - allTeamAvgSTD[element].allAvg) / allTeamAvgSTD[element].arraySTD
+                if (currData.timeLine.length === 0 && isFirst) {
+                    hasData = false
+                }
+                isFirst = false
+                if (isNaN(zScore)) {
+                    zScore = 0
+                }
+                adj.push({ "result": zScore * params.data[picklistSliderMap[element]], "type": element })
+                unAdj.push({ "result": zScore, "type": element })
             }
-            adj.push({ "result": zScore * params.data[picklistSliderMap[element]], "type": element })
-            unAdj.push({ "result": zScore, "type": element })
+            else
+            {
+                //figure out correct # later on
+                adj.push({ "result": -10 * params.data[picklistSliderMap[element]], "type": element })
+                unAdj.push({ "result": -10, "type": element })
+            }
+          
         };
         let zScore = adj.reduce((partialSum, a) => partialSum + a.result, 0)
         return {
