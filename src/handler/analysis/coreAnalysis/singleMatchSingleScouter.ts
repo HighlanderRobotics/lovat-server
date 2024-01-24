@@ -38,42 +38,39 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
         //     metric: metric1
         // })
         const metric = metricToEvent[metric1][0]
-        if (metric1 === "stage") {
-            const scoutReports = await prismaClient.scoutReport.findMany({
-                where:
-                {
-                    teamMatchData:
-                    {
+        // if (metric1 === "stage") {
+        //     const scoutReports = await prismaClient.scoutReport.findMany({
+        //         where:
+        //         {
+        //             teamMatchData:
+        //             {
 
-                        tournamentKey: {
-                            in: req.user.tournamentSource
-                        },
-                    },
-                    scouter:
-                    {
-                        sourceTeamNumber:
-                        {
-                            in: req.user.teamSource
-                        }
-                    },
-                }
-            })
-            let stagePoints = []
-            for (let element of scoutReports) {
-                let currStagePoints = stageMap[element.stage] + highNoteMap[element.highNote]
-                stagePoints.push(currStagePoints)
-            }
-            let stagePointsAverage = 0
-            if (stagePoints.length > 0) {
-                stagePointsAverage = stagePoints.reduce((acc, val) => acc + val, 0) / stagePoints.length;
-            }
-            return stagePointsAverage
-        }
-        //done in a seperate file for now
-        // else if (metric === "cooperation") {
-
+        //                 tournamentKey: {
+        //                     in: req.user.tournamentSource
+        //                 },
+        //             },
+        //             scouter:
+        //             {
+        //                 sourceTeamNumber:
+        //                 {
+        //                     in: req.user.teamSource
+        //                 }
+        //             },
+        //         }
+        //     })
+        //     let stagePoints = []
+        //     for (let element of scoutReports) {
+        //         let currStagePoints = stageMap[element.stage] + highNoteMap[element.highNote]
+        //         stagePoints.push(currStagePoints)
+        //     }
+        //     let stagePointsAverage = 0
+        //     if (stagePoints.length > 0) {
+        //         stagePointsAverage = stagePoints.reduce((acc, val) => acc + val, 0) / stagePoints.length;
+        //     }
+        //     return stagePointsAverage
         // }
-        else if (metric1 === "driverability") {
+     
+        if (metric1 === "driverability") {
 
             const sumOfMatches = await prismaClient.scoutReport.aggregate({
                 _avg:

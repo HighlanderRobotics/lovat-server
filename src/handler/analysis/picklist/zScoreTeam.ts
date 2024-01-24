@@ -17,7 +17,7 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
             if (hasData) {
                 const currData = await arrayAndAverageTeam(req, element, teamNumber)
                 let zScore = (currData.average - allTeamAvgSTD[element].allAvg) / allTeamAvgSTD[element].arraySTD
-                if (currData.timeLine.length === 0 && isFirst) {
+                if (isFirst && currData.timeLine !== null && currData.timeLine.length === 0) {
                     hasData = false
                 }
                 isFirst = false

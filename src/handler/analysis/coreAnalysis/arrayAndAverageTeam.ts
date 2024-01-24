@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teleopStart } from "../analysisConstants";
 import { run } from "node:test";
+import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 
 
 export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: string, team: number): Promise<{ average: number, timeLine: Array<{ match: string, dataPoint: number }> }> => {
@@ -54,7 +55,10 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
             return acc;
         }, {});
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
-
+        if(metric === "stage")
+        {
+            return  { average : await stagePicklistTeam(req, team), timeLine : null}
+        }
         const timeLineArray = []
         const tournamentAverages = []
         //group into tournaments, calculate all averages indivudally so they can all be properly weighted after the nested loops
