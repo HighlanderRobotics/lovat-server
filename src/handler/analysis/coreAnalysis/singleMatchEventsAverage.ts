@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
 import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
 import { singleMatchSingleScouter } from "./singleMatchSingleScouter";
+import { cooperationSingleMatch } from "./cooperationSingleMatch";
 // import { cooperationSingleMatch } from "./cooperationSingleMatch";
 
 
@@ -33,7 +34,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
         })
         if(scoutReports.length === 0)
         {
-            return 0
+            return null
         }
         else
         {
@@ -42,11 +43,14 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
             for(const element of scoutReports)
             {
                 let data = null
-                // if(metric1 === "coooperation")
-                // {
-                //     data = await cooperationSingleMatch(req, matchKey, team)
-                // }
-                data = await singleMatchSingleScouter(req, isPointAverage, matchKey, metric1, element.scouterUuid, timeMin, timeMax)
+                if(metric1 === "coooperation")
+                {
+                    data = await cooperationSingleMatch(req, matchKey, team)
+                }
+                else
+                {
+                    data = await singleMatchSingleScouter(req, isPointAverage, matchKey, metric1, element.scouterUuid, timeMin, timeMax)
+                }
                 if(data !== null)
                 {
                     matchDataArray.push(data)

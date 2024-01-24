@@ -63,6 +63,7 @@ import { alliancePageResponse } from "./handler/analysis/alliancePredictions/all
 import { matchPrediction } from "./handler/analysis/alliancePredictions/matchPrediction";
 import { getTeamSource } from "./handler/manager/getTeamSource";
 import { getTournamentSource } from "./handler/manager/getTournamentSource";
+import { picklistShell } from "./handler/analysis/picklist/picklistShell";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -180,6 +181,7 @@ app.get('/v1/analysis/alliance', requireAuth, alliancePageResponse)
 
 //match prediction
 app.get('/v1/analysis/matchprediction', requireAuth, matchPrediction)
+app.get('/v1/analysis/picklist', requireAuth, picklistShell)
 
 
 

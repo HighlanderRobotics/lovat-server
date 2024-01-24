@@ -15,8 +15,7 @@ export const updateMutablePicklist = async (req: AuthenticatedRequest, res: Resp
         }).safeParse({
             name: req.body.name,
             teams: req.body.teams,
-            authorId : user.id
-
+            authorId : user.id,
         })
         if (!params.success) {
             res.status(400).send(params);
@@ -34,7 +33,7 @@ export const updateMutablePicklist = async (req: AuthenticatedRequest, res: Resp
             data: {
                 name : params.data.name,
                 teams : params.data.teams,
-                authorId : params.data.authorId
+                authorId : params.data.authorId,
             }
         });
         if (!row) {

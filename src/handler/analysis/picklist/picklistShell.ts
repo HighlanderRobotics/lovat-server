@@ -15,18 +15,17 @@ import { picklistSliders } from "../analysisConstants";
 
 
 
-export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) => {
+export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
 
 
-        //if theres a tournamentKey provided only look at teams from that tournament, else, look at all teams
+        //MAKE IT WORK FOR NO TOURNAMENT
         const params = z.object({
-            tournamentKey: z.string().nullable(),
+            tournamentKey: z.string(),
             totalPoints: z.number(),
             pickUps: z.number(),
             stage: z.number(),
-            highNote: z.number(),
-            trapScore: z.number(),
+            trapScores: z.number(),
             autoPoints: z.number(),
             teleopPoints: z.number(),
             driverAbility: z.number(),
@@ -38,12 +37,11 @@ export const nonEventMetric = async (req: AuthenticatedRequest, res: Response) =
 
 
         }).safeParse({
-            tournnamentKey: Number(req.query.tournamentKey),
+            tournamentKey: req.query.tournamentKey,
             totalPoints: Number(req.query.totalPoints),
             pickUps: Number(req.query.pickUps),
             stage: Number(req.query.stage),
-            highNote: Number(req.query.highNote),
-            trapScore: Number(req.query.trap),
+            trapScores: Number(req.query.trapScores),
             autoPoints: Number(req.query.autoPoints),
             teleopPoints: Number(req.query.teleopPoints),
             driverAbility: Number(req.query.driverAbility),

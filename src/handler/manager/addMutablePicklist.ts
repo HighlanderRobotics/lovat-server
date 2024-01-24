@@ -13,11 +13,13 @@ export const addMutablePicklist = async (req: AuthenticatedRequest, res: Respons
         const params = z.object({
             name: z.string(),
             teams: z.array(z.number().min(0)),
-            authorId: z.string()
+            authorId: z.string(),
+            tournamentKey : z.string()
         }).safeParse({
             name: req.body.name,
             teams: req.body.teams,
-            authorId: user.id
+            authorId: user.id,
+            tournamentKey : req.body.tournamentKey
         })
 
         if (!params.success) {
@@ -29,7 +31,8 @@ export const addMutablePicklist = async (req: AuthenticatedRequest, res: Respons
             data: {
                 name : params.data.name,
                 teams : params.data.teams,
-                authorId : params.data.authorId
+                authorId : params.data.authorId,
+                tournamentKey : params.data.tournamentKey
             }
         });
 

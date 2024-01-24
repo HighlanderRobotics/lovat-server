@@ -14,6 +14,17 @@ export const getMutablePicklists = async (req: AuthenticatedRequest, res: Respon
                 {
                     teamNumber : user.teamNumber
                 } 
+            },
+            select :
+            {
+                name : true,
+                tournamentKey : true,
+                author : {
+                    select :
+                    {
+                        username : true
+                    }
+                }
             }
             
         })
