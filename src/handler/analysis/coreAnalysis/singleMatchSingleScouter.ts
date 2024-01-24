@@ -38,7 +38,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
         //     metric: metric1
         // })
         const metric = metricToEvent[metric1][0]
-        if (metric === "stage") {
+        if (metric1 === "stage") {
             const scoutReports = await prismaClient.scoutReport.findMany({
                 where:
                 {
@@ -73,7 +73,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
         // else if (metric === "cooperation") {
 
         // }
-        else if (metric === driverAbility) {
+        else if (metric1 === "driverability") {
 
             const sumOfMatches = await prismaClient.scoutReport.aggregate({
                 _avg:

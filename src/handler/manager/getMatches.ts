@@ -19,12 +19,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         const params = z.object({
             tournamentKey: z.string(),
             teamNumbers: z.array(z.number()).optional(),
-            isScouted: z.boolean().optional()
+            isScouted: z.boolean().nullable()
         }).safeParse({
             tournamentKey: req.params.tournament,
             //must send team numbers, just make it empty
             teamNumbers: req.query.teams ? JSON.parse(req.query.teams as string) : undefined,
-            isScouted: isScouted
+            isScouted: isScouted 
         })
         if (!params.success) {
             res.status(400).send(params);

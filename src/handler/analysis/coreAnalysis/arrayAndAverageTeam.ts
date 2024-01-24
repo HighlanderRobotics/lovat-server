@@ -101,7 +101,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
             else if(i === tournamentAverages.length -1)
             {
                 const recentTournament = matchKeys[matchKeys.length-1].tournamentKey
-                const scoutedMatchesAtMostRecentTournament = timeLineArray.filter(item => item.match.startsWith(recentTournament)).length;
+                const scoutedMatchesAtMostRecentTournament =  timeLineArray.filter(item => item.match.startsWith(recentTournament)).length;
                 const totalMatchesAtMostRecentTournament = tournamentGroups[i].length
                 //0.95 because thats were it asymmpotes, not where it will realsitically reach. Graph on desmos to see more info
                 const weightOnRecent = 0.95*(1 - (1 / ((multiplerBaseAnalysis * scoutedMatchesAtMostRecentTournament / totalMatchesAtMostRecentTournament) + 1)))

@@ -13,7 +13,19 @@ const matchTimeEnd = 300
 const specificMatchPageMetrics = ["defense", "ampscores", "speakerscores", "trapscores", "pickups"] 
 const driverAbility = "driverability"
 const exludedAutoEvents = [EventAction.DROP_RING]
-
+const picklistSliderMap = {
+    "totalpoints" : "totalPoints",
+    "driverability" : "driverAbility",
+    "teleoppoints" : "teleopPoints",
+    "autopoints" : "autoPoints",
+    "pickups" : "pickUps",
+    "ampscores" :  "ampScores",
+    "speakerscores" : "speakerScores",
+    "trapscores" : "trapScores",
+    "stage" : "stage",
+    "cooperation" : "cooperation",
+    "feeds" : "feeds"
+}
 
 const stageMap = {
     [StageResult.NOTHING]: 0,
@@ -53,6 +65,6 @@ const metricToEvent = {
 }
 
 const multiplerBaseAnalysis = 4
-export { metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents};
+export { picklistSliderMap, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents};
 
 

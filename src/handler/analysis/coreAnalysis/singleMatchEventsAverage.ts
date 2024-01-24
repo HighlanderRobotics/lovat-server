@@ -43,7 +43,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
             for(const element of scoutReports)
             {
                 let data = null
-                if(metric1 === "coooperation")
+                if(metric1 === "cooperation")
                 {
                     data = await cooperationSingleMatch(req, matchKey, team)
                 }
@@ -56,7 +56,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                     matchDataArray.push(data)
                 }
             }
-          return matchDataArray.reduce((acc, val) => acc + val, 0) / matchDataArray.length;
+          return await matchDataArray.reduce((acc, val) => acc + val, 0) / matchDataArray.length;
 
         }
     }

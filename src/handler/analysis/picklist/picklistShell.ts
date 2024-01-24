@@ -67,12 +67,15 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             await addTournamentMatches(params.data.tournamentKey)
         }
         const allTeamAvgSTD = {}
-        for (const element of picklistSliders) {
+         for (const element of picklistSliders) {
             const currData = await arrayAndAverageAllTeam(req, element);
-            allTeamAvgSTD[element] = {
-                "allAvg": currData.average,
-                "arraySTD": ss.standardDeviation(currData.timeLine)
-            };
+            if (!isNaN(currData.average)) {
+                allTeamAvgSTD[element] = {
+                    "allAvg": currData.average,
+                    "arraySTD": ss.standardDeviation(currData.timeLine)
+                };
+            }
+
         }
         const allTeams = await prismaClient.team.findMany({})
         let includedTeamNumbers: number[] = allTeams.map(team => team.number);
@@ -89,7 +92,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         let arr = []
         for (const element of includedTeamNumbers) {
-            const currZscores = await zScoreTeam(req, allTeamAvgSTD)
+            const currZscores = await zScoreTeam(req, allTeamAvgSTD, element, params)
             //flags go here, wehn added
             if (!isNaN(currZscores.zScore)) {
                 let temp = { "team": element, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted }
@@ -97,7 +100,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         };
         const resultArr = arr.sort((a, b) => b.result - a.result)
-        res.status(400).send(resultArr)
+        res.status(200).send(resultArr)
     }
     catch (error) {
         console.log(error)
