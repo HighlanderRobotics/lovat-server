@@ -14,6 +14,16 @@ export const getPicklists = async (req: AuthenticatedRequest, res: Response): Pr
                 author: {
                     teamNumber: user.teamNumber
                 }
+            },
+            select :
+            {
+                name : true,
+                author :
+                {
+                    select : {
+                        username : true
+                    }
+                }
             }
 
         })

@@ -26,7 +26,6 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
             defense: req.body.defense,
             pickUps : req.body.pickUps,
             stage : req.body.stage,
-            //only cant do high note rn
             autoPoints : req.body.autoPoints,
             driverAbility : req.body.driverAbility,
             speakerScores : req.body.speakerScores,
