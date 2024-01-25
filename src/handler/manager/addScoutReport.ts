@@ -208,7 +208,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             await prismaClient.flaggedScoutReport.create({
                 data:
                 {
-                    note: `${totalPoints} recorded`,
+                    note: `${totalPoints} recorded, not including endgame`,
                     scoutReportUuid: scoutReportUuid
                 }
 
