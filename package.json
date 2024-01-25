@@ -2,13 +2,13 @@
   "name": "lovat-server",
   "version": "0.1.0",
   "prisma": {
-    "seed": "node dist/seed.ts"
+    "seed": "node dist/seed.js"
   },
   "description": "",
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
-    "start": "tsc && node dist/index.js "
+    "start": "tsc && node dist/index.js"
   },
   "keywords": [],
   "author": "",
