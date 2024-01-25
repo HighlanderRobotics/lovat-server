@@ -8,6 +8,7 @@ import { EventAction } from "@prisma/client";
 import { ADDRGETNETWORKPARAMS } from "dns";
 import { PickUpMap, PositionMap, MatchTypeMap, HighNoteMap, StageResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
+import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
 
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
@@ -201,18 +202,18 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         const rows = await prismaClient.event.createMany({
             data : eventDataArray
         })
-        // const totalPoints = await singleMatchSingleScouter(req, true, req.body.matchKey, "totalpoints", req.body.scouterUuid)
-        // //recalibrate the max resonable points for every year 
-        // if (totalPoints === 0 || totalPoints > 80) {
-        //     await prismaClient.flaggedScoutReport.create({
-        //         data:
-        //         {
-        //             note: `${totalPoints} recorded`,
-        //             scoutReportUuid: scoutReportUuid
-        //         }
+        const totalPoints = await totalPointsScoutingLead(scoutReportUuid)
+        //recalibrate the max resonable points for every year 
+        if (totalPoints === 0 || totalPoints > 80) {
+            await prismaClient.flaggedScoutReport.create({
+                data:
+                {
+                    note: `${totalPoints} recorded`,
+                    scoutReportUuid: scoutReportUuid
+                }
 
-        //     })
-        // }
+            })
+        }
         res.status(200).send('done adding data');
     }
 
