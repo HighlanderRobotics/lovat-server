@@ -67,7 +67,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         const allTeamAvgSTD = {}
          for (const element of picklistSliders) {
             const currData = await arrayAndAverageAllTeam(req, element);
-            if (!isNaN(currData.average)) {
+            if (currData.average !== null) {
                 allTeamAvgSTD[element] = {
                     "allAvg": currData.average,
                     "arraySTD": ss.standardDeviation(currData.timeLine)

@@ -49,7 +49,12 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
             const currArr =  (await arrayAndAverageTeam(req, metric, element)).average
             timeLineArray = timeLineArray.concat(currArr)
         };
-        const average = await timeLineArray.reduce((acc, cur) => acc + cur) / timeLineArray.length;
+        //change to null possibly
+        const average = null
+        if(timeLineArray.length !== 0)
+        {
+            const average = await timeLineArray.reduce((acc, cur) => acc + cur) / timeLineArray.length;
+        }
         return {
             average: average,
             timeLine: timeLineArray
