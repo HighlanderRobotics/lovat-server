@@ -65,12 +65,20 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             await addTournamentMatches(params.data.tournamentKey)
         }
         const allTeamAvgSTD = {}
+        let data = true
          for (const element of picklistSliders) {
             const currData = await arrayAndAverageAllTeam(req, element);
-            if (currData.average !== null) {
+            if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined) {
                 allTeamAvgSTD[element] = {
                     "allAvg": currData.average,
                     "arraySTD": ss.standardDeviation(currData.timeLine)
+                };
+            }
+            else
+            {
+                allTeamAvgSTD[element] = {
+                    "allAvg": 0,
+                    "arraySTD": 0
                 };
             }
 
@@ -88,6 +96,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             includedTeamNumbers = teamsAtTournament.map(record => record.teamNumber);
 
         }
+        
         let arr = []
         for (const element of includedTeamNumbers) {
             const currZscores = await zScoreTeam(req, allTeamAvgSTD, element, params)
