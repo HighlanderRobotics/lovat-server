@@ -18,6 +18,7 @@ export const getPicklists = async (req: AuthenticatedRequest, res: Response): Pr
             select :
             {
                 name : true,
+                uuid : true,
                 author :
                 {
                     select : {
