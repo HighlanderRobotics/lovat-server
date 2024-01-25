@@ -29,8 +29,13 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                     scouter:
                     {
                         sourceTeamNumber: req.user.teamNumber
+                    },
+                    notes :
+                    {
+                        not : ""
                     }
                 },
+                
                 include:
                 {
                     scouter: true,
@@ -52,12 +57,18 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                             not: req.user.teamNumber
                         }
 
+                    },
+                    notes :
+                    {
+                        not : ""
                     }
+                    
                 },
                 include :
                 {
                     teamMatchData : true,
-                }
+                },
+               
             })
             const notesAndMatches = notesOffTeam.map(item => ({
                 notes: item.notes,
@@ -96,6 +107,10 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                             in: req.user.teamSource,
                         }
 
+                    },
+                    notes :
+                    {
+                        not : ""
                     }
                 },
                 include :
@@ -108,7 +123,6 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             const notesAndMatches = notesOffTeam.map(item => ({
                 notes: item.notes,
                 uuid : item.uuid,
-                scouterName : item.scouter.name,
                 matchNumber : item.teamMatchData.matchNumber,
                 matchType : item.teamMatchData.matchType,
                 tournamentKey : item.teamMatchData.tournamentKey,
