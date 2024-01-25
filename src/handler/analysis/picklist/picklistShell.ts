@@ -107,7 +107,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         };
         const resultArr = arr.sort((a, b) => b.result - a.result)
-        res.status(200).send(resultArr)
+        res.status(200).send({teams : resultArr})
     }
     catch (error) {
         console.log(error)
