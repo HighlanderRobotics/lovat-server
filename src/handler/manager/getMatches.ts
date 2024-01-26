@@ -178,7 +178,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 
         }
-        else if (params.data.teamNumbers.length === 0) {
+        else if (params.data.teamNumbers === undefined || params.data.teamNumbers.length === 0) {
             finalMatches = matchKeyAndNumber
         }
         const finalFormatedMatches = []
