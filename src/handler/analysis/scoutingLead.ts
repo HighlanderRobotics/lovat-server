@@ -42,7 +42,18 @@ export const scoutingLead = async (req: AuthenticatedRequest, res : Response) =>
 
 
         })
-        res.status(200).send(flaggedMatches)
+        const scouters = await prismaClient.scouter.findMany({
+            where :
+            {
+                sourceTeamNumber : req.user.teamNumber
+            },
+            select :
+            {
+                name : true,
+                strikes : true
+            }
+        })
+        res.status(200).send({flaggedMatches : flaggedMatches, scouters : scouters})
 
     }
     catch (error) {
