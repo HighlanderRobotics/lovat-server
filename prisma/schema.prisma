@@ -16,6 +16,7 @@ model Event {
   scoutReportUuid String
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
 }
+
 enum Position {
   NONE
   AMP
@@ -23,18 +24,18 @@ enum Position {
   TRAP
   WING_NEAR_AMP
   WING_FRONT_OF_SPEAKER
-  WING_CENTER 
+  WING_CENTER
   WING_NEAR_SOURCE
-  GROUND_NOTE_ALLIANCE_NEAR_AMP 
-  GROUND_NOTE_ALLIANCE_FRONT_OF_SPEAKER 
-  GROUND_NOTE_ALLIANCE_BY_SPEAKER 
-  GROUND_NOTE_CENTER_FARTHEST_AMP_SIDE 
-  GROUND_NOTE_CENTER_TOWARD_AMP_SIDE 
-  GROUND_NOTE_CENTER_CENTER 
-  GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE 
-  GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE 
-
+  GROUND_NOTE_ALLIANCE_NEAR_AMP
+  GROUND_NOTE_ALLIANCE_FRONT_OF_SPEAKER
+  GROUND_NOTE_ALLIANCE_BY_SPEAKER
+  GROUND_NOTE_CENTER_FARTHEST_AMP_SIDE
+  GROUND_NOTE_CENTER_TOWARD_AMP_SIDE
+  GROUND_NOTE_CENTER_CENTER
+  GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE
+  GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE
 }
+
 enum EventAction {
   LEAVE
   PICK_UP
@@ -73,30 +74,30 @@ enum MatchType {
 }
 
 model MutablePicklist {
-  uuid             String @id @default(uuid())
-  teams            Int[]
-  authorId         String
-  author           User   @relation(fields: [authorId], references: [id])
-  name             String
-  tournamentKey   String?
-  tournament      Tournament? @relation(fields: [tournamentKey], references: [key])
+  uuid          String      @id @default(uuid())
+  teams         Int[]
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id])
+  name          String
+  tournamentKey String?
+  tournament    Tournament? @relation(fields: [tournamentKey], references: [key])
 }
 
 model ScoutReport {
-  uuid                String                @id @default(uuid())
-  teamMatchKey        String
-  teamMatchData       TeamMatchData         @relation(fields: [teamMatchKey], references: [key])
-  startTime           DateTime
-  notes               String
-  robotRole           RobotRole
-  stage               StageResult
-  highNote            HighNoteResult
-  pickUp              PickUp
-  driverAbility       Int
-  scouterUuid         String
-  scouter             Scouter               @relation(fields: [scouterUuid], references: [uuid])
-  events              Event[]
-  flaggedScoutReport  FlaggedScoutReport?
+  uuid               String              @id @default(uuid())
+  teamMatchKey       String
+  teamMatchData      TeamMatchData       @relation(fields: [teamMatchKey], references: [key])
+  startTime          DateTime
+  notes              String
+  robotRole          RobotRole
+  stage              StageResult
+  highNote           HighNoteResult
+  pickUp             PickUp
+  driverAbility      Int
+  scouterUuid        String
+  scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid])
+  events             Event[]
+  flaggedScoutReport FlaggedScoutReport?
 }
 
 enum RobotRole {
@@ -106,7 +107,7 @@ enum RobotRole {
   IMMOBILE
 }
 
-enum HighNoteResult{
+enum HighNoteResult {
   NOT_ATTEMPTED
   FAILED
   SUCCESSFUL
@@ -117,7 +118,6 @@ enum StageResult {
   PARK
   ONSTAGE
   ONSTAGE_HARMONY
-
 }
 
 enum PickUp {
@@ -153,16 +153,16 @@ model Scouter {
 }
 
 model SharedPicklist {
-  uuid     String @id @default(uuid())
-  name     String
-  totalPoints  Float    
-  defense     Float 
-  pickUps     Float
-  stage       Float
-  autoPoints  Float
-  driverAbility  Float
-  speakerScores   Float
-  ampScores      Float
+  uuid          String @id @default(uuid())
+  name          String
+  totalPoints   Float    
+  defense       Float 
+  pickUps       Float
+  stage         Float
+  autoPoints    Float
+  driverAbility Float
+  speakerScores Float
+  ampScores     Float
   teleopPoints  Float
   trapScores    Float
   feeds         Float
@@ -180,7 +180,7 @@ model Team {
 model RegisteredTeam {
   number                Int                    @id
   team                  Team                   @relation(fields: [number], references: [number])
-  code                  String                    @unique // 6 digit alphanumeric, case-insensitive code
+  code                  String                 @unique // 6 digit alphanumeric, case-insensitive code
   email                 String
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
@@ -214,7 +214,7 @@ model User {
   sharedPicklists  SharedPicklist[]
 }
 
-enum UserRole { // Do we want to rename these?
+enum UserRole {
   ANALYST
   SCOUTING_LEAD
 }
