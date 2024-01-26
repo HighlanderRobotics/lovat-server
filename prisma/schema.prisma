@@ -155,17 +155,17 @@ model Scouter {
 model SharedPicklist {
   uuid     String @id @default(uuid())
   name     String
-  totalPoints  Decimal    
-  defense     Decimal 
-  pickUps     Decimal
-  stage       Decimal
-  autoPoints  Decimal
-  driverAbility  Decimal
-  speakerScores   Decimal
-  ampScores      Decimal
-  teleopPoints  Decimal
-  trapScores    Decimal
-  feeds         Decimal
+  totalPoints  Float    
+  defense     Float 
+  pickUps     Float
+  stage       Float
+  autoPoints  Float
+  driverAbility  Float
+  speakerScores   Float
+  ampScores      Float
+  teleopPoints  Float
+  trapScores    Float
+  feeds         Float
 
   authorId String
   author   User   @relation(fields: [authorId], references: [id])
