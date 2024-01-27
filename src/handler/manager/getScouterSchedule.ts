@@ -29,12 +29,48 @@ export const getScouterSchedule = async (req: AuthenticatedRequest, res: Respons
             },
             include :
             {
-                team1 : true,
-                team2 : true,
-                team3 : true,
-                team4 : true,
-                team5 : true,
-                team6 : true
+                team1 : {
+                    select :
+                    {
+                        name : true,
+                        uuid : true,
+                    }
+                },
+                team2 : {
+                    select :
+                    {
+                        name : true,
+                        uuid : true,
+                    }
+                },
+                team3 : {
+                    select :
+                    {
+                        name : true,
+                        uuid : true,
+                    }
+                },
+                team4 :  {
+                    select :
+                    {
+                        name : true,
+                        uuid : true,
+                    }
+                },
+                team5 :  {
+                    select :
+                    {
+                        name : true,
+                        uuid : true,
+                    }
+                },
+                team6 :  {
+                    select :
+                    {
+                        name : true,
+                        uuid : true,
+                    }
+                }
             }
 
         })
