@@ -78,6 +78,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
                     currData = await singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
                 }
                 if (currData) {
+                    console.log(currData)
                     timeLineArray.push({ match: match.key, dataPoint: currData })
                     if(!currAvg)
                     {

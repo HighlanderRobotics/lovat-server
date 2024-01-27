@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { SHA256 } from "crypto-js";
 
 
 export const getScouterSchedule = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -28,7 +29,8 @@ export const getScouterSchedule = async (req: AuthenticatedRequest, res: Respons
             }
 
         })
-        res.status(200).send(rows);
+
+        res.status(200).send({hash : hashJsonObject(rows), data : rows});
     }
     catch (error) {
         console.error(error)
@@ -36,3 +38,10 @@ export const getScouterSchedule = async (req: AuthenticatedRequest, res: Respons
     }
 
 };
+function hashJsonObject(json: object): string {
+    const jsonString = JSON.stringify(json);
+
+    const hash = SHA256(jsonString);
+
+    return hash.toString();
+}
