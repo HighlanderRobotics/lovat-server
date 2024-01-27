@@ -248,6 +248,7 @@ export const getScouterTournaments = async (req: Request, res: Response): Promis
         if(!teamRow)
         {
             res.status(400).send({ "error": `x-team-code sent was ${params.data.code} and is not affilated with a team.`, "displayError": "Team code is not correct." })
+            return
         }
         const teamTournaments = await prismaClient.teamMatchData.groupBy({
             by: ['tournamentKey'],
