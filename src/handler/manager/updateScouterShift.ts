@@ -41,7 +41,7 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
 
 
         if (user.role === "SCOUTING_LEAD") {
-                const rows = await prismaClient.scouterScheduleShift.updateMany({
+                const rows = await prismaClient.scouterScheduleShift.update({
                     where:
                     {
                          uuid: params.data.uuid ,
@@ -51,14 +51,15 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
                     data : {
                         sourceTeamNumber : params.data.sourceTeamNumber,
                         tournamentKey : params.data.tournamentKey,
+                        
                         startMatchOrdinalNumber : params.data.startMatchOrdinalNumber,
                         endMatchOrdinalNumber : params.data.endMatchOrdinalNumber,
-                        team1 : params.data.team1,
-                        team2 : params.data.team2,
-                        team3 : params.data.team3,
-                        team4 : params.data.team4,
-                        team5 : params.data.team5,
-                        team6 : params.data.team6,
+                        team1 : {connect : params.data.team1.map(uuid => ({ uuid }))},
+                        team2 : {connect : params.data.team2.map(uuid => ({ uuid }))},
+                        team3 : {connect : params.data.team3.map(uuid => ({ uuid }))},
+                        team4 : {connect : params.data.team4.map(uuid => ({ uuid }))},
+                        team5 : {connect : params.data.team5.map(uuid => ({ uuid }))},
+                        team6 : {connect : params.data.team6.map(uuid => ({ uuid }))},
 
 
                     }
