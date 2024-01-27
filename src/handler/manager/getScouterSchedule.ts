@@ -26,9 +26,10 @@ export const getScouterSchedule = async (req: AuthenticatedRequest, res: Respons
             {
                 sourceTeamNumber : req.user.teamNumber,
                 tournamentKey : params.data.tournament,
-            }
+            },
 
         })
+        
 
         res.status(200).send({hash : hashJsonObject(rows), data : rows});
     }

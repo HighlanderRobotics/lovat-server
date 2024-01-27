@@ -134,12 +134,13 @@ model ScouterScheduleShift {
   tournament              Tournament     @relation(fields: [tournamentKey], references: [key])
   startMatchOrdinalNumber Int
   endMatchOrdinalNumber   Int
-  team1                   String[]
-  team2                   String[]
-  team3                   String[]
-  team4                   String[]
-  team5                   String[]
-  team6                   String[]
+  team1                   Scouter[] @relation(name: "Team1")
+  team2                   Scouter[] @relation(name: "Team2")
+  team3                   Scouter[] @relation(name: "Team3")
+  team4                   Scouter[] @relation(name: "Team4")
+  team5                   Scouter[] @relation(name: "Team5")
+  team6                   Scouter[] @relation(name: "Team6")
+
 }
 
 model Scouter {
@@ -150,6 +151,13 @@ model Scouter {
   strikes            Int            @default(0)
   scouterReliability Int            @default(0)
   scoutReports       ScoutReport[]
+  Team1Shifts                ScouterScheduleShift[] @relation(name: "Team1")
+  Team2Shifts                ScouterScheduleShift[] @relation(name: "Team2")
+  Team3Shifts                ScouterScheduleShift[] @relation(name: "Team3")
+  Team4Shifts                ScouterScheduleShift[] @relation(name: "Team4")
+  Team5Shifts                ScouterScheduleShift[] @relation(name: "Team5")
+  Team6Shifts                ScouterScheduleShift[] @relation(name: "Team6")
+
 }
 
 model SharedPicklist {
@@ -185,8 +193,8 @@ model RegisteredTeam {
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
   website               String?
-  scouterScheduleShifts ScouterScheduleShift[]
-  scouters              Scouter[]
+  scouterScheduleShifts ScouterScheduleShift[] 
+  scouters              Scouter[] 
   users                 User[]
 }
 
@@ -218,3 +226,4 @@ enum UserRole {
   ANALYST
   SCOUTING_LEAD
 }
+
