@@ -65,6 +65,7 @@ import { getTeamSource } from "./handler/manager/getTeamSource";
 import { getTournamentSource } from "./handler/manager/getTournamentSource";
 import { picklistShell } from "./handler/analysis/picklist/picklistShell";
 import { scoutingLeadPage } from "./handler/analysis/scoutingLead/scoutingLeadPage";
+import { getScouterTournaments } from "./handler/manager/getScouterTournaments";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -164,7 +165,7 @@ app.post('/v1/manager/scouter', addNewScouter) //tested
 
 
 //collection app homepage (feel free to change request/response format as needed)
-app.get('/v1/manager/scouters/:uuid/tournaments', getTournamentsWithSchedule) //tested
+app.get('/v1/manager/scouters/:uuid/tournaments', getScouterTournaments) //tested
 app.get('/v1/manager/scouterschedules/:tournament', getScheduleForScouter) //tested
 
 
