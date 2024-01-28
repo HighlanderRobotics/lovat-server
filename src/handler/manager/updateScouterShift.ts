@@ -8,7 +8,6 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
     try {
 
         const params = z.object({
-            tournamentKey: z.string(),
             startMatchOrdinalNumber: z.number(),
             endMatchOrdinalNumber: z.number(),
             team1: z.array(z.string()),
@@ -19,7 +18,6 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
             team6: z.array(z.string()),
             uuid : z.string()
         }).safeParse({
-            tournamentKey: req.body.tournamentKey,
             startMatchOrdinalNumber: req.body.startMatchOrdinalNumber,
             endMatchOrdinalNumber: req.body.endMatchOrdinalNumber,
             team1: req.body.team1,
@@ -44,7 +42,6 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
                        
                     },
                     data : {
-                        tournamentKey : params.data.tournamentKey,     
                         startMatchOrdinalNumber : params.data.startMatchOrdinalNumber,
                         endMatchOrdinalNumber : params.data.endMatchOrdinalNumber,
                         team1 : {connect : params.data.team1.map(uuid => ({ uuid }))},
