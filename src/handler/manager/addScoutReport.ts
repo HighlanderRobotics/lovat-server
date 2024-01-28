@@ -63,7 +63,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         })
         if(!scouter)
         {
-            res.status(400).send({"error" : `${paramsScoutReport.data.scouterUuid} does not an existing scouter UUID`, "displayError" : "Scouter does not exist"})
+            res.status(404).send({"error" : `${paramsScoutReport.data.scouterUuid} does not an existing scouter UUID`, "displayError" : "Scouter does not exist"})
             return
         }
         const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
@@ -99,7 +99,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         })
         if(!matchRow)
         {
-            res.status(400).send({"error" : `There are no matches that meet these requirements. ${paramsScoutReport.data.tournamentKey}, ${paramsScoutReport.data.matchNumber}, ${paramsScoutReport.data.matchType}, ${paramsScoutReport.data.teamNumber}`, "displayError" : "Match does not exist"})
+            res.status(404).send({"error" : `There are no matches that meet these requirements. ${paramsScoutReport.data.tournamentKey}, ${paramsScoutReport.data.matchNumber}, ${paramsScoutReport.data.matchType}, ${paramsScoutReport.data.teamNumber}`, "displayError" : "Match does not exist"})
             return
         }
         let matchKey = matchRow.key
@@ -219,7 +219,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
 
     catch (error) {
         console.log(error)
-        res.status(400).send({"error" : error, "displayError" : "Error"});
+        res.status(500).send({"error" : error, "displayError" : "Error"});
 
     }
 }

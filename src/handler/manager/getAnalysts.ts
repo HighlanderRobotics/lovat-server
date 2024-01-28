@@ -31,6 +31,6 @@ export const getAnalysts = async (req: AuthenticatedRequest, res: Response): Pro
         res.status(200).send(analystsOnTeam)
     } catch (error) {
         console.error(error);
-        res.status(400).send(error);
+        res.status(500).send(error);
     }
 };

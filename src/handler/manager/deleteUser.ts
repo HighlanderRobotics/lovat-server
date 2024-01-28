@@ -15,12 +15,12 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response): Prom
         })
         if(checkScoutingLead === null || checkScoutingLead.length === 0) 
         {
-            res.status(400).send("Cannot find any scouting leads for the given team")
+            res.status(404).send("Cannot find any scouting leads for the given team")
             return
         }
         else if(req.user.role === "SCOUTING_LEAD" && checkScoutingLead.length === 1)
         {
-            res.send(404).send("Cannot delete the only scouting lead for the given team")
+            res.send(400).send("Cannot delete the only scouting lead for the given team")
             return
         }
         else
@@ -36,6 +36,6 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response): Prom
         }
     } catch (error) {
         console.error(error);
-        res.status(400).send(error);
+        res.status(500).send(error);
     }
 };

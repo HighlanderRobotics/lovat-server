@@ -23,7 +23,7 @@ export const getTeamCode = async (req: AuthenticatedRequest, res: Response): Pro
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

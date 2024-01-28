@@ -28,7 +28,7 @@ export const rejectRegisteredTeam = async (req: Request, res: Response): Promise
     catch(error)
     {
         console.log(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
     
 };

@@ -72,7 +72,7 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
             
             if(!rows)
             {
-                res.status(400).send("Cannot find scouter shift or not on the team of the shift you are trying to edit")
+                res.status(404).send("Cannot find scouter shift or not on the team of the shift you are trying to edit")
                 return
             }
             res.status(200).send("Scouter shift updated successfully");
@@ -84,6 +84,6 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
 
     } catch (error) {
         console.error(error);
-        res.status(400).send("Error in deleting data");
+        res.status(500).send("Error in deleting data");
     }
 };

@@ -31,7 +31,7 @@ export const addNewScouter = async (req: Request, res: Response): Promise<void> 
     }
     catch (error) {
         console.error(error)
-        res.status(400).send({"error" : error, "displayError" : "Error"})
+        res.status(500).send({"error" : error, "displayError" : "Error"})
     }
 
 };

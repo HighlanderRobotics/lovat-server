@@ -41,10 +41,10 @@ export const deleteMutablePicklist = async (req: AuthenticatedRequest, res: Resp
             });
             res.status(200).send("Picklist deleted successfully");
         } else {
-            res.status(401).send("Unauthorized to delete this picklist");
+            res.status(403).send("Unauthorized to delete this picklist");
         }
     } catch (error) {
         console.error(error);
-        res.status(400).send(error);
+        res.status(500).send(error);
     }
 };

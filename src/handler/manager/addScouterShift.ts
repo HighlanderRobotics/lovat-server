@@ -54,14 +54,14 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
 
         }
         else {
-            res.status(401).send("Not authorized to add scouter shift")
+            res.status(403).send("Not authorized to add scouter shift")
         }
 
 
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

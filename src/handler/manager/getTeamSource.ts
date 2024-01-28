@@ -24,7 +24,7 @@ export const getTeamSource = async (req: AuthenticatedRequest, res: Response): P
     }
     catch (error) {
         console.error(error);
-        res.status(400).send(error);
+        res.status(500).send(error);
     }
 };
     

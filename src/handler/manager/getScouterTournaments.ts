@@ -272,7 +272,7 @@ export const getScouterTournaments = async (req: Request, res: Response): Promis
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

@@ -31,7 +31,7 @@ export const deleteScoutReport = async (req: AuthenticatedRequest, res: Response
 
         });
         if (scouter === null) {
-            res.status(400).send("Scouter or scout report not found")
+            res.status(404).send("Scouter or scout report not found")
             return
         }
 
@@ -55,6 +55,6 @@ export const deleteScoutReport = async (req: AuthenticatedRequest, res: Response
         }
     } catch (error) {
         console.error(error);
-        res.status(400).send(error);
+        res.status(500).send(error);
     }
 };

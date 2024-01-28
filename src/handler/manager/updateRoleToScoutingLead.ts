@@ -40,7 +40,7 @@ export const updateRoleToScoutingLead = async (req: AuthenticatedRequest, res: R
             return
         }
         if ( user.role !== "SCOUTING_LEAD" || user.teamNumber !== upgradingUser.teamNumber) {
-            res.status(404).send("Not authorized to upgrade the given user")
+            res.status(403).send("Not authorized to upgrade the given user")
             return
 
         }
@@ -61,7 +61,7 @@ export const updateRoleToScoutingLead = async (req: AuthenticatedRequest, res: R
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

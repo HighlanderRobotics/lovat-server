@@ -31,7 +31,7 @@ export const getSingleMutablePicklist = async (req: AuthenticatedRequest, res: R
     catch(error)
     {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
     
 };

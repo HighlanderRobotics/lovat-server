@@ -11,7 +11,7 @@ export const getScouters = async (req: AuthenticatedRequest, res: Response): Pro
        
         if(req.user.teamNumber === null)
         {
-            res.status(400).send("User is not affilated with a team")
+            res.status(403).send("User is not affilated with a team")
             return
         }
         const rows = await prismaClient.scouter.findMany({
@@ -31,7 +31,7 @@ export const getScouters = async (req: AuthenticatedRequest, res: Response): Pro
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

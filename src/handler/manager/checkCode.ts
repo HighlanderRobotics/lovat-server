@@ -53,7 +53,7 @@ export const checkCode = async (req: AuthenticatedRequest, res: Response): Promi
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

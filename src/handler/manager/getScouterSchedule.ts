@@ -18,7 +18,7 @@ export const getScouterSchedule = async (req: AuthenticatedRequest, res: Respons
         };
         if(req.user.teamNumber === null)
         {
-            res.status(400).send("User is not affilated with a team")
+            res.status(403).send("User is not affilated with a team")
             return
         }
         const rows = await prismaClient.scouterScheduleShift.findMany({
@@ -80,7 +80,7 @@ export const getScouterSchedule = async (req: AuthenticatedRequest, res: Respons
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

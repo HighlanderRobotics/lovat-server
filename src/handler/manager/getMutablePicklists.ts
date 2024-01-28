@@ -34,7 +34,7 @@ export const getMutablePicklists = async (req: AuthenticatedRequest, res: Respon
     catch(error)
     {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
     
 };

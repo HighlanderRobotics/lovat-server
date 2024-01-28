@@ -26,7 +26,7 @@ export const updateNotes = async (req: AuthenticatedRequest, res: Response): Pro
         })
         if(userRow.role !== "SCOUTING_LEAD")
         {
-            res.status(401).send("Not authorized to edit this note")
+            res.status(403).send("Not authorized to edit this note")
             return
         }
         const row = await prismaClient.scoutReport.update({
@@ -46,14 +46,14 @@ export const updateNotes = async (req: AuthenticatedRequest, res: Response): Pro
         })
         if(!row)
         {
-            res.status(401).send("Not authorized to update this picklist")
+            res.status(403).send("Not authorized to update this picklist")
             return
         }
         res.status(200).send("Note updated");
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

@@ -66,14 +66,14 @@ export const updatePicklist = async (req: AuthenticatedRequest, res: Response): 
         })
         if(!row)
         {
-            res.status(401).send("Not authorized to update this picklist")
+            res.status(403).send("Not authorized to update this picklist")
             return
         }
         res.status(200).send("picklist updated");
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

@@ -40,13 +40,13 @@ export const deleteScouterShift = async (req: AuthenticatedRequest, res: Respons
             return
             
         } else {
-            res.status(401).send("Unauthorized to delete this picklist");
+            res.status(403).send("Unauthorized to delete this picklist");
             return
         }
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

@@ -24,7 +24,7 @@ export const addTeamSource = async (req: AuthenticatedRequest, res: Response): P
         }
         else if (req.body.mode === "THIS_TEAM") {
             if (user.teamNumber === null) {
-                res.status(400).send("Not affliated with a team")
+                res.status(403).send("Not affliated with a team")
                 return
             }
             else {
@@ -66,7 +66,7 @@ export const addTeamSource = async (req: AuthenticatedRequest, res: Response): P
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };

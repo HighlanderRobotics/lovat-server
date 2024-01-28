@@ -30,7 +30,7 @@ export const addWebsite = async (req: AuthenticatedRequest, res: Response): Prom
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        res.status(500).send(error)
     }
 
 };
