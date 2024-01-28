@@ -35,25 +35,41 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
         };
 
         if (req.user.role === "SCOUTING_LEAD") {
-                const rows = await prismaClient.scouterScheduleShift.update({
-                    where:
-                    {
-                         uuid: params.data.uuid ,
-                       
+            const rows = await prismaClient.scouterScheduleShift.update({
+                where: {
+                    uuid: params.data.uuid,
+                },
+                data: {
+                    startMatchOrdinalNumber: params.data.startMatchOrdinalNumber,
+                    endMatchOrdinalNumber: params.data.endMatchOrdinalNumber,
+                    team1: {
+                        set: [], 
+                        connect: params.data.team1.map(uuid => ({ uuid })), 
                     },
-                    data : {
-                        startMatchOrdinalNumber : params.data.startMatchOrdinalNumber,
-                        endMatchOrdinalNumber : params.data.endMatchOrdinalNumber,
-                        team1 : {connect : params.data.team1.map(uuid => ({ uuid }))},
-                        team2 : {connect : params.data.team2.map(uuid => ({ uuid }))},
-                        team3 : {connect : params.data.team3.map(uuid => ({ uuid }))},
-                        team4 : {connect : params.data.team4.map(uuid => ({ uuid }))},
-                        team5 : {connect : params.data.team5.map(uuid => ({ uuid }))},
-                        team6 : {connect : params.data.team6.map(uuid => ({ uuid }))},
-                        sourceTeamNumber : req.user.teamNumber
-
-                    }
-                })
+                    team2: {
+                        set: [],
+                        connect: params.data.team2.map(uuid => ({ uuid })),
+                    },
+                    team3: {
+                        set: [],
+                        connect: params.data.team3.map(uuid => ({ uuid })),
+                    },
+                    team4: {
+                        set: [],
+                        connect: params.data.team4.map(uuid => ({ uuid })),
+                    },
+                    team5: {
+                        set: [],
+                        connect: params.data.team5.map(uuid => ({ uuid })),
+                    },
+                    team6: {
+                        set: [],
+                        connect: params.data.team6.map(uuid => ({ uuid })),
+                    },
+                    sourceTeamNumber: req.user.teamNumber
+                }
+            });
+            
             if(!rows)
             {
                 res.status(400).send("Cannot find scouter shift or not on the team of the shift you are trying to edit")
