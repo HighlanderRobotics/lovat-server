@@ -7,9 +7,7 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 export const updateScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
 
-        const user = req.user
         const params = z.object({
-            sourceTeamNumber: z.number(),
             tournamentKey: z.string(),
             startMatchOrdinalNumber: z.number(),
             endMatchOrdinalNumber: z.number(),
@@ -21,7 +19,6 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
             team6: z.array(z.string()),
             uuid : z.string()
         }).safeParse({
-            sourceTeamNumber: user.teamNumber,
             tournamentKey: req.body.tournamentKey,
             startMatchOrdinalNumber: req.body.startMatchOrdinalNumber,
             endMatchOrdinalNumber: req.body.endMatchOrdinalNumber,
@@ -39,19 +36,15 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
             return;
         };
 
-
-        if (user.role === "SCOUTING_LEAD") {
+        if (req.user.role === "SCOUTING_LEAD") {
                 const rows = await prismaClient.scouterScheduleShift.update({
                     where:
                     {
                          uuid: params.data.uuid ,
-                         sourceTeamNumber : user.teamNumber
                        
                     },
                     data : {
-                        sourceTeamNumber : params.data.sourceTeamNumber,
-                        tournamentKey : params.data.tournamentKey,
-                        
+                        tournamentKey : params.data.tournamentKey,     
                         startMatchOrdinalNumber : params.data.startMatchOrdinalNumber,
                         endMatchOrdinalNumber : params.data.endMatchOrdinalNumber,
                         team1 : {connect : params.data.team1.map(uuid => ({ uuid }))},
@@ -60,16 +53,16 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
                         team4 : {connect : params.data.team4.map(uuid => ({ uuid }))},
                         team5 : {connect : params.data.team5.map(uuid => ({ uuid }))},
                         team6 : {connect : params.data.team6.map(uuid => ({ uuid }))},
-
+                        sourceTeamNumber : req.user.teamNumber
 
                     }
                 })
             if(!rows)
             {
-                res.status(400).send("cannot find scouter shift")
+                res.status(400).send("Cannot find scouter shift or not on the team of the shift you are trying to edit")
                 return
             }
-            res.status(200).send("scouter shift updated successfully");
+            res.status(200).send("Scouter shift updated successfully");
         } else {
             res.status(403).send("Unauthorized to delete this picklist");
         }
