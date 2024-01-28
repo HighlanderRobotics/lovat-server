@@ -37,9 +37,11 @@ export const deleteScouterShift = async (req: AuthenticatedRequest, res: Respons
                 }
             });
             res.status(200).send("scouter shift deleted successfully");
+            return
             
         } else {
             res.status(401).send("Unauthorized to delete this picklist");
+            return
         }
     }
     catch (error) {
