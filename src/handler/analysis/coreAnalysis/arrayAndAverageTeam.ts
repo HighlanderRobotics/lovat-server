@@ -26,6 +26,10 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
                 },
                 teamNumber: team
             },
+            include :
+            {
+                tournament : true
+            },
             orderBy:
                 [
                     {
@@ -47,11 +51,13 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
             matchNumber: number;
             teamNumber: number;
             matchType: string;
+            tournamentName : string
         };
 
         const groupedByTournament = matchKeys.reduce<Record<string, Match[]>>((acc, match) => {
             acc[match.tournamentKey] = acc[match.tournamentKey] || [];
-            acc[match.tournamentKey].push(match);
+            let matchMap = {key : match.key, tournamentKey : match.tournamentKey, matchNumber : match.matchNumber, teamNumber : match.teamNumber, matchType : match.matchType, tournamentName : match.tournament.name}
+            acc[match.tournamentKey].push(matchMap);
             return acc;
         }, {});
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
@@ -79,7 +85,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
                 }
                 if (currData) {
                     console.log(currData)
-                    timeLineArray.push({ match: match.key, dataPoint: currData })
+                    timeLineArray.push({ match: match.key, dataPoint: currData, tournamentName : match.tournamentName})
                     if(!currAvg)
                     {
                         currAvg = currData
