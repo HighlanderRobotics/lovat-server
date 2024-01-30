@@ -67,6 +67,7 @@ import { picklistShell } from "./handler/analysis/picklist/picklistShell";
 import { scoutingLeadPage } from "./handler/analysis/scoutingLead/scoutingLeadPage";
 import { getScouterTournaments } from "./handler/manager/getScouterTournaments";
 import { getScouters } from "./handler/manager/getScouters";
+import { addScoutReportDashboard } from "./handler/manager/addScoutReportDashboard";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -94,7 +95,6 @@ app.get('/v1/manager/matches/:tournament', requireAuth, getMatches) // should be
 
 //scout report
 app.delete('/v1/manager/scoutreports/:uuid',requireAuth, deleteScoutReport) // tested
-app.post('/v1/manager/scoutreports', addScoutReport) //tested
 app.put('/v1/manager/notes/:uuid', requireAuth, updateNotes) 
 app.get('/v1/manager/scoutreports/:uuid', getScoutReport ) //tested
 
@@ -156,6 +156,8 @@ app.get('/v1/manager/settings/tournamentsource', requireAuth, getTournamentSourc
 app.get('/v1/manager/code', requireAuth, getTeamCode )
 app.get('/v1/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
 
+app.post('/v1/manager/dashboard/scoutreport', requireAuth, addScoutReportDashboard)
+
 
 
 
@@ -169,6 +171,9 @@ app.post('/v1/manager/scouter', addNewScouter) //tested
 //collection app homepage (feel free to change request/response format as needed)
 app.get('/v1/manager/scouters/:uuid/tournaments', getScouterTournaments) //tested
 app.get('/v1/manager/scouterschedules/:tournament', getScheduleForScouter) //tested
+
+app.post('/v1/manager/scoutreports', addScoutReport) //tested
+
 
 
 //analysis
