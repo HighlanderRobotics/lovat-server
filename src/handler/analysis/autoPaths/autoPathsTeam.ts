@@ -17,8 +17,8 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
         };
 
         type Position = {
-            location: string;
-            event: string;
+            location: number;
+            event: number;
             time?: number;
         };
         
@@ -90,7 +90,8 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
             }
         }
         const groupedAutoPaths = groupAutoData(autoPaths)
-        return groupAutoData
+        
+        return groupedAutoPaths
     }
     catch (error) {
         console.error(error)

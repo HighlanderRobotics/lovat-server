@@ -3,7 +3,8 @@ import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
-import { autoEnd, exludedAutoEvents } from "../analysisConstants";
+import { FlippedActionMap, FlippedPositionMap, autoEnd, exludedAutoEvents } from "../analysisConstants";
+import { PositionMap } from "../../manager/managerConstants";
 
 
 export const autoPathSingleMatchSingleScouter = async (req: AuthenticatedRequest, matchKey : string, scouterUuid : string) => {
@@ -42,8 +43,8 @@ export const autoPathSingleMatchSingleScouter = async (req: AuthenticatedRequest
         //GET SCOUT REPORT COLUMNN IF NESSISARY
         const totalScore = autoData.reduce((sum, event) => sum + event.points, 0);
         const positions = autoData.map(event => ({
-            location: event.position,
-            event: event.action,
+            location: FlippedPositionMap[event.position],
+            event: FlippedActionMap[event.action],
             time: event.time
         }))
 

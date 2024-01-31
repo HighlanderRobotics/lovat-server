@@ -219,7 +219,16 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 orderBy: [
                     
                     {startMatchOrdinalNumber: 'asc'},
-                ]
+                ],
+                include :
+                {
+                    team1 : true,
+                    team2 : true,
+                    team3 : true,
+                    team4 : true,
+                    team5 : true,
+                    team6 : true
+                }
             })
             if (scouterShifts.length !== 0) {
 
@@ -273,15 +282,8 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 async function addScoutedTeam(scouterShifts, currIndex, team, match) {
     try {
-
-
-        for (const scouterUuid of scouterShifts[currIndex][team]) {
-            const scouter = await prismaClient.scouter.findUnique({
-                where:
-                {
-                    uuid: scouterUuid
-                }
-            })
+        for (const scouter of scouterShifts[currIndex][team]) {
+            
             match[team].scouters.push(scouter.name)
         }
     }
