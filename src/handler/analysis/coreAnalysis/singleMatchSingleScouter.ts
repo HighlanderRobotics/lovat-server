@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
+import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap, teleopStart } from "../analysisConstants";
 import { sum } from "simple-statistics";
 import { EventAction, Position } from "@prisma/client";
 import { match } from "assert";
@@ -87,7 +87,6 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
             return sumOfMatches._avg.driverAbility
         }
         else if (isPointAverage) {
-
             const sumOfMatches = await prismaClient.event.groupBy({
                 by: ["scoutReportUuid"],
                 _sum:
@@ -113,8 +112,10 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
 
                 }
             })
+            
+
             if (sumOfMatches.length === 0) {
-                return null
+                return 0
             }
             const eventsAverage = sumOfMatches.reduce((acc, val) => acc + val._sum.points, 0) / sumOfMatches.length;
             //adds endgame/climbing points if nessisary
@@ -146,6 +147,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                 if (stagePoints.length > 0) {
                     stagePointsAverage = stagePoints.reduce((acc, val) => acc + val, 0) / stagePoints.length;
                 }
+
                 return eventsAverage + stagePointsAverage
             }
 
@@ -187,7 +189,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                 }
             })
             if (sumOfMatches.length === 0) {
-                return null
+                return 0
             }
             const average = sumOfMatches.reduce((acc, val) => acc + val._count._all, 0) / sumOfMatches.length;
             return average

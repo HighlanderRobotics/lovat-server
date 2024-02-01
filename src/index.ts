@@ -104,7 +104,7 @@ app.post('/v1/manager/tournament/:tournament/scoutershifts', requireAuth, addSco
 // app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
 app.post('/v1/manager/scoutershifts/:uuid', requireAuth,updateScouterShift) //tested 
 app.delete('/v1/manager/scoutershifts/:uuid', requireAuth, deleteScouterShift) //tested
-app.get('/v1/manager/scouters', requireAuth, getScouters)
+app.get('/v1/manager/scoutershift/scouters', requireAuth, getScouters)
 
 //picklist (waiting to fully finish testing when I have a second user to play with)
 app.post('/v1/manager/picklists', requireAuth, addPicklist) //tested 

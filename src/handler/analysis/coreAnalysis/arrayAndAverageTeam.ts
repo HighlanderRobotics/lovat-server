@@ -69,9 +69,9 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
         const tournamentAverages = []
         //group into tournaments, calculate all averages indivudally so they can all be properly weighted after the nested loops
         for (const tournament of tournamentGroups) {
-            let currAvg = null
+            let currAvg = 0
             for (const match of tournament) {
-                let currData = null
+                let currData = 0
                 //add time constraints if nessissary
             
                 if (metric.includes("teleop") || metric.includes("Teleop")) {
@@ -83,8 +83,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
                 else {
                     currData = await singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
                 }
-                if (currData) {
-                    console.log(currData)
+                if (currData !== null){
                     timeLineArray.push({ match: match.key, dataPoint: currData, tournamentName : match.tournamentName})
                     if(!currAvg)
                     {
@@ -95,8 +94,9 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
                         currAvg = (currAvg + currData)/2
                     }
                 }
-            }  
-            if(currAvg)
+            } 
+
+            if(currAvg !== null)
             {
                 tournamentAverages.push(currAvg)
             }          

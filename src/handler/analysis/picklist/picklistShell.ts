@@ -68,7 +68,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         let data = true
          for (const element of picklistSliders) {
             const currData = await arrayAndAverageAllTeam(req, element);
-            if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined) {
+            if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2) {
                 allTeamAvgSTD[element] = {
                     "allAvg": currData.average,
                     "arraySTD": ss.standardDeviation(currData.timeLine)
@@ -76,10 +76,22 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
             else
             {
-                allTeamAvgSTD[element] = {
-                    "allAvg": 0,
-                    "arraySTD": 0
-                };
+                if(isNaN(currData.average) )
+                {
+                    allTeamAvgSTD[element] = {
+                        "allAvg": 0,
+                        "arraySTD": 0.1
+                    };
+                }
+                else
+                {
+                    allTeamAvgSTD[element] = {
+                        "allAvg": currData.average,
+                        "arraySTD": 0.1
+                    };
+                }
+                //TUNE THESE VALUES
+               
             }
 
         }
