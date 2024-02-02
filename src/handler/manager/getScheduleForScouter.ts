@@ -13,27 +13,25 @@ import { SHA256 } from 'crypto-js';
 
 export const getScheduleForScouter = async (req: Request, res: Response): Promise<void> => {
     try {
-
         const params = z.object({
-            code : z.string(),
+            code: z.string(),
             tournamentKey: z.string()
         }).safeParse({
-            code : req.headers['x-team-code'],
+            code: req.headers['x-team-code'],
             tournamentKey: req.params.tournament
         })
 
         if (!params.success) {
-            res.status(400).send({"error" : params, "displayError" : "Invalid input. Make sure you are using the correct input."});
+            res.status(400).send({ "error": params, "displayError": "Invalid input. Make sure you are using the correct input." });
             return;
         };
         const teamRow = await prismaClient.registeredTeam.findUnique({
-            where :
+            where:
             {
-                code : params.data.code
+                code: params.data.code
             }
         })
-        if(!teamRow)
-        {
+        if (!teamRow) {
             res.status(400).send("Provided code is not affiliated with a team")
             return
         }
@@ -41,6 +39,16 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
             where: {
                 sourceTeamNumber: teamRow.number,
                 tournamentKey: params.data.tournamentKey
+
+            },
+            include :
+            {
+                team1 : true,
+                team2 : true,
+                team3 : true,
+                team4 : true,
+                team5 : true,
+                team6 : true,
 
             }
         })
@@ -59,7 +67,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
         let finalArr = []
         for (const element of rows) {
             for (let i = element.startMatchOrdinalNumber; i <= element.endMatchOrdinalNumber; i++) {
-                
+
                 let matchNumber = i
                 let matchType = 0
                 if (i > highestQualificationMatchNumber) {
@@ -68,43 +76,38 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                 }
 
                 let currData = {
-                    matchType : matchType,
-                    matchNumber : matchNumber
+                    matchType: matchType,
+                    matchNumber: matchNumber
                 }
 
-                
+
                 const matchRows = await prismaClient.teamMatchData.findMany({
                     where:
                     {
                         tournamentKey: params.data.tournamentKey,
                         matchNumber: matchNumber,
-                        matchType : MatchTypeMap[matchType][0]
+                        matchType: MatchTypeMap[matchType][0]
                     }
                 })
                 //if its 0 just skipp over 
-                if(matchRows.length !== 6 && matchRows.length > 0)
-                {
+                if (matchRows.length !== 6 && matchRows.length > 0) {
                     //could be a server issue or an ordinal number problem
                     res.status(400).send("Match has not imported correctly")
                     return
                 }
-                if(matchRows.length === 6 )
-                {
+                if (matchRows.length === 6) {
                     const scouterMap = {}
-                    for(let j = 0; j < 6; j ++)
-                    {
-                        for(const scouterUuid of element[ScouterScheduleMap[j]])
-                        {
-                            if(j <= 2)
-                            {
+                    for (let j = 0; j < 6; j++) {
+                        for (const scouter of element[ScouterScheduleMap[j]]) {
+                            if (j <= 2) {
                                 //check that this is red
-                                let map = {}    
-                                scouterMap[scouterUuid] = { team : matchRows[j].teamNumber, alliance : "red"}                   
+                                let map = {}
+                                scouterMap[scouter.uuid] = { team: matchRows[j].teamNumber, alliance: "red" }
                             }
-                            else
-                            {  let map = {}    
-                            scouterMap[scouterUuid] = { team : matchRows[j].teamNumber, alliance : "blue"}                   
-                        }
+                            else {
+                                let map = {}
+                                scouterMap[scouter.uuid] = { team: matchRows[j].teamNumber, alliance: "blue" }
+                            }
                         }
                     }
                     currData["scouters"] = scouterMap
@@ -112,14 +115,14 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                 }
             }
         }
-       
-        console.log(finalArr)
 
-        res.status(200).send({hash : hashJsonObject(rows), data : finalArr});
+        // console.log(finalArr)
+
+        res.status(200).send({ hash: hashJsonObject(rows), data: finalArr });
     }
     catch (error) {
         console.error(error)
-        res.status(500).send({"error" : error, "displayError" : "error"})
+        res.status(500).send({ "error": error, "displayError": "error" })
     }
 
 };
