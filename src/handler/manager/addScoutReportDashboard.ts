@@ -79,7 +79,7 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
         })
         if(scoutReportUuidRow)
         {
-            res.status(400).send({"error" : `The scout report uuid ${paramsScoutReport.data.uuid} already exists.`, "displayText" : "Scout report already uploaded"})
+            res.status(400).send({"error" : `The scout report uuid ${paramsScoutReport.data.uuid} already exists.`, "displayError" : "Scout report already uploaded"})
             return
         }
 
