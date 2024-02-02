@@ -12,13 +12,12 @@ import { alliancePage } from "./alliancePage";
 export const matchPrediction = async (req: AuthenticatedRequest, res: Response): Promise<Object> => {
     try {
         const params = z.object({
-            red1: z.number(),
-            red2: z.number(),
-            red3: z.number(),
-            blue1: z.number(),
-            blue2: z.number(),
-            blue3: z.number()
-
+            red1: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
+            red2: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
+            red3: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
+            blue1: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
+            blue2: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
+            blue3: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
         }).safeParse({
             red1: req.query.red1,
             red2: req.query.red2,
