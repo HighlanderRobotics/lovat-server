@@ -47,8 +47,12 @@ const highNoteMap = {
     [HighNoteResult.SUCCESSFUL] : 1
 }
 
-RobotRole.OFFENSE
-
+const roleMap = {
+    [RobotRole.OFFENSE] : 0,
+    [RobotRole.DEFENSE] : 1,
+    [RobotRole.FEEDER] : 2,
+    [RobotRole.IMMOBILE] : 3
+}
 const metricToEvent = {
     "totalpoints" : "totalpoints",
     "teleoppoints" : "teleoppoints",
@@ -99,6 +103,6 @@ const FlippedPositionMap = {
 
 
 const multiplerBaseAnalysis = 4
-export { picklistSliderMap, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap};
+export { picklistSliderMap, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap};
 
 

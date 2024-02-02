@@ -4,6 +4,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
+import { roleMap } from "../analysisConstants";
 
 
 export const robotRole = async (req: AuthenticatedRequest, team: number): Promise<{mainRole : string}> => {
@@ -50,7 +51,7 @@ export const robotRole = async (req: AuthenticatedRequest, team: number): Promis
             }
         };
         return {
-            mainRole : eventTypeWithMostOccurrences
+            mainRole : roleMap[eventTypeWithMostOccurrences]
         }
 
 
