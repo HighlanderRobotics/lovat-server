@@ -196,7 +196,7 @@ app.get('/v1/analysis/picklist', requireAuth, picklistShell)
 //scouting lead
 app.get('/v1/analysis/scoutinglead', requireAuth, scoutingLeadPage)
 
-app.get('/v1/analysis/match/:match/scouter/scouteruuid', requireAuth, matchPageSpecificScouter)
+app.get('/v1/analysis/match/:match/scouter/:scouteruuid', requireAuth, matchPageSpecificScouter)
 
 
 
