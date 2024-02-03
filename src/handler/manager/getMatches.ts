@@ -6,6 +6,7 @@ import { addTournamentMatches } from "./addTournamentMatches";
 import prisma from "../../prismaClient";
 import { findSourceMap } from "node:module";
 import { match } from "node:assert";
+import { MatchTypeMap, ReverseMatchTypeMap } from "./managerConstants";
 
 
 export const getMatches = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -24,7 +25,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             tournamentKey: req.params.tournament,
             //must send team numbers, just make it empty
             teamNumbers: req.query.teams ? JSON.parse(req.query.teams as string) : undefined,
-            isScouted: isScouted 
+            isScouted: isScouted
         })
         if (!params.success) {
             res.status(400).send(params);
@@ -48,7 +49,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             where:
             {
                 tournamentKey: params.data.tournamentKey,
-                matchType : "QUALIFICATION"
+                matchType: "QUALIFICATION"
             },
             orderBy:
             {
@@ -60,8 +61,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         }
         let lastQualMatch = Number(qualMatches.length / 6)
         let matches = []
-        if(params.data.isScouted === null)
-        {
+        if (params.data.isScouted === null) {
             matches = await prismaClient.teamMatchData.findMany({
                 where:
                 {
@@ -99,7 +99,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             })
         }
         else {
-        //find non scouted matches (not scouted from user.sourceTeam)
+            //find non scouted matches (not scouted from user.sourceTeam)
             matches = await prismaClient.teamMatchData.findMany({
                 where:
                 {
@@ -107,7 +107,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     scoutReports:
                     {
                         none: {
-                            
+
                             scouter:
                             {
                                 sourceTeamNumber: {
@@ -131,13 +131,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 acc[key].push(match);
                 return acc;
             }, {});
-            console.log(groupedMatches)
-            
+
             // find matches with less than 6 rows
             const groupsToKeep = Object.keys(groupedMatches)
                 .filter(key => groupedMatches[key].length >= 6);
-            
-            
+
+
             // remove unwanted matches
             matches = matches.filter(match => {
                 const key = `${match.matchNumber}-${match.matchType}`;
@@ -154,9 +153,16 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 key: {
                     in: matches.map(item => item.key)
                 }
-            },
+            }
+
         })
-        //filter out matches by if they include all the teams the user wants to see or not
+        //sort
+        matchKeyAndNumber =  matchKeyAndNumber.sort((a, b) => {
+            if (a.matchType < b.matchType) return 1;
+            if (a.matchType > b.matchType) return -1;
+            
+            return a.matchNumber - b.matchNumber; 
+          });
         let finalMatches = []
         if (params.data.teamNumbers && params.data.teamNumbers.length > 0 && params.data.teamNumbers.length <= 6) {
             for (let i = 0; i < matchKeyAndNumber.length; i++) {
@@ -197,7 +203,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 return
             }
             let currData = {
-                tournamentKey: params.data.tournamentKey, matchNumber: element.matchNumber, matchType: element.matchType,
+                tournamentKey: params.data.tournamentKey, matchNumber: element.matchNumber, matchType: ReverseMatchTypeMap[element.matchType],
                 team1: { number: currMatch[0].teamNumber, alliance: "red", scouters: [] },
                 team2: { number: currMatch[1].teamNumber, alliance: "red", scouters: [] },
                 team3: { number: currMatch[2].teamNumber, alliance: "red", scouters: [] },
@@ -217,27 +223,26 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     sourceTeamNumber: user.teamNumber
                 },
                 orderBy: [
-                    
-                    {startMatchOrdinalNumber: 'asc'},
+
+                    { startMatchOrdinalNumber: 'asc' },
                 ],
-                include :
+                include:
                 {
-                    team1 : true,
-                    team2 : true,
-                    team3 : true,
-                    team4 : true,
-                    team5 : true,
-                    team6 : true
+                    team1: true,
+                    team2: true,
+                    team3: true,
+                    team4: true,
+                    team5: true,
+                    team6: true
                 }
             })
             if (scouterShifts.length !== 0) {
-
 
                 for (const element of finalFormatedMatches) {
                     let scoutersExist = true
                     //if its an elimination match get the ordinal number, so that we can compare it to the scouterShift start/end
                     let matchNumber = element.matchNumber
-                    if (element.matchType === 'ELIMINATION') {
+                    if (element.matchType === 1) {
                         matchNumber += lastQualMatch
                     }
                     //move onto correct shift
@@ -261,7 +266,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         await addScoutedTeam(scouterShifts, currIndex, "team5", element)
                         await addScoutedTeam(scouterShifts, currIndex, "team6", element)
                     }
-                    
+
 
 
                 }
@@ -282,10 +287,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 async function addScoutedTeam(scouterShifts, currIndex, team, match) {
     try {
+       
         for (const scouter of scouterShifts[currIndex][team]) {
-            
-            match[team].scouters.push(scouter.name)
+
+            await match[team].scouters.push(scouter.name)
         }
+
     }
     catch (error) {
         throw (error)
