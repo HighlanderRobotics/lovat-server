@@ -367,7 +367,7 @@ async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, cu
                     {
                         matchNumber: match.matchNumber,
                         tournamentKey: match.tournamentKey,
-                        matchType: MatchTypeMap[match.matchType][9]
+                        matchType: MatchTypeMap[match.matchType][0]
                     }
                 },
                 include :
@@ -398,7 +398,7 @@ async function addScoutedTeam(scouterShifts, currIndex, team, match) {
                     {
                         matchNumber: match.matchNumber,
                         tournamentKey: match.tournamentKey,
-                        matchType: MatchTypeMap[match.matchType][9]
+                        matchType: MatchTypeMap[match.matchType][0]
                     }
                 }
 
