@@ -72,7 +72,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     teamNumber: 'asc'
                 }
             })
-            
+
         }
         else if (params.data.isScouted) {
 
@@ -98,8 +98,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 }
 
             })
-            matches = matches.map(match => ({ ...match, scouted: true }));
-            
+
         }
         else {
             //find non scouted matches (not scouted from user.sourceTeam)
@@ -125,7 +124,6 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     teamNumber: 'asc'
                 }
             })
-            matches = matches.map(match => ({ ...match, scouted: false }));
             //check to make sure each match has 6 rows, if not than 1 + rows have been scouted already
             const groupedMatches = matches.reduce((acc, match) => {
                 const key = `${match.matchNumber}-${match.matchType}`;
@@ -150,23 +148,60 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
         }
         //get just the matchNumber + matchType for included matches so far
-        let matchKeyAndNumber = await prismaClient.teamMatchData.groupBy({
+        let matchKeyAndNumberScouted = await prismaClient.teamMatchData.groupBy({
             by: ["matchNumber", "matchType"],
             where: {
                 tournamentKey: params.data.tournamentKey,
                 key: {
                     in: matches.map(item => item.key)
+                },
+                scoutReports:
+                {
+                    some: {
+                        scouter:
+                        {
+                            sourceTeamNumber: {
+                                in: req.user.teamSource
+                            }
+                        }
+                    }
                 }
             }
 
         })
+        let matchKeyAndNumberUnScouted = await prismaClient.teamMatchData.groupBy({
+            by: ["matchNumber", "matchType"],
+            where: {
+                tournamentKey: params.data.tournamentKey,
+                key: {
+                    in: matches.map(item => item.key),
+                },
+                AND: [
+                    {
+                        matchNumber:
+                        {
+                            notIn: matchKeyAndNumberScouted.map(item => item.matchNumber)
+                        }
+                    },
+                    {
+                        matchType:
+                        {
+                            notIn: matchKeyAndNumberScouted.map(item => item.matchType)
+                        }
+                    }
+                ]
+            }
+
+
+        })
+        let matchKeyAndNumber = matchKeyAndNumberUnScouted.map(match => ({ ...match, scouted: false })).concat(matchKeyAndNumberScouted.map(match => ({ ...match, scouted: true })))
         //sort
-        matchKeyAndNumber =  matchKeyAndNumber.sort((a, b) => {
-            if (a.matchType < b.matchType) return 1;
+        matchKeyAndNumber.sort((a, b) => {
             if (a.matchType > b.matchType) return -1;
-            
-            return a.matchNumber - b.matchNumber; 
-          });
+            if (a.matchType < b.matchType) return 1;
+            return a.matchNumber - b.matchNumber;
+        });
+
         let finalMatches = []
         if (params.data.teamNumbers && params.data.teamNumbers.length > 0 && params.data.teamNumbers.length <= 6) {
             for (let i = 0; i < matchKeyAndNumber.length; i++) {
@@ -206,9 +241,8 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 res.status(400).send(`Matches not added correctly, does not have 6 teams for match ${element.matchNumber} of type ${element.matchType}`)
                 return
             }
-            console.log(element)
             let currData = {
-                tournamentKey: params.data.tournamentKey, matchNumber: element.matchNumber, matchType: ReverseMatchTypeMap[element.matchType], scouted : element.scouted,
+                tournamentKey: params.data.tournamentKey, matchNumber: element.matchNumber, matchType: ReverseMatchTypeMap[element.matchType], scouted: element.scouted,
                 team1: { number: currMatch[0].teamNumber, alliance: "red", scouters: [] },
                 team2: { number: currMatch[1].teamNumber, alliance: "red", scouters: [] },
                 team3: { number: currMatch[2].teamNumber, alliance: "red", scouters: [] },
@@ -292,7 +326,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 async function addScoutedTeam(scouterShifts, currIndex, team, match) {
     try {
-       
+
         for (const scouter of scouterShifts[currIndex][team]) {
 
             await match[team].scouters.push(scouter.name)
