@@ -305,15 +305,15 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         await addScoutedTeam(scouterShifts, currIndex, "team5", element)
                         await addScoutedTeam(scouterShifts, currIndex, "team6", element)
                     }
-                    else
-                    {
-                        await addScoutedTeamNotOnSchedule("team1", element)
-                        await addScoutedTeamNotOnSchedule("team2", element)
-                        await addScoutedTeamNotOnSchedule("team3", element)
-                        await addScoutedTeamNotOnSchedule("team4", element)
-                        await addScoutedTeamNotOnSchedule("team5", element)
-                        await addScoutedTeamNotOnSchedule("team6", element)
-                    }
+                    // else
+                    // {
+                    //     await addScoutedTeamNotOnSchedule("team1", element)
+                    //     await addScoutedTeamNotOnSchedule("team2", element)
+                    //     await addScoutedTeamNotOnSchedule("team3", element)
+                    //     await addScoutedTeamNotOnSchedule("team4", element)
+                    //     await addScoutedTeamNotOnSchedule("team5", element)
+                    //     await addScoutedTeamNotOnSchedule("team6", element)
+                    // }
 
 
 
@@ -332,59 +332,59 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 };
 
-async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, currIndex = -1) {
-    try {
-        if (scouterShifts !== null && currIndex !== -1) {
-            const rows = await prismaClient.scoutReport.findMany({
-                where:
-                {
-                    teamMatchData:
-                    {
-                        matchNumber: match.matchNumber,
-                        tournamentKey: match.tournamentKey,
-                        matchType: MatchTypeMap[match.matchType][0]
-                    },
-                    scouterUuid: {
-                        notIn: scouterShifts[currIndex][team].map(item => item.uuid)
-                    }
-                },
-                include :
-                {
-                    scouter : true
-                }
-            })
-            for(let scoutReport of rows)
-            {
-                await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
-            }
-        }
-        else
-        {
-            const rows = await prismaClient.scoutReport.findMany({
-                where:
-                {
-                    teamMatchData:
-                    {
-                        matchNumber: match.matchNumber,
-                        tournamentKey: match.tournamentKey,
-                        matchType: MatchTypeMap[match.matchType][0]
-                    }
-                },
-                include :
-                {
-                    scouter : true
-                }
-            })
-            for(let scoutReport of rows)
-            {
-                await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
-            }
-        }
-    }
-    catch (error) {
-        throw (error)
-    }
-}
+// async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, currIndex = -1) {
+//     try {
+//         if (scouterShifts !== null && currIndex !== -1) {
+//             const rows = await prismaClient.scoutReport.findMany({
+//                 where:
+//                 {
+//                     teamMatchData:
+//                     {
+//                         matchNumber: match.matchNumber,
+//                         tournamentKey: match.tournamentKey,
+//                         matchType: MatchTypeMap[match.matchType][0]
+//                     },
+//                     scouterUuid: {
+//                         notIn: scouterShifts[currIndex][team].map(item => item.uuid)
+//                     }
+//                 },
+//                 include :
+//                 {
+//                     scouter : true
+//                 }
+//             })
+//             for(let scoutReport of rows)
+//             {
+//                 await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
+//             }
+//         }
+//         else
+//         {
+//             const rows = await prismaClient.scoutReport.findMany({
+//                 where:
+//                 {
+//                     teamMatchData:
+//                     {
+//                         matchNumber: match.matchNumber,
+//                         tournamentKey: match.tournamentKey,
+//                         matchType: MatchTypeMap[match.matchType][0]
+//                     }
+//                 },
+//                 include :
+//                 {
+//                     scouter : true
+//                 }
+//             })
+//             for(let scoutReport of rows)
+//             {
+//                 await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
+//             }
+//         }
+//     }
+//     catch (error) {
+//         throw (error)
+//     }
+// }
 
 async function addScoutedTeam(scouterShifts, currIndex, team, match) {
     try {
@@ -410,7 +410,7 @@ async function addScoutedTeam(scouterShifts, currIndex, team, match) {
                 await match[team].scouters.push({ name: scouter.name, scouted: false })
             }
         }
-        await addScoutedTeamNotOnSchedule(team, match, scouterShifts, currIndex)
+        // await addScoutedTeamNotOnSchedule(team, match, scouterShifts, currIndex)
 
     }
     catch (error) {
