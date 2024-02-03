@@ -307,12 +307,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     }
                     else
                     {
-                        await addScoutedTeamNotOnSchedule("team1", currIndex)
-                        await addScoutedTeamNotOnSchedule("team2", currIndex)
-                        await addScoutedTeamNotOnSchedule("team3", currIndex)
-                        await addScoutedTeamNotOnSchedule("team4", currIndex)
-                        await addScoutedTeamNotOnSchedule("team5", currIndex)
-                        await addScoutedTeamNotOnSchedule("team6", currIndex)
+                        await addScoutedTeamNotOnSchedule("team1", element)
+                        await addScoutedTeamNotOnSchedule("team2", element)
+                        await addScoutedTeamNotOnSchedule("team3", element)
+                        await addScoutedTeamNotOnSchedule("team4", element)
+                        await addScoutedTeamNotOnSchedule("team5", element)
+                        await addScoutedTeamNotOnSchedule("team6", element)
                     }
 
 
