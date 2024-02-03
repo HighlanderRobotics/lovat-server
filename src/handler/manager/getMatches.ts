@@ -125,7 +125,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 }
             })
             //check to make sure each match has 6 rows, if not than 1 + rows have been scouted already
-            const groupedMatches = matches.reduce((acc, match) => {
+            const groupedMatches = await matches.reduce((acc, match) => {
                 const key = `${match.matchNumber}-${match.matchType}`;
                 if (!acc[key]) {
                     acc[key] = [];
@@ -305,6 +305,15 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         await addScoutedTeam(scouterShifts, currIndex, "team5", element)
                         await addScoutedTeam(scouterShifts, currIndex, "team6", element)
                     }
+                    else
+                    {
+                        await addScoutedTeamNotOnSchedule("team1", currIndex)
+                        await addScoutedTeamNotOnSchedule("team2", currIndex)
+                        await addScoutedTeamNotOnSchedule("team3", currIndex)
+                        await addScoutedTeamNotOnSchedule("team4", currIndex)
+                        await addScoutedTeamNotOnSchedule("team5", currIndex)
+                        await addScoutedTeamNotOnSchedule("team6", currIndex)
+                    }
 
 
 
@@ -323,33 +332,85 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 };
 
+async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, currIndex = -1) {
+    try {
+        if (scouterShifts !== null && currIndex !== -1) {
+            const rows = await prismaClient.scoutReport.findMany({
+                where:
+                {
+                    teamMatchData:
+                    {
+                        matchNumber: match.matchNumber,
+                        tournamentKey: match.tournamentKey,
+                        matchType: MatchTypeMap[match.matchType][9]
+                    },
+                    scouterUuid: {
+                        notIn: scouterShifts[currIndex][team].map(item => item.uuid)
+                    }
+                },
+                include :
+                {
+                    scouter : true
+                }
+            })
+            for(let scoutReport of rows)
+            {
+                await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
+            }
+        }
+        else
+        {
+            const rows = await prismaClient.scoutReport.findMany({
+                where:
+                {
+                    teamMatchData:
+                    {
+                        matchNumber: match.matchNumber,
+                        tournamentKey: match.tournamentKey,
+                        matchType: MatchTypeMap[match.matchType][9]
+                    }
+                },
+                include :
+                {
+                    scouter : true
+                }
+            })
+            for(let scoutReport of rows)
+            {
+                await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
+            }
+        }
+    }
+    catch (error) {
+        throw (error)
+    }
+}
 
 async function addScoutedTeam(scouterShifts, currIndex, team, match) {
     try {
 
         for (const scouter of scouterShifts[currIndex][team]) {
             const row = await prismaClient.scoutReport.findFirst({
-                where :
+                where:
                 {
-                    scouterUuid : scouter.uuid,
-                    teamMatchData :
+                    scouterUuid: scouter.uuid,
+                    teamMatchData:
                     {
-                        matchNumber : match.matchNumber,
-                        tournamentKey : match.tournamentKey,
-                        matchType : MatchTypeMap[match.matchType][9]
+                        matchNumber: match.matchNumber,
+                        tournamentKey: match.tournamentKey,
+                        matchType: MatchTypeMap[match.matchType][9]
                     }
                 }
 
             })
-            if(row !== null)
-            {
-                await match[team].scouters.push({name : scouter.name, scouted : true})
+            if (row !== null) {
+                await match[team].scouters.push({ name: scouter.name, scouted: true })
             }
-            else
-            {
-                await match[team].scouters.push({name : scouter.name, scouted : false})
+            else {
+                await match[team].scouters.push({ name: scouter.name, scouted: false })
             }
         }
+        await addScoutedTeamNotOnSchedule(team, match, scouterShifts, currIndex)
 
     }
     catch (error) {
