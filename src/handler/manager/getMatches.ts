@@ -72,6 +72,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     teamNumber: 'asc'
                 }
             })
+            
         }
         else if (params.data.isScouted) {
 
@@ -97,6 +98,8 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 }
 
             })
+            matches = matches.map(match => ({ ...match, scouted: true }));
+            
         }
         else {
             //find non scouted matches (not scouted from user.sourceTeam)
@@ -122,6 +125,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     teamNumber: 'asc'
                 }
             })
+            matches = matches.map(match => ({ ...match, scouted: false }));
             //check to make sure each match has 6 rows, if not than 1 + rows have been scouted already
             const groupedMatches = matches.reduce((acc, match) => {
                 const key = `${match.matchNumber}-${match.matchType}`;
@@ -202,8 +206,9 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 res.status(400).send(`Matches not added correctly, does not have 6 teams for match ${element.matchNumber} of type ${element.matchType}`)
                 return
             }
+            console.log(element)
             let currData = {
-                tournamentKey: params.data.tournamentKey, matchNumber: element.matchNumber, matchType: ReverseMatchTypeMap[element.matchType],
+                tournamentKey: params.data.tournamentKey, matchNumber: element.matchNumber, matchType: ReverseMatchTypeMap[element.matchType], scouted : element.scouted,
                 team1: { number: currMatch[0].teamNumber, alliance: "red", scouters: [] },
                 team2: { number: currMatch[1].teamNumber, alliance: "red", scouters: [] },
                 team3: { number: currMatch[2].teamNumber, alliance: "red", scouters: [] },

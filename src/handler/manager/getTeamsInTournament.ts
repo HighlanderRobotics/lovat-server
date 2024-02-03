@@ -10,7 +10,7 @@ export const getTeamsInTournament = async (req: Request, res: Response): Promise
         const params = z.object({
             tournamentKey : z.string()
         }).safeParse({
-            tournamentKey : req.params.key
+            tournamentKey : req.params.tournament
         })
         if (!params.success) {
             res.status(400).send(params);
@@ -28,12 +28,21 @@ export const getTeamsInTournament = async (req: Request, res: Response): Promise
         if(!rows)
         {
             res.status(404).send("Tournament or teams not found")
+            return
         }
-    
 
         const uniqueTeamNumbers = Array.from(new Set(rows.map(row => row.teamNumber)));
+        const teams = await prismaClient.team.findMany({
+            where :
+            {
+                number :
+                {
+                    in : uniqueTeamNumbers
+                }
+            }
+        })
 
-        res.status(200).send(uniqueTeamNumbers);
+        res.status(200).send(teams);
     }
     catch (error) {
         console.error(error);
