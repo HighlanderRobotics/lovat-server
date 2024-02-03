@@ -17,7 +17,7 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             scouterUuid: z.string()
         }).safeParse({
             matchKey: req.params.match,
-            scouterUuid: req.params.scouterUuid
+            scouterUuid: req.params.scouteruuid
         })
         if (!params.success) {
             res.status(400).send(params)
