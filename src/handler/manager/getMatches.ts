@@ -342,7 +342,7 @@ async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, cu
                     {
                         matchNumber: match.matchNumber,
                         tournamentKey: match.tournamentKey,
-                        matchType: MatchTypeMap[match.matchType][9]
+                        matchType: MatchTypeMap[match.matchType][0]
                     },
                     scouterUuid: {
                         notIn: scouterShifts[currIndex][team].map(item => item.uuid)
