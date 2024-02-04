@@ -80,7 +80,7 @@ model MutablePicklist {
   author        User        @relation(fields: [authorId], references: [id])
   name          String
   tournamentKey String?
-  tournament    Tournament? @relation(fields: [tournamentKey], references: [key])
+  tournament    Tournament? @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
 }
 
 model ScoutReport {
@@ -176,7 +176,7 @@ model SharedPicklist {
   feeds         Float
 
   authorId String
-  author   User   @relation(fields: [authorId], references: [id])
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model Team {
@@ -218,7 +218,7 @@ model User {
   role             UserRole          @default(ANALYST)
   tournamentSource String[]
   teamSource       Int[]
-  mutablePicklists MutablePicklist[]
+  mutablePicklists MutablePicklist[] 
   sharedPicklists  SharedPicklist[]
 }
 
