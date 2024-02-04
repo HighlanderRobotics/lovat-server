@@ -4,7 +4,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import { specificMatchPageMetrics } from "../analysisConstants";
+import { roleMap, specificMatchPageMetrics } from "../analysisConstants";
 import { singleMatchSingleScouter } from "../coreAnalysis/singleMatchSingleScouter";
 import { match } from "assert";
 import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
@@ -30,7 +30,7 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
         let data = {
             totalPoints: await singleMatchSingleScouter(req, true, scoutReport.teamMatchKey, "totalpoints", scoutReport.scouterUuid),
             driverAbility: scoutReport.driverAbility,
-            role : scoutReport.robotRole,
+            role : roleMap[scoutReport.robotRole],
             autoPath : await autoPathSingleMatchSingleScouter(req, scoutReport.teamMatchKey, scoutReport.scouterUuid)
         }
         for (const element of specificMatchPageMetrics) {
