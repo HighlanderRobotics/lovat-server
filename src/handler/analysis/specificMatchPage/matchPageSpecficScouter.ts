@@ -4,10 +4,11 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import { roleMap, specificMatchPageMetrics } from "../analysisConstants";
+import { highNoteMap, roleMap, specificMatchPageMetrics, stageMap } from "../analysisConstants";
 import { singleMatchSingleScouter } from "../coreAnalysis/singleMatchSingleScouter";
 import { match } from "assert";
 import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
+import { scoutingLeadPage } from "../scoutingLead/scoutingLeadPage";
 
 
 export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: Response) => {
@@ -31,6 +32,8 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             totalPoints: await singleMatchSingleScouter(req, true, scoutReport.teamMatchKey, "totalpoints", scoutReport.scouterUuid),
             driverAbility: scoutReport.driverAbility,
             role : roleMap[scoutReport.robotRole],
+            stage : stageMap[scoutReport.stage],
+            highNote : highNoteMap[scoutReport.highNote],
             autoPath : await autoPathSingleMatchSingleScouter(req, scoutReport.teamMatchKey, scoutReport.scouterUuid)
         }
         for (const element of specificMatchPageMetrics) {
