@@ -70,6 +70,7 @@ import { getScouters } from "./handler/manager/getScouters";
 import { addScoutReportDashboard } from "./handler/manager/addScoutReportDashboard";
 import { matchPageSpecificScouter } from "./handler/analysis/specificMatchPage/matchPageSpecficScouter";
 import { scoutReportForMatch } from "./handler/analysis/specificMatchPage/scoutReportForMatch";
+import { timelineForScoutReport } from "./handler/analysis/specificMatchPage/timelineForScoutReport";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -200,8 +201,9 @@ app.get('/v1/analysis/scoutinglead', requireAuth, scoutingLeadPage)
 
 //specific match
 
-app.get('/v1/analysis/scoutreports/match/:match', requireAuth, scoutReportForMatch)
+app.get('/v1/analysis/metrics/scoutreport/:uuid', requireAuth, scoutReportForMatch)
 app.get('/v1/analysis/scoutreport/:uuid', requireAuth, matchPageSpecificScouter)
+app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScoutReport)
 
 
 
