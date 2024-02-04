@@ -12,19 +12,22 @@ import { MatchTypeMap, ReverseMatchTypeMap } from "./managerConstants";
 export const getMatches = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const user = req.user
+        let teams = null
         let isScouted = null
         //type check, convert isScouted to a boolean
         if (req.query.isScouted != undefined) {
             isScouted = req.query.isScouted === 'true'
         }
+        if (req.query.teams != undefined) {
+            teams = JSON.parse(req.query.teams as string);
+        }
         const params = z.object({
             tournamentKey: z.string(),
-            teamNumbers: z.array(z.number()).optional(),
+            teamNumbers: z.array(z.number()).nullable(),
             isScouted: z.boolean().nullable()
         }).safeParse({
             tournamentKey: req.params.tournament,
-            //must send team numbers, just make it empty
-            teamNumbers: req.query.teams ? JSON.parse(req.query.teams as string) : undefined,
+            teamNumbers: teams,
             isScouted: isScouted
         })
         if (!params.success) {
@@ -67,10 +70,11 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 {
                     tournamentKey: params.data.tournamentKey,
                 },
-                orderBy:
-                {
-                    teamNumber: 'asc'
-                }
+                orderBy: [
+                    { matchType: 'desc' },
+                    { matchNumber: 'asc' }
+                ]
+
             })
 
         }
@@ -92,10 +96,10 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         }
                     }
                 },
-                orderBy:
-                {
-                    teamNumber: 'asc'
-                }
+                orderBy: [
+                    { matchType: 'desc' },
+                    { matchNumber: 'asc' }
+                ]
 
             })
 
@@ -119,10 +123,11 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         }
                     }
                 },
-                orderBy:
-                {
-                    teamNumber: 'asc'
-                }
+                orderBy: [
+                    { matchType: 'desc' },
+                    { matchNumber: 'asc' }
+                ]
+
             })
             //check to make sure each match has 6 rows, if not than 1 + rows have been scouted already
             const groupedMatches = await matches.reduce((acc, match) => {
@@ -166,7 +171,11 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         }
                     }
                 }
-            }
+            },
+            orderBy: [
+                { matchType: 'desc' },
+                { matchNumber: 'asc' }
+            ]
 
         })
         let matchKeyAndNumberUnScouted = await prismaClient.teamMatchData.groupBy({
@@ -176,32 +185,16 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 key: {
                     in: matches.map(item => item.key),
                 },
-                AND: [
-                    {
-                        matchNumber:
-                        {
-                            notIn: matchKeyAndNumberScouted.map(item => item.matchNumber)
-                        }
-                    },
-                    {
-                        matchType:
-                        {
-                            notIn: matchKeyAndNumberScouted.map(item => item.matchType)
-                        }
-                    }
+                
+            },
+            orderBy: [
+                    { matchType: 'asc' },
+                    { matchNumber: 'asc' }
                 ]
-            }
 
 
         })
         let matchKeyAndNumber = matchKeyAndNumberUnScouted.map(match => ({ ...match, scouted: false })).concat(matchKeyAndNumberScouted.map(match => ({ ...match, scouted: true })))
-        //sort
-        matchKeyAndNumber.sort((a, b) => {
-            if (a.matchType > b.matchType) return -1;
-            if (a.matchType < b.matchType) return 1;
-            return a.matchNumber - b.matchNumber;
-        });
-
         let finalMatches = []
         if (params.data.teamNumbers && params.data.teamNumbers.length > 0 && params.data.teamNumbers.length <= 6) {
             for (let i = 0; i < matchKeyAndNumber.length; i++) {
@@ -223,7 +216,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 
         }
-        else if (params.data.teamNumbers === undefined || params.data.teamNumbers.length === 0) {
+        else if (params.data.teamNumbers === null || params.data.teamNumbers === undefined || params.data.teamNumbers.length === 0) {
             finalMatches = matchKeyAndNumber
         }
         const finalFormatedMatches = []
@@ -253,7 +246,6 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             }
             finalFormatedMatches.push(currData)
         };
-        finalFormatedMatches.sort((a, b) => a.matchNumber - b.matchNumber);
         if (user.teamNumber) {
             const scouterShifts = await prismaClient.scouterScheduleShift.findMany({
                 where:
@@ -305,15 +297,14 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         await addScoutedTeam(scouterShifts, currIndex, "team5", element)
                         await addScoutedTeam(scouterShifts, currIndex, "team6", element)
                     }
-                    // else
-                    // {
-                    //     await addScoutedTeamNotOnSchedule("team1", element)
-                    //     await addScoutedTeamNotOnSchedule("team2", element)
-                    //     await addScoutedTeamNotOnSchedule("team3", element)
-                    //     await addScoutedTeamNotOnSchedule("team4", element)
-                    //     await addScoutedTeamNotOnSchedule("team5", element)
-                    //     await addScoutedTeamNotOnSchedule("team6", element)
-                    // }
+                    else {
+                        await addScoutedTeamNotOnSchedule("team1", element)
+                        await addScoutedTeamNotOnSchedule("team2", element)
+                        await addScoutedTeamNotOnSchedule("team3", element)
+                        await addScoutedTeamNotOnSchedule("team4", element)
+                        await addScoutedTeamNotOnSchedule("team5", element)
+                        await addScoutedTeamNotOnSchedule("team6", element)
+                    }
 
 
 
@@ -331,60 +322,57 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
     }
 
 };
-
-// async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, currIndex = -1) {
-//     try {
-//         if (scouterShifts !== null && currIndex !== -1) {
-//             const rows = await prismaClient.scoutReport.findMany({
-//                 where:
-//                 {
-//                     teamMatchData:
-//                     {
-//                         matchNumber: match.matchNumber,
-//                         tournamentKey: match.tournamentKey,
-//                         matchType: MatchTypeMap[match.matchType][0]
-//                     },
-//                     scouterUuid: {
-//                         notIn: scouterShifts[currIndex][team].map(item => item.uuid)
-//                     }
-//                 },
-//                 include :
-//                 {
-//                     scouter : true
-//                 }
-//             })
-//             for(let scoutReport of rows)
-//             {
-//                 await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
-//             }
-//         }
-//         else
-//         {
-//             const rows = await prismaClient.scoutReport.findMany({
-//                 where:
-//                 {
-//                     teamMatchData:
-//                     {
-//                         matchNumber: match.matchNumber,
-//                         tournamentKey: match.tournamentKey,
-//                         matchType: MatchTypeMap[match.matchType][0]
-//                     }
-//                 },
-//                 include :
-//                 {
-//                     scouter : true
-//                 }
-//             })
-//             for(let scoutReport of rows)
-//             {
-//                 await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
-//             }
-//         }
-//     }
-//     catch (error) {
-//         throw (error)
-//     }
-// }
+//problem: will push to all 6 teams 
+async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, currIndex = -1) {
+    try {
+        if (scouterShifts !== null && currIndex !== -1) {
+            const rows = await prismaClient.scoutReport.findMany({
+                where:
+                {
+                    teamMatchData:
+                    {
+                        matchNumber: match.matchNumber,
+                        tournamentKey: match.tournamentKey,
+                        matchType: MatchTypeMap[match.matchType][0]
+                    },
+                    scouterUuid: {
+                        notIn: scouterShifts[currIndex][team].map(item => item.uuid)
+                    }
+                },
+                include:
+                {
+                    scouter: true
+                }
+            })
+            for (let scoutReport of rows) {
+                await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
+            }
+        }
+        else {
+            const rows = await prismaClient.scoutReport.findMany({
+                where:
+                {
+                    teamMatchData:
+                    {
+                        matchNumber: match.matchNumber,
+                        tournamentKey: match.tournamentKey,
+                        matchType: MatchTypeMap[match.matchType][0]
+                    }
+                },
+                include:
+                {
+                    scouter: true
+                }
+            })
+            for (let scoutReport of rows) {
+                await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
+            }
+        }
+    }
+    catch (error) {
+        throw (error)
+    }
+}
 
 async function addScoutedTeam(scouterShifts, currIndex, team, match) {
     try {
