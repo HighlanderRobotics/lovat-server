@@ -10,34 +10,50 @@ import { match } from "assert";
 import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
 
 
-export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: Response) => {
+export const scoutReportForMatch = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const params = z.object({
-            scoutReportUuid : z.string()
+            matchKey: z.string(),
         }).safeParse({
-            scoutReportUuid : req.params.uuid
+            matchKey: req.params.match,
         })
         if (!params.success) {
             res.status(400).send(params)
             return
         };
-        const scoutReport = await prismaClient.scoutReport.findUnique({
+        //comfirm if finding first is ideal
+        if (req.user.teamNumber === null || req.user.role !== "SCOUTING_LEAD") {
+            res.status(403).send("Not authorized to acsess this endpoint.")
+            return
+        }
+        const scoutReports = await prismaClient.scoutReport.findFirst({
             where:
             {
-                uuid : params.data.scoutReportUuid
+                teamMatchKey: params.data.matchKey,
+                scouter:
+                {
+                    sourceTeamNumber: req.user.teamNumber
+                }
+            },
+
+            select:
+            {
+                uuid: true,
+                scouterUuid: true,
+                scouter:
+                {
+                    select:
+                    {
+                        name: true
+                    }
+                }
+
+
             }
         })
-        let data = {
-            totalPoints: await singleMatchSingleScouter(req, true, scoutReport.teamMatchKey, "totalpoints", scoutReport.scouterUuid),
-            driverAbility: scoutReport.driverAbility,
-            role : scoutReport.robotRole,
-            autoPath : await autoPathSingleMatchSingleScouter(req, scoutReport.teamMatchKey, scoutReport.scouterUuid)
-        }
-        for (const element of specificMatchPageMetrics) {
-            data[element] = await singleMatchSingleScouter(req, false, scoutReport.teamMatchKey, element, scoutReport.scouterUuid)
-        };
 
-        res.status(200).send(data)
+
+        res.status(200).send(scoutReports)
 
 
     }

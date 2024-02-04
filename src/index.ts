@@ -69,6 +69,7 @@ import { getScouterTournaments } from "./handler/manager/getScouterTournaments";
 import { getScouters } from "./handler/manager/getScouters";
 import { addScoutReportDashboard } from "./handler/manager/addScoutReportDashboard";
 import { matchPageSpecificScouter } from "./handler/analysis/specificMatchPage/matchPageSpecficScouter";
+import { scoutReportForMatch } from "./handler/analysis/specificMatchPage/scoutReportForMatch";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -196,7 +197,11 @@ app.get('/v1/analysis/picklist', requireAuth, picklistShell)
 //scouting lead
 app.get('/v1/analysis/scoutinglead', requireAuth, scoutingLeadPage)
 
-app.get('/v1/analysis/match/:match/scouter/:scouteruuid', requireAuth, matchPageSpecificScouter)
+
+//specific match
+
+app.get('/v1/analysis/scoutreports/match/:match', requireAuth, scoutReportForMatch)
+app.get('/v1/analysis/scoutreport/:uuid', requireAuth, matchPageSpecificScouter)
 
 
 
