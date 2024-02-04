@@ -74,6 +74,19 @@ const EventActionMap = {
     4 : "team5",
     5 : "team6"
   }
-export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap}
+  const ReverseScouterScheduleMap = 
+  {
+    "team1" : 0,
+    "team2" : 1,
+    "team3" : 2,
+    "team4" : 3,
+    "team5" : 4,
+    "team6" : 5,
+  }
+  const MatchTypeToAbrivation = {
+    0 : "qm",
+    1 : "em"
+  }
+export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation}
 
   

@@ -6,7 +6,7 @@ import { addTournamentMatches } from "./addTournamentMatches";
 import prisma from "../../prismaClient";
 import { findSourceMap } from "node:module";
 import { match } from "node:assert";
-import { MatchTypeMap, ReverseMatchTypeMap } from "./managerConstants";
+import { MatchTypeMap, MatchTypeToAbrivation, ReverseMatchTypeMap, ReverseScouterScheduleMap } from "./managerConstants";
 import { nonEventMetric } from "../analysis/coreAnalysis/nonEventMetric";
 
 
@@ -296,15 +296,14 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 //problem: will push to all 6 teams 
 async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, currIndex = -1) {
     try {
+        let key = match.tournamentKey + "_" + MatchTypeToAbrivation[match.matchType] + match.matchNumber + "_" + ReverseScouterScheduleMap[team]
         if (scouterShifts !== null && currIndex !== -1) {
             const rows = await prismaClient.scoutReport.findMany({
                 where:
                 {
                     teamMatchData:
                     {
-                        matchNumber: match.matchNumber,
-                        tournamentKey: match.tournamentKey,
-                        matchType: MatchTypeMap[match.matchType][0]
+                        key : key
                     },
                     scouterUuid: {
                         notIn: scouterShifts[currIndex][team].map(item => item.uuid)
@@ -325,9 +324,7 @@ async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, cu
                 {
                     teamMatchData:
                     {
-                        matchNumber: match.matchNumber,
-                        tournamentKey: match.tournamentKey,
-                        matchType: MatchTypeMap[match.matchType][0]
+                        key : key
                     }
                 },
                 include:
@@ -335,6 +332,7 @@ async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, cu
                     scouter: true
                 }
             })
+
             for (let scoutReport of rows) {
                 await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
             }
