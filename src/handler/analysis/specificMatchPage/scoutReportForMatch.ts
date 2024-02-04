@@ -26,7 +26,7 @@ export const scoutReportForMatch = async (req: AuthenticatedRequest, res: Respon
             res.status(403).send("Not authorized to acsess this endpoint.")
             return
         }
-        const scoutReports = await prismaClient.scoutReport.findFirst({
+        const scoutReports = await prismaClient.scoutReport.findMany({
             where:
             {
                 teamMatchKey: params.data.matchKey,
