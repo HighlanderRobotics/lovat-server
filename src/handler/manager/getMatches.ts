@@ -190,6 +190,13 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         else if (params.data.teamNumbers === null || params.data.teamNumbers === undefined || params.data.teamNumbers.length === 0) {
             finalMatches = matchKeyAndNumber
         }
+        //sort
+        finalMatches.sort((a, b) => {
+            if (a.matchType < b.matchType) return 1;
+            if (a.matchType > b.matchType) return -1;
+            return a.matchNumber - b.matchNumber;
+          });
+          
         const finalFormatedMatches = []
         //change into proper format once we know all the matches we are including
         for (const element of finalMatches) {
