@@ -42,12 +42,11 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
                  uniqueTeams.add(element.teamMatchData.teamNumber);
             }
         };
-
         const uniqueTeamsArray : Array<number> = Array.from(uniqueTeams);
         let timeLineArray = []
         for (const element of uniqueTeamsArray) {
-            const currArr =  (await arrayAndAverageTeam(req, metric, element)).average
-            timeLineArray = timeLineArray.concat(currArr)
+            const currAvg =  (await arrayAndAverageTeam(req, metric, element)).average
+            timeLineArray = timeLineArray.concat(currAvg)
         };
         //change to null possibly
         let average = 0
@@ -55,6 +54,7 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
         {
             average = await timeLineArray.reduce((acc, cur) => acc + cur) / timeLineArray.length;
         }
+        
         return {
             average: average,
             timeLine: timeLineArray
