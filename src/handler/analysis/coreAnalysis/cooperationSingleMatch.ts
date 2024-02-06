@@ -68,6 +68,10 @@ export const cooperationSingleMatch = async (req: AuthenticatedRequest, matchKey
                 }
             }
         }
+        if(arrOfDifferences.length === 0)
+        {
+            return 0
+        }
         return  arrOfDifferences.reduce((sum, curr) => sum + curr, 0)/arrOfDifferences.length
 
 
