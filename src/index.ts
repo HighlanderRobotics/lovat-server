@@ -201,8 +201,8 @@ app.get('/v1/analysis/scoutinglead', requireAuth, scoutingLeadPage)
 
 //specific match
 
-app.get('/v1/analysis/metrics/scoutreport/:uuid', requireAuth, scoutReportForMatch)
-app.get('/v1/analysis/scoutreports/match/:match', requireAuth, matchPageSpecificScouter)
+app.get('/v1/analysis/metrics/scoutreport/:uuid', requireAuth, matchPageSpecificScouter)
+app.get('/v1/analysis/scoutreports/match/:match', requireAuth, scoutReportForMatch )
 app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScoutReport)
 
 
