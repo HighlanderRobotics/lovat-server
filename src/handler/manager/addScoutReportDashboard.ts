@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import { match } from "assert";
 import z from 'zod'
-import { singleMatchSingleScouter } from "../analysis/coreAnalysis/singleMatchSingleScouter";
+import { singleMatchSingleScoutReport } from "../analysis/coreAnalysis/singleMatchSingleScoutReport";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { EventAction } from "@prisma/client";
 import { ADDRGETNETWORKPARAMS } from "dns";
@@ -209,16 +209,17 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
         })
         const totalPoints = await totalPointsScoutingLead(scoutReportUuid)
         //recalibrate the max resonable points for every year 
-        if (totalPoints === 0 || totalPoints > 80) {
-            await prismaClient.flaggedScoutReport.create({
-                data:
-                {
-                    note: `${totalPoints} recorded, not including endgame`,
-                    scoutReportUuid: scoutReportUuid
-                }
+        //uncomment for scouting lead page
+        // if (totalPoints === 0 || totalPoints > 80) {
+        //     await prismaClient.flaggedScoutReport.create({
+        //         data:
+        //         {
+        //             note: `${totalPoints} recorded, not including endgame`,
+        //             scoutReportUuid: scoutReportUuid
+        //         }
 
-            })
-        }
+        //     })
+        // }
         res.status(200).send('done adding data');
     }
 

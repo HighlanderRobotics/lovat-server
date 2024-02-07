@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { autoPathSingleMatchSingleScouter } from "./autoPathSingleMatchSingleScouter";
+import { autoPathSingleMatchSingleScoutReport } from "./autoPathSingleMatchSingleScoutReport";
 
 
 export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : number) => {
@@ -83,7 +83,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
         let autoPaths  = []
         for(const element of matches)
         {
-            const currAutoPath = await autoPathSingleMatchSingleScouter(req, element.teamMatchKey, element.scouterUuid)
+            const currAutoPath = await autoPathSingleMatchSingleScoutReport(req, element.teamMatchKey, element.uuid)
             if(currAutoPath)
             {
                 autoPaths.push(currAutoPath)

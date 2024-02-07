@@ -5,9 +5,9 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { FlippedActionMap, FlippedPositionMap, specificMatchPageMetrics } from "../analysisConstants";
-import { singleMatchSingleScouter } from "../coreAnalysis/singleMatchSingleScouter";
+import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
 import { match } from "assert";
-import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
+import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingleMatchSingleScoutReport";
 
 
 export const timelineForScoutReport = async (req: AuthenticatedRequest, res: Response) => {

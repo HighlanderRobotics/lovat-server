@@ -3,8 +3,8 @@ import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
-import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
-import { singleMatchSingleScouter } from "../coreAnalysis/singleMatchSingleScouter";
+import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingleMatchSingleScoutReport";
+import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
 import { cooperationSingleMatch } from "../coreAnalysis/cooperationSingleMatch";
 // import { cooperationSingleMatch } from "./cooperationSingleMatch";
 

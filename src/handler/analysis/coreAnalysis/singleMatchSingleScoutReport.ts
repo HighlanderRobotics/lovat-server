@@ -9,7 +9,7 @@ import { match } from "assert";
 
 
 
-export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPointAverage: boolean, matchKey: string, metric1: string, scouterUuid: string, timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
+export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, isPointAverage: boolean, scoutReportUuid: string, metric1: string, timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
         if(metric1 === "ampscores" )
@@ -72,23 +72,18 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
      
         if (metric1 === "driverability") {
 
-            const sumOfMatches = await prismaClient.scoutReport.aggregate({
-                _avg:
-                {
-                    driverAbility: true
-                },
+            const match = await prismaClient.scoutReport.findUnique({
+               
                 where:
                 {
-                    teamMatchKey: matchKey,
-                    scouterUuid: scouterUuid
+                    uuid : scoutReportUuid
                 }
             })
             //avg could be multiple results from one scout
-            return sumOfMatches._avg.driverAbility
+            return match.driverAbility
         }
         else if (isPointAverage) {
-            const sumOfMatches = await prismaClient.event.groupBy({
-                by: ["scoutReportUuid"],
+            const sumOfMatches = await prismaClient.event.aggregate({
                 _sum:
                 {
                     points: true
@@ -96,8 +91,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                 where:
                 {
                     scoutReport: {
-                        teamMatchKey: matchKey,
-                        scouterUuid: scouterUuid
+                        uuid : scoutReportUuid
 
                     },
                     //no need for action, either has points or has 0
@@ -114,44 +108,25 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
             })
             
 
-            if (sumOfMatches.length === 0) {
-                return 0
-            }
-            const eventsAverage = sumOfMatches.reduce((acc, val) => acc + val._sum.points, 0) / sumOfMatches.length;
+         
+            const eventsAverage = sumOfMatches._sum.points
             //adds endgame/climbing points if nessisary
             if (metric === "totalpoints" || metric === "teleoppoints") {
-                let stagePoints = []
-                const scoutReports = await prismaClient.scoutReport.findMany({
+                const element = await prismaClient.scoutReport.findUnique({
                     where:
                     {
-                        teamMatchData:
-                        {
-                            tournamentKey: {
-                                in: req.user.tournamentSource
-                            },
-                        },
-                        scouter:
-                        {
-                            sourceTeamNumber:
-                            {
-                                in: req.user.teamSource
-                            }
-                        },
+                        uuid : scoutReportUuid
                     }
                 })
-                for (let element of scoutReports) {
-                    let currStagePoints = stageMap[element.stage] + highNoteMap[element.highNote]
-                    stagePoints.push(currStagePoints)
-                }
-                let stagePointsAverage = 0
-                if (stagePoints.length > 0) {
-                    stagePointsAverage = stagePoints.reduce((acc, val) => acc + val, 0) / stagePoints.length;
-                }
-
-                return eventsAverage + stagePointsAverage
+                let stagePoints = stageMap[element.stage] + highNoteMap[element.highNote]
+            
+                return eventsAverage + stagePoints
             }
+            else
+            {
+                return eventsAverage
 
-            return eventsAverage
+            }
         }
 
         else {
@@ -166,8 +141,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                 throw (params)
             };
 
-            const sumOfMatches = await prismaClient.event.groupBy({
-                by: ["scoutReportUuid"],
+            const match = await prismaClient.event.aggregate({
                 _count:
                 {
                     _all: true
@@ -175,8 +149,7 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
                 where:
                 {
                     scoutReport: {
-                        teamMatchKey: matchKey,
-                        scouterUuid: scouterUuid
+                        uuid : scoutReportUuid
                     },
                     action: params.data.metric,
                     time:
@@ -188,11 +161,8 @@ export const singleMatchSingleScouter = async (req: AuthenticatedRequest, isPoin
 
                 }
             })
-            if (sumOfMatches.length === 0) {
-                return 0
-            }
-            const average = sumOfMatches.reduce((acc, val) => acc + val._count._all, 0) / sumOfMatches.length;
-            return average
+            
+            return match._count._all
 
         }
     }

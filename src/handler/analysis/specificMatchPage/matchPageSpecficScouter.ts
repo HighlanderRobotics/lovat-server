@@ -5,9 +5,9 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { highNoteMap, roleMap, specificMatchPageMetrics, stageMap } from "../analysisConstants";
-import { singleMatchSingleScouter } from "../coreAnalysis/singleMatchSingleScouter";
+import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
 import { match } from "assert";
-import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
+import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingleMatchSingleScoutReport";
 import { scoutingLeadPage } from "../scoutingLead/scoutingLeadPage";
 
 
@@ -29,15 +29,15 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             }
         })
         let data = {
-            totalPoints: await singleMatchSingleScouter(req, true, scoutReport.teamMatchKey, "totalpoints", scoutReport.scouterUuid),
+            totalPoints: await singleMatchSingleScoutReport(req, true, scoutReport.uuid, "totalpoints"),
             driverAbility: scoutReport.driverAbility,
             role : roleMap[scoutReport.robotRole],
             stage : stageMap[scoutReport.stage],
             highNote : highNoteMap[scoutReport.highNote],
-            autoPath : await autoPathSingleMatchSingleScouter(req, scoutReport.teamMatchKey, scoutReport.scouterUuid)
+            autoPath : await autoPathSingleMatchSingleScoutReport(req, scoutReport.teamMatchKey, scoutReport.uuid)
         }
         for (const element of specificMatchPageMetrics) {
-            data[element] = await singleMatchSingleScouter(req, false, scoutReport.teamMatchKey, element, scoutReport.scouterUuid)
+            data[element] = await singleMatchSingleScoutReport(req, false, scoutReport.uuid, element)
         };
 
         res.status(200).send(data)

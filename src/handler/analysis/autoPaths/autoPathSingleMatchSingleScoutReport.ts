@@ -7,25 +7,14 @@ import { FlippedActionMap, FlippedPositionMap, autoEnd, exludedAutoEvents } from
 import { PositionMap } from "../../manager/managerConstants";
 
 
-export const autoPathSingleMatchSingleScouter = async (req: AuthenticatedRequest, matchKey : string, scouterUuid : string) => {
+export const autoPathSingleMatchSingleScoutReport = async (req: AuthenticatedRequest, matchKey : string, scoutReportUuid : string) => {
     try {
-        const params = z.object({
-           matchKey : z.string(),
-           scouterUuid : z.string()
-        }).safeParse({
-           matchKey : matchKey,
-           scouterUuid : scouterUuid
-        })
-        if (!params.success) {
-            throw(params)
-        };
         const autoData = await prismaClient.event.findMany({
             where : 
             {
                 scoutReport :
                 {
-                    teamMatchKey : params.data.matchKey,
-                    scouterUuid : params.data.scouterUuid
+                    uuid : scoutReportUuid
                 },
                 time : 
                 {
@@ -51,8 +40,7 @@ export const autoPathSingleMatchSingleScouter = async (req: AuthenticatedRequest
         return  {
             autoPoints : totalScore,
             positions : positions,
-            match : params.data.matchKey
-
+            match : matchKey
         }
         
     

@@ -3,8 +3,8 @@ import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
-import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
-import { singleMatchSingleScouter } from "./singleMatchSingleScouter";
+import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingleMatchSingleScoutReport";
+import { singleMatchSingleScoutReport } from "./singleMatchSingleScoutReport";
 import { cooperationSingleMatch } from "./cooperationSingleMatch";
 import { match } from "assert";
 // import { cooperationSingleMatch } from "./cooperationSingleMatch";
@@ -50,7 +50,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                 }
                 else
                 {
-                    data = await singleMatchSingleScouter(req, isPointAverage, matchKey, metric1, element.scouterUuid, timeMin, timeMax)
+                    data = await singleMatchSingleScoutReport(req, isPointAverage, element.uuid, metric1,  timeMin, timeMax)
                 }
                 if(data !== null)
                 {
