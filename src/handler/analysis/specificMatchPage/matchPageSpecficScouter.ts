@@ -34,7 +34,9 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             role : roleMap[scoutReport.robotRole],
             stage : stageMap[scoutReport.stage],
             highNote : highNoteMap[scoutReport.highNote],
-            autoPath : await autoPathSingleMatchSingleScoutReport(req, scoutReport.teamMatchKey, scoutReport.uuid)
+            autoPath : await autoPathSingleMatchSingleScoutReport(req, scoutReport.teamMatchKey, scoutReport.uuid),
+            note : scoutReport.notes,
+            timeStamp : scoutReport.startTime
         }
         for (const element of specificMatchPageMetrics) {
             data[element] = await singleMatchSingleScoutReport(req, false, scoutReport.uuid, element)
