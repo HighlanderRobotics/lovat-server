@@ -18,7 +18,7 @@ import { picklistSliders } from "../analysisConstants";
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
 
-            const params = z.object({
+        const params = z.object({
             tournamentKey: z.string().optional(),
             totalPoints: z.number(),
             pickUps: z.number(),
@@ -66,35 +66,40 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         const allTeamAvgSTD = {}
         let data = true
-         for (const element of picklistSliders) {
-            const currData = await arrayAndAverageAllTeam(req, element);
-            if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2) {
-                allTeamAvgSTD[element] = {
-                    "allAvg": currData.average,
-                    "arraySTD": ss.standardDeviation(currData.timeLine)
-                };
-            }
-            else
-            {
-                if(isNaN(currData.average) )
-                {
-                    allTeamAvgSTD[element] = {
-                        "allAvg": 0,
-                        "arraySTD": 0.1
-                    };
-                }
-                else
-                {
+        let allTeamData: Promise<{ average: number, timeLine: Array<number> }>[] = []
+        for (const element of picklistSliders) {
+            const currData = arrayAndAverageAllTeam(req, element);
+            allTeamData.push(currData)
+        }
+        await Promise.all(allTeamData).then((allTeamDataResolved) => {
+            for (let i = 0; i < allTeamDataResolved.length; i++) {
+                let currData = allTeamDataResolved[i]
+                let element = picklistSliders[i]
+                if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2) {
                     allTeamAvgSTD[element] = {
                         "allAvg": currData.average,
-                        "arraySTD": 0.1
+                        "arraySTD": ss.standardDeviation(currData.timeLine)
                     };
                 }
-                //TUNE THESE VALUES
-               
+                else {
+                    if (isNaN(currData.average)) {
+                        allTeamAvgSTD[element] = {
+                            "allAvg": 0,
+                            "arraySTD": 0.1
+                        };
+                    }
+                    else {
+                        allTeamAvgSTD[element] = {
+                            "allAvg": currData.average,
+                            "arraySTD": 0.1
+                        };
+                    }
+                }
             }
+        })
+        //TUNE THESE VALUES
 
-        }
+
         const allTeams = await prismaClient.team.findMany({})
         let includedTeamNumbers: number[] = allTeams.map(team => team.number);
         if (params.data.tournamentKey) {
@@ -108,18 +113,29 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             includedTeamNumbers = teamsAtTournament.map(record => record.teamNumber);
 
         }
-        
+
         let arr = []
         for (const element of includedTeamNumbers) {
-            const currZscores = await zScoreTeam(req, allTeamAvgSTD, element, params)
-            //flags go here, wehn added
-            if (!isNaN(currZscores.zScore)) {
-                let temp = { "team": element, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted }
-                arr.push(temp)
-            }
+            const currZscores = zScoreTeam(req, allTeamAvgSTD, element, params)
+            //flags go here, when added
+            arr.push(currZscores)
+
         };
-        const resultArr = arr.sort((a, b) => b.result - a.result)
-        res.status(200).send({teams : resultArr})
+        console.log(allTeamAvgSTD)
+        let dataArr = []
+        await Promise.all(arr).then((values) => {
+            for (let i = 0; i < values.length; i ++) {
+                let currZscores = values[i]
+                let team = includedTeamNumbers[i]
+                if (!isNaN(currZscores.zScore)) {
+                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted }
+                    dataArr.push(temp)
+                }
+            }
+            const resultArr = dataArr.sort((a, b) => b.result - a.result)
+            res.status(200).send({ teams: resultArr })
+        })
+       
     }
     catch (error) {
         console.log(error)
