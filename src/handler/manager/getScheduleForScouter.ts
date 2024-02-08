@@ -8,6 +8,8 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { match } from "node:assert";
 import { MatchTypeMap, ScouterScheduleMap } from "./managerConstants";
 import { SHA256 } from 'crypto-js';
+import { max } from "simple-statistics";
+import { addTournamentMatches } from "./addTournamentMatches";
 
 
 
@@ -63,6 +65,10 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                 matchNumber: "desc",
             }
         })
+        if(maxQualifierRow === null)
+        {
+            await addTournamentMatches(params.data.tournamentKey)
+        }
         const highestQualificationMatchNumber = maxQualifierRow.matchNumber
         let finalArr = []
         for (const element of rows) {

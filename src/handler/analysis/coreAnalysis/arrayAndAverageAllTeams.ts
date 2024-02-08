@@ -56,7 +56,6 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
             if (timeLineArray.length !== 0) {
                 console.log(values[0].average)
                 average = values.reduce((acc, cur) => acc + cur.average, 0) / values.length;
-                console.log(average)
             }
         });
 
