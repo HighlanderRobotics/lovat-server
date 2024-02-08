@@ -5,11 +5,11 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
-import { time } from "console";
+import { error, time } from "console";
 import { Position } from "@prisma/client";
 
 
-export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string): Promise<{ average: number, timeLine: Array<number> }> => {
+export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string) : Promise<{average : number, timeLine : Array<number>}>=> {
     try {
 
         const teams = await prismaClient.scoutReport.findMany({
@@ -35,30 +35,36 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
                 teamMatchData: true
             }
         })
-        const uniqueTeams : Set<number>= new Set();
+        const uniqueTeams: Set<number> = new Set();
 
         for (const element of teams) {
             if (element) {
-                 uniqueTeams.add(element.teamMatchData.teamNumber);
+                uniqueTeams.add(element.teamMatchData.teamNumber);
             }
         };
-        const uniqueTeamsArray : Array<number> = Array.from(uniqueTeams);
+        const uniqueTeamsArray: Array<number> = Array.from(uniqueTeams);
         let timeLineArray = []
         for (const element of uniqueTeamsArray) {
-            const currAvg =  (await arrayAndAverageTeam(req, metric, element)).average
+            const currAvg = (arrayAndAverageTeam(req, metric, element))
             timeLineArray = timeLineArray.concat(currAvg)
         };
         //change to null possibly
         let average = 0
-        if(timeLineArray.length !== 0)
-        {
-            average = await timeLineArray.reduce((acc, cur) => acc + cur) / timeLineArray.length;
-        }
+
+        await Promise.all(timeLineArray).then((values) => {
+
+            if (timeLineArray.length !== 0) {
+                console.log(values[0].average)
+                average = values.reduce((acc, cur) => acc + cur.average, 0) / values.length;
+                console.log(average)
+            }
+        });
+
         return {
             average: average,
             timeLine: timeLineArray
         }
-
+  
     }
     catch (error) {
         console.error(error)

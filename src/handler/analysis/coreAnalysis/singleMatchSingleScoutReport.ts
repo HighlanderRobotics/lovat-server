@@ -119,7 +119,6 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
                     }
                 })
                 let stagePoints = stageMap[element.stage] + highNoteMap[element.highNote]
-            
                 return eventsAverage + stagePoints
             }
             else

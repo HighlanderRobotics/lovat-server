@@ -57,7 +57,14 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                     matchDataArray.push(data)
                 }
             }
-          return await matchDataArray.reduce((acc, val) => acc + val, 0) / matchDataArray.length;
+            if(matchDataArray.length !== 0)
+            {
+                return await matchDataArray.reduce((acc, val) => acc + val, 0) / matchDataArray.length;
+            }
+            else
+            {
+                return null
+            }
 
         }
     }
