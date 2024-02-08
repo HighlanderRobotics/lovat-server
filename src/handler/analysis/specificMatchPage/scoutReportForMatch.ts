@@ -40,6 +40,8 @@ export const scoutReportForMatch = async (req: AuthenticatedRequest, res: Respon
             {
                 uuid: true,
                 scouterUuid: true,
+                notes : true,
+                startTime : true,
                 scouter:
                 {
                     select:
@@ -52,7 +54,7 @@ export const scoutReportForMatch = async (req: AuthenticatedRequest, res: Respon
             }
         })
 
-
+        
         res.status(200).send(scoutReports)
 
 
