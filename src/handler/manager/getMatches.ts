@@ -287,6 +287,17 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
                 }
             }
+            else {
+                for(const match of finalFormatedMatches)
+                {
+                    await addScoutedTeamNotOnSchedule("team1", match)
+                    await addScoutedTeamNotOnSchedule("team2", match)
+                    await addScoutedTeamNotOnSchedule("team3", match)
+                    await addScoutedTeamNotOnSchedule("team4", match)
+                    await addScoutedTeamNotOnSchedule("team5", match)
+                    await addScoutedTeamNotOnSchedule("team6", match)
+                }
+            }
 
 
 
