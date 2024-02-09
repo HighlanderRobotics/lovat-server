@@ -8,7 +8,7 @@ import { robotRole } from "../coreAnalysis/robotRole";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 
 
-export const alliancePage = async (req : AuthenticatedRequest, team1 : number, team2 : number, team3 : number): Promise<{totalPoints : number, teams : Array<Object>, speakerScores : number, ampscores : number}> =>{
+export const alliancePage = async (req : AuthenticatedRequest, team1 : number, team2 : number, team3 : number): Promise<{totalPoints : number, teams : Array<Object>, speakerScores : number, ampScores : number}> =>{
     try {
         let teamOnePoints = await arrayAndAverageTeam(req, "totalpoints", team1)
         let teamTwoPoints = await arrayAndAverageTeam(req, "totalpoints", team2)
@@ -42,7 +42,7 @@ export const alliancePage = async (req : AuthenticatedRequest, team1 : number, t
                 {team : team3, role : teamThreeMainRole, averagePoints : teamThreePoints.average, paths : teamThreeAutoPaths}
             ],
             speakerScores : teamOneSpeakerScores.average + teamTwoSpeakerScores.average + teamThreeSpeakerScores.average,
-            ampscores : teamOneAmpScores.average + teamTwoAmpScores.average + teamThreeAmpScores.average
+            ampScores : teamOneAmpScores.average + teamTwoAmpScores.average + teamThreeAmpScores.average
         }
 
     }

@@ -134,7 +134,6 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     key: {
                         in: scoutedMatches.map(item => item.key)
                     },
-
                 },
                 orderBy: [
                     { matchType: 'desc' },
