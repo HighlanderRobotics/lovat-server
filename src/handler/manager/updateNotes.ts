@@ -11,7 +11,7 @@ export const updateNotes = async (req: AuthenticatedRequest, res: Response): Pro
            note : z.string(),
            uuid : z.string()
         }).safeParse({
-           note : req.body.note(),
+           note : req.body.note,
            uuid : req.params.uuid
         })
         if (!params.success) {

@@ -353,7 +353,7 @@ async function addScoutedTeam(scouterShifts, currIndex, team, match) {
     try {
 
         for (const scouter of scouterShifts[currIndex][team]) {
-            const row = await prismaClient.scoutReport.findFirst({
+            const rows = await prismaClient.scoutReport.findMany({
                 where:
                 {
                     scouterUuid: scouter.uuid,
@@ -366,8 +366,11 @@ async function addScoutedTeam(scouterShifts, currIndex, team, match) {
                 }
 
             })
-            if (row !== null) {
-                await match[team].scouters.push({ name: scouter.name, scouted: true })
+            if (rows !== null && rows.length > 0) {
+                for(const element of rows)
+                {
+                    await match[team].scouters.push({ name: scouter.name, scouted: true })
+                }
             }
             else {
                 await match[team].scouters.push({ name: scouter.name, scouted: false })
