@@ -69,8 +69,30 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
         //     }
         //     return stagePointsAverage
         // }
-     
-        if (metric1 === "driverability") {
+        if(metric1 === "pickups")
+        {
+            const match = await prismaClient.event.aggregate({
+                _count:
+                {
+                    _all: true
+                },
+                where:
+                {
+                    scoutReport: {
+                        uuid : scoutReportUuid
+                    },
+                    action: "PICK_UP",
+                    time:
+                    {
+                        lt: timeMax,
+                        gte: timeMin
+                    },
+                }
+            })
+            
+            return match._count._all
+        }
+        else if (metric1 === "driverability") {
 
             const match = await prismaClient.scoutReport.findUnique({
                
@@ -127,7 +149,7 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
 
             }
         }
-
+       
         else {
             const params = z.object({
                 metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE]),

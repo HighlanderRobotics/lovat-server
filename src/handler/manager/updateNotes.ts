@@ -6,7 +6,6 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 export const updateNotes = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        const user = req.user
         const params = z.object({
            note : z.string(),
            uuid : z.string()
@@ -18,13 +17,8 @@ export const updateNotes = async (req: AuthenticatedRequest, res: Response): Pro
             res.status(400).send(params);
             return;
         };
-        const userRow = await prismaClient.user.findUnique({
-            where : 
-            {
-                id : req.user.id
-            }
-        })
-        if(userRow.role !== "SCOUTING_LEAD")
+    
+        if(req.user.role !== "SCOUTING_LEAD")
         {
             res.status(403).send("Not authorized to edit this note")
             return
