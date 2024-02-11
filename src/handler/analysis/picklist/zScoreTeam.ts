@@ -25,8 +25,6 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
                 if (isNaN(zScore)) {
                     zScore = 0
                 }
-                console.log(element)
-                console.log(params.data[picklistSliderMap[element]])
                 adj.push({ "result": zScore * params.data[picklistSliderMap[element]], "type": element })
                 unAdj.push({ "result": zScore, "type": element })
             }
