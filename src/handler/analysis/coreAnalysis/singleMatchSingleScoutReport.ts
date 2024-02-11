@@ -129,7 +129,6 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
                 }
             })
             
-
          
             const eventsAverage = sumOfMatches._sum.points
             //adds endgame/climbing points if nessisary
