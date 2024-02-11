@@ -45,7 +45,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             driverAbility: Number(req.query.driverAbility) || 0,
             defense: Number(req.query.defense) || 0,
             speakerScores: Number(req.query.speakerScores) || 0,
-            ampScores: Number(req.query.totalPoints) || 0,
+            ampScores: Number(req.query.ampScores) || 0,
             cooperation: Number(req.query.cooperation) || 0,
             feeds: Number(req.query.feeds) || 0
 
@@ -54,7 +54,6 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             res.status(400).send(params);
             return;
         };
-        console.log(params)
         //if tournament matches not in yet, attempt to add them
         const matches = await prismaClient.teamMatchData.findMany({
             where:

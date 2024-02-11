@@ -22,17 +22,17 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
             feeds : z.number()
         }).safeParse({
             name: req.body.name,
-            totalPoints: req.body.totalPoints,
-            defense: req.body.defense,
-            pickUps : req.body.pickUps,
-            stage : req.body.stage,
-            autoPoints : req.body.autoPoints,
-            driverAbility : req.body.driverAbility,
-            speakerScores : req.body.speakerScores,
-            ampScores : req.body.ampScores,
-            teleopPoints : req.body.teleopPoints,
-            trapScores : req.body.trapScores,
-            feeds : req.body.feeds,
+            totalPoints: req.body.totalPoints || 0,
+            defense: req.body.defense || 0,
+            pickUps : req.body.pickUps || 0,
+            stage : req.body.stage || 0,
+            autoPoints : req.body.autoPoints || 0,
+            driverAbility : req.body.driverAbility || 0,
+            speakerScores : req.body.speakerScores || 0,
+            ampScores : req.body.ampScores || 0,
+            teleopPoints : req.body.teleopPoints || 0,
+            trapScores : req.body.trapScores || 0,
+            feeds : req.body.feeds || 0,
             authorId: req.user.id
         })
         if (!params.success) {
