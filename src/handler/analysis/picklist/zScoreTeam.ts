@@ -31,8 +31,8 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
             else
             {
                 //figure out correct # later on
-                adj.push({ "result": -10 * params.data[picklistSliderMap[element]], "type": element })
-                unAdj.push({ "result": -10, "type": element })
+                adj.push({ "result": 0, "type": element })
+                unAdj.push({ "result": 0, "type": element })
             }
           
         };
