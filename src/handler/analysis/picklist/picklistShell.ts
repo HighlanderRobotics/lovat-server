@@ -54,6 +54,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             res.status(400).send(params);
             return;
         };
+        console.log(params)
         //if tournament matches not in yet, attempt to add them
         const matches = await prismaClient.teamMatchData.findMany({
             where:
@@ -121,7 +122,6 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             arr.push(currZscores)
 
         };
-        console.log(allTeamAvgSTD)
         let dataArr = []
         await Promise.all(arr).then((values) => {
             for (let i = 0; i < values.length; i ++) {
