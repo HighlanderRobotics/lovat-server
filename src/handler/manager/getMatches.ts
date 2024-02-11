@@ -267,20 +267,20 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         scoutersExist = false
                     }
                     if (scoutersExist) {
-                        await addScoutedTeam(scouterShifts, currIndex, "team1", element)
-                        await addScoutedTeam(scouterShifts, currIndex, "team2", element)
-                        await addScoutedTeam(scouterShifts, currIndex, "team3", element)
-                        await addScoutedTeam(scouterShifts, currIndex, "team4", element)
-                        await addScoutedTeam(scouterShifts, currIndex, "team5", element)
-                        await addScoutedTeam(scouterShifts, currIndex, "team6", element)
+                        await addScoutedTeam(req, scouterShifts, currIndex, "team1", element)
+                        await addScoutedTeam(req, scouterShifts, currIndex, "team2", element)
+                        await addScoutedTeam(req, scouterShifts, currIndex, "team3", element)
+                        await addScoutedTeam(req, scouterShifts, currIndex, "team4", element)
+                        await addScoutedTeam(req, scouterShifts, currIndex, "team5", element)
+                        await addScoutedTeam(req, scouterShifts, currIndex, "team6", element)
                     }
                     else {
-                        await addScoutedTeamNotOnSchedule("team1", element)
-                        await addScoutedTeamNotOnSchedule("team2", element)
-                        await addScoutedTeamNotOnSchedule("team3", element)
-                        await addScoutedTeamNotOnSchedule("team4", element)
-                        await addScoutedTeamNotOnSchedule("team5", element)
-                        await addScoutedTeamNotOnSchedule("team6", element)
+                        await addScoutedTeamNotOnSchedule(req, "team1", element)
+                        await addScoutedTeamNotOnSchedule(req, "team2", element)
+                        await addScoutedTeamNotOnSchedule(req, "team3", element)
+                        await addScoutedTeamNotOnSchedule(req, "team4", element)
+                        await addScoutedTeamNotOnSchedule(req, "team5", element)
+                        await addScoutedTeamNotOnSchedule(req, "team6", element)
                     }
 
 
@@ -290,12 +290,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             else {
                 for(const match of finalFormatedMatches)
                 {
-                    await addScoutedTeamNotOnSchedule("team1", match)
-                    await addScoutedTeamNotOnSchedule("team2", match)
-                    await addScoutedTeamNotOnSchedule("team3", match)
-                    await addScoutedTeamNotOnSchedule("team4", match)
-                    await addScoutedTeamNotOnSchedule("team5", match)
-                    await addScoutedTeamNotOnSchedule("team6", match)
+                    await addScoutedTeamNotOnSchedule(req, "team1", match)
+                    await addScoutedTeamNotOnSchedule(req, "team2", match)
+                    await addScoutedTeamNotOnSchedule(req, "team3", match)
+                    await addScoutedTeamNotOnSchedule(req, "team4", match)
+                    await addScoutedTeamNotOnSchedule(req, "team5", match)
+                    await addScoutedTeamNotOnSchedule(req, "team6", match)
                 }
             }
 
@@ -311,7 +311,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 };
 //problem: will push to all 6 teams 
-async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, currIndex = -1) {
+async function addScoutedTeamNotOnSchedule(req : AuthenticatedRequest, team : string, match, scouterShifts = null, currIndex = -1) {
     try {
         let key = match.tournamentKey + "_" + MatchTypeToAbrivation[match.matchType] + match.matchNumber + "_" + ReverseScouterScheduleMap[team]
         if (scouterShifts !== null && currIndex !== -1) {
@@ -324,6 +324,10 @@ async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, cu
                     },
                     scouterUuid: {
                         notIn: scouterShifts[currIndex][team].map(item => item.uuid)
+                    },
+                    scouter :
+                    {
+                        sourceTeamNumber : req.user.teamNumber
                     }
                 },
                 include:
@@ -342,6 +346,10 @@ async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, cu
                     teamMatchData:
                     {
                         key : key
+                    },
+                    scouter :
+                    {
+                        sourceTeamNumber : req.user.teamNumber
                     }
                 },
                 include:
@@ -360,7 +368,7 @@ async function addScoutedTeamNotOnSchedule(team, match, scouterShifts = null, cu
     }
 }
 
-async function addScoutedTeam(scouterShifts, currIndex, team, match) {
+async function addScoutedTeam(req : AuthenticatedRequest, scouterShifts, currIndex : number, team : string, match) {
     try {
 
         for (const scouter of scouterShifts[currIndex][team]) {
@@ -387,7 +395,7 @@ async function addScoutedTeam(scouterShifts, currIndex, team, match) {
                 await match[team].scouters.push({ name: scouter.name, scouted: false })
             }
         }
-        await addScoutedTeamNotOnSchedule(team, match, scouterShifts, currIndex)
+        await addScoutedTeamNotOnSchedule(req, team, match, scouterShifts, currIndex)
 
     }
     catch (error) {
