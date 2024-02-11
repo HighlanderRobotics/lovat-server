@@ -35,19 +35,19 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
 
         }).safeParse({
-            tournamentKey: req.query.tournamentKey,
-            totalPoints: Number(req.query.totalPoints),
-            pickUps: Number(req.query.pickUps),
-            stage: Number(req.query.stage),
-            trapScores: Number(req.query.trapScores),
-            autoPoints: Number(req.query.autoPoints),
-            teleopPoints: Number(req.query.teleopPoints),
-            driverAbility: Number(req.query.driverAbility),
-            defense: Number(req.query.defense),
-            speakerScores: Number(req.query.speakerScores),
-            ampScores: Number(req.query.totalPoints),
-            cooperation: Number(req.query.cooperation),
-            feeds: Number(req.query.feeds)
+            tournamentKey: req.query.tournamentKey || 0,
+            totalPoints: Number(req.query.totalPoints) || 0, 
+            pickUps: Number(req.query.pickUps) || 0,
+            stage: Number(req.query.stage) || 0,
+            trapScores: Number(req.query.trapScores) || 0,
+            autoPoints: Number(req.query.autoPoints) || 0,
+            teleopPoints: Number(req.query.teleopPoints) || 0,
+            driverAbility: Number(req.query.driverAbility) || 0,
+            defense: Number(req.query.defense) || 0,
+            speakerScores: Number(req.query.speakerScores) || 0,
+            ampScores: Number(req.query.totalPoints) || 0,
+            cooperation: Number(req.query.cooperation) || 0,
+            feeds: Number(req.query.feeds) || 0
 
         })
         if (!params.success) {
