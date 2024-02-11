@@ -143,7 +143,7 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             else if (action === "STOP") {
                 ampOn = false
             }
-            else if (time <= 17) {
+            else if (time <= 18) {
                 if (action === "SCORE") {
                     if (position === "AMP") {
                         points = 2

@@ -8,8 +8,8 @@ const metricsBreakdown = ["robotRole", "pickUp", "highNote", "stage"]
 //includes picklist sliders
 //havent done stage or highnote yet 
 const picklistSliders =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "cooperation", "feeds", "defense"]
-const autoEnd = 17
-const teleopStart = 18
+const autoEnd = 18
+const teleopStart = 19
 const matchTimeEnd = 300
 const specificMatchPageMetrics = ["defense", "ampscores", "speakerscores", "trapscores", "pickups"] 
 const driverAbility = "driverability"

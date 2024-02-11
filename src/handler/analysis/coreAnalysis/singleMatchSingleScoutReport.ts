@@ -84,7 +84,7 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
                     action: "PICK_UP",
                     time:
                     {
-                        lt: timeMax,
+                        lte: timeMax,
                         gte: timeMin
                     },
                 }
@@ -122,7 +122,7 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
                     // },
                     time:
                     {
-                        lt: timeMax,
+                        lte: timeMax,
                         gte: timeMin
                     }
 
@@ -175,7 +175,7 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
                     action: params.data.metric,
                     time:
                     {
-                        lt: timeMax,
+                        lte: timeMax,
                         gte: timeMin
                     },
                     position : params.data.position

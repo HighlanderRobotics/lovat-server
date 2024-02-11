@@ -10,7 +10,7 @@ import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 
 export const alliancePage = async (req : AuthenticatedRequest, team1 : number, team2 : number, team3 : number): Promise<{totalPoints : number, teams : Array<Object>, speakerScores : number, ampScores : number}> =>{
     try {
-        let teamOnePoints = await arrayAndAverageTeam(req, "totalpoints", team1)
+        let teamOnePoints = await arrayAndAverageTeam(req, "totalpoints", team1)    
         let teamTwoPoints = await arrayAndAverageTeam(req, "totalpoints", team2)
         let teamThreePoints = await arrayAndAverageTeam(req, "totalpoints", team3)
 

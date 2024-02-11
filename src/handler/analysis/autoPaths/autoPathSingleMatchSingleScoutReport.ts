@@ -27,6 +27,21 @@ export const autoPathSingleMatchSingleScoutReport = async (req: AuthenticatedReq
                 }
             
             },
+            include :
+            {
+                scoutReport :
+                {
+                    include : {
+                        teamMatchData :
+                        {
+                            include :
+                            {
+                                tournament : true
+                            }
+                        }
+                    }
+                } 
+            }
 
         })
         //GET SCOUT REPORT COLUMNN IF NESSISARY
@@ -40,7 +55,9 @@ export const autoPathSingleMatchSingleScoutReport = async (req: AuthenticatedReq
         return  {
             autoPoints : totalScore,
             positions : positions,
-            match : matchKey
+            match : matchKey,
+            tournamentName : autoData[0].scoutReport.teamMatchData.tournament.name,
+            tournamentKey : autoData[0].scoutReport.teamMatchData.tournament.key
         }
         
     
