@@ -71,6 +71,7 @@ import { addScoutReportDashboard } from "./handler/manager/addScoutReportDashboa
 import { matchPageSpecificScouter } from "./handler/analysis/specificMatchPage/matchPageSpecficScouter";
 import { scoutReportForMatch } from "./handler/analysis/specificMatchPage/scoutReportForMatch";
 import { timelineForScoutReport } from "./handler/analysis/specificMatchPage/timelineForScoutReport";
+import { getTournamentForScouterWithSchedule } from "./handler/manager/getTournamentForScouterWithSchedule";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -172,9 +173,9 @@ app.post('/v1/manager/scouter', addNewScouter) //tested
 
 
 //collection app homepage (feel free to change request/response format as needed)
-app.get('/v1/manager/scouters/:uuid/tournaments', getScouterTournaments) //tested
+app.get('/v1/manager/scouters/:uuid/tournaments', getScouterTournaments) //tested, gets all tournaments (for settings)
 app.get('/v1/manager/scouterschedules/:tournament', getScheduleForScouter) //tested
-
+app.get('/v1/manager/scouter/tournaments', getTournamentForScouterWithSchedule )
 app.post('/v1/manager/scoutreports', addScoutReport) //tested
 
 
@@ -204,8 +205,6 @@ app.get('/v1/analysis/scoutinglead', requireAuth, scoutingLeadPage)
 app.get('/v1/analysis/metrics/scoutreport/:uuid', requireAuth, matchPageSpecificScouter)
 app.get('/v1/analysis/scoutreports/match/:match', requireAuth, scoutReportForMatch )
 app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScoutReport)
-
-
 
 
 
