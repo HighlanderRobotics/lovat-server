@@ -6,6 +6,7 @@ import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap, tele
 import { sum } from "simple-statistics";
 import { EventAction, Position } from "@prisma/client";
 import { match } from "assert";
+import { time } from "console";
 
 
 
@@ -129,9 +130,12 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
                 }
             })
             
-         
-            const eventsAverage = sumOfMatches._sum.points
-            //adds endgame/climbing points if nessisary
+            let eventsAverage = sumOfMatches._sum.points
+            if(!eventsAverage)
+            {
+                eventsAverage = 0
+            }
+            //adds endgame points if nessisary
             if (metric === "totalpoints" || metric === "teleoppoints") {
                 const element = await prismaClient.scoutReport.findUnique({
                     where:
@@ -140,6 +144,10 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
                     }
                 })
                 let stagePoints = stageMap[element.stage] + highNoteMap[element.highNote]
+                if(!stagePoints)
+                {
+                    stagePoints = 0
+                }
                 return eventsAverage + stagePoints
             }
             else

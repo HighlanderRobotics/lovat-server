@@ -55,19 +55,19 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                 }
             
             }
+            let resolvedMatchDataArray = []
             await Promise.all(matchDataArray).then((values) => {
                 for(const element of values)
                 {
                     if(element !== null)
                     {
-                        matchDataArray.push(element)
-                        
+                        resolvedMatchDataArray.push(element)
                     }
                 }
             })
-            if(matchDataArray.length !== 0)
+            if(resolvedMatchDataArray.length !== 0)
             {
-                return await matchDataArray.reduce((acc, val) => acc + val, 0) / matchDataArray.length;
+                return await resolvedMatchDataArray.reduce((acc, val) => acc + val, 0) / matchDataArray.length;
             }
             else
             {
