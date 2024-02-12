@@ -27,7 +27,25 @@ export const autoPathSingleMatchSingleScoutReport = async (req: AuthenticatedReq
                 }
             
             },
+           
+           
 
+        })
+        let scoutReport = await prismaClient.scoutReport.findUnique({
+            where :
+            {
+                uuid : scoutReportUuid
+            }
+        })
+        let match = await prismaClient.teamMatchData.findUnique({
+            where :
+            {
+                key : scoutReport.teamMatchKey
+            },
+            include :
+            {
+                tournament : true
+            }
         })
         //GET SCOUT REPORT COLUMNN IF NESSISARY
         const totalScore = autoData.reduce((sum, event) => sum + event.points, 0);
@@ -41,6 +59,7 @@ export const autoPathSingleMatchSingleScoutReport = async (req: AuthenticatedReq
             autoPoints : totalScore,
             positions : positions,
             match : matchKey,
+            tournamentName : match.tournament.name
         }
         
     

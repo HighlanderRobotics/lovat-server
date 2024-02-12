@@ -26,6 +26,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
             autoPoints: number;
             positions: Position[];
             match: string;
+            tournamentName : string
         };
         
         const isSubsetPositions = (listOne: Position[], listTwo: Position[]): boolean => {
@@ -39,8 +40,8 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
             return isSubset(listOne, listTwo) || isSubset(listTwo, listOne);
         };
 
-        const groupAutoData = (data: AutoData[]): { positions: Position[], matches: string[], score: number[], frequency: number, maxScore: number }[] => {
-            const groups: { positions: Position[], matches: Set<string>, score: number[], maxScore: number }[] = [];
+        const groupAutoData = (data: AutoData[]): { positions: Position[], matches: { matchKey: string, tournamentName: string }[], score: number[], frequency: number, maxScore: number }[] => {
+            const groups: { positions: Position[], matches: Set<string>, score: number[], maxScore: number, matchDetails: Map<string, string> }[] = [];
         
             data.forEach(item => {
                 let isGrouped = false;
@@ -48,30 +49,38 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
                 for (const group of groups) {
                     if (isSubsetPositions(item.positions, group.positions)) {
                         if (item.positions.length > group.positions.length) {
-                            group.positions = item.positions; 
+                            group.positions = item.positions;
                         }
                         group.matches.add(item.match);
+                        group.matchDetails.set(item.match, item.tournamentName);
                         group.score.push(item.autoPoints);
-                        group.maxScore = Math.max(group.maxScore, item.autoPoints); 
+                        group.maxScore = Math.max(group.maxScore, item.autoPoints);
                         isGrouped = true;
                         break;
                     }
                 }
         
                 if (!isGrouped) {
-                    groups.push({ positions: item.positions, matches: new Set([item.match]), score: [item.autoPoints], maxScore: item.autoPoints });
+                    const matchDetails = new Map<string, string>();
+                    matchDetails.set(item.match, item.tournamentName);
+                    groups.push({
+                        positions: item.positions,
+                        matches: new Set([item.match]),
+                        score: [item.autoPoints],
+                        maxScore: item.autoPoints,
+                        matchDetails: matchDetails
+                    });
                 }
             });
         
             return groups.map(group => ({
                 positions: group.positions,
-                matches: Array.from(group.matches), 
+                matches: Array.from(group.matches).map(matchKey => ({ matchKey: matchKey, tournamentName: group.matchDetails.get(matchKey) || '' })),
                 score: group.score,
                 frequency: group.matches.size,
-                maxScore: group.maxScore 
+                maxScore: group.maxScore
             }));
         };
-
         const matches = await prismaClient.scoutReport.findMany({
             where : {
                 teamMatchData : 
@@ -98,3 +107,5 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
         throw(error)
     }
 };
+
+
