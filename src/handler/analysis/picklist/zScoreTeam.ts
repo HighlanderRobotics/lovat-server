@@ -11,32 +11,40 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
     try {
         let adj = []
         let unAdj = []
-        let hasData = true
-        let isFirst = true
+        let zScores = []
         for (const element of picklistSliders) {
-            if (hasData) {
-                const currData = await arrayAndAverageTeam(req, element, teamNumber)
-                let zScore = (currData.average - allTeamAvgSTD[element].allAvg) / allTeamAvgSTD[element].arraySTD
-              
-                if (isFirst && currData.timeLine !== null && currData.timeLine.length === 0) {
-                    hasData = false
-                }
-                isFirst = false
-                if (isNaN(zScore)) {
-                    zScore = 0
-                }
-                adj.push({ "result": zScore * params.data[picklistSliderMap[element]], "type": element })
-                unAdj.push({ "result": zScore, "type": element })
-            }
-            else
-            {
-                //figure out correct # later on
-                adj.push({ "result": 0, "type": element })
-                unAdj.push({ "result": 0, "type": element })
-            }
-          
+            const currData = arrayAndAverageTeam(req, element, teamNumber)
+            zScores.push(currData)
+
+        
+
         };
-        let zScore = adj.reduce((partialSum, a) => partialSum + a.result, 0)
+        await Promise.all(zScores).then((values) => {
+            for (const currTeamData of values) {
+                let hasData = true
+                let isFirst = true
+                for (let i = 0; i < values.length; i++) {
+                    let currData = values[i]
+                    let element = picklistSliders[i]
+                    let zScore = (currData.average - allTeamAvgSTD[element].allAvg) / allTeamAvgSTD[element].arraySTD
+                    if (isFirst && currData.timeLine !== null && currData.timeLine.length === 0) {
+                        hasData = false
+                    }
+                    else {
+                        adj.push({ "result": 0, "type": element })
+                        unAdj.push({ "result": 0, "type": element })
+                    }
+                    isFirst = false
+                    if (isNaN(zScore)) {
+                        zScore = 0
+                    }
+                    adj.push({ "result": zScore * params.data[picklistSliderMap[element]], "type": element })
+                    unAdj.push({ "result": zScore, "type": element })
+                }
+            }
+
+        })
+        let zScore = await adj.reduce((partialSum, a) => partialSum + a.result, 0)
         return {
             "zScore": zScore,
             "adjusted": adj,
