@@ -43,31 +43,24 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
 
             for(const element of scoutReports)
             {
+                let data = null
                 if(metric1 === "cooperation")
                 {
-                    let data = cooperationSingleMatch(req, matchKey, team)
-                    matchDataArray.push(data)
+                    data = await cooperationSingleMatch(req, matchKey, team)
                 }
                 else
                 {
-                    let data = singleMatchSingleScoutReport(req, isPointAverage, element.uuid, metric1,  timeMin, timeMax)
-                    matchDataArray.push(data)
+                    data = await singleMatchSingleScoutReport(req, isPointAverage, element.uuid, metric1,  timeMin, timeMax)
                 }
-            
-            }
-            let resolvedMatchDataArray = []
-            await Promise.all(matchDataArray).then((values) => {
-                for(const element of values)
+                if(data !== null)
                 {
-                    if(element !== null)
-                    {
-                        resolvedMatchDataArray.push(element)
-                    }
+                    matchDataArray.push(data)
+                    
                 }
-            })
-            if(resolvedMatchDataArray.length !== 0)
+            }
+            if(matchDataArray.length !== 0)
             {
-                return await resolvedMatchDataArray.reduce((acc, val) => acc + val, 0) / matchDataArray.length;
+                return await matchDataArray.reduce((acc, val) => acc + val, 0) / matchDataArray.length;
             }
             else
             {
