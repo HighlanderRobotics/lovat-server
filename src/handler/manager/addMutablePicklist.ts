@@ -7,7 +7,6 @@ export const addMutablePicklist = async (req: AuthenticatedRequest, res: Respons
 
     try {
         const user = req.user
-
         const params = z.object({
             name: z.string(),
             teams: z.array(z.number().min(0)),
@@ -17,7 +16,7 @@ export const addMutablePicklist = async (req: AuthenticatedRequest, res: Respons
             name: req.body.name,
             teams: req.body.teams,
             authorId: user.id,
-            tournamentKey :  req.body.tournamentKey ? JSON.parse(req.body.tournamentKey as string) : undefined,
+            tournamentKey :  req.body.tournamnetKey
         })
 
         if (!params.success) {
@@ -33,7 +32,6 @@ export const addMutablePicklist = async (req: AuthenticatedRequest, res: Respons
                 tournamentKey : params.data.tournamentKey
             }
         });
-
         res.status(200).send("mutable picklist added");
     } catch (error) {
         console.error(error);
