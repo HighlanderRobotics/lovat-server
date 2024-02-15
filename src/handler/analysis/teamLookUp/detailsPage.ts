@@ -12,7 +12,6 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const params = z.object({
             team: z.number(),
-            //add more, game specfic
             metric: z.enum(["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "feeds", "trapscores", "drops"])
         }).safeParse({
             team: Number(req.params.team),
@@ -23,7 +22,6 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             res.status(400).send(params);
             return;
         };
-        // temporary, decide on metric name later
         if(params.data.metric === "autopoints")
         {
             const autoPaths = await autoPathsTeam(req, params.data.team)

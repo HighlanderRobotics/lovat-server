@@ -65,10 +65,10 @@ export const stagePicklistTeam = async (req: AuthenticatedRequest, team: number)
                 }
             }
         });
-        
         if(totalAttemptsStage === 0)
         {
-            return 0
+            //can be tuned, baseline value
+            return 1.5
         }
         const totalAttempsHighNote = highNoteRows.reduce((total, item) => {
             if (item.highNote !== "NOT_ATTEMPTED") {
@@ -80,11 +80,22 @@ export const stagePicklistTeam = async (req: AuthenticatedRequest, team: number)
             map[item.stage] = item._count.stage;
             return map;
         }, {});
-        const onstage = ((stageMap["ONSTAGE"] + 1)/(totalAttemptsStage + 3)) * 3
-        const onstageHarmony = ((stageMap["ONSTAGE_HARMONY"] + 1)/(totalAttemptsStage + 3)) * 5
-        const park = ((stageMap["PARK"] + 1)/(totalAttemptsStage + 2))
+        let onstage = ((stageMap["ONSTAGE"] + 1 )/(totalAttemptsStage + 3)) * 3
+        if(isNaN(onstage))
+        {
+            onstage = 1
+        }
+        let onstageHarmony = ((stageMap["ONSTAGE_HARMONY"] || 0 + 1 )/(totalAttemptsStage + 3)) * 5
+        if(isNaN(onstageHarmony))
+        {
+            onstageHarmony = 1
+        }
+        let park = ((stageMap["PARK"] + 1)/(totalAttemptsStage + 2))
+        if(isNaN(park))
+        {
+            park = 1
+        }
         let averageRuleOfSucsession = onstage + onstageHarmony + park
-
         if(totalAttempsHighNote !== 0)
         {
             const highNoteMap = highNoteRows.reduce((map, item) => {
