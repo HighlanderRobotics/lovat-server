@@ -30,16 +30,20 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
                     if (isFirst && currData.timeLine !== null && currData.timeLine.length === 0) {
                         hasData = false
                     }
-                    else {
-                        adj.push({ "result": 0, "type": element })
-                        unAdj.push({ "result": 0, "type": element })
-                    }
                     isFirst = false
                     if (isNaN(zScore)) {
                         zScore = 0
                     }
-                    adj.push({ "result": zScore * params.data[picklistSliderMap[element]], "type": element })
-                    unAdj.push({ "result": zScore, "type": element })
+                    if(!hasData) {
+                        adj.push({ "result": 0, "type": element })
+                        unAdj.push({ "result": 0, "type": element })
+                    }
+                    else
+                    {
+                        adj.push({ "result": zScore * params.data[picklistSliderMap[element]], "type": element })
+                        unAdj.push({ "result": zScore, "type": element })
+                    }
+                
                 }
             }
 
