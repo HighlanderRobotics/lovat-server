@@ -11,6 +11,7 @@ import { zScoreTeam } from "./zScoreTeam";
 import { match } from "assert";
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
 import { picklistSliders } from "../analysisConstants";
+import { picklistArrayAndAverageAllTeam } from "./picklistArrayAndAverageAllTeam";
 
 
 
@@ -66,11 +67,12 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         const allTeamAvgSTD = {}
         let data = true
-        let allTeamData: Promise<{ average: number, timeLine: Array<number> }>[] = []
+        let allTeamData: Promise<{ average: number, teamAverages : Map<number, number>, timeLine: Array<number> }>[] = []
         for (const element of picklistSliders) {
-            const currData = arrayAndAverageAllTeam(req, element);
+            const currData = picklistArrayAndAverageAllTeam(req, element);
             allTeamData.push(currData)
         }
+        const metricAllTeamMaps = {}
         await Promise.all(allTeamData).then((allTeamDataResolved) => {
             for (let i = 0; i < allTeamDataResolved.length; i++) {
                 let currData = allTeamDataResolved[i]
@@ -81,6 +83,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                         "arraySTD": ss.standardDeviation(currData.timeLine)
                     };
                 }
+                //will only happen at the very start of new season when theres not a lot of data
                 else {
                     if (isNaN(currData.average)) {
                         allTeamAvgSTD[element] = {
@@ -95,6 +98,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                         };
                     }
                 }
+                metricAllTeamMaps[element] = currData.teamAverages
             }
         })
         //TUNE THESE VALUES
@@ -116,7 +120,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
         let arr = []
         for (const element of includedTeamNumbers) {
-            const currZscores = zScoreTeam(req, allTeamAvgSTD, element, params)
+            const currZscores = zScoreTeam(req, allTeamAvgSTD, element, params, metricAllTeamMaps)
             //flags go here, when added
             arr.push(currZscores)
 
