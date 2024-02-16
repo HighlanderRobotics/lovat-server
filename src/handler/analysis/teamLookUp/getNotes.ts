@@ -80,28 +80,61 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                 },
 
             })
-            const notesAndMatches = notesOffTeam.map(item => ({
-                notes: item.notes,
-                match: item.teamMatchKey,
-                matchNumber: item.teamMatchData.matchNumber,
-                matchType: item.teamMatchData.matchType,
-                tournamentKey: item.teamMatchData.tournamentKey,
-                matchKey: item.teamMatchKey,
-                tounramentName: item.teamMatchData.tournament.name
-            }));
-            const notesAndMatchesAndNames = notesOnTeam.map(item => ({
-                notes: item.notes,
-                match: item.teamMatchKey,
-                scouterName: item.scouter.name,
-                matchNumber: item.teamMatchData.matchNumber,
-                matchType: item.teamMatchData.matchType,
-                tournamentKey: item.teamMatchData.tournamentKey,
-                matchKey: item.teamMatchKey,
-                tounramentName: item.teamMatchData.tournament.name
+            if (req.user.role === "SCOUTING_LEAD") {
 
-            }));
-            const allNotes = notesAndMatches.concat(notesAndMatchesAndNames)
-            res.status(200).send(allNotes)
+
+                const notesAndMatches = notesOffTeam.map(item => ({
+                    notes: item.notes,
+                    match: item.teamMatchKey,
+                    matchNumber: item.teamMatchData.matchNumber,
+                    matchType: item.teamMatchData.matchType,
+                    tournamentKey: item.teamMatchData.tournamentKey,
+                    matchKey: item.teamMatchKey,
+                    tounramentName: item.teamMatchData.tournament.name,
+                    uuid: item.uuid
+                }));
+                const notesAndMatchesAndNames = notesOnTeam.map(item => ({
+                    notes: item.notes,
+                    match: item.teamMatchKey,
+                    scouterName: item.scouter.name,
+                    matchNumber: item.teamMatchData.matchNumber,
+                    matchType: item.teamMatchData.matchType,
+                    tournamentKey: item.teamMatchData.tournamentKey,
+                    matchKey: item.teamMatchKey,
+                    tounramentName: item.teamMatchData.tournament.name,
+                    uuid: item.uuid
+
+
+                }));
+                const allNotes = notesAndMatches.concat(notesAndMatchesAndNames)
+                res.status(200).send(allNotes)
+            }
+            else {
+
+                const notesAndMatches = notesOffTeam.map(item => ({
+                    notes: item.notes,
+                    match: item.teamMatchKey,
+                    matchNumber: item.teamMatchData.matchNumber,
+                    matchType: item.teamMatchData.matchType,
+                    tournamentKey: item.teamMatchData.tournamentKey,
+                    matchKey: item.teamMatchKey,
+                    tounramentName: item.teamMatchData.tournament.name,
+                }));
+                const notesAndMatchesAndNames = notesOnTeam.map(item => ({
+                    notes: item.notes,
+                    match: item.teamMatchKey,
+                    scouterName: item.scouter.name,
+                    matchNumber: item.teamMatchData.matchNumber,
+                    matchType: item.teamMatchData.matchType,
+                    tournamentKey: item.teamMatchData.tournamentKey,
+                    matchKey: item.teamMatchKey,
+                    tounramentName: item.teamMatchData.tournament.name,
+
+
+                }));
+                const allNotes = notesAndMatches.concat(notesAndMatchesAndNames)
+                res.status(200).send(allNotes)
+            }
 
         }
         else {
@@ -143,7 +176,7 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                 matchNumber: item.teamMatchData.matchNumber,
                 matchType: item.teamMatchData.matchType,
                 tournamentKey: item.teamMatchData.tournamentKey,
-                tournamentName : item.teamMatchData.tournament.name,
+                tournamentName: item.teamMatchData.tournament.name,
                 matchKey: item.teamMatchKey
             }));
             res.status(200).send(notesAndMatches)
