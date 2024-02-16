@@ -11,7 +11,6 @@ export const addTournamentMatches = async (tournamentKey) => {
         if(tournamentKey === undefined)
         {
             throw("tournament key is undefined")
-            return
         }
        
         var url = 'https://www.thebluealliance.com/api/v3';
@@ -32,8 +31,6 @@ export const addTournamentMatches = async (tournamentKey) => {
         }).then(async (response) => {
             // For each match in the tournament
             for (var i = 0; i < response.data.length; i++) {
-                // console.log(response.data[i])
-                // console.log("-----------------------------")
                 if (response.data[i].comp_level == 'qm') {
                     //all teams in the match
                     var teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];

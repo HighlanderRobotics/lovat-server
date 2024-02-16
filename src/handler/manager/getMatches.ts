@@ -60,8 +60,9 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 teamNumber: 'asc'
             }
         })
-        if (!qualMatches) {
-            res.status(404).send("qualification matches not found")
+        if (qualMatches.length === 0) {
+            res.status(404).send("The match schedule for this tournament hasn't been posted yet.")
+            return
         }
         let lastQualMatch = Number(qualMatches.length / 6)
   
@@ -302,6 +303,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 
         }
+    
         res.status(200).send(finalFormatedMatches);
     }
     catch (error) {
