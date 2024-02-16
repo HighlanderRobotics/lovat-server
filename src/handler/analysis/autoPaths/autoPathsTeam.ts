@@ -85,7 +85,19 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
             where : {
                 teamMatchData : 
                 {
-                    teamNumber : params.data.team
+                    teamNumber : params.data.team,
+                    tournamentKey :
+                    {
+                        in : req.user.tournamentSource
+                    },
+                    
+                },
+                scouter :
+                {
+                    sourceTeamNumber :
+                    {
+                        in : req.user.teamSource
+                    }
                 }
             }
         })
