@@ -372,18 +372,13 @@ async function addScoutedTeamNotOnSchedule(req : AuthenticatedRequest, team : st
 
 async function addScoutedTeam(req : AuthenticatedRequest, scouterShifts, currIndex : number, team : string, match) {
     try {
-
+        let key = match.tournamentKey + "_" + MatchTypeToAbrivation[match.matchType] + match.matchNumber + "_" + ReverseScouterScheduleMap[team]
         for (const scouter of scouterShifts[currIndex][team]) {
             const rows = await prismaClient.scoutReport.findMany({
                 where:
                 {
                     scouterUuid: scouter.uuid,
-                    teamMatchData:
-                    {
-                        matchNumber: match.matchNumber,
-                        tournamentKey: match.tournamentKey,
-                        matchType: MatchTypeMap[match.matchType][0]
-                    }
+                   teamMatchKey : key
                 }
 
             })
