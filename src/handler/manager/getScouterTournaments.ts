@@ -4,7 +4,6 @@ import z, { ZodNumber } from 'zod'
 import { unwatchFile } from "fs";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { userInfo } from "os";
-import { scoutingLead } from "../analysis/scoutingLead";
 
 
 export const getScouterTournaments = async (req: Request, res: Response): Promise<void> => {

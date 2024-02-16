@@ -5,7 +5,8 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 import { picklistSliderMap, picklistSliders } from "../analysisConstants";
-import { flag } from "../flag";
+import { flag } from ".././teamLookUp/flag";
+import { rankFlag } from "../rankFlag";
 
 
 export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Object, teamNumber: number, params, metricTeamAverages: Object, flags: Array<string>): Promise<{ zScore: number, adjusted: Array<Object>, unadjusted: Array<Object>, flags : Array<Object> }> => {
@@ -44,8 +45,34 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
                     flagData.push({ type: metric, result: currData.average })
                 }
             }
+        }
+        if(flags.includes("rank"))
+        {
+            if(req.query.tournamentKey)
+            {
+                flagData.push({ type: "rank", result: await rankFlag(req, "frc" + teamNumber, req.query.tournamentKey as string) })
+            }
+            else
+            {
+                let tourament = await prismaClient.tournament.findFirst({
+                    where :
+                    {
+                        teamMatchData :
+                        {
+                            some :
+                            {
+                                teamNumber : params.data.team
+                            }
+                        }
+                    },
+                    orderBy :
+                    {
+                        date : "desc"
+                    }
+                })
+                flagData.push({ type: "rank", result: await rankFlag(req, "frc" + teamNumber, tourament.key) })
 
-
+            }
         }
 
 
@@ -64,3 +91,4 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
     }
 
 };
+

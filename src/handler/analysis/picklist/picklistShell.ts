@@ -42,7 +42,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
 
         }).safeParse({
-            tournamentKey: req.query.tournamentKey || 0,
+            tournamentKey: req.query.tournamentKey || undefined,
             totalPoints: Number(req.query.totalPoints) || 0, 
             pickUps: Number(req.query.pickUps) || 0,
             stage: Number(req.query.stage) || 0,
@@ -69,7 +69,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 tournamentKey: params.data.tournamentKey
             }
         })
-        if (matches === null || match.length === 0) {
+        if (matches === null || matches.length === 0) {
             await addTournamentMatches(params.data.tournamentKey)
         }
         const allTeamAvgSTD = {}

@@ -64,7 +64,7 @@ import { matchPrediction } from "./handler/analysis/alliancePredictions/matchPre
 import { getTeamSource } from "./handler/manager/getTeamSource";
 import { getTournamentSource } from "./handler/manager/getTournamentSource";
 import { picklistShell } from "./handler/analysis/picklist/picklistShell";
-import { scoutingLeadPage } from "./handler/analysis/scoutingLead/scoutingLeadPage";
+// import { scoutingLeadPage } from "./handler/analysis/scoutingLead/scoutingLeadPage";
 import { getScouterTournaments } from "./handler/manager/getScouterTournaments";
 import { getScouters } from "./handler/manager/getScouters";
 import { addScoutReportDashboard } from "./handler/manager/addScoutReportDashboard";
@@ -72,6 +72,7 @@ import { matchPageSpecificScouter } from "./handler/analysis/specificMatchPage/m
 import { scoutReportForMatch } from "./handler/analysis/specificMatchPage/scoutReportForMatch";
 import { timelineForScoutReport } from "./handler/analysis/specificMatchPage/timelineForScoutReport";
 import { getTournamentForScouterWithSchedule } from "./handler/manager/getTournamentForScouterWithSchedule";
+import { flag } from "./handler/analysis/teamLookUp/flag";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -188,6 +189,7 @@ app.get('/v1/analysis/metric/:metric/team/:team', requireAuth, detailsPage) //te
 app.get('/v1/analysis/category/team/:team', requireAuth, categoryMetrics) //tested, same format
 app.get('/v1/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested, same format
 app.get('/v1/analysis/notes/team/:team', requireAuth, getNotes) //tested
+app.get('/v1/analysis/flag/team/:team/metric/:metric', requireAuth, flag) //tested
 
 //my alliance page
 app.get('/v1/analysis/alliance', requireAuth, alliancePageResponse)
@@ -197,7 +199,7 @@ app.get('/v1/analysis/matchprediction', requireAuth, matchPrediction)
 app.get('/v1/analysis/picklist', requireAuth, picklistShell)
 
 //scouting lead
-app.get('/v1/analysis/scoutinglead', requireAuth, scoutingLeadPage)
+// app.get('/v1/analysis/scoutinglead', requireAuth, scoutingLeadPage)
 
 
 //specific match

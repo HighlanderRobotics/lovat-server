@@ -8,7 +8,6 @@ import { highNoteMap, roleMap, specificMatchPageMetrics, stageMap } from "../ana
 import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
 import { match } from "assert";
 import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingleMatchSingleScoutReport";
-import { scoutingLeadPage } from "../scoutingLead/scoutingLeadPage";
 
 
 export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: Response) => {
