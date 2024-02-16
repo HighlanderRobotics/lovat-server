@@ -5,35 +5,46 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 import { picklistSliderMap, picklistSliders } from "../analysisConstants";
+import { flag } from "../flag";
 
 
-export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Object, teamNumber: number, params, allTeamData: Object): Promise<{ zScore: number, adjusted: Array<Object>, unadjusted: Array<Object> }> => {
+export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Object, teamNumber: number, params, metricTeamAverages: Object, flags: Array<string>): Promise<{ zScore: number, adjusted: Array<Object>, unadjusted: Array<Object>, flags : Array<Object> }> => {
     try {
         let adj = []
         let unAdj = []
         let zScores = []
-
+        let flagData = []
         for (const metric of picklistSliders) {
             let hasData = true
             let isFirst = true
-            let currData = allTeamData[metric][teamNumber]
+            let currData = metricTeamAverages[metric][teamNumber]
             if (!currData) {
                 hasData = false
             }
             isFirst = false
-
-            if (!hasData) {
-                unAdj.push({ "result": 0, "type": metric })
+            let zScore = 0
+            if (hasData) {
+                zScore = (currData.average - allTeamAvgSTD[metric].allAvg) / allTeamAvgSTD[metric].arraySTD
             }
             else {
-                let zScore = (currData.average - allTeamAvgSTD[metric].allAvg) / allTeamAvgSTD[metric].arraySTD
-           
-                if (isNaN(zScore)) {
-                    zScore = 0
-                }
-                adj.push({ "result": zScore * params.data[picklistSliderMap[metric]], "type": metric })
-                unAdj.push({ "result": zScore, "type": metric })
+                currData = 0
+                zScore = 0
             }
+
+            if (isNaN(zScore)) {
+                zScore = 0
+            }
+            adj.push({ "result": zScore * params.data[picklistSliderMap[metric]], "type": metric })
+            unAdj.push({ "result": zScore, "type": metric })
+            if (flags.includes(metric)) {
+                if (!hasData) {
+                    flagData.push({ type: metric, result: 0 })
+                }
+                else {
+                    flagData.push({ type: metric, result: currData.average })
+                }
+            }
+
 
         }
 
@@ -43,7 +54,8 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
         return {
             "zScore": zScore,
             "adjusted": adj,
-            "unadjusted": unAdj
+            "unadjusted": unAdj,
+            "flags": flagData
         }
     }
     catch (error) {

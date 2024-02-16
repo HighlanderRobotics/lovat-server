@@ -18,7 +18,12 @@ import { picklistArrayAndAverageAllTeam } from "./picklistArrayAndAverageAllTeam
 
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
-
+        let flags = []
+        if(req.query.flags)
+        {
+            flags = JSON.parse(req.query.flags as string)
+        }
+      
         const params = z.object({
             tournamentKey: z.string().optional(),
             totalPoints: z.number(),
@@ -32,7 +37,8 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             speakerScores: z.number(),
             ampScores: z.number(),
             cooperation: z.number(),
-            feeds: z.number()
+            feeds: z.number(),
+            flags : z.array(z.string())
 
 
         }).safeParse({
@@ -48,7 +54,8 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             speakerScores: Number(req.query.speakerScores) || 0,
             ampScores: Number(req.query.ampScores) || 0,
             cooperation: Number(req.query.cooperation) || 0,
-            feeds: Number(req.query.feeds) || 0
+            feeds: Number(req.query.feeds) || 0,
+            flags : flags
 
         })
         if (!params.success) {
@@ -120,7 +127,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
         let arr = []
         for (const element of includedTeamNumbers) {
-            const currZscores = zScoreTeam(req, allTeamAvgSTD, element, params, metricAllTeamMaps)
+            const currZscores = zScoreTeam(req, allTeamAvgSTD, element, params, metricAllTeamMaps, params.data.flags)
             //flags go here, when added
             arr.push(currZscores)
 
@@ -131,7 +138,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 let currZscores = values[i]
                 let team = includedTeamNumbers[i]
                 if (!isNaN(currZscores.zScore)) {
-                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted }
+                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags" : currZscores.flags }
                     dataArr.push(temp)
                 }
             }
