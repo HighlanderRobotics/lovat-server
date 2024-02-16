@@ -30,16 +30,21 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                     {
                         sourceTeamNumber: req.user.teamNumber
                     },
-                    notes :
+                    notes:
                     {
-                        not : ""
+                        not: ""
                     }
                 },
-                
+
                 include:
                 {
                     scouter: true,
-                    teamMatchData : true
+                    teamMatchData: {
+                        include:
+                        {
+                            tournament: true
+                        }
+                    }
                 }
             })
             const notesOffTeam = await prismaClient.scoutReport.findMany({
@@ -58,41 +63,48 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                         }
 
                     },
-                    notes :
+                    notes:
                     {
-                        not : ""
+                        not: ""
                     }
-                    
+
                 },
-                include :
+                include:
                 {
-                    teamMatchData : true,
+                    teamMatchData: {
+                        include:
+                        {
+                            tournament: true
+                        }
+                    }
                 },
-               
+
             })
             const notesAndMatches = notesOffTeam.map(item => ({
                 notes: item.notes,
                 match: item.teamMatchKey,
-                matchNumber : item.teamMatchData.matchNumber,
-                matchType : item.teamMatchData.matchType,
-                tournamentKey : item.teamMatchData.tournamentKey,
-                matchKey : item.teamMatchKey
+                matchNumber: item.teamMatchData.matchNumber,
+                matchType: item.teamMatchData.matchType,
+                tournamentKey: item.teamMatchData.tournamentKey,
+                matchKey: item.teamMatchKey,
+                tounramentName: item.teamMatchData.tournament.name
             }));
             const notesAndMatchesAndNames = notesOnTeam.map(item => ({
                 notes: item.notes,
                 match: item.teamMatchKey,
                 scouterName: item.scouter.name,
-                matchNumber : item.teamMatchData.matchNumber,
-                matchType : item.teamMatchData.matchType,
-                tournamentKey : item.teamMatchData.tournamentKey,
-                matchKey : item.teamMatchKey
+                matchNumber: item.teamMatchData.matchNumber,
+                matchType: item.teamMatchData.matchType,
+                tournamentKey: item.teamMatchData.tournamentKey,
+                matchKey: item.teamMatchKey,
+                tounramentName: item.teamMatchData.tournament.name
+
             }));
             const allNotes = notesAndMatches.concat(notesAndMatchesAndNames)
             res.status(200).send(allNotes)
 
         }
-        else
-        {
+        else {
             const notesOffTeam = await prismaClient.scoutReport.findMany({
                 where:
                 {
@@ -108,25 +120,31 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                         }
 
                     },
-                    notes :
+                    notes:
                     {
-                        not : ""
+                        not: ""
                     }
                 },
-                include :
+                include:
                 {
-                    scouter : true,
-                    teamMatchData : true
+                    scouter: true,
+                    teamMatchData: {
+                        include:
+                        {
+                            tournament: true
+                        }
+                    }
                 }
-            
+
             })
             const notesAndMatches = notesOffTeam.map(item => ({
                 notes: item.notes,
-                uuid : item.uuid,
-                matchNumber : item.teamMatchData.matchNumber,
-                matchType : item.teamMatchData.matchType,
-                tournamentKey : item.teamMatchData.tournamentKey,
-                matchKey : item.teamMatchKey
+                uuid: item.uuid,
+                matchNumber: item.teamMatchData.matchNumber,
+                matchType: item.teamMatchData.matchType,
+                tournamentKey: item.teamMatchData.tournamentKey,
+                tournamentName : item.teamMatchData.tournament.name,
+                matchKey: item.teamMatchKey
             }));
             res.status(200).send(notesAndMatches)
             return
