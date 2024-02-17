@@ -72,7 +72,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
         const tournamentAverages = []
         //group into tournaments, calculate all averages indivudally so they can all be properly weighted after the nested loops
         for (const tournament of tournamentGroups) {
-            let currAvg = 0
+            let currAvg = null
             const currDatas = []
             for (const match of tournament) {
                 //add time constraints if nessissary
@@ -96,7 +96,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
                 for (let i = 0; i < values.length; i++) {
                     if (values[0] !== null) {
                         timeLineArray.push({ match: tournament[i].key, dataPoint: values[i], tournamentName: tournament[i].tournamentName })
-                        if (currAvg !== null) {
+                        if (currAvg === null) {
                             currAvg = values[i]
                         }
                         else {
