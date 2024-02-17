@@ -96,7 +96,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
                 for (let i = 0; i < values.length; i++) {
                     if (values[0] !== null) {
                         timeLineArray.push({ match: tournament[i].key, dataPoint: values[i], tournamentName: tournament[i].tournamentName })
-                        if (!currAvg) {
+                        if (currAvg !== null) {
                             currAvg = values[i]
                         }
                         else {
