@@ -152,8 +152,6 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
             }
             else
             {
-                console.log(scoutReportUuid)
-                console.log(eventsAverage)
                 return eventsAverage
 
             }
