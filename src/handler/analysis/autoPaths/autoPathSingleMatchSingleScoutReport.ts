@@ -20,7 +20,6 @@ export const autoPathSingleMatchSingleScoutReport = async (req: AuthenticatedReq
                 {
                     lte : autoEnd
                 },
-                //ADD OTHER FILTERS ON WHAT EVENT ENUMS COUNT
                 action :
                 {
                     notIn : exludedAutoEvents
