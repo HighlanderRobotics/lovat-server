@@ -13,7 +13,7 @@ const teleopStart = 19
 const matchTimeEnd = 300
 const specificMatchPageMetrics = ["defense", "ampscores", "speakerscores", "trapscores", "pickups"] 
 const driverAbility = "driverability"
-const exludedAutoEvents = [EventAction.DROP_RING]
+const exludedAutoEvents = [EventAction.DROP_RING, EventAction.DEFENSE, EventAction.FEED_RING]
 const picklistSliderMap = {
     "totalpoints" : "totalPoints",
     "driverability" : "driverAbility",
