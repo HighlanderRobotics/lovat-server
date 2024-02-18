@@ -153,7 +153,6 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
             else
             {
                 return eventsAverage
-
             }
         }
        

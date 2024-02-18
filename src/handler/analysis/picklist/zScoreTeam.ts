@@ -46,7 +46,7 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
                 }
             }
         }
-        if(flags.includes("rank"))
+        if(flags.includes("rank") && req.query.tournamentKey)
         {
             if(req.query.tournamentKey)
             {
