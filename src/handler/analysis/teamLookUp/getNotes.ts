@@ -91,7 +91,6 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                     tournamentKey: item.teamMatchData.tournamentKey,
                     matchKey: item.teamMatchKey,
                     tounramentName: item.teamMatchData.tournament.name,
-                    uuid: item.uuid
                 }));
                 const notesAndMatchesAndNames = notesOnTeam.map(item => ({
                     notes: item.notes,
