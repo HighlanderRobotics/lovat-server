@@ -71,6 +71,10 @@ export const getScouterSchedule = async (req: AuthenticatedRequest, res: Respons
                         uuid : true,
                     }
                 }
+            },
+            orderBy :
+            {
+                startMatchOrdinalNumber : "asc"
             }
 
         })
