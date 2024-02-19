@@ -216,8 +216,8 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 console.log(currMatch)
             }
             currMatch = currMatch.sort((a, b) => {
-                const lastDigitA = parseInt(a[a.key.length - 1]);
-                const lastDigitB = parseInt(b[b.key.length - 1]);
+                const lastDigitA = parseInt(a.key[a.key.length-1]);
+                const lastDigitB = parseInt(b.key[b.key.length-1]);
                 return lastDigitA - lastDigitB;
             });
             if (currMatch[0].matchNumber === 6) {
