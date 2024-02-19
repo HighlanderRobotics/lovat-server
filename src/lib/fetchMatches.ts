@@ -9,7 +9,7 @@ export default async function fetchMatches() {
     //new tournaments are added to the matches table in getMatches (if it doesn't already exist)
     const distinctTournamentKeys = await prisma.teamMatchData.groupBy({
         by: ['tournamentKey'],
-        //DO WITHIN THE WEEK
+        //DO WITHIN THE
         // where :
         // {
         //     tournament :
