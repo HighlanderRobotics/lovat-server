@@ -212,17 +212,13 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 res.status(400).send(`Matches not added correctly, does not have 6 teams for match ${element.matchNumber} of type ${element.matchType}`)
                 return
             }
-            if (currMatch[0].matchNumber === 6) {
-                console.log(currMatch)
-            }
+            //sort by 0, 1, 2, 3, 4, 5 in case its out of order
             currMatch = currMatch.sort((a, b) => {
                 const lastDigitA = parseInt(a.key[a.key.length-1]);
                 const lastDigitB = parseInt(b.key[b.key.length-1]);
                 return lastDigitA - lastDigitB;
             });
-            if (currMatch[0].matchNumber === 6) {
-                console.log(currMatch)
-            } let currData = {
+           let currData = {
                 tournamentKey: params.data.tournamentKey, matchNumber: element.matchNumber, matchType: ReverseMatchTypeMap[element.matchType], scouted: element.scouted,
                 team1: { number: currMatch[0].teamNumber, alliance: "red", scouters: [] },
                 team2: { number: currMatch[1].teamNumber, alliance: "red", scouters: [] },
