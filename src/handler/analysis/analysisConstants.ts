@@ -32,8 +32,8 @@ const picklistSliderMap = {
 const stageMap = {
     [StageResult.NOTHING]: 0,
     [StageResult.PARK] : 1,
-    [StageResult.ONSTAGE] : 3,
-    [StageResult.ONSTAGE_HARMONY] : 5
+    [StageResult.ONSTAGE] : 2,
+    [StageResult.ONSTAGE_HARMONY] : 3
 
 }
 // const trapMap = {
