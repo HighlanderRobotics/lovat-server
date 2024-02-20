@@ -18,6 +18,8 @@ export const zScoreTeam = async (req: AuthenticatedRequest, allTeamAvgSTD: Objec
         for (const metric of picklistSliders) {
             let hasData = true
             let isFirst = true
+            //total points is 0 then they (probably) have no data
+            //averages out over time, by the end of a tournament they will have scored
             let currData = metricTeamAverages[metric][teamNumber]
             if (!currData) {
                 hasData = false

@@ -19,11 +19,10 @@ import { picklistArrayAndAverageAllTeam } from "./picklistArrayAndAverageAllTeam
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
         let flags = []
-        if(req.query.flags)
-        {
+        if (req.query.flags) {
             flags = JSON.parse(req.query.flags as string)
         }
-      
+
         const params = z.object({
             tournamentKey: z.string().optional(),
             totalPoints: z.number(),
@@ -38,12 +37,12 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             ampScores: z.number(),
             cooperation: z.number(),
             feeds: z.number(),
-            flags : z.array(z.string())
+            flags: z.array(z.string())
 
 
         }).safeParse({
             tournamentKey: req.query.tournamentKey || undefined,
-            totalPoints: Number(req.query.totalPoints) || 0, 
+            totalPoints: Number(req.query.totalPoints) || 0,
             pickUps: Number(req.query.pickUps) || 0,
             stage: Number(req.query.stage) || 0,
             trapScores: Number(req.query.trapScores) || 0,
@@ -55,7 +54,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             ampScores: Number(req.query.ampScores) || 0,
             cooperation: Number(req.query.cooperation) || 0,
             feeds: Number(req.query.feeds) || 0,
-            flags : flags
+            flags: flags
 
         })
         if (!params.success) {
@@ -74,7 +73,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         const allTeamAvgSTD = {}
         let data = true
-        let allTeamData: Promise<{ average: number, teamAverages : Map<number, number>, timeLine: Array<number> }>[] = []
+        let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
         for (const element of picklistSliders) {
             const currData = picklistArrayAndAverageAllTeam(req, element);
             allTeamData.push(currData)
@@ -126,26 +125,29 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
 
         let arr = []
-        for (const element of includedTeamNumbers) {
-            const currZscores = zScoreTeam(req, allTeamAvgSTD, element, params, metricAllTeamMaps, params.data.flags)
-            //flags go here, when added
+        let empty = []
+
+        for (const team of includedTeamNumbers) {
+
+            const currZscores = zScoreTeam(req, allTeamAvgSTD, team, params, metricAllTeamMaps, params.data.flags)
             arr.push(currZscores)
+
 
         };
         let dataArr = []
         await Promise.all(arr).then((values) => {
-            for (let i = 0; i < values.length; i ++) {
+            for (let i = 0; i < values.length; i++) {
                 let currZscores = values[i]
                 let team = includedTeamNumbers[i]
                 if (!isNaN(currZscores.zScore)) {
-                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags" : currZscores.flags }
+                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
                     dataArr.push(temp)
                 }
             }
             const resultArr = dataArr.sort((a, b) => b.result - a.result)
             res.status(200).send({ teams: resultArr })
         })
-       
+
     }
     catch (error) {
         console.log(error)

@@ -3,37 +3,37 @@ import { singleMatchEventsAverage } from "./coreAnalysis/singleMatchEventsAverag
 //add cooperation
 
 
-const metricsCategory =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "feeds", "drops", "defense"]
+const metricsCategory = ["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "feeds", "drops", "defense"]
 const metricsBreakdown = ["robotRole", "pickUp", "highNote", "stage"]
 //includes picklist sliders
 //havent done stage or highnote yet 
-const picklistSliders =  ["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "feeds", "defense"]
+const picklistSliders = ["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "feeds", "defense"]
 const autoEnd = 18
 const teleopStart = 19
 const matchTimeEnd = 300
-const specificMatchPageMetrics = ["defense", "ampscores", "speakerscores", "trapscores", "pickups"] 
+const specificMatchPageMetrics = ["defense", "ampscores", "speakerscores", "trapscores", "pickups"]
 const driverAbility = "driverability"
 const exludedAutoEvents = [EventAction.DROP_RING, EventAction.DEFENSE, EventAction.FEED_RING]
 const picklistSliderMap = {
-    "totalpoints" : "totalPoints",
-    "driverability" : "driverAbility",
-    "teleoppoints" : "teleopPoints",
-    "autopoints" : "autoPoints",
-    "pickups" : "pickUps",
-    "ampscores" :  "ampScores",
-    "speakerscores" : "speakerScores",
-    "trapscores" : "trapScores",
-    "stage" : "stage",
-    "cooperation" : "cooperation",
-    "feeds" : "feeds",
-    "defense" : "defense"
+    "totalpoints": "totalPoints",
+    "driverability": "driverAbility",
+    "teleoppoints": "teleopPoints",
+    "autopoints": "autoPoints",
+    "pickups": "pickUps",
+    "ampscores": "ampScores",
+    "speakerscores": "speakerScores",
+    "trapscores": "trapScores",
+    "stage": "stage",
+    "cooperation": "cooperation",
+    "feeds": "feeds",
+    "defense": "defense"
 }
 
 const stageMap = {
     [StageResult.NOTHING]: 0,
-    [StageResult.PARK] : 1,
-    [StageResult.ONSTAGE] : 2,
-    [StageResult.ONSTAGE_HARMONY] : 3
+    [StageResult.PARK]: 1,
+    [StageResult.ONSTAGE]: 2,
+    [StageResult.ONSTAGE_HARMONY]: 3
 
 }
 // const trapMap = {
@@ -42,46 +42,46 @@ const stageMap = {
 //     "SUCCESSFUL" : 5
 // }
 const highNoteMap = {
-    [HighNoteResult.NOT_ATTEMPTED] :0,
-    [HighNoteResult.FAILED] : 0,
-    [HighNoteResult.SUCCESSFUL] : 1
+    [HighNoteResult.NOT_ATTEMPTED]: 0,
+    [HighNoteResult.FAILED]: 0,
+    [HighNoteResult.SUCCESSFUL]: 1
 }
 
 const roleMap = {
-    [RobotRole.OFFENSE] : 0,
-    [RobotRole.DEFENSE] : 1,
-    [RobotRole.FEEDER] : 2,
-    [RobotRole.IMMOBILE] : 3
+    [RobotRole.OFFENSE]: 0,
+    [RobotRole.DEFENSE]: 1,
+    [RobotRole.FEEDER]: 2,
+    [RobotRole.IMMOBILE]: 3
 }
 const metricToEvent = {
-    "totalpoints" : "totalpoints",
-    "teleoppoints" : "teleoppoints",
-    "driverability" : "driverability",
-    "autopoints" : "autopoints",
+    "totalpoints": "totalpoints",
+    "teleoppoints": "teleoppoints",
+    "driverability": "driverability",
+    "autopoints": "autopoints",
     //use locations
-    "pickups" : [EventAction.PICK_UP],
-    "ampscores" : [EventAction.SCORE],
-    "speakerscores" : [EventAction.SCORE],
-    "trapscores" : [EventAction.SCORE],
-    "stage" : "stage",
-    "cooperation" : "cooperation",
-    "feeds" : [EventAction.FEED_RING],
-    "drops" : [EventAction.DROP_RING],
-    "defense" : [EventAction.DEFENSE]
+    "pickups": [EventAction.PICK_UP],
+    "ampscores": [EventAction.SCORE],
+    "speakerscores": [EventAction.SCORE],
+    "trapscores": [EventAction.SCORE],
+    "stage": "stage",
+    "cooperation": "cooperation",
+    "feeds": [EventAction.FEED_RING],
+    "drops": [EventAction.DROP_RING],
+    "defense": [EventAction.DEFENSE]
 
 }
 const FlippedActionMap = {
-    [EventAction.LEAVE] : 0,
-    [EventAction.PICK_UP] : 1,
-    [EventAction.DROP_RING] : 2,
-    [EventAction.SCORE] : 3,
-    [EventAction.DEFENSE] : 4,
-    [EventAction.FEED_RING] : 5,
+    [EventAction.LEAVE]: 0,
+    [EventAction.PICK_UP]: 1,
+    [EventAction.DROP_RING]: 2,
+    [EventAction.SCORE]: 3,
+    [EventAction.DEFENSE]: 4,
+    [EventAction.FEED_RING]: 5,
     // 6 : ["START"],
     // 7 : ["STOP"],
-    [EventAction.STARTING_POSITION] : 8
+    [EventAction.STARTING_POSITION]: 8
 
-  }
+}
 const FlippedPositionMap = {
     [Position.NONE]: 0,
     [Position.AMP]: 1,
@@ -103,6 +103,6 @@ const FlippedPositionMap = {
 
 
 const multiplerBaseAnalysis = 4
-export { picklistSliderMap, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap};
+export { picklistSliderMap, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap };
 
 
