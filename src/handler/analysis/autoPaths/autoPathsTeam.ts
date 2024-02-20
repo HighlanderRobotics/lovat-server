@@ -105,7 +105,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
         for(const element of matches)
         {
             const currAutoPath = await autoPathSingleMatchSingleScoutReport(req, element.teamMatchKey, element.uuid)
-            if(currAutoPath)
+            if(currAutoPath.positions.length > 0)
             {
                 autoPaths.push(currAutoPath)
             }

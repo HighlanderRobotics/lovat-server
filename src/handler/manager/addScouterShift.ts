@@ -3,6 +3,7 @@ import prismaClient from '../../prismaClient'
 import { type } from "os";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { UserRole } from "@prisma/client";
 
 
 export const addScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -35,7 +36,8 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
             res.status(400).send(params);
             return;
         };
-        if (req.user.role === "SCOUTING_LEAD") {
+        
+        if (req.user.role === UserRole.SCOUTING_LEAD) {
             const rows = await prismaClient.scouterScheduleShift.create({
                 data: {
                     sourceTeamNumber : params.data.sourceTeamNumber,

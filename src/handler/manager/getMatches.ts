@@ -65,7 +65,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             return
         }
         let lastQualMatch = Number(qualMatches.length / 6)
-  
+
         //find non scouted matches (not scouted from user.sourceTeam)
         let notScouted = await prismaClient.teamMatchData.findMany({
             where:
@@ -110,7 +110,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             const key = `${match.matchNumber}-${match.matchType}`;
             return groupsToKeep.includes(key);
         });
-       
+
 
 
         let scoutedMatches = await prismaClient.teamMatchData.findMany({
@@ -162,7 +162,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 
             })
-            matchKeyAndNumber =  matchKeyAndNumber.concat(matchKeyAndNumberUnScouted.map(match => ({ ...match, scouted: false })))
+            matchKeyAndNumber = matchKeyAndNumber.concat(matchKeyAndNumberUnScouted.map(match => ({ ...match, scouted: false })))
 
         }
         //assuming scouted matches always come before non scouted, add sort to comfim that
@@ -195,12 +195,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             if (a.matchType < b.matchType) return 1;
             if (a.matchType > b.matchType) return -1;
             return a.matchNumber - b.matchNumber;
-          });
-          
+        });
+
         const finalFormatedMatches = []
         //change into proper format once we know all the matches we are including
         for (const element of finalMatches) {
-            const currMatch = await prismaClient.teamMatchData.findMany({
+            let currMatch = await prismaClient.teamMatchData.findMany({
                 where:
                 {
                     matchNumber: element.matchNumber,
@@ -212,7 +212,13 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 res.status(400).send(`Matches not added correctly, does not have 6 teams for match ${element.matchNumber} of type ${element.matchType}`)
                 return
             }
-            let currData = {
+            //sort by 0, 1, 2, 3, 4, 5 in case its out of order
+            currMatch = currMatch.sort((a, b) => {
+                const lastDigitA = parseInt(a.key[a.key.length-1]);
+                const lastDigitB = parseInt(b.key[b.key.length-1]);
+                return lastDigitA - lastDigitB;
+            });
+           let currData = {
                 tournamentKey: params.data.tournamentKey, matchNumber: element.matchNumber, matchType: ReverseMatchTypeMap[element.matchType], scouted: element.scouted,
                 team1: { number: currMatch[0].teamNumber, alliance: "red", scouters: [] },
                 team2: { number: currMatch[1].teamNumber, alliance: "red", scouters: [] },
@@ -289,8 +295,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 }
             }
             else {
-                for(const match of finalFormatedMatches)
-                {
+                for (const match of finalFormatedMatches) {
                     await addScoutedTeamNotOnSchedule(req, "team1", match)
                     await addScoutedTeamNotOnSchedule(req, "team2", match)
                     await addScoutedTeamNotOnSchedule(req, "team3", match)
@@ -303,7 +308,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 
         }
-    
+
         res.status(200).send(finalFormatedMatches);
     }
     catch (error) {
@@ -313,7 +318,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 };
 //problem: will push to all 6 teams 
-async function addScoutedTeamNotOnSchedule(req : AuthenticatedRequest, team : string, match, scouterShifts = null, currIndex = -1) {
+async function addScoutedTeamNotOnSchedule(req: AuthenticatedRequest, team: string, match, scouterShifts = null, currIndex = -1) {
     try {
         let key = match.tournamentKey + "_" + MatchTypeToAbrivation[match.matchType] + match.matchNumber + "_" + ReverseScouterScheduleMap[team]
         if (scouterShifts !== null && currIndex !== -1) {
@@ -322,14 +327,14 @@ async function addScoutedTeamNotOnSchedule(req : AuthenticatedRequest, team : st
                 {
                     teamMatchData:
                     {
-                        key : key
+                        key: key
                     },
                     scouterUuid: {
                         notIn: scouterShifts[currIndex][team].map(item => item.uuid)
                     },
-                    scouter :
+                    scouter:
                     {
-                        sourceTeamNumber : req.user.teamNumber
+                        sourceTeamNumber: req.user.teamNumber
                     }
                 },
                 include:
@@ -347,11 +352,11 @@ async function addScoutedTeamNotOnSchedule(req : AuthenticatedRequest, team : st
                 {
                     teamMatchData:
                     {
-                        key : key
+                        key: key
                     },
-                    scouter :
+                    scouter:
                     {
-                        sourceTeamNumber : req.user.teamNumber
+                        sourceTeamNumber: req.user.teamNumber
                     }
                 },
                 include:
@@ -370,7 +375,7 @@ async function addScoutedTeamNotOnSchedule(req : AuthenticatedRequest, team : st
     }
 }
 
-async function addScoutedTeam(req : AuthenticatedRequest, scouterShifts, currIndex : number, team : string, match) {
+async function addScoutedTeam(req: AuthenticatedRequest, scouterShifts, currIndex: number, team: string, match) {
     try {
         let key = match.tournamentKey + "_" + MatchTypeToAbrivation[match.matchType] + match.matchNumber + "_" + ReverseScouterScheduleMap[team]
         for (const scouter of scouterShifts[currIndex][team]) {
@@ -378,13 +383,12 @@ async function addScoutedTeam(req : AuthenticatedRequest, scouterShifts, currInd
                 where:
                 {
                     scouterUuid: scouter.uuid,
-                   teamMatchKey : key
+                    teamMatchKey: key
                 }
 
             })
             if (rows !== null && rows.length > 0) {
-                for(const element of rows)
-                {
+                for (const element of rows) {
                     await match[team].scouters.push({ name: scouter.name, scouted: true })
                 }
             }

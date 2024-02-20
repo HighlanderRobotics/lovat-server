@@ -202,7 +202,7 @@ app.get('/v1/analysis/picklist', requireAuth, picklistShell)
 // app.get('/v1/analysis/scoutinglead', requireAuth, scoutingLeadPage)
 
 
-//specific match
+//specific scoutreport
 
 app.get('/v1/analysis/metrics/scoutreport/:uuid', requireAuth, matchPageSpecificScouter)
 app.get('/v1/analysis/scoutreports/match/:match', requireAuth, scoutReportForMatch )

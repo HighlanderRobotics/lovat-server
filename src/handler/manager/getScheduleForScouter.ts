@@ -52,7 +52,12 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                 team5 : true,
                 team6 : true,
 
-            }
+            },
+            orderBy :
+           {
+                startMatchOrdinalNumber : "asc",
+           }
+
         })
         const maxQualifierRow = await prismaClient.teamMatchData.findFirst({
             where:

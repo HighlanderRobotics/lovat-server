@@ -24,7 +24,7 @@ export default async function getTBAData() {
     }
 
 
-    // Repeat this daily //could we do hourly? So that elim matches update in a timly manner, we could do it seperatly too
+    // repeat daily
     setInterval(async () => {
         console.log("Fetching tournaments from TBA...");
         await fetchTournaments();
@@ -35,8 +35,12 @@ export default async function getTBAData() {
         console.log("Done fetching teams from TBA.")
         
         console.log("Fetching matches from TBA...");
+
+    }, 1000 * 60 * 60 * 24);
+    //repeat hourly
+    setInterval(async () => {
         await fetchMatches();
         console.log("Done fetching matches from TBA.");
 
-    }, 1000 * 60 * 60 * 24);
+    }, 1000 * 60 * 60);
 }
