@@ -4,19 +4,41 @@ import z from 'zod'
 import e, { Request, Response } from "express";
 import { AuthenticatedRequest } from '../../lib/middleware/requireAuth';
 
-
-export const checkScouterShiftMatches = async (tournamentKey : string, currStart : number, currEnd : number) => {
+//uuid is when editing a shift so it doesnt check that its over lapping with itself
+export const checkScouterShiftMatches = async (tournamentKey : string, currStart : number, currEnd : number,  uuid : string = null) => {
     try {
-        const shifts = await prismaClient.scouterScheduleShift.findMany({
-            where :
-            {
-                tournamentKey : tournamentKey
-            },
-            orderBy :
-            {
-                startMatchOrdinalNumber : "asc"
-            }
-        })
+        let shifts = []
+        if(uuid)
+        {
+            shifts = await prismaClient.scouterScheduleShift.findMany({
+                where :
+                {
+                    tournamentKey : tournamentKey,
+                    uuid :
+                    {
+                        not : uuid
+                    }
+                },
+                orderBy :
+                {
+                    startMatchOrdinalNumber : "asc"
+                }
+            })
+        }
+        else
+        {
+            shifts =  await prismaClient.scouterScheduleShift.findMany({
+                where :
+                {
+                    tournamentKey : tournamentKey
+                },
+                orderBy :
+                {
+                    startMatchOrdinalNumber : "asc"
+                }
+            })
+        }
+        
         if(shifts.length === 0)
         {
             return true
