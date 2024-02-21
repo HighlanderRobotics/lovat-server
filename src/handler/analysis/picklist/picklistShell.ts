@@ -135,17 +135,19 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
         };
         let dataArr = []
+        let flagsArr = []
         await Promise.all(arr).then((values) => {
             for (let i = 0; i < values.length; i++) {
                 let currZscores = values[i]
                 let team = includedTeamNumbers[i]
                 if (!isNaN(currZscores.zScore)) {
-                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
+                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted}
                     dataArr.push(temp)
+                    flagsArr.push(currZscores.flags)
                 }
             }
             const resultArr = dataArr.sort((a, b) => b.result - a.result)
-            res.status(200).send({ teams: resultArr })
+            res.status(200).send({ teams: resultArr, flags : flagsArr })
         })
 
     }
