@@ -80,6 +80,7 @@ export const requireAuth = async (req: AuthenticatedRequest, res, next) => {
 
             if (!user) {
                 res.status(500).send("Internal server error");
+                return
             }
 
             req.user = user;

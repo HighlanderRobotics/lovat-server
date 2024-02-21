@@ -73,6 +73,7 @@ import { scoutReportForMatch } from "./handler/analysis/specificMatchPage/scoutR
 import { timelineForScoutReport } from "./handler/analysis/specificMatchPage/timelineForScoutReport";
 import { getTournamentForScouterWithSchedule } from "./handler/manager/getTournamentForScouterWithSchedule";
 import { flag } from "./handler/analysis/teamLookUp/flag";
+import { multipleFlags } from "./handler/analysis/teamLookUp/multipleFlags";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -189,7 +190,7 @@ app.get('/v1/analysis/metric/:metric/team/:team', requireAuth, detailsPage) //te
 app.get('/v1/analysis/category/team/:team', requireAuth, categoryMetrics) //tested, same format
 app.get('/v1/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested, same format
 app.get('/v1/analysis/notes/team/:team', requireAuth, getNotes) //tested
-app.get('/v1/analysis/flag/team/:team/metric/:metric', requireAuth, flag) //tested
+app.get('/v1/analysis/flag/team/:team', requireAuth, multipleFlags) //tested
 
 //my alliance page
 app.get('/v1/analysis/alliance', requireAuth, alliancePageResponse)

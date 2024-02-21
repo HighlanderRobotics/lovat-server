@@ -7,35 +7,55 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 export const deleteUser = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const checkScoutingLead = await prismaClient.user.findMany({
-            where :
+            where:
             {
-                teamNumber : req.user.teamNumber,
-                role : "SCOUTING_LEAD"
+                teamNumber: req.user.teamNumber,
+                role: "SCOUTING_LEAD"
             }
         })
-        if(checkScoutingLead === null || checkScoutingLead.length === 0) 
-        {
-            res.status(404).send("Cannot find any scouting leads for the given team")
+
+        if (req.user.role === "SCOUTING_LEAD" && checkScoutingLead.length === 1) {
+            res.status(400).send("Cannot delete the only scouting lead for the given team")
             return
         }
-        else if(req.user.role === "SCOUTING_LEAD" && checkScoutingLead.length === 1)
-        {
-            res.send(400).send("Cannot delete the only scouting lead for the given team")
-            return
-        }
-        else
-        {
-            const deleteUser = await prismaClient.user.delete({
-                where : 
+        else {
+            const deletedUser = await prismaClient.user.delete({
+                where:
                 {
-                    id : req.user.id
+                    id: req.user.id
                 }
             })
-            res.status(200).send("User deleted")
+            res.status(200).send("User sucsesfully deleted")
+            // let requestOptions: RequestInit = {
+            //     method: 'DELETE',
+            //     redirect: 'follow',
+            //     headers: {
+            //         'Authorization': req.headers.authorization,
+            //         'Content-Type': 'application/json'
+            //     },
+            // }; 
+            // const axios = require('axios');
+
+            // let config = {
+            //   method: 'delete',
+            //   maxBodyLength: Infinity,
+            //   url: `https://${process.env.AUTH0_DOMAIN}/api/v2/users/:id`,
+            //   headers: { }
+            // };
+            
+            // axios.request(config)
+            // .then((response) => {
+            //     console.log(response)
+            //   res.status(200).send("Sucsessfullly deleted the user")
+            // })
+            // .catch((error) => {
+            //     res.status(400).send(error)
+            // });
             
         }
     } catch (error) {
         console.error(error);
         res.status(500).send(error);
+
     }
 };

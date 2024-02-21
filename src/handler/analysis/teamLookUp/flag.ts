@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
+import z, { array } from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
@@ -9,19 +9,18 @@ import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 import { rankFlag } from "../rankFlag";
 
 
-export const flag = async (req: AuthenticatedRequest, res: Response) => {
+export const flag = async (req: AuthenticatedRequest, metric : string) => {
     try {
         const params = z.object({
             team: z.number(),
             flag: z.enum(["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "feeds", "trapscores", "drops", "rank"])
         }).safeParse({
             team: Number(req.params.team),
-            flag: req.params.metric
+            flag: metric
 
         })
         if (!params.success) {
-            res.status(400).send(params);
-            return;
+            throw(params);
         };
         if(params.data.flag === "rank")
         {
@@ -42,18 +41,19 @@ export const flag = async (req: AuthenticatedRequest, res: Response) => {
                 }
             })
             let data = await rankFlag(req, "frc" + params.data.team, tourament.key)
-            res.status(200).send({flag : params.data.flag, "data" : data})
+            return{flag : params.data.flag, "data" : data}
         }
         else
         {
             let data = await arrayAndAverageTeam(req, params.data.flag, params.data.team)
-            res.status(200).send({flag : params.data.flag, data : data.average})
+            console.log(data)
+            return{flag : params.data.flag, data : data.average}
         }
        
     }
     catch (error) {
         console.error(error)
-        res.status(400).send(error)
+        throw(error)
     }
 
 };
