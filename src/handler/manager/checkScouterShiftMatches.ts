@@ -5,7 +5,7 @@ import e, { Request, Response } from "express";
 import { AuthenticatedRequest } from '../../lib/middleware/requireAuth';
 
 
-export const checkRegisteredTeam = async (tournamentKey : string, currStart : number, currEnd : number) => {
+export const checkScouterShiftMatches = async (tournamentKey : string, currStart : number, currEnd : number) => {
     try {
         const shifts = await prismaClient.scouterScheduleShift.findMany({
             where :

@@ -55,6 +55,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                 if(data !== null)
                 {
                     matchDataArray.push(data)
+                    
                 }
             }
             if(matchDataArray.length !== 0)

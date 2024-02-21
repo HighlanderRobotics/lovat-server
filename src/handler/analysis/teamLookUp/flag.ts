@@ -13,7 +13,7 @@ export const flag = async (req: AuthenticatedRequest, metric : string) => {
     try {
         const params = z.object({
             team: z.number(),
-            flag: z.enum(["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "feeds", "trapscores", "drops", "rank"])
+            flag: z.enum(["totalpoints","driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "feeds", "trapscores", "drops", "rank", "defense"])
         }).safeParse({
             team: Number(req.params.team),
             flag: metric
