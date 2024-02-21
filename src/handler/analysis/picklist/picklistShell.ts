@@ -141,13 +141,13 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 let currZscores = values[i]
                 let team = includedTeamNumbers[i]
                 if (!isNaN(currZscores.zScore)) {
-                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted}
+                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags}
                     dataArr.push(temp)
                     flagsArr.push(currZscores.flags)
                 }
             }
             const resultArr = dataArr.sort((a, b) => b.result - a.result)
-            res.status(200).send({ teams: resultArr, flags : flagsArr })
+            res.status(200).send({ teams: resultArr})
         })
 
     }
