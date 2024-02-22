@@ -8,9 +8,8 @@ import { Resend } from "resend";
 export const updateTeamEmail = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
 
-        const user = req.user
         const params = z.object({
-            email: z.string()
+            email: z.string().email()
 
         }).safeParse({
             email: req.query.email
@@ -20,7 +19,6 @@ export const updateTeamEmail = async (req: AuthenticatedRequest, res: Response):
             res.status(400).send(params);
             return;
         };
-        //check that teamNumber is not null at this procsess
         const emailRow = await prismaClient.registeredTeam.update({
             where:
             {
@@ -37,7 +35,7 @@ export const updateTeamEmail = async (req: AuthenticatedRequest, res: Response):
 
         resend.emails.send({
             from: 'noreply@lovat.app',
-            to: req.body.email,
+            to: params.data.email,
             subject: 'Lovat Email Verification',
             html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`
         });
