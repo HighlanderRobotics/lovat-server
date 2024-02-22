@@ -5,13 +5,14 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 import ss from 'simple-statistics';
 import prisma from '../../../prismaClient';
-import z from 'zod'
-import { all } from "axios";
-import { zScoreTeam } from "./zScoreTeam";
-import { match } from "assert";
+import z, { array } from 'zod'
+const { Worker } = require('worker_threads');
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
 import { picklistSliders } from "../analysisConstants";
 import { picklistArrayAndAverageAllTeam } from "./picklistArrayAndAverageAllTeam";
+import { workerData } from "worker_threads";
+import flatted from 'flatted';
+import { resolve } from "dns/promises";
 
 
 
@@ -107,7 +108,6 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 metricAllTeamMaps[element] = currData.teamAverages
             }
         })
-        //TUNE THESE VALUES
 
 
         const allTeams = await prismaClient.team.findMany({})
@@ -124,31 +124,28 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
         }
 
-        let arr = []
-        let empty = []
-
-        for (const team of includedTeamNumbers) {
-
-            const currZscores = zScoreTeam(req, allTeamAvgSTD, team, params, metricAllTeamMaps, params.data.flags)
-            arr.push(currZscores)
-
-
-        };
+        let teamBreakdowns = []
+        //split teams for the cors
+        let teamChunks = splitTeams(includedTeamNumbers, 16)
+        for (const teams of teamChunks) {
+            teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
+        }
         let dataArr = []
-        let flagsArr = []
-        await Promise.all(arr).then((values) => {
-            for (let i = 0; i < values.length; i++) {
-                let currZscores = values[i]
-                let team = includedTeamNumbers[i]
-                if (!isNaN(currZscores.zScore)) {
-                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags}
-                    dataArr.push(temp)
-                    flagsArr.push(currZscores.flags)
+        await Promise.all(teamBreakdowns).then(function (data) {
+            for (let i = 0; i < data.length; i++) {
+                let currTeamData = data[i]
+                for (let j = 0; j < currTeamData.length; j++) {
+                    let currZscores = currTeamData[j]
+                    if (!isNaN(currZscores.zScore)) {
+                        let temp = { "team": currZscores.team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
+                        dataArr.push(temp)
+                    }
                 }
             }
             const resultArr = dataArr.sort((a, b) => b.result - a.result)
-            res.status(200).send({ teams: resultArr})
+            res.status(200).send({ teams: resultArr })
         })
+
 
     }
     catch (error) {
@@ -156,6 +153,42 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         res.status(400).send(error)
     }
 
+}
+function splitTeams(teams: Array<number>, n: number): Array<Array<number>> {
+    const splitSize = Math.ceil(teams.length / n);
+    const result: Array<Array<number>> = [];
+
+    for (let i = 0; i < n; i++) {
+        let start = i * splitSize;
+        let end = start + splitSize;
+        result.push(teams.slice(start, end));
+    }
+
+    return result;
+}
+function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
+    return new Promise((resolve, reject) => {
+
+        let data = {
+            teams: teams,
+            metricTeamAverages: metricAllTeamMaps,
+            allTeamAvgSTD: allTeamAvgSTD,
+            flags: params.data.flags,
+            req: flatted.stringify(req),
+            params: params
+        }
+        const worker = new Worker('././dist/handler/analysis/picklist/zScoreTeam.js', { type: "module" })
+        worker.postMessage(data);
+
+        worker.on('message', (event) => {
+            resolve(event);
+
+        });
+
+        worker.on('error', (error) => {
+            reject(error);
+        });
+    })
 }
 
 
