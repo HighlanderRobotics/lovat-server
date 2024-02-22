@@ -82,7 +82,7 @@ try {
                 }
         
                 let zScoreTotal = adj.reduce((partialSum, a) => partialSum + a.result, 0);
-
+                
                 finalData.push({
                     "team": team,
                     "zScore": zScoreTotal,

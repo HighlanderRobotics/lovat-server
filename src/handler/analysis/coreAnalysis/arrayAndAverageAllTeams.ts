@@ -7,9 +7,12 @@ import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { error, time } from "console";
 import { Position } from "@prisma/client";
+import flatted from 'flatted'
+import { numericSort } from "simple-statistics";
+const { Worker } = require('worker_threads');
+import os from 'os'
 
-
-export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string) : Promise<{average : number, timeLine : Array<number>}>=> {
+export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string) : Promise<{average : number, timeLine : Array<number>, teams : Array<number> }>=> {
     try {
 
         const teams = await prismaClient.scoutReport.findMany({
@@ -43,24 +46,26 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
             }
         };
         const uniqueTeamsArray: Array<number> = Array.from(uniqueTeams);
+        const chunkedTeams = splitTeams(uniqueTeamsArray, os.cpus().length -1) 
+
         let timeLineArray = []
-        for (const element of uniqueTeamsArray) {
-            const currAvg = (arrayAndAverageTeam(req, metric, element))
-            timeLineArray = timeLineArray.concat(currAvg)
+        for (const teams of chunkedTeams) {
+            timeLineArray.push(createWorker(req, teams, metric))
         };
-        //change to null possibly
+
         let average = 0
-
+        let teamsAverage = []
         await Promise.all(timeLineArray).then((values) => {
-
+            let converted1DArray = values.reduce((accumulator, currentValue) => accumulator.concat(currentValue), []);
             if (timeLineArray.length !== 0) {
-                average = values.reduce((acc, cur) => acc + cur.average, 0) / values.length;
+                average = converted1DArray.reduce((acc, cur) => acc + cur.average, 0) / values.length;
             }
-            timeLineArray = values.map(item => item.average);
+            timeLineArray = converted1DArray.map(item => item.average);
         });
         return {
             average: average,
-            timeLine: timeLineArray
+            timeLine: timeLineArray,
+            teams : teamsAverage
         }
   
     }
@@ -69,4 +74,37 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
         throw (error)
     }
 
-};
+}
+function createWorker(req, teams, metric) {
+    return new Promise((resolve, reject) => {
+
+        let data = {
+            req: flatted.stringify(req),
+            teams : teams,
+            metric : metric
+        }
+        const worker = new Worker('././dist/handler/analysis/picklist/arrayAndAverageTeamWorker.js', {type : "module"})
+        worker.postMessage(data);
+
+        worker.on('message', (event) => {
+            resolve(event);
+
+        });
+
+        worker.on('error', (error) => {
+            reject(error);
+        });
+    })
+}
+ function splitTeams(teams: Array<number>, n: number): Array<Array<number>> {
+    const splitSize = Math.ceil(teams.length / n);
+    const result: Array<Array<number>> = [];
+
+    for (let i = 0; i < n; i++) {
+        let start = i * splitSize;
+        let end = start + splitSize;
+        result.push(teams.slice(start, end));
+    }
+
+    return result;
+}

@@ -13,7 +13,7 @@ import { picklistArrayAndAverageAllTeam } from "./picklistArrayAndAverageAllTeam
 import { workerData } from "worker_threads";
 import flatted from 'flatted';
 import { resolve } from "dns/promises";
-
+import os from 'os'
 
 
 
@@ -125,8 +125,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
 
         let teamBreakdowns = []
-        //split teams for the cors
-        let teamChunks = splitTeams(includedTeamNumbers, 16)
+        let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length -1)
         for (const teams of teamChunks) {
             teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
         }

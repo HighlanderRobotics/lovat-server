@@ -74,6 +74,7 @@ import { timelineForScoutReport } from "./handler/analysis/specificMatchPage/tim
 import { getTournamentForScouterWithSchedule } from "./handler/manager/getTournamentForScouterWithSchedule";
 import { flag } from "./handler/analysis/teamLookUp/flag";
 import { multipleFlags } from "./handler/analysis/teamLookUp/multipleFlags";
+import { updateTeamEmail } from "./handler/manager/updateTeamEmail";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -82,6 +83,12 @@ const resendEmailLimiter = rateLimit({
 });
 
 
+
+const updateTeamEmails = rateLimit({
+  windowMs: 2 * 60 * 1000,
+  max: 3, 
+  message: 'Too many email updates sent from this IP, please try again after 2 minutes'
+});
 
 const app = express();
 
@@ -155,6 +162,7 @@ app.get('/v1/manager/analysts', requireAuth, getAnalysts) //use for list of peop
 app.put('/v1/manager/settings', requireAuth, updateSettings)
 app.get('/v1/manager/settings/teamsource', requireAuth, getTeamSource)
 app.get('/v1/manager/settings/tournamentsource', requireAuth, getTournamentSource)
+app.put('/v1/manager/settings/teamemail', updateTeamEmails, requireAuth, updateTeamEmail )
 
 
 
