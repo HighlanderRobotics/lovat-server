@@ -12,7 +12,7 @@ import { numericSort } from "simple-statistics";
 const { Worker } = require('worker_threads');
 import os from 'os'
 
-export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string) : Promise<{average : number, timeLine : Array<number>, teams : Array<number> }>=> {
+export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string) : Promise<{average : number, timeLine : Array<number>, teamsAverage : Array<number> }>=> {
     try {
 
         const teams = await prismaClient.scoutReport.findMany({
@@ -47,10 +47,18 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
         };
         const uniqueTeamsArray: Array<number> = Array.from(uniqueTeams);
         const chunkedTeams = splitTeams(uniqueTeamsArray, os.cpus().length -1) 
-
+        if(uniqueTeamsArray.length === 0)
+        {
+            return {
+                average : average
+            }
+        }
         let timeLineArray = []
         for (const teams of chunkedTeams) {
-            timeLineArray.push(createWorker(req, teams, metric))
+            if(teams.length > 0)
+            {
+                timeLineArray.push(createWorker(req, teams, metric))
+            }
         };
 
         let average = 0
@@ -65,7 +73,7 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
         return {
             average: average,
             timeLine: timeLineArray,
-            teams : teamsAverage
+            teamsAverage : teamsAverage
         }
   
     }
@@ -83,7 +91,7 @@ function createWorker(req, teams, metric) {
             teams : teams,
             metric : metric
         }
-        const worker = new Worker('././dist/handler/analysis/picklist/arrayAndAverageTeamWorker.js', {type : "module"})
+        const worker = new Worker('././dist/handler/analysis/coreAnalysis/arrayAndAverageTeamWorker.js', {type : "module"})
         worker.postMessage(data);
 
         worker.on('message', (event) => {

@@ -10,16 +10,17 @@ import { match } from "assert";
 import { parentPort } from "worker_threads";
 import { deflateRawSync } from "zlib";
 import { teamAverageFastTournament } from "./teamAverageFastTournament";
-
+import flatted from 'flatted'
 
 try {
     parentPort.on('message', async (data) => {
         let teamsDataArray = []
+        const req = flatted.parse(data.req)
         for (const team of data.teams) {
             const params = z.object({
                 team: z.number(),
             }).safeParse({
-                team: data.team,
+                team: team,
             })
             if (!params.success) {
                 throw (params)
@@ -29,7 +30,7 @@ try {
                 where: {
                     tournamentKey:
                     {
-                        in: data.req.user.tournamentSource
+                        in: req.user.tournamentSource
                     },
                     teamNumber: params.data.team,
                     scoutReports:
@@ -72,7 +73,7 @@ try {
             }, {});
             const tournamentGroups: Match[][] = Object.values(groupedByTournament);
             if (metric === "stage") {
-                return { average: await stagePicklistTeam(data.req, params.data.team), timeLine: null }
+                return { average: await stagePicklistTeam(req, params.data.team), timeLine: null }
             }
             const timeLineArray = []
             const tournamentAverages = []
@@ -81,17 +82,17 @@ try {
                 let currAvg = null
                 const currDatas = []
 
-                    if (data.includes("teleop") || metric.includes("Teleop")) {
-                        let currData = teamAverageFastTournament(data.req, team,  metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, teleopStart, matchTimeEnd)
+                    if (metric.includes("teleop") || metric.includes("Teleop")) {
+                        let currData = teamAverageFastTournament(req, team,  metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, teleopStart, matchTimeEnd)
                         currDatas.push(currData)
                     }
                     else if (metric.includes("auto") || metric.includes("Auto")) {
-                        let currData = teamAverageFastTournament(data.req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, 0, autoEnd)
+                        let currData = teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, 0, autoEnd)
                         currDatas.push(currData)
 
                     }
                     else {
-                        let currData = teamAverageFastTournament(data.req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey)
+                        let currData = teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey)
                         currDatas.push(currData)
                     }
 
