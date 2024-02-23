@@ -6,7 +6,7 @@ import prismaClient from "../../../prismaClient";
 import { unwatchFile } from "fs";
 
 
-
+//worker for picklists
 try {
     parentPort.on('message', async (data) => {
         return new Promise(async function (resolve) {
