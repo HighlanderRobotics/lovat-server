@@ -9,6 +9,7 @@ import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { match } from "assert";
 import { parentPort } from "worker_threads";
 import { deflateRawSync } from "zlib";
+import { teamAverageFastTournament } from "./teamAverageFastTournament";
 
 
 try {
@@ -79,24 +80,21 @@ try {
             for (const tournament of tournamentGroups) {
                 let currAvg = null
                 const currDatas = []
-                for (const match of tournament) {
-                    //add time constraints if nessissary
 
                     if (data.includes("teleop") || metric.includes("Teleop")) {
-                        let currData = singleMatchEventsAverage(data.req, metric.includes("point") || metric.includes("Point"), match.key, data.team, metric, teleopStart, matchTimeEnd)
+                        let currData = teamAverageFastTournament(data.req, team,  metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, teleopStart, matchTimeEnd)
                         currDatas.push(currData)
                     }
                     else if (metric.includes("auto") || metric.includes("Auto")) {
-                        let currData = singleMatchEventsAverage(data.req, metric.includes("point") || metric.includes("Point"), match.key, data.team, metric, 0, autoEnd)
+                        let currData = teamAverageFastTournament(data.req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, 0, autoEnd)
                         currDatas.push(currData)
 
                     }
                     else {
-                        let currData = singleMatchEventsAverage(data.req, metric.includes("point") || metric.includes("Point"), match.key, params.data.team, metric)
+                        let currData = teamAverageFastTournament(data.req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey)
                         currDatas.push(currData)
                     }
 
-                }
                 await Promise.all(currDatas).then((values) => {
                     for (let i = 0; i < values.length; i++) {
                         if (values[i] !== null) {

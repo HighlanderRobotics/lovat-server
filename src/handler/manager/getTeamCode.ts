@@ -17,9 +17,18 @@ export const getTeamCode = async (req: AuthenticatedRequest, res: Response): Pro
             where: {
                 number : user.teamNumber
             }
-
         })
-        res.status(200).send(row.code);
+        if(row.teamApproved && row.emailVerified)
+        {
+            res.status(200).send(row.code);
+            return
+        }
+        else
+        {
+            //change to team email or website not approved if we do the 2 step verification
+            res.status(400).send({error : "team email not approved", displayError : "team email not approved"});
+            return
+        }
     }
     catch (error) {
         console.error(error)

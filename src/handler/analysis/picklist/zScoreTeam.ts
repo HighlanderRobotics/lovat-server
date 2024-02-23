@@ -3,6 +3,7 @@ import { parentPort } from 'worker_threads';
 import { rankFlag } from '../rankFlag';
 import flatted from 'flatted';
 import prismaClient from "../../../prismaClient";
+import { unwatchFile } from "fs";
 
 
 
@@ -20,14 +21,18 @@ try {
                 let adj = [];
                 let unAdj = [];
                 let flagData = [];
-
+               
                 for (const metric of picklistSliders) {
                     let hasData = true
                     let isFirst = true
                     let currData = metricTeamAverages[metric][team]
-                    if (!currData) {
+                    if (isFirst && currData === null || isNaN(currData) || currData === undefined) {
                         hasData = false
                     }
+                    // if(team === 8033)
+                    // {
+                    //     console.log(metricTeamAverages)
+                    // }
                     isFirst = false
                     let zScore = 0
                     if (hasData) {
@@ -83,6 +88,7 @@ try {
         
                 let zScoreTotal = adj.reduce((partialSum, a) => partialSum + a.result, 0);
                 
+
                 finalData.push({
                     "team": team,
                     "zScore": zScoreTotal,
