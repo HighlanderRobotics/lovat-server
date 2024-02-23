@@ -74,6 +74,10 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
         {
             await addTournamentMatches(params.data.tournamentKey)
         }
+        if(maxQualifierRow === null)
+        {
+            res.status(400).send({ "error": "Matches are not available for this tournamnet", "displayError": "Matches are not available for this tournament"})
+        }
         const highestQualificationMatchNumber = maxQualifierRow.matchNumber
         let finalArr = []
         for (const element of rows) {

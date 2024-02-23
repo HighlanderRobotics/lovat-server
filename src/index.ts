@@ -73,6 +73,9 @@ import { scoutReportForMatch } from "./handler/analysis/specificMatchPage/scoutR
 import { timelineForScoutReport } from "./handler/analysis/specificMatchPage/timelineForScoutReport";
 import { getTournamentForScouterWithSchedule } from "./handler/manager/getTournamentForScouterWithSchedule";
 import { flag } from "./handler/analysis/teamLookUp/flag";
+import { multipleFlags } from "./handler/analysis/teamLookUp/multipleFlags";
+import { updateTeamEmail } from "./handler/manager/updateTeamEmail";
+import { addNotOnTeam } from "./handler/manager/addNotOnTeam";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -81,6 +84,12 @@ const resendEmailLimiter = rateLimit({
 });
 
 
+
+const updateTeamEmails = rateLimit({
+  windowMs: 2 * 60 * 1000,
+  max: 3, 
+  message: 'Too many email updates sent from this IP, please try again after 2 minutes'
+});
 
 const app = express();
 
@@ -146,6 +155,7 @@ app.post('/v1/manager/onboarding/verifyemail', requireLovatSignature, approveTea
 app.post('/v1/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail) //tested
 app.get('/v1/manager/profile', requireAuth, getProfile) //tested
 app.get('/v1/manager/users', requireAuth, getUsers) //tested
+app.post('/v1/manager/noteam', requireAuth, addNotOnTeam)
 
 //dashboard app settings
 app.delete('/v1/manager/user', requireAuth, deleteUser) //tested, is there more to do with Auth0
@@ -154,6 +164,7 @@ app.get('/v1/manager/analysts', requireAuth, getAnalysts) //use for list of peop
 app.put('/v1/manager/settings', requireAuth, updateSettings)
 app.get('/v1/manager/settings/teamsource', requireAuth, getTeamSource)
 app.get('/v1/manager/settings/tournamentsource', requireAuth, getTournamentSource)
+app.put('/v1/manager/settings/teamemail', updateTeamEmails, requireAuth, updateTeamEmail )
 
 
 
@@ -189,7 +200,7 @@ app.get('/v1/analysis/metric/:metric/team/:team', requireAuth, detailsPage) //te
 app.get('/v1/analysis/category/team/:team', requireAuth, categoryMetrics) //tested, same format
 app.get('/v1/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested, same format
 app.get('/v1/analysis/notes/team/:team', requireAuth, getNotes) //tested
-app.get('/v1/analysis/flag/team/:team/metric/:metric', requireAuth, flag) //tested
+app.get('/v1/analysis/flag/team/:team', requireAuth, multipleFlags) //tested
 
 //my alliance page
 app.get('/v1/analysis/alliance', requireAuth, alliancePageResponse)

@@ -5,25 +5,25 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 import ss from 'simple-statistics';
 import prisma from '../../../prismaClient';
-import z from 'zod'
-import { all } from "axios";
-import { zScoreTeam } from "./zScoreTeam";
-import { match } from "assert";
+import z, { array } from 'zod'
+const { Worker } = require('worker_threads');
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
 import { picklistSliders } from "../analysisConstants";
 import { picklistArrayAndAverageAllTeam } from "./picklistArrayAndAverageAllTeam";
-
+import { workerData } from "worker_threads";
+import flatted from 'flatted';
+import { resolve } from "dns/promises";
+import os from 'os'
 
 
 
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
         let flags = []
-        if(req.query.flags)
-        {
+        if (req.query.flags) {
             flags = JSON.parse(req.query.flags as string)
         }
-      
+
         const params = z.object({
             tournamentKey: z.string().optional(),
             totalPoints: z.number(),
@@ -38,12 +38,12 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             ampScores: z.number(),
             cooperation: z.number(),
             feeds: z.number(),
-            flags : z.array(z.string())
+            flags: z.array(z.string())
 
 
         }).safeParse({
             tournamentKey: req.query.tournamentKey || undefined,
-            totalPoints: Number(req.query.totalPoints) || 0, 
+            totalPoints: Number(req.query.totalPoints) || 0,
             pickUps: Number(req.query.pickUps) || 0,
             stage: Number(req.query.stage) || 0,
             trapScores: Number(req.query.trapScores) || 0,
@@ -55,7 +55,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             ampScores: Number(req.query.ampScores) || 0,
             cooperation: Number(req.query.cooperation) || 0,
             feeds: Number(req.query.feeds) || 0,
-            flags : flags
+            flags: flags
 
         })
         if (!params.success) {
@@ -74,7 +74,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         const allTeamAvgSTD = {}
         let data = true
-        let allTeamData: Promise<{ average: number, teamAverages : Map<number, number>, timeLine: Array<number> }>[] = []
+        let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
         for (const element of picklistSliders) {
             const currData = picklistArrayAndAverageAllTeam(req, element);
             allTeamData.push(currData)
@@ -108,7 +108,6 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 metricAllTeamMaps[element] = currData.teamAverages
             }
         })
-        //TUNE THESE VALUES
 
 
         const allTeams = await prismaClient.team.findMany({})
@@ -125,33 +124,70 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
         }
 
-        let arr = []
-        for (const element of includedTeamNumbers) {
-            const currZscores = zScoreTeam(req, allTeamAvgSTD, element, params, metricAllTeamMaps, params.data.flags)
-            //flags go here, when added
-            arr.push(currZscores)
-
-        };
+        let teamBreakdowns = []
+        let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length -1)
+        for (const teams of teamChunks) {
+            teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
+        }
         let dataArr = []
-        await Promise.all(arr).then((values) => {
-            for (let i = 0; i < values.length; i ++) {
-                let currZscores = values[i]
-                let team = includedTeamNumbers[i]
-                if (!isNaN(currZscores.zScore)) {
-                    let temp = { "team": team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags" : currZscores.flags }
-                    dataArr.push(temp)
+        await Promise.all(teamBreakdowns).then(function (data) {
+            for (let i = 0; i < data.length; i++) {
+                let currTeamData = data[i]
+                for (let j = 0; j < currTeamData.length; j++) {
+                    let currZscores = currTeamData[j]
+                    if (!isNaN(currZscores.zScore)) {
+                        let temp = { "team": currZscores.team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
+                        dataArr.push(temp)
+                    }
                 }
             }
             const resultArr = dataArr.sort((a, b) => b.result - a.result)
             res.status(200).send({ teams: resultArr })
         })
-       
+
+
     }
     catch (error) {
         console.log(error)
         res.status(400).send(error)
     }
 
+}
+function splitTeams(teams: Array<number>, n: number): Array<Array<number>> {
+    const splitSize = Math.ceil(teams.length / n);
+    const result: Array<Array<number>> = [];
+
+    for (let i = 0; i < n; i++) {
+        let start = i * splitSize;
+        let end = start + splitSize;
+        result.push(teams.slice(start, end));
+    }
+
+    return result;
+}
+function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
+    return new Promise((resolve, reject) => {
+
+        let data = {
+            teams: teams,
+            metricTeamAverages: JSON.parse(JSON.stringify(metricAllTeamMaps)),
+            allTeamAvgSTD: allTeamAvgSTD,
+            flags: params.data.flags,
+            req: flatted.stringify(req),
+            params: params
+        }
+        const worker = new Worker('././dist/handler/analysis/picklist/zScoreTeam.js', { type: "module" })
+        worker.postMessage(data);
+
+        worker.on('message', (event) => {
+            resolve(event);
+
+        });
+
+        worker.on('error', (error) => {
+            reject(error);
+        });
+    })
 }
 
 

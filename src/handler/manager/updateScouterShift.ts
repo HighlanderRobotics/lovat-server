@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { checkScouterShiftMatches } from "./checkScouterShiftMatches";
+import { checkOnlyOneInstanceOfScouter } from "./checkOnlyInstanceOfScouter";
 
 
 export const updateScouterShift = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -33,7 +35,24 @@ export const updateScouterShift = async (req: AuthenticatedRequest, res: Respons
             res.status(400).send(params);
             return;
         };
-
+        const tournamentRow = await prismaClient.scouterScheduleShift.findUnique({
+            where :
+            {
+                uuid : params.data.uuid
+            }
+        })
+        const scoutersUnique = await checkOnlyOneInstanceOfScouter(params.data.team1, params.data.team2, params.data.team3, params.data.team4, params.data.team5, params.data.team6)
+        if(!scoutersUnique)
+        {
+            res.status(400).send({ error : "Overlapping scouters in one shift", displayError : "Overlapping scouters, please make sure each scouter is scheduled only once."})
+            return
+        }
+        const matchesNotOverlapping = await checkScouterShiftMatches(tournamentRow.tournamentKey, params.data.startMatchOrdinalNumber, params.data.endMatchOrdinalNumber, params.data.uuid)
+        if(!matchesNotOverlapping)
+        {
+            res.status(400).send({error : "This shifts start or end match overlaps with another shift.", displayError : "This shifts start or end match overlaps with another shift."})
+            return
+        }
         if (req.user.role === "SCOUTING_LEAD") {
             const rows = await prismaClient.scouterScheduleShift.update({
                 where: {
