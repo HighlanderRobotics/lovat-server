@@ -10,7 +10,6 @@ import { unwatchFile } from "fs";
 try {
     parentPort.on('message', async (data) => {
         return new Promise(async function (resolve) {
-
             let metricTeamAverages = data.metricTeamAverages
             let allTeamAvgSTD = data.allTeamAvgSTD
             let params = data.params
@@ -26,13 +25,9 @@ try {
                     let hasData = true
                     let isFirst = true
                     let currData = metricTeamAverages[metric][team]
-                    if (isFirst && currData === null || isNaN(currData) || currData === undefined) {
+                    if (isFirst && currData === null || currData === undefined) {
                         hasData = false
                     }
-                    // if(team === 8033)
-                    // {
-                    //     console.log(metricTeamAverages)
-                    // }
                     isFirst = false
                     let zScore = 0
                     if (hasData) {

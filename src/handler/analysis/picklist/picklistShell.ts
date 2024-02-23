@@ -170,7 +170,7 @@ function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
 
         let data = {
             teams: teams,
-            metricTeamAverages: metricAllTeamMaps,
+            metricTeamAverages: JSON.parse(JSON.stringify(metricAllTeamMaps)),
             allTeamAvgSTD: allTeamAvgSTD,
             flags: params.data.flags,
             req: flatted.stringify(req),
