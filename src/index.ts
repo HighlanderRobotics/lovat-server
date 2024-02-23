@@ -75,6 +75,7 @@ import { getTournamentForScouterWithSchedule } from "./handler/manager/getTourna
 import { flag } from "./handler/analysis/teamLookUp/flag";
 import { multipleFlags } from "./handler/analysis/teamLookUp/multipleFlags";
 import { updateTeamEmail } from "./handler/manager/updateTeamEmail";
+import { addNotOnTeam } from "./handler/manager/addNotOnTeam";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -154,6 +155,7 @@ app.post('/v1/manager/onboarding/verifyemail', requireLovatSignature, approveTea
 app.post('/v1/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail) //tested
 app.get('/v1/manager/profile', requireAuth, getProfile) //tested
 app.get('/v1/manager/users', requireAuth, getUsers) //tested
+app.post('/v1/manager/noteam', requireAuth, addNotOnTeam)
 
 //dashboard app settings
 app.delete('/v1/manager/user', requireAuth, deleteUser) //tested, is there more to do with Auth0
