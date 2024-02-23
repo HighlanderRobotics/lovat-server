@@ -26,32 +26,34 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response): Prom
                 }
             })
             res.status(200).send("User sucsesfully deleted")
-            // let requestOptions: RequestInit = {
-            //     method: 'DELETE',
-            //     redirect: 'follow',
-            //     headers: {
-            //         'Authorization': req.headers.authorization,
-            //         'Content-Type': 'application/json'
-            //     },
-            // }; 
+    
             // const axios = require('axios');
 
             // let config = {
-            //   method: 'delete',
-            //   maxBodyLength: Infinity,
-            //   url: `https://${process.env.AUTH0_DOMAIN}/api/v2/users/:id`,
-            //   headers: { }
+            //     method: 'delete',
+            //     maxBodyLength: Infinity,
+            //     url: `https://${process.env.AUTH0_DOMAIN}/api/v2/users/${encodeURIComponent(req.user.id)}`,
+            //     headers: {
+            //         headers: {
+            //             'Authentication': req.headers.authorization,
+            //             'Content-Type': 'application/json'
+            //         },
+            //         method: 'DELETE',
+            //         redirect: 'follow',
+            //     }
             // };
-            
-            // axios.request(config)
-            // .then((response) => {
-            //     console.log(response)
-            //   res.status(200).send("Sucsessfullly deleted the user")
-            // })
-            // .catch((error) => {
-            //     res.status(400).send(error)
-            // });
-            
+
+            // try {
+            //     const deleted = await axios.request(config);
+            //     if(deleted.success)
+            //     {
+            //         res.status(200).send("Successfully deleted the user from the database and Auth0.");
+            //     }
+            // } catch (error) {
+            //     console.error(error);
+            //     res.status(400).send("Failed to delete the user from Auth0.");
+            // }
+
         }
     } catch (error) {
         console.error(error);
