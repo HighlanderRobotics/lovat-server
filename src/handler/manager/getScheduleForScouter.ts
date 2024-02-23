@@ -77,6 +77,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
         if(maxQualifierRow === null)
         {
             res.status(400).send({ "error": "Matches are not available for this tournamnet", "displayError": "Matches are not available for this tournament"})
+            return
         }
         const highestQualificationMatchNumber = maxQualifierRow.matchNumber
         let finalArr = []
