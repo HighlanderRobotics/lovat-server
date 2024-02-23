@@ -83,7 +83,7 @@ function createWorker(req, teams, metric) {
             teams : teams,
             metric : metric
         }
-        const worker = new Worker('././dist/handler/analysis/picklist/arrayAndAverageTeamWorker.js', {type : "module"})
+        const worker = new Worker('././dist/handler/analysis/coreAnalysis/arrayAndAverageTeamWorker.js', {type : "module"})
         worker.postMessage(data);
 
         worker.on('message', (event) => {
