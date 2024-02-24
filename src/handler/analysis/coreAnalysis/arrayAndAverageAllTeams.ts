@@ -50,7 +50,9 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
         if(uniqueTeamsArray.length === 0)
         {
             return {
-                average : average
+                average : 0,
+                timeLine : [],
+                teamsAverage : []
             }
         }
         let timeLineArray = []
@@ -64,6 +66,7 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
         let average = 0
         let teamsAverage = []
         await Promise.all(timeLineArray).then((values) => {
+            console.log(values)
             let converted1DArray = values.reduce((accumulator, currentValue) => accumulator.concat(currentValue), []);
             if (timeLineArray.length !== 0) {
                 average = converted1DArray.reduce((acc, cur) => acc + cur.average, 0) / values.length;
