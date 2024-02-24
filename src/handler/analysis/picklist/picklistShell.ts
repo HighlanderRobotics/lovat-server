@@ -75,9 +75,8 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         const allTeamAvgSTD = {}
         let data = true
         let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
-        for (const element of picklistSliders) {
-            const currData = picklistArrayAndAverageAllTeam(req, element);
-            allTeamData.push(currData)
+        for (const metric of picklistSliders) {
+            allTeamData.push(arrayAndAverageAllTeam(req, metric))
         }
         const metricAllTeamMaps = {}
         await Promise.all(allTeamData).then((allTeamDataResolved) => {
@@ -109,7 +108,6 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         })
 
-
         const allTeams = await prismaClient.team.findMany({})
         let includedTeamNumbers: number[] = allTeams.map(team => team.number);
         if (params.data.tournamentKey) {
@@ -125,9 +123,11 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
 
         let teamBreakdowns = []
-        let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length -1)
+        let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
         for (const teams of teamChunks) {
-            teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
+            if (teams.length > 0) {
+                teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
+            }
         }
         let dataArr = []
         await Promise.all(teamBreakdowns).then(function (data) {
@@ -170,7 +170,7 @@ function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
 
         let data = {
             teams: teams,
-            metricTeamAverages: JSON.parse(JSON.stringify(metricAllTeamMaps)),
+            metricTeamAverages: flatted.stringify(metricAllTeamMaps),
             allTeamAvgSTD: allTeamAvgSTD,
             flags: params.data.flags,
             req: flatted.stringify(req),

@@ -75,17 +75,17 @@ import flatted from 'flatted'
                     return acc;
                 }, {});
                 const tournamentGroups: Match[][] = Object.values(groupedByTournament);
-                if (metric === "stage") {
-                    return { average: await stagePicklistTeam(req, params.data.team), timeLine: null }
-                }
+                
                 const timeLineArray = []
                 const tournamentAverages = []
                 //group into tournaments, calculate all averages indivudally so they can all be properly weighted after the nested loops
                 for (const tournament of tournamentGroups) {
                     let currAvg = null
                     const currDatas = []
-
-                    if (metric.includes("teleop") || metric.includes("Teleop")) {
+                    if (metric === "stage") {
+                        currDatas.push({ average: await stagePicklistTeam(req, params.data.team) })
+                    }
+                    else if (metric.includes("teleop") || metric.includes("Teleop")) {
                         let currData = teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, teleopStart, matchTimeEnd)
                         currDatas.push(currData)
                     }
@@ -142,7 +142,7 @@ import flatted from 'flatted'
                     team: team
                 })
             }
-            resolve(teamsDataArray)
+            parentPort.postMessage(teamsDataArray);
         })
         
 
