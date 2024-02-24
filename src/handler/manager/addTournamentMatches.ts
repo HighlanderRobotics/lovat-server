@@ -30,6 +30,8 @@ export const addTournamentMatches = async (tournamentKey) => {
             headers: { 'X-TBA-Auth-Key': process.env.TBA_KEY }
         }).then(async (response) => {
             // For each match in the tournament
+            response.data.sort((a, b) => b.actual_time - a.actual_time);
+
             for (var i = 0; i < response.data.length; i++) {
                 if (response.data[i].comp_level == 'qm') {
                     //all teams in the match
