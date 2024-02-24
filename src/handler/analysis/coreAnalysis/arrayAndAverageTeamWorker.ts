@@ -12,8 +12,9 @@ import { deflateRawSync } from "zlib";
 import { teamAverageFastTournament } from "./teamAverageFastTournament";
 import flatted from 'flatted'
 
-try {
     parentPort.on('message', async (data) => {
+        try {
+
         new Promise(async (resolve, reject) => {
 
             let teamsDataArray = []
@@ -143,12 +144,15 @@ try {
             }
             resolve(teamsDataArray)
         })
+        
 
-    })
+    }
+    catch (error) {
+        console.error(error)
+        throw (error)
+    }
+})
 
-}
-catch (error) {
-    console.error(error)
-    throw (error)
-}
+
+
 
