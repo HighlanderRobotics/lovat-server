@@ -44,7 +44,7 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
             res.status(400).send({ error : "Overlapping scouters in one shift", displayError : "Overlapping scouters, please make sure each scouter is scheduled only once."})
             return
         }
-        const matchesNotOverlapping = await checkScouterShiftMatches(params.data.tournamentKey, params.data.startMatchOrdinalNumber, params.data.endMatchOrdinalNumber)
+        const matchesNotOverlapping = await checkScouterShiftMatches(req, params.data.tournamentKey, params.data.startMatchOrdinalNumber, params.data.endMatchOrdinalNumber)
         if(!matchesNotOverlapping)
         {
             res.status(400).send({error : "This shifts start or end match overlaps with another shift.", displayError : "This shifts start or end match overlaps with another shift."})

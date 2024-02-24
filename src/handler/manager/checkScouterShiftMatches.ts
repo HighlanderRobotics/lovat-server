@@ -5,7 +5,7 @@ import e, { Request, Response } from "express";
 import { AuthenticatedRequest } from '../../lib/middleware/requireAuth';
 
 //uuid is when editing a shift so it doesnt check that its over lapping with itself
-export const checkScouterShiftMatches = async (tournamentKey : string, currStart : number, currEnd : number,  uuid : string = null) => {
+export const checkScouterShiftMatches = async (req : AuthenticatedRequest, tournamentKey : string, currStart : number, currEnd : number,  uuid : string = null) => {
     try {
         let shifts = []
         if(uuid)
@@ -14,6 +14,7 @@ export const checkScouterShiftMatches = async (tournamentKey : string, currStart
                 where :
                 {
                     tournamentKey : tournamentKey,
+                    sourceTeamNumber : req.user.teamNumber,
                     uuid :
                     {
                         not : uuid
@@ -30,7 +31,8 @@ export const checkScouterShiftMatches = async (tournamentKey : string, currStart
             shifts =  await prismaClient.scouterScheduleShift.findMany({
                 where :
                 {
-                    tournamentKey : tournamentKey
+                    tournamentKey : tournamentKey,
+                    sourceTeamNumber : req.user.teamNumber
                 },
                 orderBy :
                 {
