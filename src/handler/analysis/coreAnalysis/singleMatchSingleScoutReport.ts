@@ -13,15 +13,15 @@ import { time } from "console";
 export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, isPointAverage: boolean, scoutReportUuid: string, metric1: string, timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
-        if(metric1 === "ampscores" )
+        if(metric1 === "ampscores"  || metric1 === "ampScores")
         {
             position = Position.AMP
         }
-        else if(metric1 === "speakerscores" )
+        else if(metric1 === "speakerscores" || metric1 === "speakerScores")
         {
             position = Position.SPEAKER
         }
-        else if(metric1 === "trapscores" )
+        else if(metric1 === "trapscores" || metric1 === "trapScores")
         {
             position = Position.TRAP
         }
@@ -184,11 +184,10 @@ export const singleMatchSingleScoutReport = async (req: AuthenticatedRequest, is
                         lte: timeMax,
                         gte: timeMin
                     },
-                    position : params.data.position
+                    position : position
 
                 }
             })
-            
             return match._count._all
 
         }

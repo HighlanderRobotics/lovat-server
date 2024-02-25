@@ -26,34 +26,32 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
         const params = z.object({
             tournamentKey: z.string().optional(),
-            totalPoints: z.number(),
-            pickUps: z.number(),
+            totalpoints: z.number(),
+            pickups: z.number(),
             stage: z.number(),
-            trapScores: z.number(),
-            autoPoints: z.number(),
-            teleopPoints: z.number(),
-            driverAbility: z.number(),
+            trapscores: z.number(),
+            autopoints: z.number(),
+            teleoppoints: z.number(),
+            driverability: z.number(),
             defense: z.number(),
-            speakerScores: z.number(),
-            ampScores: z.number(),
-            cooperation: z.number(),
+            speakerscores: z.number(),
+            ampscores: z.number(),
             feeds: z.number(),
             flags: z.array(z.string())
 
 
         }).safeParse({
             tournamentKey: req.query.tournamentKey || undefined,
-            totalPoints: Number(req.query.totalPoints) || 0,
-            pickUps: Number(req.query.pickUps) || 0,
+            totalpoints: Number(req.query.totalPoints) || 0,
+            pickups: Number(req.query.pickUps) || 0,
             stage: Number(req.query.stage) || 0,
-            trapScores: Number(req.query.trapScores) || 0,
-            autoPoints: Number(req.query.autoPoints) || 0,
-            teleopPoints: Number(req.query.teleopPoints) || 0,
-            driverAbility: Number(req.query.driverAbility) || 0,
+            trapscores: Number(req.query.trapScores) || 0,
+            autopoints: Number(req.query.autoPoints) || 0,
+            teleoppoints: Number(req.query.teleopPoints) || 0,
+            driverability: Number(req.query.driverAbility) || 0,
             defense: Number(req.query.defense) || 0,
-            speakerScores: Number(req.query.speakerScores) || 0,
-            ampScores: Number(req.query.ampScores) || 0,
-            cooperation: Number(req.query.cooperation) || 0,
+            speakerscores: Number(req.query.speakerScores) || 0,
+            ampscores: Number(req.query.ampScores) || 0,
             feeds: Number(req.query.feeds) || 0,
             flags: flags
 
@@ -73,19 +71,22 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             await addTournamentMatches(params.data.tournamentKey)
         }
         const allTeamAvgSTD = {}
-        let data = true
+        let usedMetrics = []
         let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
-        for (const element of picklistSliders) {
-            const currData = picklistArrayAndAverageAllTeam(req, element);
-            allTeamData.push(currData)
+        for (const metric of picklistSliders) {
+            if (params.data[metric]) {
+                const currData = picklistArrayAndAverageAllTeam(req, metric);
+                allTeamData.push(currData)
+                usedMetrics.push(metric)
+            }
         }
         const metricAllTeamMaps = {}
         await Promise.all(allTeamData).then((allTeamDataResolved) => {
             for (let i = 0; i < allTeamDataResolved.length; i++) {
                 let currData = allTeamDataResolved[i]
-                let element = picklistSliders[i]
-                if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2) {
-                    allTeamAvgSTD[element] = {
+                let metric = usedMetrics[i]
+                if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2 && (ss.standardDeviation(currData.timeLine))) {
+                    allTeamAvgSTD[metric] = {
                         "allAvg": currData.average,
                         "arraySTD": ss.standardDeviation(currData.timeLine)
                     };
@@ -93,22 +94,21 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 //will only happen at the very start of new season when theres not a lot of data
                 else {
                     if (isNaN(currData.average)) {
-                        allTeamAvgSTD[element] = {
+                        allTeamAvgSTD[metric] = {
                             "allAvg": 0,
                             "arraySTD": 0.1
                         };
                     }
                     else {
-                        allTeamAvgSTD[element] = {
+                        allTeamAvgSTD[metric] = {
                             "allAvg": currData.average,
                             "arraySTD": 0.1
                         };
                     }
                 }
-                metricAllTeamMaps[element] = currData.teamAverages
+                metricAllTeamMaps[metric] = currData.teamAverages
             }
         })
-
 
         const allTeams = await prismaClient.team.findMany({})
         let includedTeamNumbers: number[] = allTeams.map(team => team.number);
@@ -125,7 +125,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
 
         let teamBreakdowns = []
-        let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length -1)
+        let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
         for (const teams of teamChunks) {
             teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
         }

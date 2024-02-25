@@ -14,20 +14,20 @@ const matchTimeEnd = 300
 const specificMatchPageMetrics = ["defense", "ampscores", "speakerscores", "trapscores", "pickups"]
 const driverAbility = "driverability"
 const exludedAutoEvents = [EventAction.DROP_RING, EventAction.DEFENSE, EventAction.FEED_RING]
-const picklistSliderMap = {
-    "totalpoints": "totalPoints",
-    "driverability": "driverAbility",
-    "teleoppoints": "teleopPoints",
-    "autopoints": "autoPoints",
-    "pickups": "pickUps",
-    "ampscores": "ampScores",
-    "speakerscores": "speakerScores",
-    "trapscores": "trapScores",
-    "stage": "stage",
-    "cooperation": "cooperation",
-    "feeds": "feeds",
-    "defense": "defense"
-}
+// const picklistSliderMap = {
+//     "totalpoints": "totalPoints",
+//     "driverability": "driverAbility",
+//     "teleoppoints": "teleopPoints",
+//     "autopoints": "autoPoints",
+//     "pickups": "pickUps",
+//     "ampscores": "ampScores",
+//     "speakerscores": "speakerScores",
+//     "trapscores": "trapScores",
+//     "stage": "stage",
+//     "cooperation": "cooperation",
+//     "feeds": "feeds",
+//     "defense": "defense"
+// }
 
 const stageMap = {
     [StageResult.NOTHING]: 0,
@@ -103,6 +103,6 @@ const FlippedPositionMap = {
 
 
 const multiplerBaseAnalysis = 4
-export { picklistSliderMap, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap };
+export {metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap };
 
 
