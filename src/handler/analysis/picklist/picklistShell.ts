@@ -197,38 +197,3 @@ function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
 
 
 
-
-
-
-
-// const teams = await prismaClient.scoutReport.findMany({
-//     where:
-//     {
-//         scouter:
-//         {
-//             sourceTeamNumber:
-//             {
-//                 in: req.user.teamSource
-//             }
-//         },
-//         teamMatchData:
-//         {
-//             tournamentKey:
-//             {
-//                 in: req.user.tournamentSource
-//             }
-//         }
-//     },
-//     include:
-//     {
-//         teamMatchData: true
-//     }
-// })
-// const uniqueTeams: Set<number> = new Set();
-
-// for (const element of teams) {
-//     if (element) {
-//         uniqueTeams.add(element.teamMatchData.teamNumber);
-//     }
-// };
-// const uniqueTeamsArray: Array<number> = Array.from(uniqueTeams);
