@@ -139,7 +139,7 @@ export const addTournamentMatches = async (tournamentKey) => {
 
     }
     catch (error) {
-        console.log(error.error)
+        console.log(error)
         throw("Error adding tournament matches")
     }
 }

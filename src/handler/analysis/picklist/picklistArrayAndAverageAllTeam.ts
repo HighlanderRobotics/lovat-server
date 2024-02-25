@@ -26,7 +26,7 @@ export const picklistArrayAndAverageAllTeam = async (req: AuthenticatedRequest, 
                 average = values.reduce((acc, cur) => acc + cur.average, 0) / values.length;
             }
             timeLineArray = values.map(item => item.average);
-            teams.forEach((teamNumber, index) => {
+             teams.forEach((teamNumber, index) => {
                 teamAveragesMap[teamNumber] = values[index];
               });
                

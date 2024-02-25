@@ -131,7 +131,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
 
         return {
             average: runningAverage,
-            timeLine: timeLineArray
+            timeLine: timeLineArray,
         }
 
     }

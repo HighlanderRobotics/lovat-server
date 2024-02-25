@@ -11,7 +11,7 @@ import { teamAverageFastTournament } from "../coreAnalysis/teamAverageFastTourna
 try {
     parentPort.on('message', async (data) => {
         return new Promise(async function (resolve) {
-            const metricTeamAverages = data.metricTeamAverages
+            const metricTeamAverages = flatted.parse(data.metricTeamAverages)
             const allTeamAvgSTD = data.allTeamAvgSTD
             const params = data.params
             const flags = data.flags
@@ -25,6 +25,7 @@ try {
                 let isFirst = true
                 for (const metric of picklistSliders) {
                     if (params.data[metric]) {
+
                         let currData = metricTeamAverages[metric][team]
                         if (currData === undefined || isFirst && !currData) {
                             hasData = false
@@ -97,8 +98,9 @@ try {
         })
 
     })
-
 }
+
+
 catch (error) {
     console.log(error);
     throw error;

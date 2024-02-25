@@ -93,6 +93,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 usedMetrics.push(metric)
             }
         }
+        
         const metricAllTeamMaps = {}
         await Promise.all(allTeamData).then((allTeamDataResolved) => {
             for (let i = 0; i < allTeamDataResolved.length; i++) {
@@ -128,7 +129,9 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         let teamBreakdowns = []
         let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
         for (const teams of teamChunks) {
-            teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
+            if (teams.length > 0) {
+                teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
+            }
         }
         let dataArr = []
         await Promise.all(teamBreakdowns).then(function (data) {
@@ -171,7 +174,7 @@ function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
 
         let data = {
             teams: teams,
-            metricTeamAverages: JSON.parse(JSON.stringify(metricAllTeamMaps)),
+            metricTeamAverages: flatted.stringify(metricAllTeamMaps),
             allTeamAvgSTD: allTeamAvgSTD,
             flags: params.data.flags,
             req: flatted.stringify(req),
