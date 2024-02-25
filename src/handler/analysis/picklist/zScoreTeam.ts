@@ -34,8 +34,8 @@ try {
                         zScore = (currData.average - allTeamAvgSTD[metric].allAvg) / allTeamAvgSTD[metric].arraySTD
                     }
                     else {
-                        currData = 0
-                        zScore = 0
+                        currData = {average : 0}
+                        zScore = -10
                     }
         
                     if (isNaN(zScore)) {

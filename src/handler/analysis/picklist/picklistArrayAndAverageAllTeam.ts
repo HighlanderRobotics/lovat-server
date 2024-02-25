@@ -44,7 +44,7 @@ export const picklistArrayAndAverageAllTeam = async (req: AuthenticatedRequest, 
         const uniqueTeamsArray: Array<number> = Array.from(uniqueTeams);
         let timeLineArray = []
         for (const element of uniqueTeamsArray) {
-            const currAvg = (await arrayAndAverageTeam(req, metric, element))
+            const currAvg = ( arrayAndAverageTeam(req, metric, element))
             timeLineArray = timeLineArray.concat(currAvg)
         };
         //change to null possibly
