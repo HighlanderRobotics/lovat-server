@@ -78,16 +78,16 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
                 //add time constraints if nessissary
 
                 if (metric.includes("teleop") || metric.includes("Teleop")) {
-                    let currData = singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric, teleopStart, matchTimeEnd)
+                    let currData = await singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric, teleopStart, matchTimeEnd)
                     currDatas.push(currData)
                 }
                 else if (metric.includes("auto") || metric.includes("Auto")) {
-                    let currData = singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric, 0, autoEnd)
+                    let currData = await singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric, 0, autoEnd)
                     currDatas.push(currData)
 
                 }
                 else {
-                    let currData = singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
+                    let currData = await singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
                     currDatas.push(currData)
                 }
 
