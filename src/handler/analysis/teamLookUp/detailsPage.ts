@@ -37,7 +37,6 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             difference : teamAverageAndTimeLine.average - allTeamAverage.average,
             team : params.data.team
         }
-        console.log(result)
         res.status(200).send(result)
     }
     catch (error) {
