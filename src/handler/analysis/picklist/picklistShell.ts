@@ -72,10 +72,23 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         const allTeamAvgSTD = {}
         let usedMetrics = []
+        const allTeams = await prismaClient.team.findMany({})
+        let includedTeamNumbers: number[] = allTeams.map(team => team.number);
+        if (params.data.tournamentKey) {
+            const teamsAtTournament = await prismaClient.teamMatchData.groupBy({
+                by: ["teamNumber"],
+                where:
+                {
+                    tournamentKey: params.data.tournamentKey
+                }
+            })
+            includedTeamNumbers = teamsAtTournament.map(record => record.teamNumber);
+
+        }
         let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
         for (const metric of picklistSliders) {
             if (params.data[metric]) {
-                const currData = picklistArrayAndAverageAllTeam(req, metric);
+                const currData = picklistArrayAndAverageAllTeam(req, metric, includedTeamNumbers);
                 allTeamData.push(currData)
                 usedMetrics.push(metric)
             }
@@ -110,19 +123,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         })
 
-        const allTeams = await prismaClient.team.findMany({})
-        let includedTeamNumbers: number[] = allTeams.map(team => team.number);
-        if (params.data.tournamentKey) {
-            const teamsAtTournament = await prismaClient.teamMatchData.groupBy({
-                by: ["teamNumber"],
-                where:
-                {
-                    tournamentKey: params.data.tournamentKey
-                }
-            })
-            includedTeamNumbers = teamsAtTournament.map(record => record.teamNumber);
-
-        }
+       
 
         let teamBreakdowns = []
         let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
@@ -195,3 +196,36 @@ function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
 
 
 
+
+
+// const teams = await prismaClient.scoutReport.findMany({
+//     where:
+//     {
+//         scouter:
+//         {
+//             sourceTeamNumber:
+//             {
+//                 in: req.user.teamSource
+//             }
+//         },
+//         teamMatchData:
+//         {
+//             tournamentKey:
+//             {
+//                 in: req.user.tournamentSource
+//             }
+//         }
+//     },
+//     include:
+//     {
+//         teamMatchData: true
+//     }
+// })
+// const uniqueTeams: Set<number> = new Set();
+
+// for (const element of teams) {
+//     if (element) {
+//         uniqueTeams.add(element.teamMatchData.teamNumber);
+//     }
+// };
+// const uniqueTeamsArray: Array<number> = Array.from(uniqueTeams);

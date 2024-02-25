@@ -37,7 +37,7 @@ try {
                         }
                         else {
                             currData = { average: 0 }
-                            zScore = -10
+                            zScore = 0
                         }
                         if (isNaN(zScore)) {
                             zScore = 0
@@ -92,7 +92,6 @@ try {
                     "flags": flagData
                 })
             }
-            console.log(finalData)
             parentPort.postMessage(finalData);
 
         })
