@@ -76,6 +76,9 @@ import { flag } from "./handler/analysis/teamLookUp/flag";
 import { multipleFlags } from "./handler/analysis/teamLookUp/multipleFlags";
 import { updateTeamEmail } from "./handler/manager/updateTeamEmail";
 import { addNotOnTeam } from "./handler/manager/addNotOnTeam";
+import { updateScouterName } from "./handler/manager/updateScouterName";
+import { deleteScouter } from "./handler/manager/deleteScouter";
+import { scoutingLeadProgressPage } from "./handler/manager/scoutingLeadProgressPage";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -210,14 +213,17 @@ app.get('/v1/analysis/matchprediction', requireAuth, matchPrediction)
 app.get('/v1/analysis/picklist', requireAuth, picklistShell)
 
 //scouting lead
-// app.get('/v1/analysis/scoutinglead', requireAuth, scoutingLeadPage)
-
+app.put('/v1/manager/scoutername', requireAuth, updateScouterName)
+app.delete('/v1/manager/scouter', requireAuth, deleteScouter)
+app.get('/v1/manager/scouterspage', requireAuth, scoutingLeadProgressPage)
 
 //specific scoutreport
 
 app.get('/v1/analysis/metrics/scoutreport/:uuid', requireAuth, matchPageSpecificScouter)
 app.get('/v1/analysis/scoutreports/match/:match', requireAuth, scoutReportForMatch )
 app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScoutReport)
+
+//
 
 
 

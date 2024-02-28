@@ -2,7 +2,6 @@
 import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 import ss from 'simple-statistics';
 import prisma from '../../../prismaClient';
 import z from 'zod'

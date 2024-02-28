@@ -6,7 +6,6 @@ import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { match } from "assert";
 import prisma from "../../../prismaClient";
-import { arrayAndAverageAllTeam } from "./arrayAndAverageAllTeams";
 
 
 export const cooperationSingleMatch = async (req: AuthenticatedRequest, matchKey: string, team: number): Promise<number> => {
