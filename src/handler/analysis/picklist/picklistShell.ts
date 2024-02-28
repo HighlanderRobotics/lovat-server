@@ -184,11 +184,13 @@ function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
 
         worker.on('message', (event) => {
             resolve(event);
+            worker.terminate()
 
         });
 
         worker.on('error', (error) => {
             reject(error);
+            worker.terminate()
         });
     })
 }
