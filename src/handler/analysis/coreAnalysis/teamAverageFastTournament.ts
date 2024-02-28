@@ -130,7 +130,7 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
             
             let eventsAverage =sumOfMatches.reduce((acc, currentValue) => {
                 return acc + (currentValue._sum.points || 0);
-            }, 0);
+            }, 0) /sumOfMatches.length;
             
             if(!eventsAverage)
             {
@@ -257,7 +257,7 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
             
             return groupedMatches.reduce((accumulator, current) => {
                 return accumulator + current._count._all; 
-            }, 0);
+            }, 0) /groupedMatches.length;
 
         }
     }
