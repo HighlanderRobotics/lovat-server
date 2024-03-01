@@ -14,7 +14,7 @@ model Event {
   position        Position
   points          Int
   scoutReportUuid String
-  scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
+  scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
 }
 
 enum Position {
@@ -96,7 +96,7 @@ model ScoutReport {
   driverAbility      Int
   scouterUuid        String
   scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid])
-  events             Event[]
+  events             Event[]   
   // flaggedScoutReport FlaggedScoutReport?
 }
 
