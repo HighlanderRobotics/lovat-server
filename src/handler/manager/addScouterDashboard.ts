@@ -15,7 +15,7 @@ export const addScouterDashboard = async (req: AuthenticatedRequest, res: Respon
             res.status(400).send(params);
             return;
         };
-        if(req.user.role === "SCOUTING_LEAD" || req.user.teamNumber !== null)
+        if(req.user.role === "SCOUTING_LEAD" || req.user.teamNumber === null)
         {
             res.status(403).send("Not authorized to make a scouter")
             return
