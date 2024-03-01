@@ -217,7 +217,7 @@ app.get('/v1/analysis/picklist', requireAuth, picklistShell)
 app.put('/v1/manager/scoutername', requireAuth, updateScouterName)
 app.delete('/v1/manager/scouter', requireAuth, deleteScouter)
 app.get('/v1/manager/scouterspage', requireAuth, scoutingLeadProgressPage)
-app.post('/v1/manager/scouter', requireAuth, addScouterDashboard)
+app.post('/v1/manager/scouterdashboard', requireAuth, addScouterDashboard)
 
 //specific scoutreport
 
