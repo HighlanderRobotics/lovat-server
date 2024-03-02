@@ -227,6 +227,6 @@ app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScout
 
 
 
-// getTBAData();
+getTBAData();
 
 app.listen(port);
