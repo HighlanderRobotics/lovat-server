@@ -63,7 +63,7 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
         })
         if(!scouter)
         {
-            res.status(404).send({"error" : `${paramsScoutReport.data.scouterUuid} does not an existing scouter UUID`, "displayError" : "Scouter does not exist"})
+            res.status(400).send({"error" : `This ${paramsScoutReport.data.scouterUuid} has been deleted or never existed.`, "displayError" : "This scouter has been deleted. Have the scouter reset their settings and choose a new scouter."})
             return
         }
         if(req.user.teamNumber === null || scouter.sourceTeamNumber !== req.user.teamNumber )
@@ -82,6 +82,7 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             res.status(400).send({"error" : `The scout report uuid ${paramsScoutReport.data.uuid} already exists.`, "displayError" : "Scout report already uploaded"})
             return
         }
+        
 
         const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
             where :

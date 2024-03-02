@@ -55,17 +55,6 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             res.status(400).send({"error" : paramsScoutReport, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
-        const scouter = await prismaClient.scouter.findUnique({
-            where :
-            {
-                uuid : paramsScoutReport.data.scouterUuid
-            }
-        })
-        if(!scouter)
-        {
-            res.status(404).send({"error" : `${paramsScoutReport.data.scouterUuid} does not an existing scouter UUID`, "displayError" : "Scouter does not exist"})
-            return
-        }
         const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
             where :
             {
@@ -77,7 +66,17 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             res.status(400).send({"error" : `The scout report uuid ${paramsScoutReport.data.uuid} already exists.`, "displayError" : "Scout report already uploaded"})
             return
         }
-
+        const scouter = await prismaClient.scouter.findUnique({
+            where :
+            {
+                uuid : paramsScoutReport.data.scouterUuid
+            }
+        })
+        if(!scouter)
+        {
+            res.status(400).send({"error" : `This ${paramsScoutReport.data.scouterUuid} has been deleted or never existed.`, "displayError" : "This scouter has been deleted. Reset your settings and choose a new scouter."})
+            return
+        }
         const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
             where :
             {

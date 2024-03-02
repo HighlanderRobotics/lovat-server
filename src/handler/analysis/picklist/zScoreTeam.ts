@@ -54,6 +54,24 @@ try {
                             }
                         }
                     }
+                    else if(flags.includes(metric))
+                    {
+                        let currData = metricTeamAverages[metric][team]
+                        if(!currData)
+                        {
+                            currData = 0
+                        }
+                        else
+                        {
+                            currData = currData.average
+                        }
+                        if (!hasData) {
+                            flagData.push({ type: metric, result: 0 })
+                        }
+                        else {
+                            flagData.push({ type: metric, result: currData })
+                        }
+                    }
 
 
                 }

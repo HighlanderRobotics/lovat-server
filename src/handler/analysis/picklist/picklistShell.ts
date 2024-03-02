@@ -86,7 +86,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
         for (const metric of picklistSliders) {
-            if (params.data[metric]) {
+            if (params.data[metric] || params.data.flags.includes(metric)) {
                 const currData = picklistArrayAndAverageAllTeam(req, metric, includedTeamNumbers);
                 allTeamData.push(currData)
                 usedMetrics.push(metric)
