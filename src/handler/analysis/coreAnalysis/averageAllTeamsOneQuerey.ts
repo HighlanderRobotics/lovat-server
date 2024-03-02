@@ -1,0 +1,196 @@
+import { Request, Response } from "express";
+import prismaClient from '../../../prismaClient'
+import z from 'zod'
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
+import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
+import { autoEnd, matchTimeEnd, metricToEvent, roleMap, teleopStart } from "../analysisConstants";
+import { Position } from "@prisma/client";
+import { time, timeEnd } from "console";
+
+
+export const averageAllTeamOneQuerey = async (req: AuthenticatedRequest, metric: string): Promise<number> => {
+    try {
+        if (metric === "driverability" || metric === "driverAbility") {
+            const data = await prismaClient.scoutReport.aggregate({
+                _avg: {
+                    driverAbility: true
+                },
+                where:
+                {
+                    teamMatchData:
+                    {
+                        tournamentKey: {
+                            in: req.user.tournamentSource
+                        }
+                    },
+                    scouter:
+                    {
+                        sourceTeamNumber:
+                        {
+                            in: req.user.teamSource
+                        }
+                    }
+                }
+            })
+            return data._avg.driverAbility
+        }
+        else {
+            let position = null
+            if (metric === "ampscores" || metric === "ampScores") {
+                position = Position.AMP
+            }
+            else if (metric === "speakerscores" || metric === "speakerScores") {
+                position = Position.SPEAKER
+            }
+            else if (metric === "trapscores" || metric === "trapScores") {
+                position = Position.TRAP
+            }
+            else {
+                position = Position.NONE
+            }
+            if (metric === "pickups") {
+                const allTeamData = await prismaClient.event.groupBy({
+                    by : ["scoutReportUuid"],
+                    _count :
+                    {
+                        _all : true
+                    },
+                    where :
+                    {
+                        scoutReport :
+                        {
+                            teamMatchData :
+                            {
+                                tournamentKey :
+                                {
+                                    in : req.user.tournamentSource
+                                }
+                            },
+                            scouter :
+                            {
+                                sourceTeamNumber : {
+                                    in : req.user.teamSource
+                                }
+                            }
+                        },
+                        action : "PICK_UP"
+
+                    }
+
+                })
+                let averagePickups = allTeamData.reduce((acc, curr) => {
+                    return acc + curr._count._all; 
+                }, 0) / allTeamData.length;
+                if(!averagePickups)
+                {
+                    averagePickups = 0
+                }
+                return averagePickups
+            }
+            else if(metric.includes("points") || metric.includes("Points"))
+            {
+                let timeMin = 0
+                let timeMax = matchTimeEnd
+                if(metric.includes("teleop") || metric.includes("Teleop"))
+                {
+                    timeMin = teleopStart
+                }
+                else if(metric.includes("auto") || metric.includes("Auto"))
+                {
+                    timeMax = autoEnd
+                }
+                const allTeamData = await prismaClient.event.groupBy({
+                    by : ["scoutReportUuid"],
+                    _sum :
+                    {
+                        points : true
+                    },
+                    where :
+                    {
+                        scoutReport :
+                        {
+                            teamMatchData :
+                            {
+                                tournamentKey :
+                                {
+                                    in : req.user.tournamentSource
+                                }
+                            },
+                            scouter :
+                            {
+                                sourceTeamNumber : {
+                                    in : req.user.teamSource
+                                }
+                            }
+                        },
+                        time : {
+                            lte : timeMax,
+                            gte : timeMin
+                        }
+
+                    }
+
+                })
+                console.log(allTeamData)
+                let averagePoints = allTeamData.reduce((acc, curr) => {
+                    return acc + curr._sum.points; 
+                }, 0) / allTeamData.length;
+                console.log(averagePoints)
+                if(!averagePoints)
+                {
+                    averagePoints = 0
+                }
+                return averagePoints
+
+            }
+            else
+            {
+                const allTeamData = await prismaClient.event.groupBy({
+                    by : ["scoutReportUuid"],
+                    _count :
+                    {
+                        _all : true
+                    },
+                    where :
+                    {
+                        scoutReport :
+                        {
+                            teamMatchData :
+                            {
+                                tournamentKey :
+                                {
+                                    in : req.user.tournamentSource
+                                }
+                            },
+                            scouter :
+                            {
+                                sourceTeamNumber : {
+                                    in : req.user.teamSource
+                                }
+                            }
+                        },
+                        action : "SCORE",
+                        position : position
+
+                    }
+
+                })
+                let averageScores = allTeamData.reduce((acc, curr) => {
+                    return acc + curr._count._all; 
+                }, 0) / allTeamData.length;
+                if(!averageScores)
+                {
+                    averageScores = 0
+                }
+                return averageScores
+            }
+        }
+
+    }
+    catch (error) {
+        console.error(error)
+        throw (error)
+    }
+
+};

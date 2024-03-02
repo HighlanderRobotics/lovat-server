@@ -6,6 +6,7 @@ import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 import { metricsCategory } from "../analysisConstants";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
+import { averageAllTeamOneQuerey } from "../coreAnalysis/averageAllTeamsOneQuerey";
 
 
 export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
@@ -29,12 +30,12 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             return
         }
         let teamAverageAndTimeLine = await arrayAndAverageTeam(req, params.data.metric, params.data.team)
-        let allTeamAverage = await arrayAndAverageAllTeam(req, params.data.metric)
+        let allTeamAverage = await averageAllTeamOneQuerey(req, params.data.metric)
         let result = {
             array: teamAverageAndTimeLine.timeLine,
             result : teamAverageAndTimeLine.average,
-            all : allTeamAverage.average,
-            difference : teamAverageAndTimeLine.average - allTeamAverage.average,
+            all : allTeamAverage,
+            difference : teamAverageAndTimeLine.average - allTeamAverage,
             team : params.data.team
         }
         res.status(200).send(result)
