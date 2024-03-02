@@ -27,17 +27,17 @@ try {
                     if (params.data[metric]) {
 
                         let currData = metricTeamAverages[metric][team]
-                        if (currData === undefined || isFirst && !currData) {
+                        if (isFirst && !currData && currData !== 0) {
                             hasData = false
                         }
                         isFirst = false
                         let zScore = 0
                         if (hasData) {
-                            zScore = (currData.average - allTeamAvgSTD[metric].allAvg) / allTeamAvgSTD[metric].arraySTD
+                            zScore = (currData - allTeamAvgSTD[metric].allAvg) / allTeamAvgSTD[metric].arraySTD
 
                         }
                         else {
-                            currData = { average: 0 }
+                            currData = 0
                             zScore = 0
                         }
                         if (isNaN(zScore)) {
@@ -50,7 +50,7 @@ try {
                                 flagData.push({ type: metric, result: 0 })
                             }
                             else {
-                                flagData.push({ type: metric, result: currData.average })
+                                flagData.push({ type: metric, result: currData })
                             }
                         }
                     }
@@ -63,7 +63,7 @@ try {
                         }
                         else
                         {
-                            currData = currData.average
+                            currData = currData
                         }
                         if (!hasData) {
                             flagData.push({ type: metric, result: 0 })

@@ -8,11 +8,13 @@ import z, { array } from 'zod'
 const { Worker } = require('worker_threads');
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
 import { picklistSliders } from "../analysisConstants";
-import { picklistArrayAndAverageAllTeam } from "./picklistArrayAndAverageAllTeam";
+import { picklistArrayAndAverageAllTeamTournament } from "./picklistArrayAndAverageAllTeamTournament";
 import { workerData } from "worker_threads";
 import flatted from 'flatted';
 import { resolve } from "dns/promises";
 import os from 'os'
+import { picklistArrayAndAverageAllTeamNoTournament } from "./picklistArrayAndAverageAllTeamNoTournament";
+import { all } from "axios";
 
 
 
@@ -71,8 +73,9 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         const allTeamAvgSTD = {}
         let usedMetrics = []
-        const allTeams = await prismaClient.team.findMany({})
-        let includedTeamNumbers: number[] = allTeams.map(team => team.number);
+        let metricAllTeamMaps = {}
+        let includedTeamNumbers:number[] = []
+        let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
         if (params.data.tournamentKey) {
             const teamsAtTournament = await prismaClient.teamMatchData.groupBy({
                 by: ["teamNumber"],
@@ -81,19 +84,32 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                     tournamentKey: params.data.tournamentKey
                 }
             })
-            includedTeamNumbers = teamsAtTournament.map(record => record.teamNumber);
+            includedTeamNumbers = teamsAtTournament.map(team => team.teamNumber);
+            for (const metric of picklistSliders) {
+                if (params.data[metric] || params.data.flags.includes(metric)) {
+                    const currData = picklistArrayAndAverageAllTeamTournament(req, metric, includedTeamNumbers);
+                    allTeamData.push(currData)
+                    usedMetrics.push(metric)
+                }
+            }
 
         }
-        let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
-        for (const metric of picklistSliders) {
-            if (params.data[metric] || params.data.flags.includes(metric)) {
-                const currData = picklistArrayAndAverageAllTeam(req, metric, includedTeamNumbers);
-                allTeamData.push(currData)
-                usedMetrics.push(metric)
+        else
+        {
+            const allTeams = await prismaClient.team.findMany({})
+            includedTeamNumbers= allTeams.map(team => team.number);
+            for (const metric of picklistSliders) {
+                if (params.data[metric] || params.data.flags.includes(metric)) {
+                    const currData = picklistArrayAndAverageAllTeamNoTournament(req, metric, includedTeamNumbers);
+                    allTeamData.push(currData)
+                    usedMetrics.push(metric)
+                }
             }
+
         }
         
-        const metricAllTeamMaps = {}
+        
+        
         await Promise.all(allTeamData).then((allTeamDataResolved) => {
             for (let i = 0; i < allTeamDataResolved.length; i++) {
                 let currData = allTeamDataResolved[i]
