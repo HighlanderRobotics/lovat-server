@@ -96,16 +96,8 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         else
         {
-            const allTeams = await prismaClient.team.findMany({})
-            includedTeamNumbers= allTeams.map(team => team.number);
-            for (const metric of picklistSliders) {
-                if (params.data[metric] || params.data.flags.includes(metric)) {
-                    const currData = picklistArrayAndAverageAllTeamNoTournament(req, metric, includedTeamNumbers);
-                    allTeamData.push(currData)
-                    usedMetrics.push(metric)
-                }
-            }
-
+           res.status(200).send([])
+           return
         }
         
         
