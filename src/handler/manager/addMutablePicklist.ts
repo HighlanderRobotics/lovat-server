@@ -23,7 +23,11 @@ export const addMutablePicklist = async (req: AuthenticatedRequest, res: Respons
             res.status(400).send(params);
             return;
         };
-
+        if(req.user.teamNumber === null)
+        {
+            res.status(403).send("Not authortized to publish a picklist because your not on a team")
+            return
+        }
         const row = await prismaClient.mutablePicklist.create({
             data: {
                 name : params.data.name,

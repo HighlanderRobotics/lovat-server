@@ -84,11 +84,11 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     }
                 }
             },
+
             orderBy: [
                 { matchType: 'desc' },
                 { matchNumber: 'asc' }
             ]
-
         })
         //check to make sure each match has 6 rows, if not than 1 + rows have been scouted already
         const groupedMatches = await notScouted.reduce((acc, match) => {
@@ -126,8 +126,6 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         //get just the matchNumber + matchType for matches scouted and unscouted speratly
         let matchKeyAndNumber = []
         if (params.data.isScouted === null || params.data.isScouted === undefined || params.data.isScouted) {
-
-
             let matchKeyAndNumberScouted = await prismaClient.teamMatchData.groupBy({
                 by: ["matchNumber", "matchType"],
                 where: {
@@ -154,6 +152,10 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         in: nonScoutedMatches.map(item => item.key),
                     },
 
+                },
+                _count :
+                {
+                    _all : true
                 },
                 orderBy: [
                     { matchType: 'asc' },
@@ -308,6 +310,17 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 
         }
+        else
+        {
+            for (const match of finalFormatedMatches) {
+                await addExternalReports(req, "team1", match)
+                await addExternalReports(req, "team2", match)
+                await addExternalReports(req, "team3", match)
+                await addExternalReports(req, "team4", match)
+                await addExternalReports(req, "team5", match)
+                await addExternalReports(req, "team6", match)
+            }
+        }
 
         res.status(200).send(finalFormatedMatches);
     }
@@ -369,6 +382,8 @@ async function addScoutedTeamNotOnSchedule(req: AuthenticatedRequest, team: stri
                 await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
             }
         }
+        await addExternalReports(req, team, match)
+        
     }
     catch (error) {
         throw (error)
@@ -402,4 +417,26 @@ async function addScoutedTeam(req: AuthenticatedRequest, scouterShifts, currInde
     catch (error) {
         throw (error)
     }
+}
+async function addExternalReports(req : AuthenticatedRequest, team, match)
+{
+    //don't use null for "not" in prisma below
+    let teamNumber = req.user.teamNumber || 0
+    let key = match.tournamentKey + "_" + MatchTypeToAbrivation[match.matchType] + match.matchNumber + "_" + ReverseScouterScheduleMap[team]
+    const externalReports = await prismaClient.scoutReport.findMany({
+        where :
+        {
+            teamMatchKey : key,
+            scouter :
+            {
+                sourceTeamNumber :
+                {
+                    in : req.user.teamSource,
+                    not : teamNumber
+                }
+            }
+        }
+    })
+    match[team].externalReports = externalReports.length
+
 }
