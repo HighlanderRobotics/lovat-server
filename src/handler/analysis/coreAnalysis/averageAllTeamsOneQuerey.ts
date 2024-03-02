@@ -6,7 +6,6 @@ import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { autoEnd, matchTimeEnd, metricToEvent, roleMap, teleopStart } from "../analysisConstants";
 import { Position } from "@prisma/client";
-import { time, timeEnd } from "console";
 
 
 export const averageAllTeamOneQuerey = async (req: AuthenticatedRequest, metric: string): Promise<number> => {
@@ -132,11 +131,9 @@ export const averageAllTeamOneQuerey = async (req: AuthenticatedRequest, metric:
                     }
 
                 })
-                console.log(allTeamData)
                 let averagePoints = allTeamData.reduce((acc, curr) => {
                     return acc + curr._sum.points; 
                 }, 0) / allTeamData.length;
-                console.log(averagePoints)
                 if(!averagePoints)
                 {
                     averagePoints = 0
