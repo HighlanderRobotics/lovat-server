@@ -225,11 +225,8 @@ app.get('/v1/analysis/metrics/scoutreport/:uuid', requireAuth, matchPageSpecific
 app.get('/v1/analysis/scoutreports/match/:match', requireAuth, scoutReportForMatch )
 app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScoutReport)
 
-//
 
 
+// getTBAData();
 
-
-// app.get('/v1/analysis/TBA', getTBAData)
-getTBAData()
 app.listen(port);

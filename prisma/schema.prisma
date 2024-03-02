@@ -14,7 +14,7 @@ model Event {
   position        Position
   points          Int
   scoutReportUuid String
-  scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
+  scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
 }
 
 enum Position {
@@ -61,7 +61,7 @@ model FeatureToggle {
 model TeamMatchData {
   key           String        @id
   tournamentKey String
-  tournament    Tournament    @relation(fields: [tournamentKey], references: [key])
+  tournament    Tournament    @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
   matchNumber   Int           @db.SmallInt
   teamNumber    Int
   matchType     MatchType
@@ -85,8 +85,8 @@ model MutablePicklist {
 
 model ScoutReport {
   uuid               String              @id @default(uuid())
-  teamMatchKey       String
-  teamMatchData      TeamMatchData       @relation(fields: [teamMatchKey], references: [key])
+  teamMatchKey       String             
+  teamMatchData      TeamMatchData       @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
   startTime          DateTime
   notes              String
   robotRole          RobotRole
@@ -96,7 +96,7 @@ model ScoutReport {
   driverAbility      Int
   scouterUuid        String
   scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid])
-  events             Event[]
+  events             Event[]   
   // flaggedScoutReport FlaggedScoutReport?
 }
 
@@ -129,9 +129,9 @@ enum PickUp {
 model ScouterScheduleShift {
   uuid                    String         @id @default(uuid())
   sourceTeamNumber        Int
-  sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number])
+  sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
   tournamentKey           String
-  tournament              Tournament     @relation(fields: [tournamentKey], references: [key])
+  tournament              Tournament     @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
   startMatchOrdinalNumber Int
   endMatchOrdinalNumber   Int
   team1                   Scouter[] @relation(name: "Team1")
@@ -147,7 +147,7 @@ model Scouter {
   uuid               String         @id @default(uuid())
   name               String?
   sourceTeamNumber   Int
-  sourceTeam         RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number])
+  sourceTeam         RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
   strikes            Int            @default(0)
   scouterReliability Int            @default(0)
   scoutReports       ScoutReport[]
@@ -187,7 +187,7 @@ model Team {
 
 model RegisteredTeam {
   number                Int                    @id
-  team                  Team                   @relation(fields: [number], references: [number])
+  team                  Team                   @relation(fields: [number], references: [number], onDelete: Cascade)
   code                  String                 @unique // 6 digit alphanumeric, case-insensitive code
   email                 String
   emailVerified         Boolean                @default(false)
@@ -211,7 +211,7 @@ model Tournament {
 model User {
   id               String            @id
   teamNumber       Int?
-  team             RegisteredTeam?   @relation(fields: [teamNumber], references: [number])
+  team             RegisteredTeam?   @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
   email            String            @unique
   emailVerified    Boolean           @default(false)
   username         String?
