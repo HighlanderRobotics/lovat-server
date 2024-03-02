@@ -24,7 +24,7 @@ export default async function getTBAData() {
     }
 
 
-    // repeat daily
+    // repeat every 10 days
     setInterval(async () => {
         console.log("Fetching tournaments from TBA...");
         await fetchTournaments();
@@ -36,7 +36,7 @@ export default async function getTBAData() {
         
         console.log("Fetching matches from TBA...");
 
-    }, 1000 * 60 * 60 * 24);
+    }, 1000 * 60 * 60 * 24*10);
     //repeat hourly
     setInterval(async () => {
         await fetchMatches();
