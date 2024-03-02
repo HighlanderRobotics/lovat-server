@@ -26,7 +26,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
             autoPoints: number;
             positions: Position[];
             match: string;
-            scores : Array<number>,
+            score : Array<number>,
             tournamentName : string,
         };
         
@@ -40,8 +40,8 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
         
             return isSubset(listOne, listTwo) || isSubset(listTwo, listOne);
         };
-        const groupAutoData = (data: AutoData[]): { positions: Position[], matches: { matchKey: string, tournamentName: string }[], scores: number[], frequency: number, maxScore: number }[] => {
-            const groups: { positions: Position[], matches: Set<string>, scores: number[], maxScore: number, matchDetails: Map<string, string> }[] = [];
+        const groupAutoData = (data: AutoData[]): { positions: Position[], matches: { matchKey: string, tournamentName: string }[], score: number[], frequency: number, maxScore: number }[] => {
+            const groups: { positions: Position[], matches: Set<string>, score: number[], maxScore: number, matchDetails: Map<string, string> }[] = [];
         
             data.forEach(item => {
                 let isGrouped = false;
@@ -53,7 +53,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
                         }
                         group.matches.add(item.match);
                         group.matchDetails.set(item.match, item.tournamentName);
-                        group.scores.push(item.autoPoints); 
+                        group.score.push(item.autoPoints); 
                         group.maxScore = Math.max(group.maxScore, item.autoPoints);
                         isGrouped = true;
                         break;
@@ -66,7 +66,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
                     groups.push({
                         positions: item.positions,
                         matches: new Set([item.match]),
-                        scores: [item.autoPoints], 
+                        score: [item.autoPoints], 
                         maxScore: item.autoPoints,
                         matchDetails: matchDetails
                     });
@@ -76,7 +76,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
             return groups.map(group => ({
                 positions: group.positions,
                 matches: Array.from(group.matches).map(matchKey => ({ matchKey: matchKey, tournamentName: group.matchDetails.get(matchKey) || '' })),
-                scores: group.scores,
+                score: group.score,
                 frequency: group.matches.size,
                 maxScore: group.maxScore
             }));
