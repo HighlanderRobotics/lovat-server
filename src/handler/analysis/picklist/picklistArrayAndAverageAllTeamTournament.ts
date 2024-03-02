@@ -9,26 +9,30 @@ import { Position } from "@prisma/client";
 import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
 
 
-export const picklistArrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string, teams : Array<number>) : Promise<{average : number, teamAverages : Map<number, number>, timeLine : Array<number>}>=> {
+export const picklistArrayAndAverageAllTeamTournament = async (req: AuthenticatedRequest, metric: string, teams : Array<number>) : Promise<{average : number, teamAverages : Map<number, number>, timeLine : Array<number>}>=> {
     try {
 
        
         let timeLineArray = []
         for (const team of teams) {
             const currAvg = ( arrayAndAverageTeamFast(req, metric, team))
-            timeLineArray = timeLineArray.concat(currAvg)
+            timeLineArray.push(currAvg)
         };
         //change to null possibly
         let average = 0
         let teamAveragesMap : Map<number, number> = new Map()
         await Promise.all(timeLineArray).then((values) => {
-
-            if (timeLineArray.length !== 0) {
+            if (values.length !== 0) {
                 average = values.reduce((acc, cur) => acc + cur.average, 0) / values.length;
             }
-            timeLineArray = values.map(item => item.average);
+            timeLineArray =  values.map(item => item.average);
              teams.forEach((teamNumber, index) => {
-                teamAveragesMap[teamNumber] = values[index];
+                let currAvg = values[index].average
+                if(!currAvg)
+                {
+                    currAvg = 0
+                }
+                teamAveragesMap[teamNumber] = currAvg;
               });
                
         });

@@ -94,7 +94,12 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
                }
             })
             //avg could be multiple results from one scout
-            return driverAbilityAvg._avg.driverAbility
+            let avg=  driverAbilityAvg._avg.driverAbility
+            if(!avg)
+            {
+                avg = 0
+            }
+            return avg
         }
         else if (isPointAverage) {
             const sumOfMatches = await prismaClient.event.groupBy({
@@ -198,8 +203,15 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
                 {
                     stagePoints = highNoteMap["SUCCESSFUL"]/totalAttempsHighNote
                 }
-                
-                
+               
+                if(!highNotePoints)
+                {
+                    highNotePoints = 0
+                }  
+                if(!stagePoints)
+                {
+                    stagePoints = 0
+                }                
                 return eventsAverage + highNotePoints + stagePoints 
             }
             else
@@ -255,9 +267,14 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
                 }
             })
             
-            return groupedMatches.reduce((accumulator, current) => {
+            let avg = groupedMatches.reduce((accumulator, current) => {
                 return accumulator + current._count._all; 
             }, 0) /groupedMatches.length;
+            if(!avg)
+            {
+                avg =0
+            }
+            return avg
 
         }
     }
