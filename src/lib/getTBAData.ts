@@ -4,13 +4,14 @@ import fetchTeams from "./fetchTeams";
 import fetchMatches from "./fetchMatches";
 
 
-export default async function getTBAData() {
+export default async function  getTBAData() {
+    const year = 2024
     // If we don't have any tournaments, fetch them from TBA
     const tournaments = await prisma.tournament.findMany();
 
     if (tournaments.length === 0) {
         console.log("No tournaments found in database. Fetching from TBA...");
-        await fetchTournaments();
+        await fetchTournaments(year);
         console.log("Done fetching tournaments from TBA.");
     }
 
@@ -27,7 +28,7 @@ export default async function getTBAData() {
     // repeat every 10 days
     setInterval(async () => {
         console.log("Fetching tournaments from TBA...");
-        await fetchTournaments();
+        await fetchTournaments(year);
         console.log("Done fetching tournaments from TBA.");
 
         console.log("Fetching teams from TBA...");
