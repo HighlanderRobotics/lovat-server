@@ -216,7 +216,7 @@ app.get('/v1/analysis/picklist', requireAuth, picklistShell)
 
 //scouting lead
 app.put('/v1/manager/scoutername', requireAuth, updateScouterName)
-app.delete('/v1/manager/scouter', requireAuth, deleteScouter)
+app.delete('/v1/manager/scouterdashboard', requireAuth, deleteScouter)
 app.get('/v1/manager/scouterspage', requireAuth, scoutingLeadProgressPage)
 app.post('/v1/manager/scouterdashboard', requireAuth, addScouterDashboard)
 app.get('/v1/manager/scouterreports', requireAuth, scouterScoutReports)

@@ -426,7 +426,6 @@ async function addExternalReports(req : AuthenticatedRequest, team, match)
     const externalReports = await prismaClient.scoutReport.findMany({
         where :
         {
-            teamMatchKey : key,
             scouter :
             {
                 sourceTeamNumber :
