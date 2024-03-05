@@ -95,7 +95,7 @@ model ScoutReport {
   pickUp             PickUp
   driverAbility      Int
   scouterUuid        String
-  scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid])
+  scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
   events             Event[]   
   // flaggedScoutReport FlaggedScoutReport?
 }
@@ -129,7 +129,7 @@ enum PickUp {
 model ScouterScheduleShift {
   uuid                    String         @id @default(uuid())
   sourceTeamNumber        Int
-  sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
+  sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number], onDelete : Cascade)
   tournamentKey           String
   tournament              Tournament     @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
   startMatchOrdinalNumber Int

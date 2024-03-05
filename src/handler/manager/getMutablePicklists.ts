@@ -7,6 +7,11 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 export const getMutablePicklists = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
+        if(req.user.teamNumber === null)
+        {
+            res.status(403).send("Not authortized to get mutable picklists because your not on a team")
+            return
+        }
         const user = req.user
            const rows = await prismaClient.mutablePicklist.findMany({
             where: {

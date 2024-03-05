@@ -80,6 +80,7 @@ import { updateScouterName } from "./handler/manager/updateScouterName";
 import { deleteScouter } from "./handler/manager/deleteScouter";
 import { scoutingLeadProgressPage } from "./handler/manager/scoutingLeadProgressPage";
 import { addScouterDashboard } from "./handler/manager/addScouterDashboard";
+import { scouterScoutReports } from "./handler/analysis/scoutingLead/scouterScoutReports";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -215,9 +216,10 @@ app.get('/v1/analysis/picklist', requireAuth, picklistShell)
 
 //scouting lead
 app.put('/v1/manager/scoutername', requireAuth, updateScouterName)
-app.delete('/v1/manager/scouter', requireAuth, deleteScouter)
+app.delete('/v1/manager/scouterdashboard', requireAuth, deleteScouter)
 app.get('/v1/manager/scouterspage', requireAuth, scoutingLeadProgressPage)
 app.post('/v1/manager/scouterdashboard', requireAuth, addScouterDashboard)
+app.get('/v1/manager/scouterreports', requireAuth, scouterScoutReports)
 
 //specific scoutreport
 

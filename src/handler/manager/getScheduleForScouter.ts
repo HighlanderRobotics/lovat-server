@@ -103,6 +103,10 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                         tournamentKey: params.data.tournamentKey,
                         matchNumber: matchNumber,
                         matchType: MatchTypeMap[matchType][0]
+                    },
+                    orderBy : 
+                    {
+                        key : "asc"
                     }
                 })
                 //if its 0 just skipp over 
