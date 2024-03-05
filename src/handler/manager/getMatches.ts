@@ -283,6 +283,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         await addScoutedTeam(req, scouterShifts, currIndex, "team4", element)
                         await addScoutedTeam(req, scouterShifts, currIndex, "team5", element)
                         await addScoutedTeam(req, scouterShifts, currIndex, "team6", element)
+
                     }
                     else {
                         await addScoutedTeamNotOnSchedule(req, "team1", element)
@@ -291,7 +292,11 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         await addScoutedTeamNotOnSchedule(req, "team4", element)
                         await addScoutedTeamNotOnSchedule(req, "team5", element)
                         await addScoutedTeamNotOnSchedule(req, "team6", element)
-                        await addExternalReports(req, match)
+
+                    }
+                    if(element.scouted)
+                    {
+                        await addExternalReports(req, element)
                     }
 
 
@@ -306,8 +311,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     await addScoutedTeamNotOnSchedule(req, "team4", match)
                     await addScoutedTeamNotOnSchedule(req, "team5", match)
                     await addScoutedTeamNotOnSchedule(req, "team6", match)
-                    await addExternalReports(req, match)
+                    if(match.scouted)
+                    {
+                        await addExternalReports(req, match)
+                    }
                 }
+        
             }
 
 
@@ -379,7 +388,7 @@ async function addScoutedTeamNotOnSchedule(req: AuthenticatedRequest, team: stri
                 await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
             }
         }
-        
+
 
     }
     catch (error) {
@@ -443,9 +452,9 @@ async function addExternalReports(req: AuthenticatedRequest, match) {
         }
       
     })
-    await externalReports.forEach(groupedScoutReports => {
-        const team = ScouterScheduleMap[groupedScoutReports.teamMatchKey[groupedScoutReports.teamMatchKey.length - 1]]
-        match[team].externalReports = groupedScoutReports._count._all
+    await externalReports.forEach(externalReport => {
+        const team = ScouterScheduleMap[externalReport.teamMatchKey[externalReport.teamMatchKey.length - 1]]
+        match[team].externalReports = externalReport._count._all
     });
 
 
