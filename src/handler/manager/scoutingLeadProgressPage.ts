@@ -164,7 +164,9 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                 {
                     scoutReports : true
                 },
-                orderBy : "asc"
+                orderBy : {
+                    name : "asc"
+                }
             })
             const formattedScouters = scouters.map(scouter => ({
                 scouterUuid: scouter.uuid,
