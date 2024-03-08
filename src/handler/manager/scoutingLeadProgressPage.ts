@@ -108,7 +108,9 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                         }
                     }
                 },
-                orderBy : "asc"
+                orderBy : {
+                    name : "asc"
+                }
             })
            
             let result = []
