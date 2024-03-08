@@ -331,7 +331,6 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         res.status(200).send(finalFormatedMatches);
     }
     catch (error) {
-        console.error(error)
         res.status(500).send(error)
     }
 
