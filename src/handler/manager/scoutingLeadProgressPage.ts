@@ -185,4 +185,3 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
     }
 
 };
-//test
