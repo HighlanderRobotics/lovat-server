@@ -107,7 +107,8 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                             }
                         }
                     }
-                }
+                },
+                orderBy : "asc"
             })
            
             let result = []
@@ -162,7 +163,8 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                 include :
                 {
                     scoutReports : true
-                }
+                },
+                orderBy : "asc"
             })
             const formattedScouters = scouters.map(scouter => ({
                 scouterUuid: scouter.uuid,
