@@ -29,8 +29,8 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
             res.status(400).send(params);
             return;
         };
-        let data = { "matches": {}, "timeLine": {}, "webcasts": null, "rankingBlocks": null }
-        await addTournamentMatches(params.data.tournamentKey)
+        let data = { "matches": {}, "teamMatchTimeline": {}, "webcasts": null, "rankingBlocks": null }
+        // await addTournamentMatches(params.data.tournamentKey)
         const matchesWithTeam = await prismaClient.teamMatchData.findMany({
             where :
             {
@@ -87,7 +87,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
 
             })
 
-        const latestScoutedMatch = await prismaClient.teamMatchData.findFirst({
+        let nowPlaying = await prismaClient.teamMatchData.findFirst({
                 where:
                 {
                     tournamentKey: params.data.tournamentKey,
@@ -104,19 +104,20 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
                     ]
     
             })
-
-        if (latestScoutedMatch) {
+            nowPlaying.matchNumber = nowPlaying.matchNumber + 1
+        
+        if (nowPlaying) {
             let matchesData: any = {}
-            matchesData.nowPlaying= await matchFormat(params.data.tournamentKey, latestScoutedMatch.matchNumber, latestScoutedMatch.matchType)
-            matchesData.next = await matchFormat(params.data.tournamentKey, latestScoutedMatch.matchNumber + 1, latestScoutedMatch.matchType)
+            matchesData.nowPlaying= await matchFormat(params.data.tournamentKey, nowPlaying.matchNumber, nowPlaying.matchType)
+            matchesData.next = await matchFormat(params.data.tournamentKey, nowPlaying.matchNumber, nowPlaying.matchType)
             //if there are more matches left
             if (matchesData.next !== null) {
                 const prevMatchAllRows = await prismaClient.teamMatchData.findMany({
                     where:
                     {
                         tournamentKey: params.data.tournamentKey,
-                        matchNumber: latestScoutedMatch.matchNumber,
-                        matchType: latestScoutedMatch.matchType
+                        matchNumber: nowPlaying.matchNumber,
+                        matchType: nowPlaying.matchType
                     }
                 })
                 let prevMatchAllKeys = []
@@ -124,6 +125,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
                     prevMatchAllKeys.push(match.key)
 
                 ));
+                //update
                 const nextTeamMatch = await prismaClient.teamMatchData.findFirst({
                     where:
                     {
@@ -191,17 +193,17 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
                             ]
                     })
 
-                    if (latestScoutedMatch.matchType !== teamPrevMatch.matchType) {
-                        data.timeLine = { "matchCount": (maxQualifierRow.matchNumber - teamPrevMatch.matchNumber) + nextTeamMatch.matchNumber, "currentMatchCount": (maxQualifierRow.matchNumber - teamPrevMatch.matchNumber) + latestScoutedMatch.matchNumber +1}
+                    if (nowPlaying.matchType !== teamPrevMatch.matchType) {
+                        data.teamMatchTimeline = { "matchCount": (maxQualifierRow.matchNumber - teamPrevMatch.matchNumber) + nextTeamMatch.matchNumber, "currentMatchCount": (maxQualifierRow.matchNumber - teamPrevMatch.matchNumber) + nowPlaying.matchNumber +1}
                     }
                     else {
-                        data.timeLine = { "matchCount": (maxQualifierRow.matchNumber - teamPrevMatch.matchNumber) + nextTeamMatch.matchNumber, "currentMatchCount": latestScoutedMatch.matchNumber - teamPrevMatch.matchNumber +1}
+                        data.teamMatchTimeline = { "matchCount": (maxQualifierRow.matchNumber - teamPrevMatch.matchNumber) + nextTeamMatch.matchNumber, "currentMatchCount": nowPlaying.matchNumber - teamPrevMatch.matchNumber +1}
 
                     }
                 }
                 else
                 {
-                    data.timeLine = { "matchCount": nextTeamMatch.matchNumber - teamPrevMatch.matchNumber, "currentMatchCount": latestScoutedMatch.matchNumber - teamPrevMatch.matchNumber +1}
+                    data.teamMatchTimeline = { "matchCount": nextTeamMatch.matchNumber - teamPrevMatch.matchNumber, "currentMatchCount": nowPlaying.matchNumber - teamPrevMatch.matchNumber +1}
                 }
             }
 
