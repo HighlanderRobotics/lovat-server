@@ -29,7 +29,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
             res.status(400).send(params);
             return;
         };
-        let data = { "matches": {}, "timeLine": null, "webcasts": null, "rankingBlocks": null }
+        let data = { "matches": {}, "timeLine": {}, "webcasts": null, "rankingBlocks": null }
         await addTournamentMatches(params.data.tournamentKey)
         const matchesWithTeam = await prismaClient.teamMatchData.findMany({
             where :
