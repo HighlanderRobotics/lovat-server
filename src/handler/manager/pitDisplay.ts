@@ -58,12 +58,11 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
                     type : "team",
                     rankingPoints : teamInfo.extra_stats,
                     number: parseInt(teamInfo.team_key.substring(3), 10),
-                    rank: teamInfo.rank,
+                    rank: teamInfo.rank[0],
 
                 }));
                     const findTeamIndex = mappedData.findIndex(team => team.number === params.data.team);
                  
-                  console.log(findTeamIndex)
                   if(findTeamIndex)
                   {
                     if(findTeamIndex < params.data.topTeamCount + params.data.teamsAboveCount)
