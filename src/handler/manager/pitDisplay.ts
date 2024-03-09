@@ -120,11 +120,30 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
                         matchType: nowPlaying.matchType
                     }
                 })
+                const allPrevMatches = await prismaClient.teamMatchData.groupBy({
+                   by : ["tournamentKey", "matchNumber", "matchType"],
+                   where :
+                   {
+                        scoutReports : {
+                            some : {}
+                        }
+                   }
+                })
                 let prevMatchAllKeys = []
                 prevMatchAllRows.filter(match => (
                     prevMatchAllKeys.push(match.key)
 
                 ));
+                for(const match of allPrevMatches)
+                {
+
+                    for(let i = 0; i < 6; i ++)
+                    {
+                        prevMatchAllKeys.push(match.tournamentKey + "_" + MatchEnumToAbrivation[match.matchType] + match.matchNumber + "_" + i)
+
+                    }
+                }
+                
                 //update
                 const nextTeamMatch = await prismaClient.teamMatchData.findFirst({
                     where:
