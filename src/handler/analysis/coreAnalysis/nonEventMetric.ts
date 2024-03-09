@@ -4,9 +4,10 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
+import { User } from "@prisma/client";
 
 
-export const nonEventMetric = async (req: AuthenticatedRequest, team : number, metric: string): Promise<Object> => {
+export const nonEventMetric = async (user: User, team : number, metric: string): Promise<Object> => {
     try {
         const params = z.object({
             //UPDATE WITH COLUMNS IN THE SCHEMA EACH YEAR
@@ -37,7 +38,7 @@ export const nonEventMetric = async (req: AuthenticatedRequest, team : number, m
                 {
                     sourceTeamNumber :
                     {
-                        in : req.user.teamSource
+                        in : user.teamSource
                     }
                 }
             },

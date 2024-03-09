@@ -5,11 +5,11 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { error, time } from "console";
-import { Position } from "@prisma/client";
+import { Position, User } from "@prisma/client";
 import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
 
 
-export const picklistArrayAndAverageAllTeamNoTournament = async (req: AuthenticatedRequest, metric: string, teams: Array<number>): Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }> => {
+export const picklistArrayAndAverageAllTeamNoTournament = async (user: User, metric: string, teams: Array<number>): Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }> => {
     try {
 
 
@@ -17,7 +17,7 @@ export const picklistArrayAndAverageAllTeamNoTournament = async (req: Authentica
         let teamAveragesMap: Map<number, number> = new Map()
         let average = 0
         for (const team of teams) {
-            let currAvg = (await (arrayAndAverageTeamFast(req, metric, team))).average
+            let currAvg = (await (arrayAndAverageTeamFast(user, metric, team))).average
             if (!currAvg) {
                 currAvg = 0
             }

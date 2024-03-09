@@ -87,7 +87,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             includedTeamNumbers = teamsAtTournament.map(team => team.teamNumber);
             for (const metric of picklistSliders) {
                 if (params.data[metric] || params.data.flags.includes(metric)) {
-                    const currData = picklistArrayAndAverageAllTeamTournament(req, metric, includedTeamNumbers);
+                    const currData = picklistArrayAndAverageAllTeamTournament(req.user, metric, includedTeamNumbers);
                     allTeamData.push(currData)
                     usedMetrics.push(metric)
                 }

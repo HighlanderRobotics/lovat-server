@@ -19,7 +19,7 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
         };
         let result = {}
         for (const element of metricsBreakdown) {
-            result[element] = await nonEventMetric(req, params.data.team, element )
+            result[element] = await nonEventMetric(req.user, params.data.team, element )
         };
         res.status(200).send(result)
     }
