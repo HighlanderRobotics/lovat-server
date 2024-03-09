@@ -109,7 +109,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
         if (nowPlaying) {
             let matchesData: any = {}
             matchesData.nowPlaying= await matchFormat(params.data.tournamentKey, nowPlaying.matchNumber, nowPlaying.matchType)
-            matchesData.next = await matchFormat(params.data.tournamentKey, nowPlaying.matchNumber, nowPlaying.matchType)
+            matchesData.next = await matchFormat(params.data.tournamentKey, nowPlaying.matchNumber + 1, nowPlaying.matchType)
             //if there are more matches left
             if (matchesData.next !== null) {
                 const prevMatchAllRows = await prismaClient.teamMatchData.findMany({
