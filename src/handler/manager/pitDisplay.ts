@@ -56,9 +56,9 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
             .then(async response => {
                 const mappedData = response.data.rankings.map(teamInfo => ({
                     type : "team",
-                    rankingPoints : teamInfo.extra_stats,
+                    rankingPoints : teamInfo.extra_stats[0],
                     number: parseInt(teamInfo.team_key.substring(3), 10),
-                    rank: teamInfo.rank[0],
+                    rank: teamInfo.rank,
 
                 }));
                     const findTeamIndex = mappedData.findIndex(team => team.number === params.data.team);
