@@ -29,7 +29,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
             res.status(400).send(params);
             return;
         };
-        let data = { "matches": { "nowPlaying": null, "next": null, "teamNext": null }, "timeLine": null, "webcasts": null, "rankingBlocks": null }
+        let data = { "matches": {}, "timeLine": null, "webcasts": null, "rankingBlocks": null }
         await addTournamentMatches(params.data.tournamentKey)
         const matchesWithTeam = await prismaClient.teamMatchData.findMany({
             where :
@@ -106,10 +106,11 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
             })
 
         if (latestScoutedMatch) {
-            data.matches.nowPlaying = await matchFormat(params.data.tournamentKey, latestScoutedMatch.matchNumber, latestScoutedMatch.matchType)
-            data.matches.next = await matchFormat(params.data.tournamentKey, latestScoutedMatch.matchNumber + 1, latestScoutedMatch.matchType)
+            let matchesData: any = {}
+            matchesData.nowPlaying= await matchFormat(params.data.tournamentKey, latestScoutedMatch.matchNumber, latestScoutedMatch.matchType)
+            matchesData.next = await matchFormat(params.data.tournamentKey, latestScoutedMatch.matchNumber + 1, latestScoutedMatch.matchType)
             //if there are more matches left
-            if (data.matches.next !== null) {
+            if (matchesData.next !== null) {
                 const prevMatchAllRows = await prismaClient.teamMatchData.findMany({
                     where:
                     {
@@ -145,8 +146,9 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
                         ]
                 })
                 if (nextTeamMatch) {
-                    data.matches.teamNext = await matchFormat(params.data.tournamentKey, nextTeamMatch.matchNumber, nextTeamMatch.matchType)
+                    matchesData.teamNext = await matchFormat(params.data.tournamentKey, nextTeamMatch.matchNumber, nextTeamMatch.matchType)
                 }
+                data.matches = matchesData
                 let teamPrevMatch = await prismaClient.teamMatchData.findFirst({
                     where:
                     {
@@ -272,12 +274,10 @@ async function matchFormat(tournamentKey: string, matchNumber: number, matchType
                         "red":
                         {
                             "teams": redTeams,
-                            winPrediction: 0
                         },
                         "blue":
                         {
                             "teams": blueTeams,
-                            winPrediction: 0
                         }
 
                     }
