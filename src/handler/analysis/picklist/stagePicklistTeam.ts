@@ -6,11 +6,12 @@ import ss from 'simple-statistics';
 import prisma from '../../../prismaClient';
 import z from 'zod'
 import { error } from "console";
+import { User } from "@prisma/client";
 
 
 
 
-export const stagePicklistTeam = async (req: AuthenticatedRequest, team: number) => {
+export const stagePicklistTeam = async (user: User, team: number) => {
     try {
         const params = z.object({
             team: z.number()
@@ -28,13 +29,13 @@ export const stagePicklistTeam = async (req: AuthenticatedRequest, team: number)
             where: {
                 teamMatchData: {
                     tournamentKey: {
-                        in: req.user.tournamentSource
+                        in: user.tournamentSource
                     },
                     teamNumber: team,
                 },
                 scouter: {
                     sourceTeamNumber: {
-                        in: req.user.teamSource
+                        in: user.teamSource
                     }
                 }
             }
@@ -53,13 +54,13 @@ export const stagePicklistTeam = async (req: AuthenticatedRequest, team: number)
             where: {
                 teamMatchData: {
                     tournamentKey: {
-                        in: req.user.tournamentSource
+                        in: user.tournamentSource
                     },
                     teamNumber: team,
                 },
                 scouter: {
                     sourceTeamNumber: {
-                        in: req.user.teamSource
+                        in: user.teamSource
                     }
                 }
             }

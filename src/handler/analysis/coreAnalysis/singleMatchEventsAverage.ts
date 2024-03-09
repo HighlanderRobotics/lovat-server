@@ -7,10 +7,11 @@ import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingl
 import { singleMatchSingleScoutReport } from "./singleMatchSingleScoutReport";
 import { cooperationSingleMatch } from "./cooperationSingleMatch";
 import { match } from "assert";
+import { User } from "@prisma/client";
 // import { cooperationSingleMatch } from "./cooperationSingleMatch";
 
 
-export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPointAverage: boolean, matchKey: string, team: number, metric1 : string, timeMin: number = 0, timeMax : number = matchTimeEnd): Promise<number> => {
+export const singleMatchEventsAverage = async (user: User,  isPointAverage: boolean, matchKey: string, team: number, metric1 : string, timeMin: number = 0, timeMax : number = matchTimeEnd): Promise<number> => {
     try {
         const scoutReports = await prismaClient.scoutReport.findMany({
             where :
@@ -19,7 +20,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                 teamMatchData :
                 {
                     tournamentKey : {
-                        in : req.user.tournamentSource
+                        in : user.tournamentSource
                     },
                     teamNumber : team
                 },
@@ -27,7 +28,7 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                 {
                     sourceTeamNumber : 
                     {
-                        in : req.user.teamSource
+                        in :user.teamSource
                     }
                 }
                 
@@ -46,11 +47,11 @@ export const singleMatchEventsAverage = async (req: AuthenticatedRequest,  isPoi
                 let data = null
                 if(metric1 === "cooperation")
                 {
-                    data = await cooperationSingleMatch(req, matchKey, team)
+                    data = await cooperationSingleMatch(user, matchKey, team)
                 }
                 else
                 {
-                    data = await singleMatchSingleScoutReport(req, isPointAverage, element.uuid, metric1,  timeMin, timeMax)
+                    data = await singleMatchSingleScoutReport(user, isPointAverage, element.uuid, metric1,  timeMin, timeMax)
                 }
                 if(data !== null)
                 {

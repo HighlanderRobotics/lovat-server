@@ -8,6 +8,7 @@ import { run } from "node:test";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { match } from "assert";
 import { teamAverageFastTournament } from "./teamAverageFastTournament";
+import { userInfo } from "os";
 
 
 export const arrayAndAverageTeamFast = async (req: AuthenticatedRequest, metric: string, team: number): Promise<{ average: number}> => {
@@ -67,7 +68,7 @@ export const arrayAndAverageTeamFast = async (req: AuthenticatedRequest, metric:
         }, {});
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
         if (metric === "stage") {
-            return { average: await stagePicklistTeam(req, team)}
+            return { average: await stagePicklistTeam(req.user, team)}
         }
         const timeLineArray = []
         let tournamentAverages = []

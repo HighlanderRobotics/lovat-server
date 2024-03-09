@@ -1,8 +1,9 @@
 import axios from "axios";
 
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { User } from "@prisma/client";
 
-export const rankFlag = async (req: AuthenticatedRequest, teamKey: string, eventKey: string) => {
+export const rankFlag = async (user: User, teamKey: string, eventKey: string) => {
     const url = 'https://www.thebluealliance.com/api/v3';
 
     if (eventKey === undefined) {

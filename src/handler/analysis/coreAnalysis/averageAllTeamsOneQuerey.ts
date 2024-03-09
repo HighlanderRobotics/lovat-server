@@ -5,10 +5,10 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { autoEnd, matchTimeEnd, metricToEvent, roleMap, teleopStart } from "../analysisConstants";
-import { Position } from "@prisma/client";
+import { Position, User } from "@prisma/client";
 
 
-export const averageAllTeamOneQuerey = async (req: AuthenticatedRequest, metric: string): Promise<number> => {
+export const averageAllTeamOneQuerey = async (user: User, metric: string): Promise<number> => {
     try {
         if (metric === "driverability" || metric === "driverAbility") {
             const data = await prismaClient.scoutReport.aggregate({
@@ -20,14 +20,14 @@ export const averageAllTeamOneQuerey = async (req: AuthenticatedRequest, metric:
                     teamMatchData:
                     {
                         tournamentKey: {
-                            in: req.user.tournamentSource
+                            in: user.tournamentSource
                         }
                     },
                     scouter:
                     {
                         sourceTeamNumber:
                         {
-                            in: req.user.teamSource
+                            in: user.teamSource
                         }
                     }
                 }
@@ -63,13 +63,13 @@ export const averageAllTeamOneQuerey = async (req: AuthenticatedRequest, metric:
                             {
                                 tournamentKey :
                                 {
-                                    in : req.user.tournamentSource
+                                    in : user.tournamentSource
                                 }
                             },
                             scouter :
                             {
                                 sourceTeamNumber : {
-                                    in : req.user.teamSource
+                                    in : user.teamSource
                                 }
                             }
                         },
@@ -113,13 +113,13 @@ export const averageAllTeamOneQuerey = async (req: AuthenticatedRequest, metric:
                             {
                                 tournamentKey :
                                 {
-                                    in : req.user.tournamentSource
+                                    in : user.tournamentSource
                                 }
                             },
                             scouter :
                             {
                                 sourceTeamNumber : {
-                                    in : req.user.teamSource
+                                    in : user.teamSource
                                 }
                             }
                         },
@@ -157,13 +157,13 @@ export const averageAllTeamOneQuerey = async (req: AuthenticatedRequest, metric:
                             {
                                 tournamentKey :
                                 {
-                                    in : req.user.tournamentSource
+                                    in :user.tournamentSource
                                 }
                             },
                             scouter :
                             {
                                 sourceTeamNumber : {
-                                    in : req.user.teamSource
+                                    in :user.teamSource
                                 }
                             }
                         },

@@ -7,9 +7,10 @@ import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teleopStart } from "../an
 import { run } from "node:test";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { match } from "assert";
+import { User } from "@prisma/client";
 
 
-export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: string, team: number): Promise<{ average: number, timeLine: Array<{ match: string, dataPoint: number }> }> => {
+export const arrayAndAverageTeam = async (user: User, metric: string, team: number): Promise<{ average: number, timeLine: Array<{ match: string, dataPoint: number }> }> => {
     try {
         const params = z.object({
             team: z.number(),
@@ -23,7 +24,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
             where: {
                 tournamentKey:
                 {
-                    in: req.user.tournamentSource
+                    in: user.tournamentSource
                 },
                 teamNumber: team,
                 scoutReports :
@@ -66,7 +67,7 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
         }, {});
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
         if (metric === "stage") {
-            return { average: await stagePicklistTeam(req, team), timeLine: null }
+            return { average: await stagePicklistTeam(user, team), timeLine: null }
         }
         const timeLineArray = []
         const tournamentAverages = []
@@ -78,16 +79,16 @@ export const arrayAndAverageTeam = async (req: AuthenticatedRequest, metric: str
                 //add time constraints if nessissary
 
                 if (metric.includes("teleop") || metric.includes("Teleop")) {
-                    let currData = singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric, teleopStart, matchTimeEnd)
+                    let currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, teleopStart, matchTimeEnd)
                     currDatas.push(currData)
                 }
                 else if (metric.includes("auto") || metric.includes("Auto")) {
-                    let currData = singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric, 0, autoEnd)
+                    let currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, 0, autoEnd)
                     currDatas.push(currData)
 
                 }
                 else {
-                    let currData = singleMatchEventsAverage(req, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
+                    let currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
                     currDatas.push(currData)
                 }
 

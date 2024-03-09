@@ -23,7 +23,7 @@ export const alliancePageResponse = async (req: AuthenticatedRequest, res : Resp
             res.status(400).send(params);
             return;
         };
-        const alliancePageData = await alliancePage(req, params.data.team1, params.data.team2, params.data.team3)
+        const alliancePageData = await alliancePage(req.user, params.data.team1, params.data.team2, params.data.team3)
         
         res.status(200).send(alliancePageData)
     }

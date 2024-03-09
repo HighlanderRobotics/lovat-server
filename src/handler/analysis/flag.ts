@@ -42,7 +42,7 @@ export const flag = async (req: AuthenticatedRequest, flagName: string, tourname
         }
         else
         {
-            const data = (await arrayAndAverageTeam(req, flagName, teamNumber)).average
+            const data = (await arrayAndAverageTeam(req.user, flagName, teamNumber)).average
             return data
         }
 

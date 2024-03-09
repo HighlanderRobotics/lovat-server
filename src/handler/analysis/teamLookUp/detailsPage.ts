@@ -25,12 +25,12 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
         };
         if(params.data.metric === "autopoints")
         {
-            const autoPaths = await autoPathsTeam(req, params.data.team)
+            const autoPaths = await autoPathsTeam(req.user, params.data.team)
             res.status(200).send({paths : autoPaths})
             return
         }
-        let teamAverageAndTimeLine = await arrayAndAverageTeam(req, params.data.metric, params.data.team)
-        let allTeamAverage = await averageAllTeamOneQuerey(req, params.data.metric)
+        let teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
+        let allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
         let result = {
             array: teamAverageAndTimeLine.timeLine,
             result : teamAverageAndTimeLine.average,
