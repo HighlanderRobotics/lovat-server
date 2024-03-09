@@ -4,13 +4,13 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap, teleopStart } from "../analysisConstants";
 import { sum } from "simple-statistics";
-import { EventAction, Position } from "@prisma/client";
+import { EventAction, Position, User } from "@prisma/client";
 import { match } from "assert";
 import { time } from "console";
 
 
 
-export const teamAverageFastTournament = async (req: AuthenticatedRequest, team : number,  isPointAverage: boolean, metric1: string, tournamentKey : string,  timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
+export const teamAverageFastTournament = async (user: User, team : number,  isPointAverage: boolean, metric1: string, tournamentKey : string,  timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
         if(metric1 === "ampscores" )
@@ -52,7 +52,7 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
                         {
                             sourceTeamNumber :
                             {
-                                in : req.user.teamSource
+                                in : user.teamSource
                             }
                         },
                         
@@ -88,7 +88,7 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
                     {
                         sourceTeamNumber :
                         {
-                            in : req.user.teamSource
+                            in : user.teamSource
                         }
                     }
                }
@@ -120,7 +120,7 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
                         {
                             sourceTeamNumber :
                             {
-                                in : req.user.teamSource
+                                in :user.teamSource
                             }
                         }
                     },
@@ -151,13 +151,13 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
                     where: {
                         teamMatchData: {
                             tournamentKey: {
-                                in: req.user.tournamentSource
+                                in: user.tournamentSource
                             },
                             teamNumber: team,
                         },
                         scouter: {
                             sourceTeamNumber: {
-                                in: req.user.teamSource
+                                in: user.teamSource
                             }
                         }
                     }
@@ -181,13 +181,13 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
                     where: {
                         teamMatchData: {
                             tournamentKey: {
-                                in: req.user.tournamentSource
+                                in: user.tournamentSource
                             },
                             teamNumber: team,
                         },
                         scouter: {
                             sourceTeamNumber: {
-                                in: req.user.teamSource
+                                in: user.teamSource
                             }
                         }
                     }
@@ -251,7 +251,7 @@ export const teamAverageFastTournament = async (req: AuthenticatedRequest, team 
                         {
                             sourceTeamNumber :
                             {
-                                in : req.user.teamSource
+                                in : user.teamSource
                             }
                         }
                     },

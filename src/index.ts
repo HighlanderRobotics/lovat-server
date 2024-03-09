@@ -81,6 +81,7 @@ import { deleteScouter } from "./handler/manager/deleteScouter";
 import { scoutingLeadProgressPage } from "./handler/manager/scoutingLeadProgressPage";
 import { addScouterDashboard } from "./handler/manager/addScouterDashboard";
 import { scouterScoutReports } from "./handler/analysis/scoutingLead/scouterScoutReports";
+import { pitDisplay } from "./handler/manager/pitDisplay";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -226,6 +227,10 @@ app.get('/v1/manager/scouterreports', requireAuth, scouterScoutReports)
 app.get('/v1/analysis/metrics/scoutreport/:uuid', requireAuth, matchPageSpecificScouter)
 app.get('/v1/analysis/scoutreports/match/:match', requireAuth, scoutReportForMatch )
 app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScoutReport)
+
+
+//pit scouting
+app.get("/v1/analysis/pitdisplay", pitDisplay)
 
 
 

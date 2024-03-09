@@ -3,9 +3,10 @@ import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { autoPathSingleMatchSingleScoutReport } from "./autoPathSingleMatchSingleScoutReport";
+import { User } from "@prisma/client";
 
 
-export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : number) => {
+export const autoPathsTeam = async (user: User, teamNumber : number) => {
     try {
         const params = z.object({
             team: z.number(),
@@ -89,7 +90,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
                     teamNumber : params.data.team,
                     tournamentKey :
                     {
-                        in : req.user.tournamentSource
+                        in : user.tournamentSource
                     },
                     
                 },
@@ -97,7 +98,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
                 {
                     sourceTeamNumber :
                     {
-                        in : req.user.teamSource
+                        in : user.teamSource
                     }
                 }
             }
@@ -105,7 +106,7 @@ export const autoPathsTeam = async (req: AuthenticatedRequest, teamNumber : numb
         let autoPaths  = []
         for(const element of matches)
         {
-            const currAutoPath = await autoPathSingleMatchSingleScoutReport(req, element.teamMatchKey, element.uuid)
+            const currAutoPath = await autoPathSingleMatchSingleScoutReport(user, element.teamMatchKey, element.uuid)
             if(currAutoPath.positions.length > 0)
             {
                 autoPaths.push(currAutoPath)

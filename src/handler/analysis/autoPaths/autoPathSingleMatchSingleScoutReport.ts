@@ -5,9 +5,10 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
 import { FlippedActionMap, FlippedPositionMap, autoEnd, exludedAutoEvents } from "../analysisConstants";
 import { PositionMap } from "../../manager/managerConstants";
+import { User } from "@prisma/client";
 
 
-export const autoPathSingleMatchSingleScoutReport = async (req: AuthenticatedRequest, matchKey : string, scoutReportUuid : string) => {
+export const autoPathSingleMatchSingleScoutReport = async (user: User, matchKey : string, scoutReportUuid : string) => {
     try {
         const autoData = await prismaClient.event.findMany({
             where : 

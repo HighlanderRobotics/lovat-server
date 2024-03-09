@@ -5,9 +5,10 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { roleMap } from "../analysisConstants";
+import { User } from "@prisma/client";
 
 
-export const robotRole = async (req: AuthenticatedRequest, team: number): Promise<{mainRole : string}> => {
+export const robotRole = async (user: User, team: number): Promise<{mainRole : string}> => {
     try {
         const params = z.object({
             team: z.number()
@@ -29,14 +30,14 @@ export const robotRole = async (req: AuthenticatedRequest, team: number): Promis
                 {
                     sourceTeamNumber:
                     {
-                        in: req.user.teamSource
+                        in: user.teamSource
                     }
                 },
                 teamMatchData:
                 {
                     tournamentKey:
                     {
-                        in: req.user.tournamentSource
+                        in: user.tournamentSource
                     },
                     teamNumber: params.data.team
                 }

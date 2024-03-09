@@ -87,10 +87,15 @@ const EventActionMap = {
     0 : "qm",
     1 : "em"
   }
+  const MatchEnumToAbrivation = {
+    [MatchType.QUALIFICATION] : "qm",
+    [MatchType.ELIMINATION] : "em"
+
+  }
   const MatchTypeEnumToFull = {
     0 : MatchType.QUALIFICATION,
     1 : MatchType.ELIMINATION
   }
-export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull}
+export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation}
 
   

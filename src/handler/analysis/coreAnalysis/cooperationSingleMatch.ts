@@ -6,9 +6,10 @@ import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { match } from "assert";
 import prisma from "../../../prismaClient";
+import { User } from "@prisma/client";
 
 
-export const cooperationSingleMatch = async (req: AuthenticatedRequest, matchKey: string, team: number): Promise<number> => {
+export const cooperationSingleMatch = async (user: User, matchKey: string, team: number): Promise<number> => {
     try {
         const params = z.object({
             team: z.number(),
@@ -46,7 +47,7 @@ export const cooperationSingleMatch = async (req: AuthenticatedRequest, matchKey
             for (let i = 0; i < 3; i++) {
                 const teamNumber = allTeamsRows[i].teamNumber
                 if (i.toString() != teamPositionSuffix) {
-                    const currDifference = await getDifferenceOneTeam(req, matchKey, teamNumber)
+                    const currDifference = await getDifferenceOneTeam(user, matchKey, teamNumber)
                     if(currDifference !== null)
                     {
                         arrOfDifferences.push(currDifference)
@@ -59,7 +60,7 @@ export const cooperationSingleMatch = async (req: AuthenticatedRequest, matchKey
             for (let i = 3; i < 6; i++) {
                 const teamNumber = allTeamsRows[i].teamNumber
                 if (i.toString() != teamPositionSuffix) {
-                    const currDifference = await getDifferenceOneTeam(req, matchKey, teamNumber)
+                    const currDifference = await getDifferenceOneTeam(user, matchKey, teamNumber)
                     if(currDifference !== null)
                     {
                         arrOfDifferences.push(currDifference)
@@ -81,9 +82,9 @@ export const cooperationSingleMatch = async (req: AuthenticatedRequest, matchKey
     }
 
 };
-async function getDifferenceOneTeam(req : AuthenticatedRequest, matchKey: string, teamNumber: number) {
-    const averageTotalTeamPoints = (await arrayAndAverageTeam(req, "totalpoints", teamNumber)).average
-    const teamPointsInThisMatch = await (await singleMatchEventsAverage(req, true, matchKey, teamNumber, "totalPoints"))
+async function getDifferenceOneTeam(user : User, matchKey: string, teamNumber: number) {
+    const averageTotalTeamPoints = (await arrayAndAverageTeam(user, "totalpoints", teamNumber)).average
+    const teamPointsInThisMatch = await (await singleMatchEventsAverage(user, true, matchKey, teamNumber, "totalPoints"))
     if (teamPointsInThisMatch !== null) {
         return teamPointsInThisMatch - averageTotalTeamPoints
     }

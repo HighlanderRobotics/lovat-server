@@ -43,12 +43,12 @@ export const flag = async (req: AuthenticatedRequest, metric: string) => {
                 return { flag: params.data.flag, "data": 0 }
             }
             else {
-                let data = await rankFlag(req, "frc" + params.data.team, tourament.key)
+                let data = await rankFlag(req.user, "frc" + params.data.team, tourament.key)
                 return { flag: params.data.flag, "data": data }
             }
         }
         else {
-            let data = await arrayAndAverageTeam(req, params.data.flag, params.data.team)
+            let data = await arrayAndAverageTeam(req.user, params.data.flag, params.data.team)
             console.log(data)
             return { flag: params.data.flag, data: data.average }
         }
