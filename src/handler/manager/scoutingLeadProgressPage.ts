@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { match } from "assert";
 
 
 export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -128,16 +129,19 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                 // iterate over all shifts and sum total assigned matches
                 let totalAssignedScouterMatches = 0
                 allShifts.forEach(shift => {
-                    const matchesForShift = (shift.endMatchOrdinalNumber - shift.startMatchOrdinalNumber);
+                    const matchesForShift = (shift.endMatchOrdinalNumber - shift.startMatchOrdinalNumber) + 1;
                     if(shift.endMatchOrdinalNumber > totalTournamentMatches)
                     {
-                        totalAssignedScouterMatches += totalTournamentMatches - shift.startMatchOrdinalNumber
+                        totalAssignedScouterMatches += (totalTournamentMatches - shift.startMatchOrdinalNumber) +1
                     }
                     else
                     {
                         totalAssignedScouterMatches += matchesForShift;
                     }
                 });
+                console.log(scouter.name)
+                console.log("totalAssinged")
+                console.log(totalAssignedScouterMatches)
                 const matchesScoutedAtTournament = await prismaClient.scoutReport.groupBy({
                     by : ["teamMatchKey"],
                     where :
@@ -149,6 +153,9 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                         }
                     }
                 })
+                
+                console.log("matches scouted")
+                console.log(matchesScoutedAtTournament.length)
                 const currData = {scouterUuid : scouter.uuid, scouterName : scouter.name, matchesScouted : matchesScoutedAtTournament.length, missedMatches : Math.max(0, totalAssignedScouterMatches-matchesScoutedAtTournament.length)}
                 result.push(currData)
             }
