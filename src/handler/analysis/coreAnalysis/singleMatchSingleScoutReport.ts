@@ -70,6 +70,30 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
         //     }
         //     return stagePointsAverage
         // }
+        if(metric1=== "scores")
+        {
+            const match = await prismaClient.event.aggregate({
+                _count:
+                {
+                    _all: true
+                },
+                where:
+                {
+                    scoutReport: {
+                        uuid : scoutReportUuid
+                    },
+                    action: "SCORE",
+                    time:
+                    {
+                        lte: timeMax,
+                        gte: timeMin
+                    },
+                }
+            })
+            
+            return match._count._all
+        
+        }
         if(metric1 === "pickups")
         {
             const match = await prismaClient.event.aggregate({

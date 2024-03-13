@@ -3,7 +3,7 @@ import { singleMatchEventsAverage } from "./coreAnalysis/singleMatchEventsAverag
 //add cooperation
 
 
-const metricsCategory = ["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "feeds", "drops", "defense"]
+const metricsCategory = ["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "feeds", "drops", "defense", "scores"]
 const metricsBreakdown = ["robotRole", "pickUp", "highNote", "stage"]
 //includes picklist sliders
 //havent done stage or highnote yet 
@@ -68,7 +68,8 @@ const metricToEvent = {
     "cooperation": "cooperation",
     "feeds": [EventAction.FEED_RING],
     "drops": [EventAction.DROP_RING],
-    "defense": [EventAction.DEFENSE]
+    "defense": [EventAction.DEFENSE],
+    "scores" : "scores"
 
 }
 const FlippedActionMap = {
