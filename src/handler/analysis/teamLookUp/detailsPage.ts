@@ -31,11 +31,11 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
         else if (params.data.metric === "scores") {
             let teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
             let allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
-            let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
+            // let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
             let speakerScores = await arrayAndAverageTeam(req.user, "speakerscores", params.data.team)
 
             let result = {
-                array: [ampScores, speakerScores],
+                array: speakerScores,
                 result: teamAverageAndTimeLine.average,
                 all: allTeamAverage,
                 difference: teamAverageAndTimeLine.average - allTeamAverage,
