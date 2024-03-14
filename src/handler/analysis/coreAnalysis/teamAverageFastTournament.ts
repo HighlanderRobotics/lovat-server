@@ -207,7 +207,6 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 if (!stagePoints) {
                     stagePoints = 0
                 }
-                console.log(eventsAverage + highNotePoints + stagePoints)
                 return eventsAverage + highNotePoints + stagePoints
             }
             else {
