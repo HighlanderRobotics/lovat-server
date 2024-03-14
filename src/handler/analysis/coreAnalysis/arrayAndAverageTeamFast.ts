@@ -92,26 +92,28 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
 
         }
         tournamentAverages = await Promise.all(tournamentAverages)    
+        console.log(team + " " + tournamentAverages)
 
     let runningAverage = 0
+
     for (let i = 0; i < tournamentAverages.length; i++) {
         if (i === 0) {
             runningAverage = tournamentAverages[i]
         }
-        else if (i === tournamentAverages.length - 1) {
-            const recentTournament = matchKeys[matchKeys.length - 1].tournamentKey
-            const scoutedMatchesAtMostRecentTournament = timeLineArray.filter(item => item.match.startsWith(recentTournament)).length;
-            const totalMatchesAtMostRecentTournament = tournamentGroups[i].length
-            //0.95 because thats were it asymmpotes, not where it will realsitically reach. Graph on desmos to see more info
-            const weightOnRecent = 0.95 * (1 - (1 / ((multiplerBaseAnalysis * scoutedMatchesAtMostRecentTournament / totalMatchesAtMostRecentTournament) + 1)))
-            runningAverage = runningAverage * (1 - weightOnRecent) + tournamentAverages[i] * weightOnRecent
-        }
+        // else if (i === tournamentAverages.length - 1) {
+        //     const recentTournament = matchKeys[matchKeys.length - 1].tournamentKey
+        //     const scoutedMatchesAtMostRecentTournament = timeLineArray.filter(item => item.match.startsWith(recentTournament)).length;
+        //     const totalMatchesAtMostRecentTournament = tournamentGroups[i].length
+        //     //0.95 because thats were it asymmpotes, not where it will realsitically reach. Graph on desmos to see more info
+        //     const weightOnRecent = 0.95 * (1 - (1 / ((multiplerBaseAnalysis * scoutedMatchesAtMostRecentTournament / totalMatchesAtMostRecentTournament) + 1)))
+        //     runningAverage = runningAverage * (1 - weightOnRecent) + tournamentAverages[i] * weightOnRecent
+        // }
         else {
             runningAverage = runningAverage * 0.2 + tournamentAverages[i] * 0.8
         }
     }
 
-
+    console.log(team + " " + runningAverage)
     return {
         average: runningAverage,
     }

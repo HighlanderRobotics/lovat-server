@@ -130,10 +130,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 metricAllTeamMaps[metric] = currData.teamAverages
             }
         })
-
-       
-
-        let teamBreakdowns = []
+       let teamBreakdowns = []
         let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
         for (const teams of teamChunks) {
             if (teams.length > 0) {

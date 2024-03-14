@@ -153,14 +153,13 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
 
                 }
             })
-            
             let eventsAverage = sumOfMatches._sum.points
             if(!eventsAverage)
             {
                 eventsAverage = 0
             }
             //adds endgame points if nessisary
-            if (metric === "totalpoints" || metric === "teleoppoints") {
+            if (metric1 === "totalpoints" || metric1 === "teleoppoints") {
                 const element = await prismaClient.scoutReport.findUnique({
                     where:
                     {
