@@ -8,6 +8,7 @@ import { highNoteMap, roleMap, specificMatchPageMetrics, stageMap } from "../ana
 import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
 import { match } from "assert";
 import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingleMatchSingleScoutReport";
+import { autoPathScouter } from "./autoPathScouter";
 
 
 export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: Response) => {
@@ -33,7 +34,7 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             role : roleMap[scoutReport.robotRole],
             stage : stageMap[scoutReport.stage],
             highNote : highNoteMap[scoutReport.highNote],
-            autoPath : await autoPathSingleMatchSingleScoutReport(req.user, scoutReport.teamMatchKey, scoutReport.uuid),
+            autoPath : await autoPathScouter(req.user, scoutReport.teamMatchKey, scoutReport.uuid),
             note : scoutReport.notes,
             timeStamp : scoutReport.startTime
         }
