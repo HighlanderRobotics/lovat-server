@@ -158,7 +158,7 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                   stageRows.forEach(row => {
                     stageDataMap[row.stage] = row._count.stage;
                 });
-
+             
                 const totalAttemptsStage = stageRows.reduce((total, item) => {
                     if (item.stage !== "NOTHING") {
                         return total + item._count.stage;
@@ -169,8 +169,9 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 if (totalAttemptsStage !== 0) {
                     stagePoints = (((stageDataMap["ONSTAGE"] || 0) / totalAttemptsStage) * 3) +
                         (((stageDataMap["ONSTAGE_HARMONY"] || 0) / totalAttemptsStage) * 5) +
-                        ((stageRows["PARK"] || 0) / totalAttemptsStage);
+                        ((stageDataMap["PARK"] || 0) / totalAttemptsStage);
                     }
+
                 const highNoteRows = await prismaClient.scoutReport.groupBy({
                     by: ['highNote'],
                     _count: {
@@ -197,8 +198,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                     return total;
                 }, 0);
                 let highNotePoints = 0
-                
-                if (totalAttemptsStage !== 0) {
+               
+                if (highNotePoints !== 0) {
                     highNotePoints = highNoteMap["SUCCESSFUL"] / totalAttempsHighNote
                 }
 
