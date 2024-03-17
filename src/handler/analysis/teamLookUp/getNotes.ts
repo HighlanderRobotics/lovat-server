@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
 import { all } from "axios";
+import { userInfo } from "os";
 
 
 export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
@@ -56,7 +57,10 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                 {
                     teamMatchData:
                     {
-                        teamNumber: params.data.team
+                        teamNumber: params.data.team,
+                        tournamentKey : {
+                            in : req.user.tournamentSource
+                        }
                     },
                     scouter:
                     {
@@ -146,7 +150,10 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                 {
                     teamMatchData:
                     {
-                        teamNumber: params.data.team
+                        teamNumber: params.data.team,
+                        tournamentKey : {
+                            in : req.user.tournamentSource
+                        }
                     },
                     scouter:
                     {
