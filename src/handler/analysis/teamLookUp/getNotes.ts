@@ -24,7 +24,11 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                 {
                     teamMatchData:
                     {
-                        teamNumber: params.data.team
+                        teamNumber: params.data.team,
+                        tournamentKey :
+                        {
+                            in : req.user.tournamentSource
+                        }
                     },
                     scouter:
                     {
