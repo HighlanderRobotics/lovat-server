@@ -129,7 +129,7 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
             let eventsAverage = sumOfMatches.reduce((acc, item) => acc + item._sum.points, 0) / sumOfMatches.length;
 
 
-            if (!eventsAverage) {
+            if (!eventsAverage || eventsAverage === Infinity) {
                 eventsAverage = 0
             }
             //adds endgame points if nessisary
@@ -197,16 +197,18 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                     return total;
                 }, 0);
                 let highNotePoints = 0
+                
                 if (totalAttemptsStage !== 0) {
                     highNotePoints = highNoteMap["SUCCESSFUL"] / totalAttempsHighNote
                 }
 
-                if (!highNotePoints) {
+                if (!highNotePoints || highNotePoints === Infinity) {
                     highNotePoints = 0
                 }
-                if (!stagePoints) {
+                if (!stagePoints || highNotePoints === Infinity) {
                     stagePoints = 0
                 }
+                
                 return eventsAverage + highNotePoints + stagePoints
             }
             else {

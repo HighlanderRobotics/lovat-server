@@ -112,7 +112,6 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
         }
     }
 
-    console.log(team + " " + runningAverage)
     return {
         average: runningAverage,
     }
