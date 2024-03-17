@@ -32,7 +32,11 @@ export const nonEventMetric = async (user: User, team : number, metric: string):
             {
                 teamMatchData:
                 {
-                    teamNumber: params.data.team
+                    teamNumber: params.data.team,
+                    tournamentKey :
+                    {
+                        in : user.tournamentSource
+                    }
                 },
                 scouter : 
                 {
