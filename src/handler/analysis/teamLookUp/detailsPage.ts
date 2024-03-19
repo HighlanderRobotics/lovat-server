@@ -35,7 +35,7 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             let speakerScores = await arrayAndAverageTeam(req.user, "speakerscores", params.data.team)
 
             let result = {
-                array: [ampScores, speakerScores],
+                arrays: {"amp" : ampScores, "speaker" : speakerScores},
                 result: teamAverageAndTimeLine.average,
                 all: allTeamAverage,
                 difference: teamAverageAndTimeLine.average - allTeamAverage,
