@@ -97,6 +97,14 @@ const updateTeamEmails = rateLimit({
   message: 'Too many email updates sent from this IP, please try again after 2 minutes'
 });
 
+
+
+const addNotOnTeamLimiter = rateLimit({
+  windowMs: 3 * 24 * 60 * 60 * 1000,
+  max: 2, 
+  message: 'Too many team number resets sent from this IP, please try again after 3 days'
+});
+
 const app = express();
 
 const port = process.env.PORT || 3000;
@@ -161,7 +169,7 @@ app.post('/v1/manager/onboarding/verifyemail', requireLovatSignature, approveTea
 app.post('/v1/manager/onboarding/resendverificationemail', resendEmailLimiter, requireAuth, resendEmail) //tested
 app.get('/v1/manager/profile', requireAuth, getProfile) //tested
 app.get('/v1/manager/users', requireAuth, getUsers) //tested
-app.post('/v1/manager/noteam', requireAuth, addNotOnTeam)
+app.post('/v1/manager/noteam', addNotOnTeamLimiter, requireAuth, addNotOnTeam)
 
 //dashboard app settings
 app.delete('/v1/manager/user', requireAuth, deleteUser) //tested, is there more to do with Auth0
