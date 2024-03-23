@@ -15,18 +15,20 @@ export const picklistArrayAndAverageAllTeamTournament = async (user: User, metri
        
         let timeLineArray = []
         for (const team of teams) {
-            const currAvg = ( await arrayAndAverageTeamFast(user, metric, team))
+            const currAvg = ( arrayAndAverageTeamFast(user, metric, team))
             timeLineArray.push(currAvg)
+            await wait(2)
         };
         //change to null possibly
         let average = 0
         let teamAveragesMap : Map<number, number> = new Map()
-            if (timeLineArray.length !== 0) {
-                average = timeLineArray.reduce((acc, cur) => acc + cur.average, 0) / timeLineArray.length;
+        await Promise.all(timeLineArray).then((values) => {
+            if (values.length !== 0) {
+                average = values.reduce((acc, cur) => acc + cur.average, 0) / values.length;
             }
-            timeLineArray =  timeLineArray.map(item => item.average);
+            timeLineArray =  values.map(item => item.average);
              teams.forEach((teamNumber, index) => {
-                let currAvg = timeLineArray[index].average
+                let currAvg = values[index].average
                 if(!currAvg)
                 {
                     currAvg = 0
@@ -34,6 +36,7 @@ export const picklistArrayAndAverageAllTeamTournament = async (user: User, metri
                 teamAveragesMap[teamNumber] = currAvg;
               });
                
+        });
         return {
             average: average,
             teamAverages : teamAveragesMap,
@@ -47,3 +50,7 @@ export const picklistArrayAndAverageAllTeamTournament = async (user: User, metri
     }
 
 };
+
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
