@@ -91,7 +91,6 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
             }
 
         }
-        tournamentAverages = await Promise.all(tournamentAverages)    
 
     let runningAverage = 0
 

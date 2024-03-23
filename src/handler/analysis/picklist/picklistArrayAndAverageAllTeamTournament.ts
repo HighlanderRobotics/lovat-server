@@ -17,7 +17,7 @@ export const picklistArrayAndAverageAllTeamTournament = async (user: User, metri
         for (const team of teams) {
             const currAvg = ( arrayAndAverageTeamFast(user, metric, team))
             timeLineArray.push(currAvg)
-            await wait(10)
+            await wait(100)
         };
         //change to null possibly
         let average = 0
