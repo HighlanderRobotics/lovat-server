@@ -82,6 +82,7 @@ import { scoutingLeadProgressPage } from "./handler/manager/scoutingLeadProgress
 import { addScouterDashboard } from "./handler/manager/addScouterDashboard";
 import { scouterScoutReports } from "./handler/analysis/scoutingLead/scouterScoutReports";
 import { pitDisplay } from "./handler/manager/pitDisplay";
+import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -232,6 +233,8 @@ app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScout
 //pit scouting
 app.get("/v1/analysis/pitdisplay", pitDisplay)
 
+
+// app.get('/v1/addtourny', addTournamentMatchesOneTime)
 
 
 getTBAData();

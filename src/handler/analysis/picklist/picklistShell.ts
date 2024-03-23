@@ -138,7 +138,6 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         }
         let dataArr = []
-        console.log(metricAllTeamMaps)
         await Promise.all(teamBreakdowns).then(function (data) {
             for (let i = 0; i < data.length; i++) {
                 let currTeamData = data[i]
