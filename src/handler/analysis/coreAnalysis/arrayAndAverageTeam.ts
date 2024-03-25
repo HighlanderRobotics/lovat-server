@@ -27,9 +27,9 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
                     in: user.tournamentSource
                 },
                 teamNumber: team,
-                scoutReports :
+                scoutReports:
                 {
-                    some : {}
+                    some: {}
                 }
             },
             include:
@@ -94,17 +94,17 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
 
             }
             await Promise.all(currDatas).then((values) => {
+                let sum = 0;
+                let count = 0;
                 for (let i = 0; i < values.length; i++) {
                     if (values[i] !== null) {
-                        timeLineArray.push({ match: tournament[i].key, dataPoint: values[i], tournamentName: tournament[i].tournamentName })
-                        if (currAvg === null) {
-                            currAvg = values[i]
-                        }
-                        else {
-                            currAvg = (currAvg + values[i]) / 2
-                        }
+                        sum += values[i];
+                        count++;
+                        timeLineArray.push({ match: tournament[i].key, dataPoint: values[i], tournamentName: tournament[i].tournamentName });
                     }
                 }
+
+                currAvg = count > 0 ? sum / count : null;
             })
             if (currAvg !== null) {
                 tournamentAverages.push(currAvg)
