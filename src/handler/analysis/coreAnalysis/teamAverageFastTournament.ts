@@ -218,7 +218,51 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 return eventsAverage
             }
         }
+        else if(metric1 === "scores")
+        {
+            const groupedMatches = await prismaClient.event.groupBy({
+                by: ["scoutReportUuid"],
+                _count:
+                {
+                    _all: true
+                },
+                where:
+                {
+                    scoutReport: {
+                        teamMatchData:
+                        {
+                            tournamentKey: tournamentKey,
+                            teamNumber: team
+                        },
+                        scouter:
+                        {
+                            sourceTeamNumber:
+                            {
+                                in: user.teamSource
+                            }
+                        }
+                    },
 
+                    action: EventAction.SCORE,
+                    time:
+                    {
+                        lte: timeMax,
+                        gte: timeMin
+                    },
+
+                }
+            })
+
+            let avg = groupedMatches.reduce((accumulator, current) => {
+                return accumulator + current._count._all;
+            }, 0) / groupedMatches.length;
+            if (!avg) {
+                avg = 0
+            }
+            return avg
+
+        
+        }
         else {
             const params = z.object({
                 metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE]),
