@@ -3,6 +3,7 @@ import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
 import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction } from "@prisma/client";
+import { autoEnd } from "../analysis/analysisConstants";
 
 type CSVData = {
     teamNumber: number
@@ -146,13 +147,27 @@ function aggregatePointsReports(teamNum: number, reports: PointsReport[]): CSVDa
             data.highNoteFail += report.weight;
         }
 
-        data.stageClimb;
-        data.stageClimbHarmony;
-        data.stagePark;
+        switch (report.stage) {
+            case StageResult.PARK:
+                data.stagePark += report.weight;
+            case StageResult.ONSTAGE:
+                data.stageClimb += report.weight;
+            case StageResult.ONSTAGE_HARMONY:
+                data.stageClimbHarmony += report.weight;
+        }
 
-        data.avgAutoPoints;
-        data.avgOffensePoints;
-        data.avgTeleopPoints;
+        report.events.forEach(event => {
+            if (event.time < autoEnd) {
+                data.avgAutoPoints += event.points * report.weight;
+            } else {
+                data.avgTeleopPoints += event.points * report.weight;
+            }
+            // FIX: This will only work if all reports for a match mark robot role as offense
+            // if (report.robotRole === RobotRole.OFFENSE) {
+            //     data.avgOffensePoints += event.points * report.weight;
+            // }
+            data.avgOffensePoints = 0;
+        });
     });
 
     data.matchesImmobile = roles.IMMOBILE;
