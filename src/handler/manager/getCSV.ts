@@ -159,7 +159,7 @@ function aggregatePointsReports(teamNum: number, reports: PointsReport[]): CSVDa
     // Remove IMMOBILE state from main roles
     delete roles.IMMOBILE;
 
-    Object.entries(roles).reduce((highestOccurences, role) => {
+    const highestOccurences = Object.entries(roles).reduce((highestOccurences, role) => {
         // Using >= gives precedence to lower-frequency roles such as Feeder
         if (role[1] >= highestOccurences[1]) {
             if (role[1] >= highestOccurences[0]) {
@@ -179,6 +179,14 @@ function aggregatePointsReports(teamNum: number, reports: PointsReport[]): CSVDa
 
         return highestOccurences;
     }, [0, 0]);
+
+    // Failsafe if robot lacks reports for other roles
+    if (highestOccurences[1] === 0) {
+        data.secondaryRole = "NONE"
+        if (highestOccurences[0] === 0) {
+            data.mainRole = RobotRole.IMMOBILE;
+        }
+    }
 
     return data;
 }
