@@ -209,5 +209,11 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         }
     }
 
+    // Divide all sums by number of matches to get mean
+    data.avgDriverAbility /= numMatches;
+    data.avgAutoPoints /= numMatches;
+    data.avgTeleopPoints /= numMatches;
+    data.avgOffensePoints /= numMatches;
+
     return data;
 }
