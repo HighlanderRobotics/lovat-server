@@ -83,6 +83,7 @@ import { addScouterDashboard } from "./handler/manager/addScouterDashboard";
 import { scouterScoutReports } from "./handler/analysis/scoutingLead/scouterScoutReports";
 import { pitDisplay } from "./handler/manager/pitDisplay";
 import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
+import { getCSV } from "./handler/manager/getCSV";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -236,6 +237,8 @@ app.get("/v1/analysis/pitdisplay", pitDisplay)
 
 // app.get('/v1/addtourny', addTournamentMatchesOneTime)
 
+// csv export
+app.get('/v1/analysis/csvplain', requireAuth, getCSV) // UNTESTED
 
 getTBAData();
 
