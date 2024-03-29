@@ -21,6 +21,7 @@ type CSVData = {
     highNoteFail: number
     highNoteSuccess: number
     avgOffensePoints: number
+    numMatches: number
     numReports: number
 }
 
@@ -92,11 +93,15 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
         }
 
         // Group reports by team number in a sparse array
-        const groupedByTeam = datapoints.reduce<PointsReport[][]>((acc, cur) => {
-            acc[cur.teamNumber] = acc[cur.teamNumber] || [];
+        const groupedByTeam = datapoints.reduce<{reports: PointsReport[], numMatches: number}[]>((acc, cur) => {
+            acc[cur.teamNumber] = acc[cur.teamNumber] || {reports: [], numMatches: 0};
 
+            // Increment number of matches for team
+            acc[cur.teamNumber].numMatches++;
+
+            // Push reports for team from match
             cur.scoutReports.forEach(element => {
-                acc[cur.teamNumber].push(Object.assign({weight: 1/cur.scoutReports.length}, element));
+                acc[cur.teamNumber].reports.push(Object.assign({weight: 1/cur.scoutReports.length}, element));
             });
 
             return acc;
@@ -104,8 +109,8 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
 
         // Aggregate point values
         const aggregatedData: CSVData[] = [];
-        groupedByTeam.forEach((reports, teamNum) => {
-            aggregatedData.push(aggregatePointsReports(teamNum, reports));
+        groupedByTeam.forEach((group, teamNum) => {
+            aggregatedData.push(aggregatePointsReports(teamNum, group.numMatches, group.reports));
         });
 
         // Create and send the csv string through express
@@ -127,9 +132,10 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
     }
 }
 
-function aggregatePointsReports(teamNum: number, reports: PointsReport[]): CSVData {
+function aggregatePointsReports(teamNum: number, numMatches: number, reports: PointsReport[]): CSVData {
     let data: CSVData;
     data.teamNumber = teamNum;
+    data.numMatches = numMatches;
     data.numReports = reports.length;
 
     const roles: Partial<Record<RobotRole, number>> = {};
