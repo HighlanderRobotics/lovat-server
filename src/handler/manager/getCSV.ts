@@ -8,7 +8,6 @@ type CSVData = {
     teamNumber: number
     avgTeleopPoints: number
     avgAutoPoints: number
-    avgOffensePoints: number
     mainRole: string
     secondaryRole: string
     matchesImmobile: number
@@ -16,10 +15,11 @@ type CSVData = {
     stagePark: number
     stageClimb: number
     stageClimbHarmony: number
-    groundPickup: number
-    chutePickup: number
-    highNoteSuccess: number
+    groundPickup: boolean
+    chutePickup: boolean
     highNoteFail: number
+    highNoteSuccess: number
+    avgOffensePoints: number
     numReports: number
 }
 
@@ -104,7 +104,7 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
         // Aggregate point values
         const aggregatedData: CSVData[] = [];
         groupedByTeam.forEach((reports, teamNum) => {
-            aggregatedData.push(Object.assign({teamNumber: teamNum}, aggregatePointsReports(reports)));
+            aggregatedData.push(aggregatePointsReports(teamNum, reports));
         });
 
         // Create and send the csv string through express
@@ -126,7 +126,59 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
     }
 }
 
-function aggregatePointsReports(reports: PointsReport[]): Omit<CSVData, "teamNumber"> {
-    // Do the heavy lifting here :)
-    return null;
+function aggregatePointsReports(teamNum: number, reports: PointsReport[]): CSVData {
+    let data: CSVData;
+    data.teamNumber = teamNum;
+    data.numReports = reports.length;
+
+    const roles: Partial<Record<RobotRole, number>> = {};
+    reports.forEach(report => {
+        data.avgDriverAbility += report.driverAbility * report.weight;
+        roles[report.robotRole] += report.weight;
+
+        // Implement a safety for this? One incorrect report could mess up the data
+        data.chutePickup ||= report.pickUp !== PickUp.GROUND;
+        data.groundPickup ||= report.pickUp !== PickUp.CHUTE;
+
+        if (report.highNote === HighNoteResult.SUCCESSFUL) {
+            data.highNoteSuccess += report.weight;
+        } else if (report.highNote === HighNoteResult.FAILED) {
+            data.highNoteFail += report.weight;
+        }
+
+        data.stageClimb;
+        data.stageClimbHarmony;
+        data.stagePark;
+
+        data.avgAutoPoints;
+        data.avgOffensePoints;
+        data.avgTeleopPoints;
+    });
+
+    data.matchesImmobile = roles.IMMOBILE;
+    // Remove IMMOBILE state from main roles
+    delete roles.IMMOBILE;
+
+    Object.entries(roles).reduce((highestOccurences, role) => {
+        // Using >= gives precedence to lower-frequency roles such as Feeder
+        if (role[1] >= highestOccurences[1]) {
+            if (role[1] >= highestOccurences[0]) {
+                // Push main role to secondary
+                highestOccurences[1] = highestOccurences[0];
+                data.secondaryRole = data.mainRole;
+
+                // Push new role to main
+                highestOccurences[0] = role[1];
+                data.mainRole = role[0];
+            } else {
+                // Push new role to secondary
+                highestOccurences[1] = role[1];
+                data.secondaryRole = role[0];
+            }
+        }
+
+        return highestOccurences;
+    }, [0, 0]);
+
+    return data;
 }
