@@ -19,11 +19,20 @@ export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) 
              return;
          };
         let result = {}
+        let promises = []
          //update if statments in arrayAndAverage if the metric needs to look at scoutReport instead of events table
          for (const element of metricsCategory) {
-            result[element] = (await arrayAndAverageTeamFast(req.user, element, params.data.team)).average;
-        }
-       
+            promises.push(arrayAndAverageTeamFast(req.user, element, params.data.team));
+          }
+        
+            const resolvedDataArray = await Promise.all(promises);
+        
+            metricsCategory.forEach((element, index) => {
+              const data = resolvedDataArray[index];
+              // Assuming 'data' contains an 'average' field
+              result[element] = data.average;
+            });
+        
         res.status(200).send(result)
     }
     catch (error) {
