@@ -20,7 +20,7 @@ type CSVData = {
     chutePickup: boolean
     highNoteFail: number
     highNoteSuccess: number
-    avgOffensePoints: number
+    // avgOffensePoints: number
     numMatches: number
     numReports: number
 }
@@ -37,7 +37,7 @@ type PointsReport = {
         action: EventAction
         points: number
     }[]
-    /** This property represents the weighting of this report in the final aggregation [0..1] */
+    // This property represents the weighting of this report in the final aggregation [0..1]
     weight: number
 }
 
@@ -138,21 +138,26 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     data.numMatches = numMatches;
     data.numReports = reports.length;
 
+    // Main iteration for most aggregation summing
     const roles: Partial<Record<RobotRole, number>> = {};
     reports.forEach(report => {
+        // Sum driver ability and robot role
         data.avgDriverAbility += report.driverAbility * report.weight;
         roles[report.robotRole] += report.weight;
 
         // Implement a safety for this? One incorrect report could mess up the data
+        // Set if chute/groud pickup has been observed
         data.chutePickup ||= report.pickUp !== PickUp.GROUND;
         data.groundPickup ||= report.pickUp !== PickUp.CHUTE;
 
+        // Sum high note successes/failures
         if (report.highNote === HighNoteResult.SUCCESSFUL) {
             data.highNoteSuccess += report.weight;
         } else if (report.highNote === HighNoteResult.FAILED) {
             data.highNoteFail += report.weight;
         }
 
+        // Sum stage results
         switch (report.stage) {
             case StageResult.PARK:
                 data.stagePark += report.weight;
@@ -162,6 +167,7 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
                 data.stageClimbHarmony += report.weight;
         }
 
+        // Sum match points
         report.events.forEach(event => {
             if (event.time < autoEnd) {
                 data.avgAutoPoints += event.points * report.weight;
@@ -172,7 +178,7 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
             // if (report.robotRole === RobotRole.OFFENSE) {
             //     data.avgOffensePoints += event.points * report.weight;
             // }
-            data.avgOffensePoints = 0;
+            // data.avgOffensePoints = 0;
         });
     });
 
@@ -180,6 +186,7 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     // Remove IMMOBILE state from main roles
     delete roles.IMMOBILE;
 
+    // Main method to find highest reported roles
     const highestOccurences = Object.entries(roles).reduce((highestOccurences, role) => {
         // Using >= gives precedence to lower-frequency roles such as Feeder
         if (role[1] >= highestOccurences[1]) {
@@ -201,7 +208,7 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         return highestOccurences;
     }, [0, 0]);
 
-    // Failsafe if robot lacks reports for other roles
+    // Failsafe if robot lacks reports for enough roles
     if (highestOccurences[1] === 0) {
         data.secondaryRole = "NONE"
         if (highestOccurences[0] === 0) {
@@ -209,11 +216,11 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         }
     }
 
-    // Divide all sums by number of matches to get mean
+    // Divide relevent sums by number of matches to get mean
     data.avgDriverAbility /= numMatches;
     data.avgAutoPoints /= numMatches;
     data.avgTeleopPoints /= numMatches;
-    data.avgOffensePoints /= numMatches;
+    // data.avgOffensePoints /= numMatches;
 
     return data;
 }
