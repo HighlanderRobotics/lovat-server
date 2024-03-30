@@ -3,7 +3,7 @@ import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
+import { autoEnd, matchTimeEnd, teamLowerBound, teleopStart, tournamentLowerBound } from "../analysisConstants";
 import { error, time } from "console";
 import { Position } from "@prisma/client";
 import { arrayAndAverageTeamFast } from "./arrayAndAverageTeamFast";
@@ -12,29 +12,86 @@ import { arrayAndAverageTeamFast } from "./arrayAndAverageTeamFast";
 export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string): Promise<{ average: number, timeLine: Array<number> }> => {
     try {
         return new Promise(async (resolve, reject) => {
-            const teams = await prismaClient.scoutReport.findMany({
-                where:
-                {
-                    scouter:
-                    {
-                        sourceTeamNumber:
+            let teams = []
+            if (req.user.teamSource.length >= teamLowerBound) {
+                if (req.user.tournamentSource.length >= tournamentLowerBound) {
+                    teams = await prismaClient.scoutReport.findMany({
+                        where:
                         {
-                            in: req.user.teamSource
-                        }
-                    },
-                    teamMatchData:
-                    {
-                        tournamentKey:
+
+                        },
+                        include:
                         {
-                            in: req.user.tournamentSource
+                            teamMatchData: true
                         }
-                    }
-                },
-                include:
-                {
-                    teamMatchData: true
+                    })
                 }
-            })
+                else {
+                    teams = await prismaClient.scoutReport.findMany({
+                        where:
+                        {
+
+                            teamMatchData:
+                            {
+                                tournamentKey:
+                                {
+                                    in: req.user.tournamentSource
+                                }
+                            }
+                        },
+                        include:
+                        {
+                            teamMatchData: true
+                        }
+                    })
+                }
+            }
+            else {
+                if (req.user.tournamentSource.length >= tournamentLowerBound) {
+                    teams = await prismaClient.scoutReport.findMany({
+                        where:
+                        {
+                            teamMatchData:
+                            {
+                                tournamentKey:
+                                {
+                                    in: req.user.tournamentSource
+                                }
+                            }
+                        },
+                        include:
+                        {
+                            teamMatchData: true
+                        }
+                    })
+                }
+                else {
+                    teams = await prismaClient.scoutReport.findMany({
+                        where:
+                        {
+                            scouter:
+                            {
+                                sourceTeamNumber:
+                                {
+                                    in: req.user.teamSource
+                                }
+                            },
+                            teamMatchData:
+                            {
+                                tournamentKey:
+                                {
+                                    in: req.user.tournamentSource
+                                }
+                            }
+
+                        },
+                        include:
+                        {
+                            teamMatchData: true
+                        }
+                    })
+                }
+            }
             const uniqueTeams: Set<number> = new Set();
 
             for (const element of teams) {
@@ -45,7 +102,7 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
             const uniqueTeamsArray: Array<number> = Array.from(uniqueTeams);
             let timeLineArray = []
             for (const element of uniqueTeamsArray) {
-                const currAvg = ( arrayAndAverageTeamFast(req.user, metric, element))
+                const currAvg = (arrayAndAverageTeamFast(req.user, metric, element))
                 timeLineArray = timeLineArray.concat(currAvg)
             };
             //change to null possibly
@@ -58,7 +115,7 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
                 }
                 timeLineArray = values.map(item => item.average);
             });
-            resolve( {
+            resolve({
                 average: average,
                 timeLine: timeLineArray
             })

@@ -3,7 +3,7 @@ import prismaClient from '../../../prismaClient'
 import z, { date } from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teleopStart } from "../analysisConstants";
+import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teamLowerBound, teleopStart } from "../analysisConstants";
 import { run } from "node:test";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { match } from "assert";
@@ -20,36 +20,68 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
         if (!params.success) {
             throw (params)
         };
-        let matchKeys = await prismaClient.teamMatchData.findMany({
-            where: {
-                tournamentKey:
-                {
-                    in: user.tournamentSource
-                },
-                teamNumber: team,
-                scoutReports:
-                {
-                    some: {}
-                }
-            },
-            include:
-            {
-                tournament: true
-            },
-            orderBy:
-                [
+        let matchKeys = []
+        if (user.tournamentSource.length >= teamLowerBound) {
+            matchKeys = await prismaClient.teamMatchData.findMany({
+                where: {
+                    teamNumber: team,
+                    scoutReports:
                     {
-                        tournament: {
-                            date: "asc"
-                        }
+                        some: {}
+                    }
+                },
+                include:
+                {
+                    tournament: true
+                },
+                orderBy:
+                    [
+                        {
+                            tournament: {
+                                date: "asc"
+                            }
+                        },
+                        //aplhabetical with QUALIFICATION first, then ELIMINATION
+
+                        { matchType: "asc" },
+                        { matchNumber: "asc" },
+
+                    ]
+            })
+        }
+        else
+        {
+            matchKeys = await prismaClient.teamMatchData.findMany({
+                where: {
+                    teamNumber: team,
+                    scoutReports:
+                    {
+                        some: {}
                     },
-                    //aplhabetical with QUALIFICATION first, then ELIMINATION
+                    tournamentKey :
+                    {
+                        in : user.tournamentSource
+                    }
+                },
+                include:
+                {
+                    tournament: true
+                },
+                orderBy:
+                    [
+                        {
+                            tournament: {
+                                date: "asc"
+                            }
+                        },
+                        //aplhabetical with QUALIFICATION first, then ELIMINATION
 
-                    { matchType: "asc" },
-                    { matchNumber: "asc" },
+                        { matchType: "asc" },
+                        { matchNumber: "asc" },
 
-                ]
-        })
+                    ]
+            })
+        }
         type Match = {
             key: string;
             tournamentKey: string;
