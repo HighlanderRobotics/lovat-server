@@ -66,6 +66,8 @@ model TeamMatchData {
   teamNumber    Int
   matchType     MatchType
   scoutReports  ScoutReport[]
+  @@index([tournamentKey, teamNumber])
+
 }
 
 enum MatchType {
@@ -97,6 +99,7 @@ model ScoutReport {
   scouterUuid        String
   scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
   events             Event[]   
+
   // flaggedScoutReport FlaggedScoutReport?
 }
 
