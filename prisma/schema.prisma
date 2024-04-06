@@ -15,6 +15,7 @@ model Event {
   points          Int
   scoutReportUuid String
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
+  @@index([scoutReportUuid])
 }
 
 enum Position {
@@ -160,6 +161,7 @@ model Scouter {
   Team4Shifts                ScouterScheduleShift[] @relation(name: "Team4")
   Team5Shifts                ScouterScheduleShift[] @relation(name: "Team5")
   Team6Shifts                ScouterScheduleShift[] @relation(name: "Team6")
+  @@index([sourceTeamNumber])
 
 }
 
