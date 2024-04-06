@@ -75,7 +75,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         let usedMetrics = []
         let metricAllTeamMaps = {}
         let includedTeamNumbers:number[] = []
-        let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
+        let allTeamData: { average: number, teamAverages: Map<number, number>, timeLine: Array<number> }[] = []
         if (params.data.tournamentKey) {
             const teamsAtTournament = await prismaClient.teamMatchData.groupBy({
                 by: ["teamNumber"],
@@ -87,11 +87,9 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             includedTeamNumbers = teamsAtTournament.map(team => team.teamNumber);
             for (const metric of picklistSliders) {
                 if (params.data[metric] || params.data.flags.includes(metric)) {
-                    const currData = picklistArrayAndAverageAllTeamTournament(req.user, metric, includedTeamNumbers);
+                    const currData = await picklistArrayAndAverageAllTeamTournament(req.user, metric, includedTeamNumbers);
                     allTeamData.push(currData)
                     usedMetrics.push(metric)
-                    await wait(500)
-
                 }
             }
 
@@ -101,12 +99,10 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
            res.status(200).send([])
            return
         }
+    
         
-        
-        
-        await Promise.all(allTeamData).then((allTeamDataResolved) => {
-            for (let i = 0; i < allTeamDataResolved.length; i++) {
-                let currData = allTeamDataResolved[i]
+            for (let i = 0; i < allTeamData.length; i++) {
+                let currData = allTeamData[i]
                 let metric = usedMetrics[i]
                 if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2 && (ss.standardDeviation(currData.timeLine))) {
                     allTeamAvgSTD[metric] = {
@@ -131,7 +127,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 }
                 metricAllTeamMaps[metric] = currData.teamAverages
             }
-        })
+        
        let teamBreakdowns = []
         let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
         for (const teams of teamChunks) {
