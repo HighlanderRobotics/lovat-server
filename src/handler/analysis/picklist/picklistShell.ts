@@ -90,6 +90,8 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                     const currData = picklistArrayAndAverageAllTeamTournament(req.user, metric, includedTeamNumbers);
                     allTeamData.push(currData)
                     usedMetrics.push(metric)
+                    await wait(75)
+
                 }
             }
 
@@ -199,7 +201,9 @@ function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
         });
     })
 }
-
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 
