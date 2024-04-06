@@ -90,7 +90,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                     const currData = picklistArrayAndAverageAllTeamTournament(req.user, metric, includedTeamNumbers);
                     allTeamData.push(currData)
                     usedMetrics.push(metric)
-                    await wait(75)
+                    await wait(500)
 
                 }
             }
