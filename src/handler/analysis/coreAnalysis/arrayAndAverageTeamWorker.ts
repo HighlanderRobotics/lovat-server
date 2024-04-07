@@ -45,7 +45,7 @@ import flatted from 'flatted'
                     {
                         tournament: true
                     },
-                    orderBy:
+                   orderBy :
                         [
                             {
                                 tournament: {

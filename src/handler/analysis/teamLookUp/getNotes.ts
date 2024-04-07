@@ -26,9 +26,9 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                     teamMatchData:
                     {
                         teamNumber: params.data.team,
-                        tournamentKey :
+                        tournamentKey:
                         {
-                            in : req.user.tournamentSource
+                            in: req.user.tournamentSource
                         }
                     },
                     scouter:
@@ -40,7 +40,33 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                         not: ""
                     }
                 },
+                orderBy: [
+                    {
+                        teamMatchData:
+                        {
+                            tournament:
+                            {
+                                date: "desc"
+                            },
+                        }
+                    },
+                    {
+                        teamMatchData:
+                        {
+                           
+                            matchType: "asc"
+                        }
 
+                    },
+                    {
+                        teamMatchData:
+                        {
+                            matchNumber: "asc"
+                        }
+                    }
+
+
+                ],
                 include:
                 {
                     scouter: true,
@@ -58,8 +84,8 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                     teamMatchData:
                     {
                         teamNumber: params.data.team,
-                        tournamentKey : {
-                            in : req.user.tournamentSource
+                        tournamentKey: {
+                            in: req.user.tournamentSource
                         }
                     },
                     scouter:
@@ -71,12 +97,41 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                         }
 
                     },
+
                     notes:
                     {
                         not: ""
                     }
 
                 },
+                orderBy: 
+                [
+                    {
+                        teamMatchData:
+                        {
+                            tournament:
+                            {
+                                date: "desc"
+                            },
+                        }
+                    },
+                    {
+                        teamMatchData:
+                        {
+                           
+                            matchType: "asc"
+                        }
+
+                    },
+                    {
+                        teamMatchData:
+                        {
+                            matchNumber: "asc"
+                        }
+                    }
+
+
+                ],
                 include:
                 {
                     teamMatchData: {
@@ -113,8 +168,17 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
 
 
                 }));
-                const allNotes = notesAndMatches.concat(notesAndMatchesAndNames)
-                res.status(200).send(allNotes)
+                let combinedNotes = notesAndMatches.concat(notesAndMatchesAndNames)
+                combinedNotes.sort((a, b) => {
+                    if (a.tournamentKey < b.tournamentKey) return -1;
+                    if (a.tournamentKey > b.tournamentKey) return 1;
+                    
+                    if (a.matchType < b.matchType) return -1;
+                    if (a.matchType > b.matchType) return 1;
+                    
+                    return a.matchNumber - b.matchNumber;
+                });
+                res.status(200).send(combinedNotes)
             }
             else {
 
@@ -139,8 +203,17 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
 
 
                 }));
-                const allNotes = notesAndMatches.concat(notesAndMatchesAndNames)
-                res.status(200).send(allNotes)
+                let combinedNotes = notesAndMatches.concat(notesAndMatchesAndNames)
+                combinedNotes.sort((a, b) => {
+                    if (a.tournamentKey < b.tournamentKey) return -1;
+                    if (a.tournamentKey > b.tournamentKey) return 1;
+                    
+                    if (a.matchType < b.matchType) return -1;
+                    if (a.matchType > b.matchType) return 1;
+                    
+                    return a.matchNumber - b.matchNumber;
+                });                
+                res.status(200).send(combinedNotes)
             }
 
         }
@@ -151,8 +224,8 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                     teamMatchData:
                     {
                         teamNumber: params.data.team,
-                        tournamentKey : {
-                            in : req.user.tournamentSource
+                        tournamentKey: {
+                            in: req.user.tournamentSource
                         }
                     },
                     scouter:
@@ -167,7 +240,36 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
                     {
                         not: ""
                     }
-                },
+                }
+                ,
+                orderBy:
+                    [
+                        {
+                            teamMatchData:
+                            {
+                                tournament:
+                                {
+                                    date: "desc"
+                                },
+                            }
+                        },
+                        {
+                            teamMatchData:
+                            {
+                               
+                                matchType: "asc"
+                            }
+
+                        },
+                        {
+                            teamMatchData:
+                            {
+                                matchNumber: "asc"
+                            }
+                        }
+
+
+                    ],
                 include:
                 {
                     scouter: true,
