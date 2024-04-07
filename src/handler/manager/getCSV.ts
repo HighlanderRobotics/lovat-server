@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
 import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction } from "@prisma/client";
 import { autoEnd } from "../analysis/analysisConstants";
+import { z } from "zod";
 
 type CSVData = {
     teamNumber: number
@@ -48,13 +49,23 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
             return;
         }
 
+        // Data will only be sourced from a tournament as sent with the request
+        const params = z.object({
+            tournamentKey: z.string()
+        }).safeParse({
+            tournamentKey: req.query.tournamentKey
+        });
+
+        if (!params.success) {
+            res.status(400).send({ "error": params, "displayError": "Invalid tournament selected." });
+            return;
+        }
+
         // TeamMatchData instances have unique combinations of team, match, and tournament keys
         // These instances will be sorted by team number and then looped through and aggregated
         const datapoints = await prismaClient.teamMatchData.findMany({
             where: {
-                tournamentKey: {
-                    in: req.user.tournamentSource
-                }
+                tournamentKey: params.data.tournamentKey
             },
             select: {
                 teamNumber: true,
