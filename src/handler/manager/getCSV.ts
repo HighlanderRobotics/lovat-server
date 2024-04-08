@@ -26,8 +26,8 @@ type CSVData = {
     avgStagePark: number
     avgStageClimb: number
     avgStageClimbHarmony: number
-    avgHighNoteFail: number
-    avgHighNoteSuccess: number
+    highNoteFails: number
+    highNoteSuccesses: number
     // avgOffensePoints: number
     matchesImmobile: number
     numMatches: number
@@ -171,13 +171,6 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         data.chutePickup ||= report.pickUp !== PickUp.GROUND;
         data.groundPickup ||= report.pickUp !== PickUp.CHUTE;
 
-        // Sum high note successes/failures
-        if (report.highNote === HighNoteResult.SUCCESSFUL) {
-            data.avgHighNoteSuccess += report.weight;
-        } else if (report.highNote === HighNoteResult.FAILED) {
-            data.avgHighNoteFail += report.weight;
-        }
-
         // Sum stage results
         switch (report.stage) {
             case StageResult.PARK:
@@ -188,7 +181,14 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
                 data.avgStageClimbHarmony += report.weight;
         }
 
-        // Sum match points
+        // Sum high note successes/failures
+        if (report.highNote === HighNoteResult.SUCCESSFUL) {
+            data.highNoteSuccesses += report.weight;
+        } else if (report.highNote === HighNoteResult.FAILED) {
+            data.highNoteFails += report.weight;
+        }
+
+        // Sum match points and actions
         report.events.forEach(event => {
             if (event.time < autoEnd) {
                 data.avgAutoPoints += event.points * report.weight;
@@ -273,8 +273,6 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     data.avgStagePark /= numMatches;
     data.avgStageClimb /= numMatches;
     data.avgStageClimbHarmony /= numMatches;
-    data.avgHighNoteFail /= numMatches;
-    data.avgHighNoteSuccess /= numMatches;
     // data.avgOffensePoints /= numMatches;
 
     return data;
