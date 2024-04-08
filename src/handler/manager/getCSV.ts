@@ -16,12 +16,12 @@ type CSVData = {
     avgAutoPoints: number
     avgDriverAbility: number
     avgPickups: number
-    avgAmpScores: number
-    avgSpeakerScores: number
-    avgTrapScores: number
     avgFeeds: number
     avgDrops: number
     avgScores: number
+    avgAmpScores: number
+    avgSpeakerScores: number
+    avgTrapScores: number
     avgDefense: number
     avgStagePark: number
     avgStageClimb: number
@@ -195,6 +195,28 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
             } else {
                 data.avgTeleopPoints += event.points * report.weight;
             }
+
+            switch (event.action) {
+                case EventAction.DEFENSE:
+                    data.avgDefense += report.weight;
+                case EventAction.DROP_RING:
+                    data.avgDrops += report.weight;
+                case EventAction.FEED_RING:
+                    data.avgFeeds += report.weight;
+                case EventAction.PICK_UP:
+                    data.avgPickups += report.weight;
+                case EventAction.SCORE:
+                    data.avgScores += report.weight;
+                    switch (event.position) {
+                        case Position.AMP:
+                            data.avgAmpScores += report.weight;
+                        case Position.SPEAKER:
+                            data.avgSpeakerScores += report.weight;
+                        case Position.TRAP:
+                            data.avgTrapScores += report.weight;
+                    }
+            }
+
             // FIX: This will only work if all reports for a match mark robot role as offense
             // if (report.robotRole === RobotRole.OFFENSE) {
             //     data.avgOffensePoints += event.points * report.weight;
@@ -241,12 +263,12 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     data.avgAutoPoints /= numMatches;
     data.avgDriverAbility /= numMatches;
     data.avgPickups /= numMatches;
-    data.avgAmpScores /= numMatches;
-    data.avgSpeakerScores /= numMatches;
-    data.avgTrapScores /= numMatches;
     data.avgFeeds /= numMatches;
     data.avgDrops /= numMatches;
     data.avgScores /= numMatches;
+    data.avgAmpScores /= numMatches;
+    data.avgSpeakerScores /= numMatches;
+    data.avgTrapScores /= numMatches;
     data.avgDefense /= numMatches;
     data.avgStagePark /= numMatches;
     data.avgStageClimb /= numMatches;
