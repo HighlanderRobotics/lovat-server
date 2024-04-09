@@ -175,10 +175,13 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         switch (report.stage) {
             case StageResult.PARK:
                 data.avgStagePark += report.weight;
+                break;
             case StageResult.ONSTAGE:
                 data.avgStageClimb += report.weight;
+                break;
             case StageResult.ONSTAGE_HARMONY:
                 data.avgStageClimbHarmony += report.weight;
+                break;
         }
 
         // Sum high note successes/failures
@@ -199,22 +202,30 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
             switch (event.action) {
                 case EventAction.DEFENSE:
                     data.avgDefense += report.weight;
+                    break;
                 case EventAction.DROP_RING:
                     data.avgDrops += report.weight;
+                    break;
                 case EventAction.FEED_RING:
                     data.avgFeeds += report.weight;
+                    break;
                 case EventAction.PICK_UP:
                     data.avgPickups += report.weight;
+                    break;
                 case EventAction.SCORE:
                     data.avgScores += report.weight;
                     switch (event.position) {
                         case Position.AMP:
                             data.avgAmpScores += report.weight;
+                            break;
                         case Position.SPEAKER:
                             data.avgSpeakerScores += report.weight;
+                            break;
                         case Position.TRAP:
                             data.avgTrapScores += report.weight;
+                            break;
                     }
+                    break;
             }
 
             // FIX: This will only work if all reports for a match mark robot role as offense
