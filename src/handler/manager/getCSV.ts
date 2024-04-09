@@ -259,21 +259,30 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     }
 
     // Divide relevent sums by number of matches to get mean
-    data.avgTeleopPoints /= numMatches;
-    data.avgAutoPoints /= numMatches;
-    data.avgDriverAbility /= numMatches;
-    data.avgPickups /= numMatches;
-    data.avgFeeds /= numMatches;
-    data.avgDrops /= numMatches;
-    data.avgScores /= numMatches;
-    data.avgAmpScores /= numMatches;
-    data.avgSpeakerScores /= numMatches;
-    data.avgTrapScores /= numMatches;
-    data.avgDefense /= numMatches;
-    data.avgStagePark /= numMatches;
-    data.avgStageClimb /= numMatches;
-    data.avgStageClimbHarmony /= numMatches;
-    // data.avgOffensePoints /= numMatches;
+    data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints / numMatches);
+    data.avgAutoPoints = roundToHundredth(data.avgAutoPoints / numMatches);
+    data.avgDriverAbility = roundToHundredth(data.avgDriverAbility / numMatches);
+    data.avgPickups = roundToHundredth(data.avgPickups / numMatches);
+    data.avgFeeds = roundToHundredth(data.avgFeeds / numMatches);
+    data.avgDrops = roundToHundredth(data.avgDrops / numMatches);
+    data.avgScores = roundToHundredth(data.avgScores / numMatches);
+    data.avgAmpScores = roundToHundredth(data.avgAmpScores / numMatches);
+    data.avgSpeakerScores = roundToHundredth(data.avgSpeakerScores / numMatches);
+    data.avgTrapScores = roundToHundredth(data.avgTrapScores / numMatches);
+    data.avgDefense = roundToHundredth(data.avgDefense / numMatches);
+    data.avgStagePark = roundToHundredth(data.avgStagePark / numMatches);
+    data.avgStageClimb = roundToHundredth(data.avgStageClimb / numMatches);
+    data.avgStageClimbHarmony = roundToHundredth(data.avgStageClimbHarmony / numMatches);
+    // data.avgOffensePoints = roundToHundredth(data.avgOffensePoints / numMatches);
+
+    // Trim remaining datapoints
+    data.highNoteFails = roundToHundredth(data.highNoteFails);
+    data.highNoteSuccesses = roundToHundredth(data.highNoteSuccesses);
+    data.matchesImmobile = roundToHundredth(data.matchesImmobile);
 
     return data;
+}
+
+function roundToHundredth(a: number): number {
+    return Math.round(a * 100) / 100;
 }
