@@ -2,25 +2,34 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
-import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction } from "@prisma/client";
+import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction, Position } from "@prisma/client";
 import { autoEnd } from "../analysis/analysisConstants";
+import { z } from "zod";
 
 type CSVData = {
     teamNumber: number
-    avgTeleopPoints: number
-    avgAutoPoints: number
     mainRole: string
     secondaryRole: string
-    matchesImmobile: number
-    avgDriverAbility: number
-    stagePark: number
-    stageClimb: number
-    stageClimbHarmony: number
     groundPickup: boolean
     chutePickup: boolean
-    highNoteFail: number
-    highNoteSuccess: number
+    avgTeleopPoints: number
+    avgAutoPoints: number
+    avgDriverAbility: number
+    avgPickups: number
+    avgFeeds: number
+    avgDrops: number
+    avgScores: number
+    avgAmpScores: number
+    avgSpeakerScores: number
+    avgTrapScores: number
+    avgDefense: number
+    avgStagePark: number
+    avgStageClimb: number
+    avgStageClimbHarmony: number
+    highNoteFails: number
+    highNoteSuccesses: number
     // avgOffensePoints: number
+    matchesImmobile: number
     numMatches: number
     numReports: number
 }
@@ -35,6 +44,7 @@ type PointsReport = {
     events: {
         time: number
         action: EventAction
+        position: Position
         points: number
     }[]
     // This property represents the weighting of this report in the final aggregation [0..1]
@@ -48,13 +58,23 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
             return;
         }
 
+        // Data will only be sourced from a tournament as sent with the request
+        const params = z.object({
+            tournamentKey: z.string()
+        }).safeParse({
+            tournamentKey: req.query.tournamentKey
+        });
+
+        if (!params.success) {
+            res.status(400).send({ "error": params, "displayError": "Invalid tournament selected." });
+            return;
+        }
+
         // TeamMatchData instances have unique combinations of team, match, and tournament keys
         // These instances will be sorted by team number and then looped through and aggregated
         const datapoints = await prismaClient.teamMatchData.findMany({
             where: {
-                tournamentKey: {
-                    in: req.user.tournamentSource
-                }
+                tournamentKey: params.data.tournamentKey
             },
             select: {
                 teamNumber: true,
@@ -76,6 +96,7 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
                             select: {
                                 time: true,
                                 action: true,
+                                position: true,
                                 points: true
                             }
                         }
@@ -150,35 +171,56 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         data.chutePickup ||= report.pickUp !== PickUp.GROUND;
         data.groundPickup ||= report.pickUp !== PickUp.CHUTE;
 
-        // Sum high note successes/failures
-        if (report.highNote === HighNoteResult.SUCCESSFUL) {
-            data.highNoteSuccess += report.weight;
-        } else if (report.highNote === HighNoteResult.FAILED) {
-            data.highNoteFail += report.weight;
-        }
-
         // Sum stage results
         switch (report.stage) {
             case StageResult.PARK:
-                data.stagePark += report.weight;
+                data.avgStagePark += report.weight;
             case StageResult.ONSTAGE:
-                data.stageClimb += report.weight;
+                data.avgStageClimb += report.weight;
             case StageResult.ONSTAGE_HARMONY:
-                data.stageClimbHarmony += report.weight;
+                data.avgStageClimbHarmony += report.weight;
         }
 
-        // Sum match points
+        // Sum high note successes/failures
+        if (report.highNote === HighNoteResult.SUCCESSFUL) {
+            data.highNoteSuccesses += report.weight;
+        } else if (report.highNote === HighNoteResult.FAILED) {
+            data.highNoteFails += report.weight;
+        }
+
+        // Sum match points and actions
         report.events.forEach(event => {
             if (event.time < autoEnd) {
                 data.avgAutoPoints += event.points * report.weight;
             } else {
                 data.avgTeleopPoints += event.points * report.weight;
             }
+
+            switch (event.action) {
+                case EventAction.DEFENSE:
+                    data.avgDefense += report.weight;
+                case EventAction.DROP_RING:
+                    data.avgDrops += report.weight;
+                case EventAction.FEED_RING:
+                    data.avgFeeds += report.weight;
+                case EventAction.PICK_UP:
+                    data.avgPickups += report.weight;
+                case EventAction.SCORE:
+                    data.avgScores += report.weight;
+                    switch (event.position) {
+                        case Position.AMP:
+                            data.avgAmpScores += report.weight;
+                        case Position.SPEAKER:
+                            data.avgSpeakerScores += report.weight;
+                        case Position.TRAP:
+                            data.avgTrapScores += report.weight;
+                    }
+            }
+
             // FIX: This will only work if all reports for a match mark robot role as offense
             // if (report.robotRole === RobotRole.OFFENSE) {
             //     data.avgOffensePoints += event.points * report.weight;
             // }
-            // data.avgOffensePoints = 0;
         });
     });
 
@@ -217,9 +259,20 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     }
 
     // Divide relevent sums by number of matches to get mean
-    data.avgDriverAbility /= numMatches;
-    data.avgAutoPoints /= numMatches;
     data.avgTeleopPoints /= numMatches;
+    data.avgAutoPoints /= numMatches;
+    data.avgDriverAbility /= numMatches;
+    data.avgPickups /= numMatches;
+    data.avgFeeds /= numMatches;
+    data.avgDrops /= numMatches;
+    data.avgScores /= numMatches;
+    data.avgAmpScores /= numMatches;
+    data.avgSpeakerScores /= numMatches;
+    data.avgTrapScores /= numMatches;
+    data.avgDefense /= numMatches;
+    data.avgStagePark /= numMatches;
+    data.avgStageClimb /= numMatches;
+    data.avgStageClimbHarmony /= numMatches;
     // data.avgOffensePoints /= numMatches;
 
     return data;
