@@ -160,8 +160,13 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     data.numMatches = numMatches;
     data.numReports = reports.length;
 
+    const roles: Record<RobotRole, number> = {
+        OFFENSE: 0,
+        DEFENSE: 0,
+        FEEDER: 0,
+        IMMOBILE: 0
+    };
     // Main iteration for most aggregation summing
-    const roles: Partial<Record<RobotRole, number>> = {};
     reports.forEach(report => {
         // Sum driver ability and robot role
         data.avgDriverAbility += report.driverAbility * report.weight;
