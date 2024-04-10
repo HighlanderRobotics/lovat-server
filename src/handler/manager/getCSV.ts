@@ -23,12 +23,12 @@ type CSVData = {
     avgSpeakerScores: number
     avgTrapScores: number
     avgDefense: number
-    avgStagePark: number
-    avgStageClimb: number
-    avgStageClimbHarmony: number
+    // avgOffensePoints: number
+    percStagePark: number
+    percStageClimb: number
+    percStageClimbHarmony: number
     highNoteFails: number
     highNoteSuccesses: number
-    // avgOffensePoints: number
     matchesImmobile: number
     numMatches: number
     numReports: number
@@ -174,13 +174,13 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         // Sum stage results
         switch (report.stage) {
             case StageResult.PARK:
-                data.avgStagePark += report.weight;
+                data.percStagePark += report.weight;
                 break;
             case StageResult.ONSTAGE:
-                data.avgStageClimb += report.weight;
+                data.percStageClimb += report.weight;
                 break;
             case StageResult.ONSTAGE_HARMONY:
-                data.avgStageClimbHarmony += report.weight;
+                data.percStageClimbHarmony += report.weight;
                 break;
         }
 
@@ -281,10 +281,10 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     data.avgSpeakerScores = roundToHundredth(data.avgSpeakerScores / numMatches);
     data.avgTrapScores = roundToHundredth(data.avgTrapScores / numMatches);
     data.avgDefense = roundToHundredth(data.avgDefense / numMatches);
-    data.avgStagePark = roundToHundredth(data.avgStagePark / numMatches);
-    data.avgStageClimb = roundToHundredth(data.avgStageClimb / numMatches);
-    data.avgStageClimbHarmony = roundToHundredth(data.avgStageClimbHarmony / numMatches);
     // data.avgOffensePoints = roundToHundredth(data.avgOffensePoints / numMatches);
+    data.percStagePark = Math.round(data.percStagePark / numMatches * 100);
+    data.percStageClimb = Math.round(data.percStageClimb / numMatches * 100);
+    data.percStageClimbHarmony = Math.round(data.percStageClimbHarmony * 100);
 
     // Trim remaining datapoints
     data.highNoteFails = roundToHundredth(data.highNoteFails);
