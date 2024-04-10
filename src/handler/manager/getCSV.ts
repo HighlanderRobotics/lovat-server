@@ -155,8 +155,33 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
 }
 
 function aggregatePointsReports(teamNum: number, numMatches: number, reports: PointsReport[]): CSVData {
-    let data: CSVData;
-    data.teamNumber = teamNum;
+    let data: CSVData = {
+        teamNumber: 0,
+        mainRole: "",
+        secondaryRole: "",
+        groundPickup: false,
+        chutePickup: false,
+        avgTeleopPoints: 0,
+        avgAutoPoints: 0,
+        avgDriverAbility: 0,
+        avgPickups: 0,
+        avgFeeds: 0,
+        avgDrops: 0,
+        avgScores: 0,
+        avgAmpScores: 0,
+        avgSpeakerScores: 0,
+        avgTrapScores: 0,
+        avgDefense: 0,
+        percStagePark: 0,
+        percStageClimb: 0,
+        percStageClimbHarmony: 0,
+        percStageNone : 0,
+        highNoteFails: 0,
+        highNoteSuccesses: 0,
+        matchesImmobile: 0,
+        numMatches: 0,
+        numReports: 0
+    };    data.teamNumber = teamNum;
     data.numMatches = numMatches;
     data.numReports = reports.length;
 
