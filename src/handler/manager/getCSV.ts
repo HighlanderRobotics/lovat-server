@@ -235,7 +235,7 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         });
     });
 
-    data.matchesImmobile = roles.IMMOBILE;
+    data.matchesImmobile = roles.IMMOBILE || 0;
     // Remove IMMOBILE state from main roles
     delete roles.IMMOBILE;
 
