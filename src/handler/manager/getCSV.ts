@@ -27,6 +27,7 @@ type CSVData = {
     percStagePark: number
     percStageClimb: number
     percStageClimbHarmony: number
+    percStageNone: number
     highNoteFails: number
     highNoteSuccesses: number
     matchesImmobile: number
@@ -182,6 +183,9 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
             case StageResult.ONSTAGE_HARMONY:
                 data.percStageClimbHarmony += report.weight;
                 break;
+            case StageResult.NOTHING:
+                data.percStageNone += report.weight;
+                break;
         }
 
         // Sum high note successes/failures
@@ -283,9 +287,10 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     data.avgDefense = roundToHundredth(data.avgDefense / numMatches);
     // data.avgOffensePoints = roundToHundredth(data.avgOffensePoints / numMatches);
 
-    data.percStagePark = Math.round(data.percStagePark / numMatches * 100);
-    data.percStageClimb = Math.round(data.percStageClimb / numMatches * 100);
-    data.percStageClimbHarmony = Math.round(data.percStageClimbHarmony / numMatches * 100);
+    data.percStagePark = Math.round(data.percStagePark / numMatches * 1000) / 10;
+    data.percStageClimb = Math.round(data.percStageClimb / numMatches * 1000) / 10;
+    data.percStageClimbHarmony = Math.round(data.percStageClimbHarmony / numMatches * 1000) / 10;
+    data.percStageNone = Math.round(data.percStageNone / numMatches * 1000) / 10;
 
     // Trim remaining datapoints
     data.highNoteFails = roundToHundredth(data.highNoteFails);
