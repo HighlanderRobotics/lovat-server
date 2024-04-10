@@ -282,9 +282,10 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     data.avgTrapScores = roundToHundredth(data.avgTrapScores / numMatches);
     data.avgDefense = roundToHundredth(data.avgDefense / numMatches);
     // data.avgOffensePoints = roundToHundredth(data.avgOffensePoints / numMatches);
+
     data.percStagePark = Math.round(data.percStagePark / numMatches * 100);
     data.percStageClimb = Math.round(data.percStageClimb / numMatches * 100);
-    data.percStageClimbHarmony = Math.round(data.percStageClimbHarmony * 100);
+    data.percStageClimbHarmony = Math.round(data.percStageClimbHarmony / numMatches * 100);
 
     // Trim remaining datapoints
     data.highNoteFails = roundToHundredth(data.highNoteFails);
