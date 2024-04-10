@@ -278,6 +278,9 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         }
     }
 
+    // Add stage points to teleop
+    data.avgTeleopPoints += data.percStagePark + data.percStageClimb * 3 + data.percStageClimbHarmony * 5;
+
     // Divide relevent sums by number of matches to get mean
     data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints / numMatches);
     data.avgAutoPoints = roundToHundredth(data.avgAutoPoints / numMatches);
