@@ -27,6 +27,7 @@ type CSVData = {
     percStagePark: number
     percStageClimb: number
     percStageClimbHarmony: number
+    percStageNone: number
     highNoteFails: number
     highNoteSuccesses: number
     matchesImmobile: number
@@ -159,8 +160,13 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     data.numMatches = numMatches;
     data.numReports = reports.length;
 
+    const roles: Record<RobotRole, number> = {
+        OFFENSE: 0,
+        DEFENSE: 0,
+        FEEDER: 0,
+        IMMOBILE: 0
+    };
     // Main iteration for most aggregation summing
-    const roles: Partial<Record<RobotRole, number>> = {};
     reports.forEach(report => {
         // Sum driver ability and robot role
         data.avgDriverAbility += report.driverAbility * report.weight;
@@ -181,6 +187,9 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
                 break;
             case StageResult.ONSTAGE_HARMONY:
                 data.percStageClimbHarmony += report.weight;
+                break;
+            case StageResult.NOTHING:
+                data.percStageNone += report.weight;
                 break;
         }
 
@@ -282,9 +291,11 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
     data.avgTrapScores = roundToHundredth(data.avgTrapScores / numMatches);
     data.avgDefense = roundToHundredth(data.avgDefense / numMatches);
     // data.avgOffensePoints = roundToHundredth(data.avgOffensePoints / numMatches);
-    data.percStagePark = Math.round(data.percStagePark / numMatches * 100);
-    data.percStageClimb = Math.round(data.percStageClimb / numMatches * 100);
-    data.percStageClimbHarmony = Math.round(data.percStageClimbHarmony * 100);
+
+    data.percStagePark = Math.round(data.percStagePark / numMatches * 1000) / 10;
+    data.percStageClimb = Math.round(data.percStageClimb / numMatches * 1000) / 10;
+    data.percStageClimbHarmony = Math.round(data.percStageClimbHarmony / numMatches * 1000) / 10;
+    data.percStageNone = Math.round(data.percStageNone / numMatches * 1000) / 10;
 
     // Trim remaining datapoints
     data.highNoteFails = roundToHundredth(data.highNoteFails);
