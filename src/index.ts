@@ -238,7 +238,9 @@ app.get("/v1/analysis/pitdisplay", pitDisplay)
 // app.get('/v1/addtourny', addTournamentMatchesOneTime)
 
 // csv export
-app.get('/v1/analysis/csvplain', requireAuth, getCSV) // UNTESTED
+app.get('/v1/analysis/csvplain', requireAuth, getCSV) // tested
+
+
 
 getTBAData();
 
