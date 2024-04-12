@@ -238,6 +238,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             }
             finalFormatedMatches.push(currData)
         };
+        let promises = []
         if (user.teamNumber) {
             const scouterShifts = await prismaClient.scouterScheduleShift.findMany({
                 where:
@@ -282,26 +283,26 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         scoutersExist = false
                     }
                     if (scoutersExist) {
-                        await addScoutedTeam(req, scouterShifts, currIndex, "team1", element)
-                        await addScoutedTeam(req, scouterShifts, currIndex, "team2", element)
-                        await addScoutedTeam(req, scouterShifts, currIndex, "team3", element)
-                        await addScoutedTeam(req, scouterShifts, currIndex, "team4", element)
-                        await addScoutedTeam(req, scouterShifts, currIndex, "team5", element)
-                        await addScoutedTeam(req, scouterShifts, currIndex, "team6", element)
+                        promises.push(addScoutedTeam(req, scouterShifts, currIndex, "team1", element))
+                        promises.push(addScoutedTeam(req, scouterShifts, currIndex, "team2", element))
+                        promises.push(addScoutedTeam(req, scouterShifts, currIndex, "team3", element))
+                        promises.push(addScoutedTeam(req, scouterShifts, currIndex, "team4", element))
+                        promises.push(addScoutedTeam(req, scouterShifts, currIndex, "team5", element))
+                        promises.push(addScoutedTeam(req, scouterShifts, currIndex, "team6", element))
 
                     }
                     else {
-                        await addScoutedTeamNotOnSchedule(req, "team1", element)
-                        await addScoutedTeamNotOnSchedule(req, "team2", element)
-                        await addScoutedTeamNotOnSchedule(req, "team3", element)
-                        await addScoutedTeamNotOnSchedule(req, "team4", element)
-                        await addScoutedTeamNotOnSchedule(req, "team5", element)
-                        await addScoutedTeamNotOnSchedule(req, "team6", element)
+                        promises.push(addScoutedTeamNotOnSchedule(req, "team1", element))
+                        promises.push(addScoutedTeamNotOnSchedule(req, "team2", element))
+                        promises.push(addScoutedTeamNotOnSchedule(req, "team3", element))
+                        promises.push(addScoutedTeamNotOnSchedule(req, "team4", element))
+                        promises.push(addScoutedTeamNotOnSchedule(req, "team5", element))
+                        promises.push(addScoutedTeamNotOnSchedule(req, "team6", element))
 
                     }
                     if(element.scouted)
                     {
-                        await addExternalReports(req, element)
+                        promises.push(addExternalReports(req, element))
                     }
 
 
@@ -310,12 +311,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             }
             else {
                 for (const match of finalFormatedMatches) {
-                    await addScoutedTeamNotOnSchedule(req, "team1", match)
-                    await addScoutedTeamNotOnSchedule(req, "team2", match)
-                    await addScoutedTeamNotOnSchedule(req, "team3", match)
-                    await addScoutedTeamNotOnSchedule(req, "team4", match)
-                    await addScoutedTeamNotOnSchedule(req, "team5", match)
-                    await addScoutedTeamNotOnSchedule(req, "team6", match)
+                    promises.push(addScoutedTeamNotOnSchedule(req, "team1", match))
+                    promises.push(addScoutedTeamNotOnSchedule(req, "team2", match))
+                    promises.push(addScoutedTeamNotOnSchedule(req, "team3", match))
+                    promises.push(addScoutedTeamNotOnSchedule(req, "team4", match))
+                    promises.push(addScoutedTeamNotOnSchedule(req, "team5", match))
+                    promises.push(addScoutedTeamNotOnSchedule(req, "team6", match))
                     if(match.scouted)
                     {
                         await addExternalReports(req, match)
@@ -329,9 +330,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         }
         else {
             for (const match of finalFormatedMatches) {
-               await addExternalReports(req, match)
+                promises.push(addExternalReports(req, match))
             }
         }
+
+        await Promise.all(promises);
+
 
         res.status(200).send(finalFormatedMatches);
     }
@@ -392,6 +396,7 @@ async function addScoutedTeamNotOnSchedule(req: AuthenticatedRequest, team: stri
                 await match[team].scouters.push({ name: scoutReport.scouter.name, scouted: true })
             }
         }
+        return true
 
 
     }
@@ -422,6 +427,7 @@ async function addScoutedTeam(req: AuthenticatedRequest, scouterShifts, currInde
             }
         }
         await addScoutedTeamNotOnSchedule(req, team, match, scouterShifts, currIndex)
+        return true
 
     }
     catch (error) {
@@ -454,12 +460,15 @@ async function addExternalReports(req: AuthenticatedRequest, match) {
                 }
             }
         }
+        
       
     })
+
     await externalReports.forEach(externalReport => {
         const team = ScouterScheduleMap[externalReport.teamMatchKey[externalReport.teamMatchKey.length - 1]]
         match[team].externalReports = externalReport._count._all
     });
+    return true
 
 
 }
