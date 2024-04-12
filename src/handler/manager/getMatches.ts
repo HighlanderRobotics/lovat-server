@@ -14,6 +14,7 @@ import { extname } from "node:path";
 export const getMatches = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const user = req.user
+
         let teams = null
         let isScouted = null
         //type check, convert isScouted to a boolean
@@ -23,6 +24,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         if (req.query.teams != undefined) {
             teams = JSON.parse(req.query.teams as string);
         }
+
         const params = z.object({
             tournamentKey: z.string(),
             teamNumbers: z.array(z.number()).nullable(),
@@ -36,19 +38,23 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             res.status(400).send(params);
             return;
         };
+
         let tournamentKey = params.data.tournamentKey
-        if (tournamentKey === "2024joh" || tournamentKey === "2024joh" || tournamentKey === "2024mil" || tournamentKey === "2024arc" || tournamentKey === "2024cur" || tournamentKey === "2024dal" || tournamentKey === "2024gal" || tournamentKey === "2024hop" || tournamentKey === "2024new") {
+
+        // Division tournaments aren't currently supported (?)
+        if (["2024joh", "2024mil", "2024arc", "2024cur", "2024dal", "2024hop", "2024new"].includes(tournamentKey)) {
             res.status(500).send("tournament not found when trying to insert tournament matches");
-            return
+            return;
         }
-        //get matches from tournament, check that tournament has been inserted. If not add it
-        const matchRows = await prismaClient.teamMatchData.findMany({
+
+        // Check that matches for a tournament have been inserted, add if needed
+        let match = await prismaClient.teamMatchData.findFirst({
             where:
             {
                 tournamentKey: params.data.tournamentKey
             }
         })
-        if (matchRows.length === 0) {
+        if (match === null) {
             await addTournamentMatches(params.data.tournamentKey)
         }
 
