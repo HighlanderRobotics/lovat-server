@@ -39,7 +39,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             return;
         };
 
-        let tournamentKey = params.data.tournamentKey
+        const tournamentKey = params.data.tournamentKey
 
         // Divisions aren't currently supported (?)
         if (["2024joh", "2024mil", "2024arc", "2024cur", "2024dal", "2024hop", "2024new"].includes(tournamentKey)) {
@@ -48,7 +48,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         }
 
         // Check that matches for a tournament have been inserted, add if needed
-        let match = await prismaClient.teamMatchData.findFirst({
+        const match = await prismaClient.teamMatchData.findFirst({
             where:
             {
                 tournamentKey: params.data.tournamentKey
@@ -61,7 +61,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
         //find scouted matches (using sourceTeam and isScouted )
         //get all matches regardless for ordinal number calculation later on
-        let qualMatchCount = await prismaClient.teamMatchData.count({
+        const qualMatchCount = await prismaClient.teamMatchData.count({
             where:
             {
                 tournamentKey: params.data.tournamentKey,
@@ -72,10 +72,10 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             res.status(404).send("The match schedule for this tournament hasn't been posted yet.")
             return;
         }
-        let lastQualMatch = qualMatchCount / 6
+        const lastQualMatch = qualMatchCount / 6
 
         //find non scouted matches (not scouted from user.sourceTeam)
-        let notScouted = await prismaClient.teamMatchData.findMany({
+        const notScouted = await prismaClient.teamMatchData.findMany({
             where:
             {
                 tournamentKey: params.data.tournamentKey,
