@@ -105,8 +105,10 @@ const FlippedPositionMap = {
 const tournamentLowerBound = 497
 const teamLowerBound = 3300
 
+const swrConstant = 300
+const ttlConstant = 200
 
 const multiplerBaseAnalysis = 4
-export {metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap, tournamentLowerBound, teamLowerBound };
+export {metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant};
 
 

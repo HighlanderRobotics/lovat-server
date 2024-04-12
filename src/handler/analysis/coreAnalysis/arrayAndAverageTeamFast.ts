@@ -3,7 +3,7 @@ import prismaClient from '../../../prismaClient'
 import z, { date } from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teamLowerBound, teleopStart, tournamentLowerBound } from "../analysisConstants";
+import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, swrConstant, teamLowerBound, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
 import { run } from "node:test";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { match } from "assert";
@@ -27,8 +27,8 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
             matchKeys = await prismaClient.teamMatchData.findMany({
                 cacheStrategy :
                 {
-                    swr : 300,
-                    ttl : 200,
+                    swr : swrConstant,
+                    ttl : ttlConstant,
                 },
                 where: {
                     teamNumber: team,
@@ -61,8 +61,8 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
             matchKeys = await prismaClient.teamMatchData.findMany({
                 cacheStrategy :
                 {
-                    swr : 300,
-                    ttl : 200,
+                    swr : swrConstant,
+                    ttl : ttlConstant,
                 },
                 where: {
                     teamNumber: team,

@@ -3,7 +3,7 @@ import prismaClient from '../../../prismaClient'
 import z, { date } from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teamLowerBound, teleopStart } from "../analysisConstants";
+import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, swrConstant, teamLowerBound, teleopStart, ttlConstant } from "../analysisConstants";
 import { run } from "node:test";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { match } from "assert";
@@ -23,6 +23,11 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
         let matchKeys = []
         if (user.tournamentSource.length >= teamLowerBound) {
             matchKeys = await prismaClient.teamMatchData.findMany({
+                cacheStrategy :
+                {
+                    swr : swrConstant,
+                    ttl : ttlConstant,
+                },
                 where: {
                     teamNumber: team,
                     scoutReports:
@@ -52,7 +57,13 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
         else
         {
             matchKeys = await prismaClient.teamMatchData.findMany({
+                cacheStrategy :
+                {
+                    swr : swrConstant,
+                    ttl : ttlConstant,
+                },
                 where: {
+                    
                     teamNumber: team,
                     scoutReports:
                     {

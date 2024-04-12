@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap, teamLowerBound, teleopStart } from "../analysisConstants";
+import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap, swrConstant, teamLowerBound, teleopStart, ttlConstant } from "../analysisConstants";
 import { average, sum } from "simple-statistics";
 import { EventAction, Position, User } from "@prisma/client";
 import { match } from "assert";
@@ -31,8 +31,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const counts = await prismaClient.event.groupBy({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     by: ["scoutReportUuid"],
                     _count:
@@ -68,8 +68,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const driverAbilityAvg = await prismaClient.scoutReport.aggregate({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     _avg:
                     {
@@ -98,8 +98,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const sumOfMatches = await prismaClient.event.groupBy({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     by: ["scoutReportUuid"],
                     _sum:
@@ -136,8 +136,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                     const stageRows = await prismaClient.scoutReport.groupBy({
                         cacheStrategy :
                         {
-                            swr : 300,
-                            ttl : 200,
+                            swr : swrConstant,
+                            ttl : ttlConstant,
                         },
                         by: ['stage'],
                         _count: {
@@ -213,8 +213,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const groupedMatches = await prismaClient.event.groupBy({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     by: ["scoutReportUuid"],
                     _count:
@@ -267,8 +267,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const groupedMatches = await prismaClient.event.groupBy({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     by: ["scoutReportUuid"],
                     _count:
@@ -313,8 +313,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const counts = await prismaClient.event.groupBy({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     by: ["scoutReportUuid"],
                     _count:
@@ -356,8 +356,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const driverAbilityAvg = await prismaClient.scoutReport.aggregate({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     _avg:
                     {
@@ -391,8 +391,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const sumOfMatches = await prismaClient.event.groupBy({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     by: ["scoutReportUuid"],
                     _sum:
@@ -435,8 +435,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                     const stageRows = await prismaClient.scoutReport.groupBy({
                         cacheStrategy :
                         {
-                            swr : 300,
-                            ttl : 200,
+                            swr : swrConstant,
+                            ttl : ttlConstant,
                         },
                         by: ['stage'],
                         _count: {
@@ -525,8 +525,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const groupedMatches = await prismaClient.event.groupBy({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     by: ["scoutReportUuid"],
                     _count:
@@ -585,8 +585,8 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 const groupedMatches = await prismaClient.event.groupBy({
                     cacheStrategy :
                     {
-                        swr : 300,
-                        ttl : 200,
+                        swr : swrConstant,
+                        ttl : ttlConstant,
                     },
                     by: ["scoutReportUuid"],
                     _count:
