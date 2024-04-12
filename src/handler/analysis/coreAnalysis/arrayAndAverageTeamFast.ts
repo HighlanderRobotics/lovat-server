@@ -25,6 +25,11 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
         let matchKeys = []
         if (user.tournamentSource.length >= tournamentLowerBound) {
             matchKeys = await prismaClient.teamMatchData.findMany({
+                cacheStrategy :
+                {
+                    swr : 300,
+                    ttl : 200,
+                },
                 where: {
                     teamNumber: team,
                     scoutReports:
@@ -54,6 +59,11 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
         else {
             
             matchKeys = await prismaClient.teamMatchData.findMany({
+                cacheStrategy :
+                {
+                    swr : 300,
+                    ttl : 200,
+                },
                 where: {
                     teamNumber: team,
                     scoutReports:
