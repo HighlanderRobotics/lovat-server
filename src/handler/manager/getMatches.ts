@@ -9,6 +9,7 @@ import { match } from "node:assert";
 import { MatchTypeEnumToFull, MatchTypeMap, MatchTypeToAbrivation, ReverseMatchTypeMap, ReverseScouterScheduleMap, ScouterScheduleMap } from "./managerConstants";
 import { nonEventMetric } from "../analysis/coreAnalysis/nonEventMetric";
 import { extname } from "node:path";
+import { MatchType } from "@prisma/client";
 
 
 export const getMatches = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -101,62 +102,50 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
         //check to make sure each match has 6 rows, if not than 1 + rows have been scouted already
         // Count non-scouted teams by match
-        const groupedMatches: Record<string, number> = notScouted.reduce((acc, match) => {
-            const key = `${match.matchNumber}-${match.matchType}`;
-            acc[key] ??= 0;
-            acc[key]++;
+        const groupedMatches: Record<string, number[]> = notScouted.reduce((acc, match) => {
+            acc[match.matchType] ??= {};
+            acc[match.matchType][match.matchNumber] ??= 0
+            acc[match.matchType][match.matchNumber]++;
             return acc;
         }, {});
 
-        // Remove unwanted matches (matches that do not contain reports from team sources)
-        const fullyNonScoutedMatches = notScouted.filter(match => {
-            return groupedMatches[`${match.matchNumber}-${match.matchType}`] >= 6;
-        }).map(teamMatch => teamMatch.key);
-
         //get just the matchNumber + matchType for matches scouted and unscouted speratly
-        let matchKeyAndNumber = []
+        let matchKeyAndNumber: {matchType: MatchType, matchNumber: number, scouted: boolean}[] = []
+
         if (params.data.isScouted === null || params.data.isScouted === undefined || params.data.isScouted) {
-            let matchKeyAndNumberScouted = await prismaClient.teamMatchData.groupBy({
+            // List (by key) matches that contain no reports from team sources
+            const fullyNonScoutedMatches = notScouted.filter(match => {
+                return groupedMatches[match.matchType][match.matchNumber] >= 6;
+            }).map(e => e.key);
+
+            // Query matches with at least one report from team sources
+            const matchKeyAndNumberScouted = await prismaClient.teamMatchData.groupBy({
                 by: ["matchNumber", "matchType"],
                 where: {
                     tournamentKey: params.data.tournamentKey,
                     key: {
                         notIn: fullyNonScoutedMatches
                     },
-                },
-                orderBy: [
-                    { matchType: 'desc' },
-                    { matchNumber: 'asc' }
-                ]
-
+                }
             })
-            matchKeyAndNumber = matchKeyAndNumber.concat(matchKeyAndNumberScouted.map(match => ({ ...match, scouted: true })))
+
+            matchKeyAndNumber = matchKeyAndNumberScouted.map(match => ({ ...match, scouted: true }))
         }
+
         if (params.data.isScouted === null || params.data.isScouted === undefined || !params.data.isScouted) {
+            // Loop over match types, then match numbers, to return a unique array of non-scouted matches
+            const matchKeyAndNumberNotScouted = Object.entries(groupedMatches).reduce((acc, [matchType, arr]) => {
+                arr.forEach((count, matchNumber) => {
+                    if (count >= 6) {
+                        acc.push({matchType: matchType, matchNumber: matchNumber, scouted: false});
+                    }
+                })
+                return acc;
+            }, [])
 
-            let matchKeyAndNumberUnScouted = await prismaClient.teamMatchData.groupBy({
-                by: ["matchNumber", "matchType"],
-                where: {
-                    tournamentKey: params.data.tournamentKey,
-                    key: {
-                        in: fullyNonScoutedMatches
-                    },
-
-                },
-                _count:
-                {
-                    _all: true
-                },
-                orderBy: [
-                    { matchType: 'asc' },
-                    { matchNumber: 'asc' }
-                ]
-
-
-            })
-            matchKeyAndNumber = matchKeyAndNumber.concat(matchKeyAndNumberUnScouted.map(match => ({ ...match, scouted: false })))
-
+            matchKeyAndNumber.push(...matchKeyAndNumberNotScouted)
         }
+
         //assuming scouted matches always come before non scouted, add sort to comfim that
         let finalMatches = []
         if (params.data.teamNumbers && params.data.teamNumbers.length > 0 && params.data.teamNumbers.length <= 6) {
