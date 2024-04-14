@@ -113,17 +113,6 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             return groupedMatches[`${match.matchNumber}-${match.matchType}`] >= 6;
         }).map(teamMatch => teamMatch.key);
 
-        let scoutedMatches = await prismaClient.teamMatchData.findMany({
-            where:
-            {
-                tournamentKey: params.data.tournamentKey,
-                key:
-                {
-                    notIn: fullyNonScoutedMatches
-                }
-            }
-        })
-
         //get just the matchNumber + matchType for matches scouted and unscouted speratly
         let matchKeyAndNumber = []
         if (params.data.isScouted === null || params.data.isScouted === undefined || params.data.isScouted) {
@@ -132,7 +121,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 where: {
                     tournamentKey: params.data.tournamentKey,
                     key: {
-                        in: scoutedMatches.map(item => item.key)
+                        notIn: fullyNonScoutedMatches
                     },
                 },
                 orderBy: [
