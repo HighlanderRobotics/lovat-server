@@ -91,24 +91,27 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         }
                     }
                 }
+            },
+            select: {
+                key: true,
+                matchNumber: true,
+                matchType: true
             }
         })
+
         //check to make sure each match has 6 rows, if not than 1 + rows have been scouted already
-        // Group scouted teams by match
+        // Count non-scouted teams by match
         const groupedMatches: Record<string, number> = notScouted.reduce((acc, match) => {
             const key = `${match.matchNumber}-${match.matchType}`;
-            if (!acc[key]) {
-                acc[key] = 0;
-            }
-            acc[key]++
+            acc[key] ??= 0;
+            acc[key]++;
             return acc;
         }, {});
 
-        // Remove unwanted matches (matches with less than 6 scouted teams)
-        const nonScoutedMatches = notScouted.filter(match => {
+        // Remove unwanted matches (matches that do not contain reports from team sources)
+        const fullyNonScoutedMatches = notScouted.filter(match => {
             return groupedMatches[`${match.matchNumber}-${match.matchType}`] >= 6;
-        });
-
+        }).map(teamMatch => teamMatch.key);
 
         let scoutedMatches = await prismaClient.teamMatchData.findMany({
             where:
@@ -116,10 +119,11 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 tournamentKey: params.data.tournamentKey,
                 key:
                 {
-                    notIn: nonScoutedMatches.map(item => item.key)
+                    notIn: fullyNonScoutedMatches
                 }
             }
         })
+
         //get just the matchNumber + matchType for matches scouted and unscouted speratly
         let matchKeyAndNumber = []
         if (params.data.isScouted === null || params.data.isScouted === undefined || params.data.isScouted) {
@@ -146,7 +150,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 where: {
                     tournamentKey: params.data.tournamentKey,
                     key: {
-                        in: nonScoutedMatches.map(item => item.key),
+                        in: fullyNonScoutedMatches
                     },
 
                 },
