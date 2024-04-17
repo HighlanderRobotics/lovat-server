@@ -37,10 +37,10 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             return;
         };
         let tournamentKey = params.data.tournamentKey
-        if (tournamentKey === "2024joh" || tournamentKey === "2024joh" || tournamentKey === "2024mil" || tournamentKey === "2024arc" || tournamentKey === "2024cur" || tournamentKey === "2024dal" || tournamentKey === "2024gal" || tournamentKey === "2024hop" || tournamentKey === "2024new") {
-            res.status(500).send("tournament not found when trying to insert tournament matches");
-            return
-        }
+        // if (tournamentKey === "2024joh" || tournamentKey === "2024joh" || tournamentKey === "2024mil" || tournamentKey === "2024arc" || tournamentKey === "2024cur" || tournamentKey === "2024dal" || tournamentKey === "2024gal" || tournamentKey === "2024hop" || tournamentKey === "2024new") {
+        //     res.status(500).send("tournament not found when trying to insert tournament matches");
+        //     return
+        // }
         //get matches from tournament, check that tournament has been inserted. If not add it
         const matchRows = await prismaClient.teamMatchData.findMany({
             where:
