@@ -73,6 +73,8 @@ export function generateOpenAPI(auth: Partial<AuthObj>) {
 	}
 
 	console.log('config: ', config)
+	console.log('process.env.SERVER_URL: ', process.env.SERVER_URL)
+	
 	const document = new OpenApiGeneratorV3(newRegistry.definitions).generateDocument(config)
 
 	return document
