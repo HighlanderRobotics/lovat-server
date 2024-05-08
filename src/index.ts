@@ -89,8 +89,6 @@ import { generateOpenAPI } from "./lib/swagger";
 import swaggerValidationMiddleware from "./lib/middleware/swaggerMiddleware";
 import { z } from "zod";
 
-console.log('process.env: ', process.env)
-
 declare global {
 	namespace Express {
 		interface Request {
@@ -142,7 +140,7 @@ app.use(
     },
   })
   .handle(async (req, res) => {
-    return res.json({ message: 'Hello, world!' })
+    return res.send({ message: 'Hello, world!' })
   })
 )
 
