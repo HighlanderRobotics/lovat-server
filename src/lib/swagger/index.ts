@@ -63,7 +63,6 @@ export function generateOpenAPI(auth: Partial<AuthObj>) {
 		]
 	}
 
-
 	for (const route of allRoutes) {
 		const shouldShow = route?.protectedFn?.(auth ?? {}) ?? true
 
@@ -73,6 +72,7 @@ export function generateOpenAPI(auth: Partial<AuthObj>) {
 		newRegistry.registerPath(route)
 	}
 
+	console.log('config: ', config)
 	const document = new OpenApiGeneratorV3(newRegistry.definitions).generateDocument(config)
 
 	return document
