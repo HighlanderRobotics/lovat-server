@@ -89,6 +89,8 @@ import { generateOpenAPI } from "./lib/swagger";
 import swaggerValidationMiddleware from "./lib/middleware/swaggerMiddleware";
 import { z } from "zod";
 
+console.log('process.env: ', process.env)
+
 declare global {
 	namespace Express {
 		interface Request {
