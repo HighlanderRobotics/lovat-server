@@ -88,7 +88,7 @@ const validateOutput = (routeConfig: CustomRouteConfig, res: Response) => {
 		}
 
 		return res.status(422).send({
-			response: result.error.issues
+			response: (result as any).error.issues
 		})
 	}
 }
@@ -182,9 +182,7 @@ const swaggerValidationMiddleware = <T extends CustomRouteConfig>(config: T) => 
 				} : undefined,
 				query: config.query,
 			},
-			responses: { 
-                ...allResponses
-            }
+			responses: Object.assign({}, ...allResponses) as any
 		})
 	}
 
@@ -205,7 +203,5 @@ const swaggerValidationMiddleware = <T extends CustomRouteConfig>(config: T) => 
 		}		
 	}
 }
-
-
 
 export default swaggerValidationMiddleware

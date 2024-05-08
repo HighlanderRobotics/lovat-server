@@ -86,6 +86,8 @@ import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatc
 import { getCSV } from "./handler/manager/getCSV";
 import swaggerUi from 'swagger-ui-express';
 import { generateOpenAPI } from "./lib/swagger";
+import swaggerValidationMiddleware from "./lib/middleware/swaggerMiddleware";
+import { z } from "zod";
 
 declare global {
 	namespace Express {
@@ -119,6 +121,28 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
+
+app.use(
+  '/hello',
+  swaggerValidationMiddleware({
+    path: '/hello',
+    description: 'Test',
+    summary: 'Test',
+    tags: ['Test'],
+    method: 'get',
+    validateInput: true,
+    validateOutput: true,
+    response200: {
+      description: 'Test',
+      schema: z.object({
+        message: z.string()
+      })
+    },
+  })
+  .handle(async (req, res) => {
+    return res.json({ message: 'Hello, world!' })
+  })
+)
 
 app.use('/swagger.json', (req, res) => {
 	// const settings = getAuthObj(req.query.url)
