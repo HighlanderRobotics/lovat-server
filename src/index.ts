@@ -84,6 +84,23 @@ import { scouterScoutReports } from "./handler/analysis/scoutingLead/scouterScou
 import { pitDisplay } from "./handler/manager/pitDisplay";
 import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 import { getCSV } from "./handler/manager/getCSV";
+import swaggerUi from 'swagger-ui-express';
+import { generateOpenAPI } from "./lib/swagger";
+import swaggerValidationMiddleware from "./lib/middleware/swaggerMiddleware";
+import { z } from "zod";
+
+declare global {
+	namespace Express {
+		interface Request {
+            swaggerDoc: any
+			openapi: any
+			clientInfo: any
+			auth?: {
+			},
+			apiUser: any
+		}
+	}
+}
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -104,6 +121,47 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
+
+app.use(
+  '/hello',
+  swaggerValidationMiddleware({
+    path: '/hello',
+    description: 'Test',
+    summary: 'Test',
+    tags: ['Test'],
+    method: 'get',
+    validateInput: true,
+    validateOutput: true,
+    response200: {
+      description: 'Test',
+      schema: z.object({
+        message: z.string()
+      })
+    },
+  })
+  .handle(async (req, res) => {
+    return res.send({ message: 'Hello, world!' })
+  })
+)
+
+app.use('/swagger.json', (req, res) => {
+	// const settings = getAuthObj(req.query.url)
+
+	return res.json(generateOpenAPI({}))
+})
+
+
+app.use('/hello', (req, res) => {
+  return res.send('Hello, world!')
+})
+app.use('/swagger', swaggerUi.serve,
+(req, res, next) => {
+
+  const options = {}
+
+	req.swaggerDoc = generateOpenAPI({})
+	swaggerUi.setup(req.swaggerDoc, options)(req, res, next)
+})
 
 
 //general endpoints
@@ -242,6 +300,8 @@ app.get('/v1/analysis/csvplain', requireAuth, getCSV) // tested
 
 
 
-getTBAData();
+// getTBAData();
 
-app.listen(port);
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+})
