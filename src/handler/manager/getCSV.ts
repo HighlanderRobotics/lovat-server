@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
@@ -6,7 +6,7 @@ import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction, 
 import { autoEnd } from "../analysis/analysisConstants";
 import { z } from "zod";
 
-type CSVData = {
+type AggregatedTeamData = {
     teamNumber: number
     mainRole: string
     secondaryRole: string
@@ -52,6 +52,10 @@ type PointsReport = {
     weight: number
 }
 
+/**
+ * Sends csv file of rows of AggregatedTeamData instances, organized by team.
+ * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
+ */
 export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         if (req.user.role !== UserRole.SCOUTING_LEAD) {
@@ -105,7 +109,7 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
                 }
             },
             orderBy: {
-                teamNumber: "desc"
+                teamNumber: "asc"
             }
         });
 
@@ -130,7 +134,7 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
         }, []);
 
         // Aggregate point values
-        const aggregatedData: CSVData[] = [];
+        const aggregatedData: AggregatedTeamData[] = [];
         groupedByTeam.forEach((group, teamNum) => {
             aggregatedData.push(aggregatePointsReports(teamNum, group.numMatches, group.reports));
         });
@@ -141,9 +145,14 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
             // Creates csv headers from data properties
             columns: Object.keys(aggregatedData[0]),
             // Required for excel viewing
-            bom: true
+            bom: true,
+            // Rename boolean values to TRUE and FALSE
+            cast: {
+                boolean: b => b ? "TRUE" : "FALSE"
+            }
         });
-        res.attachment("lovatDownload.csv");
+
+        res.attachment("teamDataDownload.csv");
         res.header('Content-Type', 'text/csv');
         res.send(csvString);
         return;
@@ -154,8 +163,8 @@ export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<
     }
 }
 
-function aggregatePointsReports(teamNum: number, numMatches: number, reports: PointsReport[]): CSVData {
-    let data: CSVData = {
+function aggregatePointsReports(teamNum: number, numMatches: number, reports: PointsReport[]): AggregatedTeamData {
+    let data: AggregatedTeamData = {
         teamNumber: 0,
         mainRole: "",
         secondaryRole: "",
@@ -181,7 +190,8 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         matchesImmobile: 0,
         numMatches: 0,
         numReports: 0
-    };    data.teamNumber = teamNum;
+    };
+    data.teamNumber = teamNum;
     data.numMatches = numMatches;
     data.numReports = reports.length;
 
