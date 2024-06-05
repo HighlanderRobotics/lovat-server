@@ -56,7 +56,7 @@ type PointsReport = {
  * Sends csv file of rows of AggregatedTeamData instances, organized by team.
  * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
  */
-export const getCSV = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         if (req.user.role !== UserRole.SCOUTING_LEAD) {
             res.status(403).send("Not authorized to download scouting data");
