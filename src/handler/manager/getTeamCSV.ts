@@ -36,7 +36,7 @@ type AggregatedTeamData = {
 }
 
 // Simplified scouting report containing only the properties required for aggregation
-type PointsReport = {
+export type PointsReport = {
     robotRole: RobotRole
     stage: StageResult
     highNote: HighNoteResult
@@ -120,7 +120,7 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
 
         // Group reports by team number in a sparse array
         const groupedByTeam = datapoints.reduce<{reports: PointsReport[], numMatches: number}[]>((acc, cur) => {
-            acc[cur.teamNumber] = acc[cur.teamNumber] || {reports: [], numMatches: 0};
+            acc[cur.teamNumber] ||= {reports: [], numMatches: 0};
 
             // Increment number of matches for team
             acc[cur.teamNumber].numMatches++;
@@ -136,7 +136,7 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
         // Aggregate point values
         const aggregatedData: AggregatedTeamData[] = [];
         groupedByTeam.forEach((group, teamNum) => {
-            aggregatedData.push(aggregatePointsReports(teamNum, group.numMatches, group.reports));
+            aggregatedData.push(aggregateTeamReports(teamNum, group.numMatches, group.reports));
         });
 
         // Create and send the csv string through express
@@ -163,11 +163,11 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
     }
 }
 
-function aggregatePointsReports(teamNum: number, numMatches: number, reports: PointsReport[]): AggregatedTeamData {
-    let data: AggregatedTeamData = {
-        teamNumber: 0,
-        mainRole: "",
-        secondaryRole: "",
+function aggregateTeamReports(teamNum: number, numMatches: number, reports: PointsReport[]): AggregatedTeamData {
+    const data: AggregatedTeamData = {
+        teamNumber: teamNum,
+        mainRole: null,
+        secondaryRole: null,
         groundPickup: false,
         chutePickup: false,
         avgTeleopPoints: 0,
@@ -188,12 +188,9 @@ function aggregatePointsReports(teamNum: number, numMatches: number, reports: Po
         highNoteFails: 0,
         highNoteSuccesses: 0,
         matchesImmobile: 0,
-        numMatches: 0,
-        numReports: 0
+        numMatches: numMatches,
+        numReports: reports.length
     };
-    data.teamNumber = teamNum;
-    data.numMatches = numMatches;
-    data.numReports = reports.length;
 
     const roles: Record<RobotRole, number> = {
         OFFENSE: 0,
