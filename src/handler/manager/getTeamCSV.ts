@@ -142,7 +142,7 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
         // Create and send the csv string through express
         const csvString = stringify(aggregatedData, {
             header: true,
-            // Creates csv headers from data properties
+            // Creates column headers from data properties
             columns: Object.keys(aggregatedData[0]),
             // Required for excel viewing
             bom: true,

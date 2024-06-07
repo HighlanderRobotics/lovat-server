@@ -123,7 +123,31 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
             i.forEach((j, matchNumber) => {
                 j.forEach((reports, teamNumber) => {
                     const match = matchType.at(0) + matchNumber;
-                    aggregatedData.push(aggregateTeamMatchReports(match, teamNumber, reports));
+                    if (reports.length !== 0) {
+                        aggregatedData.push(aggregateTeamMatchReports(match, teamNumber, reports));
+                    } else {
+                        // Push empty row if there are no reports available
+                        aggregatedData.push({
+                            match: match,
+                            teamNumber: teamNumber,
+                            role: null,
+                            groundPickup: null,
+                            chutePickup: null,
+                            avgTeleopPoints: null,
+                            avgAutoPoints: null,
+                            avgDriverAbility: null,
+                            avgPickups: null,
+                            avgFeeds: null,
+                            avgDrops: null,
+                            avgScores: null,
+                            avgAmpScores: null,
+                            avgSpeakerScores: null,
+                            avgTrapScores: null,
+                            avgDefense: null,
+                            stage: null,
+                            highNoteSuccess: null
+                        });
+                    }
                 })
             });
         }
@@ -131,7 +155,7 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
         // Create and send the csv string through express
         const csvString = stringify(aggregatedData, {
             header: true,
-            // Creates csv headers from data properties
+            // Creates column headers from data properties
             columns: Object.keys(aggregatedData[0]),
             // Required for excel viewing
             bom: true,
