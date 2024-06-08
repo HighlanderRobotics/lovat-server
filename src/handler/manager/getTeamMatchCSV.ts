@@ -4,7 +4,6 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
 import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction, Position, MatchType } from "@prisma/client";
 import { autoEnd } from "../analysis/analysisConstants";
-import { PointsReport } from "./getTeamCSV";
 import { z } from "zod";
 
 type AggregatedTeamMatchData = {
@@ -26,8 +25,29 @@ type AggregatedTeamMatchData = {
     avgDefense: number
     stage: string
     highNoteSuccess: boolean
+    scouters: string
 }
 
+// Simplified scouting report with properties required for aggregation
+type PointsReport = {
+    robotRole: RobotRole
+    stage: StageResult
+    highNote: HighNoteResult
+    pickUp: PickUp
+    driverAbility: number
+    events: {
+        time: number
+        action: EventAction
+        position: Position
+        points: number
+    }[]
+    scouter: {
+        sourceTeamNumber: number
+        name: string
+    }
+}
+
+// Map of stage events to points given
 const stagePointMap = {
     ONSTAGE_HARMONY: 5,
     ONSTAGE: 3,
@@ -83,6 +103,12 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
                         highNote: true,
                         pickUp: true,
                         driverAbility: true,
+                        scouter: {
+                            select: {
+                                sourceTeamNumber: true,
+                                name: true
+                            }
+                        },
                         events: {
                             select: {
                                 time: true,
@@ -107,7 +133,7 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
         }
 
         // Group reports by match type, match number, and team number (match first to reduce the size of recursive arrays)
-        const groupedByMatch = datapoints.reduce<Record<string, Omit<PointsReport, "weight">[][][]>>((acc, cur) => {
+        const groupedByMatch = datapoints.reduce<Record<string, PointsReport[][][]>>((acc, cur) => {
             acc[cur.matchType] ||= []
 
             acc[cur.matchType][cur.matchNumber] ||= [];
@@ -124,28 +150,15 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
                 j.forEach((reports, teamNumber) => {
                     const match = matchType.at(0) + matchNumber;
                     if (reports.length !== 0) {
-                        aggregatedData.push(aggregateTeamMatchReports(match, teamNumber, reports));
+                        // Append names of scouters from the same team as the user
+                        const scouterNames = reports.filter(e => e.scouter.sourceTeamNumber === req.user.teamNumber).map(e => e.scouter.name);
+                        aggregatedData.push(aggregateTeamMatchReports(match, teamNumber, reports, scouterNames));
                     } else {
                         // Push empty row if there are no reports available
+                        // @ts-expect-error
                         aggregatedData.push({
                             match: match,
-                            teamNumber: teamNumber,
-                            role: null,
-                            groundPickup: null,
-                            chutePickup: null,
-                            avgTeleopPoints: null,
-                            avgAutoPoints: null,
-                            avgDriverAbility: null,
-                            avgPickups: null,
-                            avgFeeds: null,
-                            avgDrops: null,
-                            avgScores: null,
-                            avgAmpScores: null,
-                            avgSpeakerScores: null,
-                            avgTrapScores: null,
-                            avgDefense: null,
-                            stage: null,
-                            highNoteSuccess: null
+                            teamNumber: teamNumber
                         });
                     }
                 })
@@ -162,7 +175,9 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
             // Rename boolean values to TRUE and FALSE
             cast: {
                 boolean: b => b ? "TRUE" : "FALSE"
-            }
+            },
+            // Turn off quotation marks
+            quote: false
         });
 
         res.attachment("teamDataDownload.csv");
@@ -176,10 +191,10 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
     }
 }
 
-function aggregateTeamMatchReports(match: string, teamNum: number, reports: Omit<PointsReport, "weight">[]): AggregatedTeamMatchData {
+function aggregateTeamMatchReports(match: string, teamNumber: number, reports: Omit<PointsReport, "scouter">[], scouters: string[]): AggregatedTeamMatchData {
     const data: AggregatedTeamMatchData = {
         match: match,
-        teamNumber: teamNum,
+        teamNumber: teamNumber,
         role: null,
         groundPickup: false,
         chutePickup: false,
@@ -195,7 +210,8 @@ function aggregateTeamMatchReports(match: string, teamNum: number, reports: Omit
         avgTrapScores: 0,
         avgDefense: 0,
         stage: null,
-        highNoteSuccess: false
+        highNoteSuccess: false,
+        scouters: scouters.join(",")
     }
 
     const roleCount: Record<RobotRole, number> = {

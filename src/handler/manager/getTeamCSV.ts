@@ -35,8 +35,8 @@ type AggregatedTeamData = {
     numReports: number
 }
 
-// Simplified scouting report containing only the properties required for aggregation
-export type PointsReport = {
+// Simplified scouting report with properties required for aggregation
+type PointsReport = {
     robotRole: RobotRole
     stage: StageResult
     highNote: HighNoteResult
@@ -149,7 +149,9 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
             // Rename boolean values to TRUE and FALSE
             cast: {
                 boolean: b => b ? "TRUE" : "FALSE"
-            }
+            },
+            // Turn off quotation marks
+            quote: false
         });
 
         res.attachment("teamDataDownload.csv");
