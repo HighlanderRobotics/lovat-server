@@ -4,5 +4,7 @@ module.exports = {
     collectCoverage: true,
     coverageDirectory: 'coverage',
     testPathIgnorePatterns: ['/node_modules/'],
+    transform: {
+      '^.+\\.ts$': 'ts-jest'
+    }
   };
-  
