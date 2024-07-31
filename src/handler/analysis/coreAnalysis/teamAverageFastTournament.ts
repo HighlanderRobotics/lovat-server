@@ -150,7 +150,7 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                             
                         },
                     });
-                    let stageDataMap ={}
+                    const stageDataMap ={}
     
                       stageRows.forEach(row => {
                         stageDataMap[row.stage] = row._count.stage;
@@ -456,7 +456,7 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                             }
                         },
                     });
-                    let stageDataMap = {}
+                    const stageDataMap = {}
 
                     stageRows.forEach(row => {
                         stageDataMap[row.stage] = row._count.stage;

@@ -7,13 +7,13 @@ import { AuthenticatedRequest } from '../../lib/middleware/requireAuth';
 
 export const checkOnlyOneInstanceOfScouter = async (teamOne: Array<string>, teamTwo: Array<string>, teamThree: Array<string>, teamFour: Array<string>, teamFive: Array<string>, teamSix: Array<string>) => {
     try {
-        let scouterSet = new Set<string>()
-        let teamOneData = await checkTeam(teamOne, scouterSet)
-        let teamTwoData = await checkTeam(teamTwo, scouterSet)
-        let teamThreeData = await checkTeam(teamThree, scouterSet)
-        let teamFourData = await checkTeam(teamFour, scouterSet)
-        let teamFiveData = await checkTeam(teamFive, scouterSet)
-        let teamSixData = await checkTeam(teamSix, scouterSet)
+        const scouterSet = new Set<string>()
+        const teamOneData = await checkTeam(teamOne, scouterSet)
+        const teamTwoData = await checkTeam(teamTwo, scouterSet)
+        const teamThreeData = await checkTeam(teamThree, scouterSet)
+        const teamFourData = await checkTeam(teamFour, scouterSet)
+        const teamFiveData = await checkTeam(teamFive, scouterSet)
+        const teamSixData = await checkTeam(teamSix, scouterSet)
         return teamOneData && teamTwoData && teamThreeData && teamFourData && teamFiveData && teamSixData
 
     }

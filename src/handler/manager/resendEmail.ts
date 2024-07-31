@@ -21,7 +21,7 @@ export const resendEmail = async (req: AuthenticatedRequest, res: Response): Pro
             res.status(404).send("team not found")
         }
 
-        let verificationUrl = `lovat.app/verify/${teamRow.code}`
+        const verificationUrl = `lovat.app/verify/${teamRow.code}`
         const resend = new Resend(process.env.RESEND_KEY);
 
         resend.emails.send({

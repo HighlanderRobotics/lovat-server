@@ -103,7 +103,7 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
                 }
             }
         })
-        let autoPaths  = []
+        const autoPaths  = []
         for(const element of matches)
         {
             const currAutoPath = await autoPathSingleMatchSingleScoutReport(user, element.teamMatchKey, element.uuid)

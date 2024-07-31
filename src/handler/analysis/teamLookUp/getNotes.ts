@@ -168,7 +168,7 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
 
 
                 }));
-                let combinedNotes = notesAndMatches.concat(notesAndMatchesAndNames)
+                const combinedNotes = notesAndMatches.concat(notesAndMatchesAndNames)
                 combinedNotes.sort((a, b) => {
                     if (a.tournamentKey < b.tournamentKey) return -1;
                     if (a.tournamentKey > b.tournamentKey) return 1;
@@ -203,7 +203,7 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
 
 
                 }));
-                let combinedNotes = notesAndMatches.concat(notesAndMatchesAndNames)
+                const combinedNotes = notesAndMatches.concat(notesAndMatchesAndNames)
                 combinedNotes.sort((a, b) => {
                     if (a.tournamentKey < b.tournamentKey) return -1;
                     if (a.tournamentKey > b.tournamentKey) return 1;

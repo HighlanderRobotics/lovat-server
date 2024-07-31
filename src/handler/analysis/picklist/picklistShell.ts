@@ -72,10 +72,10 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             await addTournamentMatches(params.data.tournamentKey)
         }
         const allTeamAvgSTD = {}
-        let usedMetrics = []
-        let metricAllTeamMaps = {}
+        const usedMetrics = []
+        const metricAllTeamMaps = {}
         let includedTeamNumbers:number[] = []
-        let allTeamData: { average: number, teamAverages: Map<number, number>, timeLine: Array<number> }[] = []
+        const allTeamData: { average: number, teamAverages: Map<number, number>, timeLine: Array<number> }[] = []
         if (params.data.tournamentKey) {
             const teamsAtTournament = await prismaClient.teamMatchData.groupBy({
                 by: ["teamNumber"],
@@ -102,8 +102,8 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
     
         
             for (let i = 0; i < allTeamData.length; i++) {
-                let currData = allTeamData[i]
-                let metric = usedMetrics[i]
+                const currData = allTeamData[i]
+                const metric = usedMetrics[i]
                 if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2 && (ss.standardDeviation(currData.timeLine))) {
                     allTeamAvgSTD[metric] = {
                         "allAvg": currData.average,
@@ -128,21 +128,21 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 metricAllTeamMaps[metric] = currData.teamAverages
             }
         
-       let teamBreakdowns = []
-        let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
+       const teamBreakdowns = []
+        const teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
         for (const teams of teamChunks) {
             if (teams.length > 0) {
                 teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
             }
         }
-        let dataArr = []
+        const dataArr = []
         await Promise.all(teamBreakdowns).then(function (data) {
             for (let i = 0; i < data.length; i++) {
-                let currTeamData = data[i]
+                const currTeamData = data[i]
                 for (let j = 0; j < currTeamData.length; j++) {
-                    let currZscores = currTeamData[j]
+                    const currZscores = currTeamData[j]
                     if (!isNaN(currZscores.zScore)) {
-                        let temp = { "team": currZscores.team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
+                        const temp = { "team": currZscores.team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
                         dataArr.push(temp)
                     }
                 }
@@ -164,8 +164,8 @@ function splitTeams(teams: Array<number>, n: number): Array<Array<number>> {
     const result: Array<Array<number>> = [];
 
     for (let i = 0; i < n; i++) {
-        let start = i * splitSize;
-        let end = start + splitSize;
+        const start = i * splitSize;
+        const end = start + splitSize;
         result.push(teams.slice(start, end));
     }
 
@@ -174,7 +174,7 @@ function splitTeams(teams: Array<number>, n: number): Array<Array<number>> {
 function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
     return new Promise((resolve, reject) => {
 
-        let data = {
+        const data = {
             teams: teams,
             metricTeamAverages: flatted.stringify(metricAllTeamMaps),
             allTeamAvgSTD: allTeamAvgSTD,

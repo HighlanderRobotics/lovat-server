@@ -41,7 +41,7 @@ export const cooperationSingleMatch = async (user: User, matchKey: string, team:
         //ex: 2023gal_qm1_0, teamPositionSuffix would be 0
         const teamPositionSuffix = matchKey.charAt(matchKey.length - 1)
         //should have two entries (for teams on their alliance in the match)
-        let arrOfDifferences : Array<number> = []
+        const arrOfDifferences : Array<number> = []
         if (teamPositionSuffix === "0" || teamPositionSuffix === "1" || teamPositionSuffix === "2") {
             //red alliance
             for (let i = 0; i < 3; i++) {

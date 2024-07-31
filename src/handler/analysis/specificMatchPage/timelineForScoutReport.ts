@@ -29,7 +29,7 @@ export const timelineForScoutReport = async (req: AuthenticatedRequest, res: Res
                 scoutReportUuid : params.data.uuid
             }
         })
-        let timelineArray = []
+        const timelineArray = []
         for(const element of events)
         {
             timelineArray.push([element.time, FlippedActionMap[element.action], FlippedPositionMap[element.position]])

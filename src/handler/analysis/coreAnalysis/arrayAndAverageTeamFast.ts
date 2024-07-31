@@ -107,7 +107,7 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
 
         const groupedByTournament = matchKeys.reduce<Record<string, Match[]>>((acc, match) => {
             acc[match.tournamentKey] = acc[match.tournamentKey] || [];
-            let matchMap = { key: match.key, tournamentKey: match.tournamentKey, matchNumber: match.matchNumber, teamNumber: match.teamNumber, matchType: match.matchType, tournamentName: match.tournament.name }
+            const matchMap = { key: match.key, tournamentKey: match.tournamentKey, matchNumber: match.matchNumber, teamNumber: match.teamNumber, matchType: match.matchType, tournamentName: match.tournament.name }
             acc[match.tournamentKey].push(matchMap);
             return acc;
         }, {});
@@ -116,21 +116,21 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
             return { average: await stagePicklistTeam(user, team) }
         }
         const timeLineArray = []
-        let tournamentAverages = []
+        const tournamentAverages = []
         //group into tournaments, calculate all averages indivudally so they can all be properly weighted after the nested loops
         for (const tournamentMatchRows of tournamentGroups) {
-            let currAvg = null
+            const currAvg = null
             if (metric.includes("teleop") || metric.includes("Teleop")) {
-                let currData = await teamAverageFastTournament(user, team, metric.includes("point") || metric.includes("Point"), metric, tournamentMatchRows[0].tournamentKey, teleopStart, matchTimeEnd)
+                const currData = await teamAverageFastTournament(user, team, metric.includes("point") || metric.includes("Point"), metric, tournamentMatchRows[0].tournamentKey, teleopStart, matchTimeEnd)
                 tournamentAverages.push(currData)
             }
             else if (metric.includes("auto") || metric.includes("Auto")) {
-                let currData = await teamAverageFastTournament(user, team, metric.includes("point") || metric.includes("Point"), metric, tournamentMatchRows[0].tournamentKey, 0, autoEnd)
+                const currData = await teamAverageFastTournament(user, team, metric.includes("point") || metric.includes("Point"), metric, tournamentMatchRows[0].tournamentKey, 0, autoEnd)
                 tournamentAverages.push(currData)
 
             }
             else {
-                let currData = await teamAverageFastTournament(user, team, metric.includes("point") || metric.includes("Point"), metric, tournamentMatchRows[0].tournamentKey)
+                const currData = await teamAverageFastTournament(user, team, metric.includes("point") || metric.includes("Point"), metric, tournamentMatchRows[0].tournamentKey)
                 tournamentAverages.push(currData)
             }
 

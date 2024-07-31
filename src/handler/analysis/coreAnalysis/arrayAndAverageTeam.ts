@@ -104,7 +104,7 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
 
         const groupedByTournament = matchKeys.reduce<Record<string, Match[]>>((acc, match) => {
             acc[match.tournamentKey] = acc[match.tournamentKey] || [];
-            let matchMap = { key: match.key, tournamentKey: match.tournamentKey, matchNumber: match.matchNumber, teamNumber: match.teamNumber, matchType: match.matchType, tournamentName: match.tournament.name }
+            const matchMap = { key: match.key, tournamentKey: match.tournamentKey, matchNumber: match.matchNumber, teamNumber: match.teamNumber, matchType: match.matchType, tournamentName: match.tournament.name }
             acc[match.tournamentKey].push(matchMap);
             return acc;
         }, {});
@@ -122,16 +122,16 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
                 //add time constraints if nessissary
 
                 if (metric.includes("teleop") || metric.includes("Teleop")) {
-                    let currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, teleopStart, matchTimeEnd)
+                    const currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, teleopStart, matchTimeEnd)
                     currDatas.push(currData)
                 }
                 else if (metric.includes("auto") || metric.includes("Auto")) {
-                    let currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, 0, autoEnd)
+                    const currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, 0, autoEnd)
                     currDatas.push(currData)
 
                 }
                 else {
-                    let currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
+                    const currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
                     currDatas.push(currData)
                 }
 

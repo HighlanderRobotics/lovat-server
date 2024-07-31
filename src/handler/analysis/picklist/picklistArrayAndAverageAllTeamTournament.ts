@@ -21,7 +21,7 @@ export const picklistArrayAndAverageAllTeamTournament = async (user: User, metri
         };
         //change to null possibly
         let average = 0
-        let teamAveragesMap : Map<number, number> = new Map()
+        const teamAveragesMap : Map<number, number> = new Map()
         await Promise.all(timeLineArray).then((values) => {
             if (values.length !== 0) {
                 average = values.reduce((acc, cur) => acc + cur.average, 0) / values.length;

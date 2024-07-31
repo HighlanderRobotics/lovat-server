@@ -23,7 +23,7 @@ export const flag = async (req: AuthenticatedRequest, metric: string) => {
             throw (params);
         };
         if (params.data.flag === "rank") {
-            let tourament = await prismaClient.tournament.findFirst({
+            const tourament = await prismaClient.tournament.findFirst({
                 where:
                 {
                     teamMatchData:
@@ -43,12 +43,12 @@ export const flag = async (req: AuthenticatedRequest, metric: string) => {
                 return { flag: params.data.flag, "data": 0 }
             }
             else {
-                let data = await rankFlag(req.user, "frc" + params.data.team, tourament.key)
+                const data = await rankFlag(req.user, "frc" + params.data.team, tourament.key)
                 return { flag: params.data.flag, "data": data }
             }
         }
         else {
-            let data = await arrayAndAverageTeam(req.user, params.data.flag, params.data.team)
+            const data = await arrayAndAverageTeam(req.user, params.data.flag, params.data.team)
             console.log(data)
             return { flag: params.data.flag, data: data.average }
         }

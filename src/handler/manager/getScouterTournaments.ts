@@ -35,7 +35,7 @@ export const getScouterTournaments = async (req: Request, res: Response): Promis
                         res.status(400).send(params);
                         return;
                     };
-                    let rows = await prismaClient.tournament.findMany({
+                    const rows = await prismaClient.tournament.findMany({
                         take: params.data.take,
                         skip: params.data.skip,
                         where:
@@ -210,7 +210,7 @@ export const getScouterTournaments = async (req: Request, res: Response): Promis
         }
         let count = 0
         if (req.query.filter != undefined) {
-            let tempRows = await prismaClient.tournament.findMany({
+            const tempRows = await prismaClient.tournament.findMany({
                 where:
                 {
                     OR: [{ key: { contains: req.query.filter as string } },

@@ -21,7 +21,7 @@ export const flag = async (req: AuthenticatedRequest, flagName: string, tourname
                 return "-"
             }
 
-            var url = 'https://www.thebluealliance.com/api/v3'
+            const url = 'https://www.thebluealliance.com/api/v3'
             axios.get(`${url}/event/${tournamentKey}/rankings`, {
                 headers: { 'X-TBA-Auth-Key': process.env.KEY }
 
@@ -30,7 +30,7 @@ export const flag = async (req: AuthenticatedRequest, flagName: string, tourname
                     for (let i = 0; i < response.data.rankings.length; i++) {
 
                         if (response.data.rankings[i].team_key === ("frc" + teamNumber)) {
-                            let x = response.data.rankings[i].rank
+                            const x = response.data.rankings[i].rank
                             return x.toString()
                         }
                     }

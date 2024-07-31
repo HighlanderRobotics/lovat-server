@@ -80,7 +80,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
             return
         }
         const highestQualificationMatchNumber = maxQualifierRow.matchNumber
-        let finalArr = []
+        const finalArr = []
         for (const element of rows) {
             for (let i = element.startMatchOrdinalNumber; i <= element.endMatchOrdinalNumber; i++) {
 
@@ -91,7 +91,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                     matchType = 1
                 }
 
-                let currData = {
+                const currData = {
                     matchType: matchType,
                     matchNumber: matchNumber
                 }
@@ -121,11 +121,11 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                         for (const scouter of element[ScouterScheduleMap[j]]) {
                             if (j <= 2) {
                                 //check that this is red
-                                let map = {}
+                                const map = {}
                                 scouterMap[scouter.uuid] = { team: matchRows[j].teamNumber, alliance: "red" }
                             }
                             else {
-                                let map = {}
+                                const map = {}
                                 scouterMap[scouter.uuid] = { team: matchRows[j].teamNumber, alliance: "blue" }
                             }
                         }

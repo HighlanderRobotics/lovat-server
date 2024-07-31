@@ -40,7 +40,7 @@ export const singleMatchEventsAverage = async (user: User,  isPointAverage: bool
         }
         else
         {
-            let matchDataArray = []
+            const matchDataArray = []
 
             for(const element of scoutReports)
             {

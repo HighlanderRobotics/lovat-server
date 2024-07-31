@@ -25,7 +25,7 @@ export const multipleFlags = async (req: AuthenticatedRequest, res: Response) =>
             res.status(400).send(params);
             return;
         };
-        let arr = []
+        const arr = []
         for(const metric of params.data.flags)
         {
             if(metric === "rank" && !params.data.tournamentKey)

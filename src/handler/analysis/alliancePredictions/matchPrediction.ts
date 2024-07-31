@@ -12,7 +12,7 @@ import { User } from "@prisma/client";
 
 
 
-export const matchPrediction = async (req: AuthenticatedRequest, res: Response): Promise<Object> => {
+export const matchPrediction = async (req: AuthenticatedRequest, res: Response): Promise<object> => {
     try {
         
         const params = z.object({
@@ -37,8 +37,8 @@ export const matchPrediction = async (req: AuthenticatedRequest, res: Response):
         const matchPreictionData = await matchPredictionLogic(req.user, params.data.red1, params.data.red2, params.data.red3, params.data.blue1, params.data.blue2, params.data.blue3)
        
 
-        let redAlliance = await alliancePage(req.user, params.data.red1, params.data.red2, params.data.red3)
-        let blueAlliance = await alliancePage(req.user, params.data.blue1, params.data.blue2, params.data.blue3)
+        const redAlliance = await alliancePage(req.user, params.data.red1, params.data.red2, params.data.red3)
+        const blueAlliance = await alliancePage(req.user, params.data.blue1, params.data.blue2, params.data.blue3)
 
 
         res.status(200).send({
@@ -81,11 +81,11 @@ async function getZPercent(z: number) {
     if (z > 6.5)
         return 1.0;
 
-    var factK = 1;
-    var sum = 0;
-    var term = 1;
-    var k = 0;
-    var loopStop = Math.exp(-23);
+    let factK = 1;
+    let sum = 0;
+    let term = 1;
+    let k = 0;
+    const loopStop = Math.exp(-23);
     while (Math.abs(term) > loopStop) {
         term = .3989422804 * Math.pow(-1, k) * Math.pow(z, k) / (2 * k + 1) / Math.pow(2, k) * Math.pow(z, k + 1) / factK;
         sum += term;
@@ -98,8 +98,8 @@ async function getZPercent(z: number) {
     return sum;
 }
 async function getMean(teamArray: Array<number>) {
-    var total = 0;
-    for (var i = 0; i < teamArray.length; i++) {
+    let total = 0;
+    for (let i = 0; i < teamArray.length; i++) {
         total += teamArray[i];
     }
     return total / teamArray.length;

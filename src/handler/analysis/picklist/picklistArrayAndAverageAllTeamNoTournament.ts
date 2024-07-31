@@ -14,7 +14,7 @@ export const picklistArrayAndAverageAllTeamNoTournament = async (user: User, met
 
 
         let timeLineArray = []
-        let teamAveragesMap: Map<number, number> = new Map()
+        const teamAveragesMap: Map<number, number> = new Map()
         let average = 0
         for (const team of teams) {
             let currAvg = (await (arrayAndAverageTeamFast(user, metric, team))).average

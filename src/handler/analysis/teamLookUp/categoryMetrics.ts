@@ -18,7 +18,7 @@ export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) 
              res.status(400).send(params);
              return;
          };
-        let result = {}
+        const result = {}
          //update if statments in arrayAndAverage if the metric needs to look at scoutReport instead of events table
          for (const element of metricsCategory) {
             result[element] = (await arrayAndAverageTeamFast(req.user, element, params.data.team)).average;

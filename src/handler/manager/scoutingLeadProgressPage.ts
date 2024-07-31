@@ -114,7 +114,7 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                 }
             })
            
-            let result = []
+            const result = []
             for(const scouter of scouters)
             {
                 const allShifts = [

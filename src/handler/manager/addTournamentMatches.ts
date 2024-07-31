@@ -14,8 +14,8 @@ export const addTournamentMatches = async (tournamentKey) => {
             throw("tournament key is undefined")
         }
        
-        var url = 'https://www.thebluealliance.com/api/v3';
-        var nonQM = 1;
+        const url = 'https://www.thebluealliance.com/api/v3';
+        let nonQM = 1;
         const tournamentRow = await prismaClient.tournament.findUnique({
             where:
             {
@@ -33,7 +33,7 @@ export const addTournamentMatches = async (tournamentKey) => {
             // For each match in the tournament
             response.data.sort((a, b) => b.actual_time - a.actual_time);
 
-            for (var i = 0; i < response.data.length; i++) {
+            for (let i = 0; i < response.data.length; i++) {
                 if (response.data[i].comp_level == 'qm') {
                     //all teams in the match
                     var teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];
@@ -41,8 +41,8 @@ export const addTournamentMatches = async (tournamentKey) => {
                     //make matches with trailing _0, _1, _2 etc
                     for (var k = 0; k < teams.length; k++) {
                         matchesString = matchesString + `('${response.data[i].key}_${k}', '${tournamentKey}', ${response.data[i].match_number}, '${teams[k]}', '${response.data[i].comp_level}'), `;
-                        let currMatchKey = `${response.data[i].key}_${k}`;
-                        let currTeam = Number(teams[k].substring(3))
+                        const currMatchKey = `${response.data[i].key}_${k}`;
+                        const currTeam = Number(teams[k].substring(3))
                         
                         const params = z.object({
                             matchNumber: z.number(),
@@ -88,9 +88,9 @@ export const addTournamentMatches = async (tournamentKey) => {
                     var teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];
 
                     for (var k = 0; k < 6; k++) {
-                        let currTeam = Number(teams[k].substring(3))
+                        const currTeam = Number(teams[k].substring(3))
 
-                        let currMatchKey = `${tournamentKey}_em${nonQM}_${k}`;
+                        const currMatchKey = `${tournamentKey}_em${nonQM}_${k}`;
                         
                         const params = z.object({
                             matchNumber: z.number(),

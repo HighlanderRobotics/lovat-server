@@ -26,13 +26,13 @@ export const autoPathScouter = async (user: User, matchKey : string, scoutReport
            
 
         })
-        let scoutReport = await prismaClient.scoutReport.findUnique({
+        const scoutReport = await prismaClient.scoutReport.findUnique({
             where :
             {
                 uuid : scoutReportUuid
             }
         })
-        let match = await prismaClient.teamMatchData.findUnique({
+        const match = await prismaClient.teamMatchData.findUnique({
             where :
             {
                 key : scoutReport.teamMatchKey

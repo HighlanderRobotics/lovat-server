@@ -17,7 +17,7 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
             res.status(400).send(params);
             return;
         };
-        let result = {}
+        const result = {}
         for (const element of metricsBreakdown) {
             result[element] = await nonEventMetric(req.user, params.data.team, element )
         };

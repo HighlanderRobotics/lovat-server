@@ -10,7 +10,7 @@ import { PrismaClient } from "@prisma/client";
 
 export const addTournamentMatchesOneTime = async (req: Request, res: Response): Promise<void> => {
     try {
-       let rows = await prismaClient.teamMatchData.createMany({
+       const rows = await prismaClient.teamMatchData.createMany({
         data :
         [
             {

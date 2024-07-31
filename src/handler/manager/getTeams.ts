@@ -142,7 +142,7 @@ export const getTeams = async (req: AuthenticatedRequest, res: Response): Promis
         let count = 0
         if(req.query.filter != undefined)
         {
-            let tempRows : Array<any> = await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${req.query.filter + '%'} OR name ILIKE ${req.query.filter + '%'}`;
+            const tempRows : Array<any> = await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${req.query.filter + '%'} OR name ILIKE ${req.query.filter + '%'}`;
             count = tempRows.length
         }
         else
@@ -154,7 +154,7 @@ export const getTeams = async (req: AuthenticatedRequest, res: Response): Promis
         {
             if(rows.some(obj => obj.number === req.user.teamNumber))
             {
-                let indexOfTeamNumber = rows.findIndex(obj => obj.number === req.user.teamNumber);
+                const indexOfTeamNumber = rows.findIndex(obj => obj.number === req.user.teamNumber);
                 rows.unshift(rows[indexOfTeamNumber]); 
                 rows.splice(indexOfTeamNumber + 1, 1)
                 console.log(rows)

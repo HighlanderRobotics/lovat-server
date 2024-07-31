@@ -18,9 +18,9 @@ try {
             const req = flatted.parse(data.req)
             const finalData = []
             for (const team of data.teams) {
-                let adj = [];
-                let unAdj = [];
-                let flagData = [];
+                const adj = [];
+                const unAdj = [];
+                const flagData = [];
                 let hasData = true
                 let isFirst = true
                 for (const metric of picklistSliders) {
@@ -80,7 +80,7 @@ try {
                         flagData.push({ type: "rank", result: await rankFlag(req, "frc" + team, req.query.tournamentKey as string) })
                     }
                     else {
-                        let tourament = await prismaClient.tournament.findFirst({
+                        const tourament = await prismaClient.tournament.findFirst({
                             where:
                             {
                                 teamMatchData:
@@ -102,7 +102,7 @@ try {
 
 
                 }
-                let zScoreTotal = adj.reduce((partialSum, a) => partialSum + a.result, 0);
+                const zScoreTotal = adj.reduce((partialSum, a) => partialSum + a.result, 0);
                 finalData.push({
                     "team": team,
                     "zScore": zScoreTotal,

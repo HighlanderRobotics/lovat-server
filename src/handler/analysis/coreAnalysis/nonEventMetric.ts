@@ -7,7 +7,7 @@ import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { User, ScoutReport } from "@prisma/client";
 
 
-export const nonEventMetric = async (user: User, team : number, metric: string): Promise<Object> => {
+export const nonEventMetric = async (user: User, team : number, metric: string): Promise<object> => {
     try {
         const params = z.object({
             // UPDATE WITH COLUMNS IN THE SCHEMA EACH YEAR

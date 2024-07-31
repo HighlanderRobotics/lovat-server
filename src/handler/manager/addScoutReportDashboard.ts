@@ -108,7 +108,7 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             res.status(404).send({"error" : `There are no matches that meet these requirements. ${paramsScoutReport.data.tournamentKey}, ${paramsScoutReport.data.matchNumber}, ${paramsScoutReport.data.matchType}, ${paramsScoutReport.data.teamNumber}`, "displayError" : "Match does not exist"})
             return
         }
-        let matchKey = matchRow.key
+        const matchKey = matchRow.key
         
         const row = await prismaClient.scoutReport.create(
             {
@@ -130,14 +130,14 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             }
         )
         const scoutReportUuid = row.uuid
-        let eventDataArray = []
-        let events = req.body.events;
+        const eventDataArray = []
+        const events = req.body.events;
         let ampOn = false
         for (let i = 0; i < events.length; i++) {
             let points = 0;
-            let time = events[i][0];
-            let position = PositionMap[events[i][2]][0];
-            let action = EventActionMap[events[i][1]][0]
+            const time = events[i][0];
+            const position = PositionMap[events[i][2]][0];
+            const action = EventActionMap[events[i][1]][0]
             if (action === "START") {
                 ampOn = true
             }
