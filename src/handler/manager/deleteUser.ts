@@ -25,7 +25,7 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response): Prom
         }
         else
         {
-            const deleteUser = await prismaClient.user.delete({
+            await prismaClient.user.delete({
                 where : 
                 {
                     id : req.user.id

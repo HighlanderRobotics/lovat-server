@@ -18,7 +18,7 @@ export const addTournamentSource = async (req: AuthenticatedRequest, res: Respon
             res.status(400).send(params);
             return;
         };
-        const row = await prismaClient.user.update({
+        await prismaClient.user.update({
             where: {
                 id: user.id
             },

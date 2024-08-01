@@ -14,7 +14,7 @@ export default async function fetchMatches() {
     const endOfWeek = new Date();
     endOfWeek.setDate(endOfWeek.getDate() + 3);
 
-    const oneWeekAgo = new Date();
+    // const oneWeekAgo = new Date();
     const distinctTournamentKeys = await prisma.teamMatchData.groupBy({
         by: ['tournamentKey'],
         //does within the week

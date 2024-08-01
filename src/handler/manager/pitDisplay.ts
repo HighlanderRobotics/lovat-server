@@ -45,7 +45,6 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
         }
 
         const headers = { 'X-TBA-Auth-Key': process.env.TBA_KEY };
-        const teamKey = "frc" + params.data.team
         await axios.get(`https://www.thebluealliance.com/api/v3/event/${params.data.tournamentKey}`, { headers })
             .then(async response => {
 

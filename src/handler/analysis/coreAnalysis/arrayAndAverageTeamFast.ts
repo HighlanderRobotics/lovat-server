@@ -115,7 +115,6 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
         if (metric === "stage") {
             return { average: await stagePicklistTeam(user, team) }
         }
-        const timeLineArray = []
         const tournamentAverages = []
         //group into tournaments, calculate all averages indivudally so they can all be properly weighted after the nested loops
         for (const tournamentMatchRows of tournamentGroups) {

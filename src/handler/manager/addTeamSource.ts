@@ -11,7 +11,7 @@ export const addTeamSource = async (req: AuthenticatedRequest, res: Response): P
         const user = req.user
         if (req.body.mode === "ALL_TEAMS") {
             const allTeams = await prismaClient.team.findMany({})
-            const row = await prismaClient.user.update({
+            await prismaClient.user.update({
                 where: {
                     id: user.id
                 },
@@ -28,7 +28,7 @@ export const addTeamSource = async (req: AuthenticatedRequest, res: Response): P
                 return
             }
             else {
-                const row = await prismaClient.user.update({
+                await prismaClient.user.update({
                     where: {
                         id: user.id
                     },
@@ -51,7 +51,7 @@ export const addTeamSource = async (req: AuthenticatedRequest, res: Response): P
                 res.status(400).send(params);
                 return;
             };
-            const row = await prismaClient.user.update({
+            await prismaClient.user.update({
                 where: {
                     id: user.id
                 },

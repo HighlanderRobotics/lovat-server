@@ -8,7 +8,7 @@ export const addUsername = async (req: AuthenticatedRequest, res: Response): Pro
     try {
         const user = req.user
 
-        const row = await prismaClient.user.update({
+        await prismaClient.user.update({
             where : {
                 id : user.id
             },

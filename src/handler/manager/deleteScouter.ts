@@ -37,7 +37,7 @@ export const deleteScouter = async (req: AuthenticatedRequest, res: Response): P
             res.status(403).send("Not authorized to update the name of the given scouter")
             return
         }
-        const deletedScouter = await prismaClient.scouter.delete({
+         await prismaClient.scouter.delete({
             where:
             {
                 uuid: params.data.uuid

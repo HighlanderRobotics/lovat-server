@@ -35,7 +35,7 @@ export const getScouterTournaments = async (req: Request, res: Response): Promis
                         res.status(400).send(params);
                         return;
                     };
-                    const rows = await prismaClient.tournament.findMany({
+                    await prismaClient.tournament.findMany({
                         take: params.data.take,
                         skip: params.data.skip,
                         where:

@@ -45,7 +45,7 @@ export const updateRoleToScoutingLead = async (req: AuthenticatedRequest, res: R
 
         }
 
-        const row = await prismaClient.user.update({
+        await prismaClient.user.update({
             where:
             {
                 id: params.data.upgradedUserId

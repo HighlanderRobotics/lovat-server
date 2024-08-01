@@ -5,9 +5,7 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
 export const getScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    try {
-        const user = req.user
-       
+    try {       
         const params = z.object({
             uuid: z.string()
         }).safeParse({

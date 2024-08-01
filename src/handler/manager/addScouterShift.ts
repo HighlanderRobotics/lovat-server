@@ -52,7 +52,7 @@ export const addScouterShift = async (req: AuthenticatedRequest, res: Response):
         }
 
         if (req.user.role === UserRole.SCOUTING_LEAD) {
-            const rows = await prismaClient.scouterScheduleShift.create({
+            await prismaClient.scouterScheduleShift.create({
                 data: {
                     sourceTeamNumber : params.data.sourceTeamNumber,
                     tournamentKey : params.data.tournamentKey,

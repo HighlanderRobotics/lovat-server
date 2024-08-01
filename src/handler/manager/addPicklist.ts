@@ -44,7 +44,7 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
             res.status(403).send("Not authortized to publish a picklist because your not on a team")
             return
         }
-        const rows = await prismaClient.sharedPicklist.create({
+        await prismaClient.sharedPicklist.create({
             data: {
                 name : params.data.name,
                 totalPoints : params.data.totalPoints,

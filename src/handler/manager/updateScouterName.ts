@@ -41,7 +41,7 @@ export const updateScouterName = async (req: AuthenticatedRequest, res: Response
             return
 
         }
-        const scouterUpdated = await prismaClient.scouter.update({
+        await prismaClient.scouter.update({
             data :
             {
                 name : params.data.newName

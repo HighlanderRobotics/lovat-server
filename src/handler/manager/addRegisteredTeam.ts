@@ -29,7 +29,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             }
         })
         if (!toggleFeatureRow.enabled) {
-            const row = await prismaClient.registeredTeam.create({
+        await prismaClient.registeredTeam.create({
                 data: {
                     email: params.data.email,
                     number: params.data.number,
@@ -39,7 +39,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             })
         }
         else {
-            const row = await prismaClient.registeredTeam.create({
+            await prismaClient.registeredTeam.create({
                 data: {
                     email: params.data.email,
                     number: params.data.number,
@@ -50,7 +50,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
 
         const user = req.user
 
-        const userRow = await prismaClient.user.update({
+        await prismaClient.user.update({
             data: {
                 teamNumber: req.body.number,
                 role: "SCOUTING_LEAD"

@@ -205,10 +205,10 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
                 
             }
         }
-        const rows = await prismaClient.event.createMany({
+        await prismaClient.event.createMany({
             data : eventDataArray
         })
-        const totalPoints = await totalPointsScoutingLead(scoutReportUuid)
+        await totalPointsScoutingLead(scoutReportUuid)
         //recalibrate the max resonable points for every year 
         //uncomment for scouting lead page
         // if (totalPoints === 0 || totalPoints > 80) {

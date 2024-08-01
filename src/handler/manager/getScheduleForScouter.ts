@@ -120,12 +120,9 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                     for (let j = 0; j < 6; j++) {
                         for (const scouter of element[ScouterScheduleMap[j]]) {
                             if (j <= 2) {
-                                //check that this is red
-                                const map = {}
                                 scouterMap[scouter.uuid] = { team: matchRows[j].teamNumber, alliance: "red" }
                             }
                             else {
-                                const map = {}
                                 scouterMap[scouter.uuid] = { team: matchRows[j].teamNumber, alliance: "blue" }
                             }
                         }
