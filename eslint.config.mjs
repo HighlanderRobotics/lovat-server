@@ -1,10 +1,16 @@
+import { ESLint } from "eslint";
 import unusedImports from "eslint-plugin-unused-imports";
+import { rules as eslintRecommendedRules } from "eslint/conf/eslint-recommended";
+import { rules as typescriptRecommendedRules } from "@typescript-eslint/eslint-plugin";
+import { rules as importRecommendedRules } from "eslint-plugin-import";
+import { rules as nodeRecommendedRules } from "eslint-plugin-node";
+import { rules as promiseRecommendedRules } from "eslint-plugin-promise";
 
 export default [
     {
-        files: ["**/*.js", "**/*.ts"], 
+        files: ["**/*.js", "**/*.ts"],
         languageOptions: {
-            ecmaVersion: 2024, 
+            ecmaVersion: 2024,
             sourceType: "module",
             globals: {
                 window: "readonly",
@@ -14,14 +20,23 @@ export default [
         plugins: {
             "unused-imports": unusedImports,
         },
-        extends: [
-            "eslint:recommended",                // ESLint recommended rules
-            "plugin:@typescript-eslint/recommended",  // Recommended TypeScript rules
-            "plugin:import/recommended",          // Recommended import rules
-            "plugin:node/recommended",            // Recommended Node.js rules
-            "plugin:promise/recommended"          // Recommended Promise rules
-        ],
         rules: {
+            // Include ESLint recommended rules
+            ...eslintRecommendedRules,
+
+            // Include TypeScript recommended rules
+            ...typescriptRecommendedRules,
+
+            // Include import plugin recommended rules
+            ...importRecommendedRules,
+
+            // Include Node.js plugin recommended rules
+            ...nodeRecommendedRules,
+
+            // Include Promise plugin recommended rules
+            ...promiseRecommendedRules,
+
+            // Custom rules
             "unused-imports/no-unused-imports": "error",
             "unused-imports/no-unused-vars": [
                 "off",
