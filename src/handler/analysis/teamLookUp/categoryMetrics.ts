@@ -1,8 +1,6 @@
-import { Request, Response } from "express";
-import prismaClient from '../../../prismaClient'
+import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { metricsCategory } from "../analysisConstants";
 import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
 

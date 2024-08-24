@@ -1,6 +1,5 @@
 import axios from "axios";
 
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { User } from "@prisma/client";
 
 export const rankFlag = async (user: User, teamKey: string, eventKey: string) => {

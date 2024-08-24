@@ -1,14 +1,11 @@
 
 
 
-import { Request, Response, json } from "express";
+import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { match } from "node:assert";
 import { MatchTypeMap, ScouterScheduleMap } from "./managerConstants";
 import { SHA256 } from 'crypto-js';
-import { max } from "simple-statistics";
 import { addTournamentMatches } from "./addTournamentMatches";
 
 

@@ -1,14 +1,11 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../prismaClient'
-import z, { late } from 'zod'
+import z from 'zod'
 import axios from "axios";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { matchPredictionLogic } from "../analysis/alliancePredictions/matchPredictionLogic";
-import { time } from "console";
-import { $Enums, MatchType } from "@prisma/client";
-import { MatchEnumToAbrivation, MatchTypeEnumToFull, MatchTypeToAbrivation } from "./managerConstants";
-import { match } from "assert";
-import { addTournamentMatches } from "./addTournamentMatches";
+import { MatchType } from "@prisma/client";
+import { MatchEnumToAbrivation } from "./managerConstants";
 
 
 export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Promise<void> => {

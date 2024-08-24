@@ -1,8 +1,3 @@
-import { Request, Response } from "express";
-import prismaClient from '../../../prismaClient'
-import z, { number } from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { robotRole } from "../coreAnalysis/robotRole";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";

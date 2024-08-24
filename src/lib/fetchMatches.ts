@@ -1,8 +1,5 @@
-import axios from "axios";
 import prisma from "../prismaClient";
-import { PrismaClient } from "@prisma/client";
 import { addTournamentMatches } from "../handler/manager/addTournamentMatches";
-import { date } from "zod";
 
 export default async function fetchMatches() {
     // upsert current tournaments in the matches table

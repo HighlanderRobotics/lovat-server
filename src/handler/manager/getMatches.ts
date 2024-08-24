@@ -1,14 +1,9 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../prismaClient'
-import z, { date, number } from 'zod'
+import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { addTournamentMatches } from "./addTournamentMatches";
-import prisma from "../../prismaClient";
-import { findSourceMap } from "node:module";
-import { match } from "node:assert";
-import { MatchTypeEnumToFull, MatchTypeMap, MatchTypeToAbrivation, ReverseMatchTypeMap, ReverseScouterScheduleMap, ScouterScheduleMap } from "./managerConstants";
-import { nonEventMetric } from "../analysis/coreAnalysis/nonEventMetric";
-import { extname } from "node:path";
+import { MatchTypeEnumToFull, MatchTypeToAbrivation, ReverseMatchTypeMap, ReverseScouterScheduleMap, ScouterScheduleMap } from "./managerConstants";
 
 
 export const getMatches = async (req: AuthenticatedRequest, res: Response): Promise<void> => {

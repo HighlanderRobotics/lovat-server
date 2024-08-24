@@ -1,20 +1,15 @@
 
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../../prismaClient'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import ss from 'simple-statistics';
-import prisma from '../../../prismaClient';
-import z, { array } from 'zod'
+import z from 'zod'
 const { Worker } = require('worker_threads');
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
 import { picklistSliders } from "../analysisConstants";
 import { picklistArrayAndAverageAllTeamTournament } from "./picklistArrayAndAverageAllTeamTournament";
-import { workerData } from "worker_threads";
 import flatted from 'flatted';
-import { resolve } from "dns/promises";
 import os from 'os'
-import { picklistArrayAndAverageAllTeamNoTournament } from "./picklistArrayAndAverageAllTeamNoTournament";
-import { all } from "axios";
 
 
 

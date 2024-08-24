@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import { Request, Response } from "express";
 
 export const sendSlackVerification = async (teamNumber : number, teamEmail : string, website : string) => {
     const body = {

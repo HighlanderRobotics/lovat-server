@@ -1,9 +1,5 @@
 
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import ss from 'simple-statistics';
-import prisma from '../../../prismaClient';
 import z from 'zod'
 import { error } from "console";
 import { User } from "@prisma/client";

@@ -1,11 +1,7 @@
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
-import { match } from "assert";
-import prisma from "../../../prismaClient";
 import { User } from "@prisma/client";
 
 

@@ -1,9 +1,6 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
-import z, { ZodNumber } from 'zod'
-import { unwatchFile } from "fs";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { userInfo } from "os";
+import z from 'zod'
 
 
 export const getScouterTournaments = async (req: Request, res: Response): Promise<void> => {

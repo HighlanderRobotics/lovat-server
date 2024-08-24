@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
-import z, { date } from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import z from 'zod'
 
 
 export const addNewScouter = async (req: Request, res: Response): Promise<void> => {

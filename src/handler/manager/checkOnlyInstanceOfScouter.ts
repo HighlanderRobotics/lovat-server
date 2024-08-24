@@ -1,8 +1,4 @@
 
-import prismaClient from '../../prismaClient'
-import z, { array } from 'zod'
-import e, { Request, Response } from "express";
-import { AuthenticatedRequest } from '../../lib/middleware/requireAuth';
 
 
 export const checkOnlyOneInstanceOfScouter = async (teamOne: Array<string>, teamTwo: Array<string>, teamThree: Array<string>, teamFour: Array<string>, teamFive: Array<string>, teamSix: Array<string>) => {

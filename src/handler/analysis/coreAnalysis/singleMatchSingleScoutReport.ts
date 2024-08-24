@@ -1,12 +1,7 @@
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap, teleopStart } from "../analysisConstants";
-import { sum } from "simple-statistics";
+import { highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
 import { EventAction, Position, User } from "@prisma/client";
-import { match } from "assert";
-import { time } from "console";
 
 
 

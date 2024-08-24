@@ -1,11 +1,4 @@
-import { Request, Response } from "express";
-import prismaClient from '../../../prismaClient'
-import z from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
-import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import { error, time } from "console";
-import { Position, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
 
 

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from "csv-stringify/sync";

@@ -1,11 +1,7 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
-import { all } from "axios";
-import { userInfo } from "os";
 
 
 export const getNotes = async (req: AuthenticatedRequest, res: Response) => {

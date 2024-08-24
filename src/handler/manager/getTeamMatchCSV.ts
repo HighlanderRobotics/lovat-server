@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
-import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction, Position, MatchType } from "@prisma/client";
+import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction, Position } from "@prisma/client";
 import { autoEnd } from "../analysis/analysisConstants";
 import { z } from "zod";
 

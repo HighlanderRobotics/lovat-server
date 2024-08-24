@@ -3,8 +3,6 @@ import { parentPort } from 'worker_threads';
 import { rankFlag } from '../rankFlag';
 import flatted from 'flatted';
 import prismaClient from "../../../prismaClient";
-import { unwatchFile } from "fs";
-import { teamAverageFastTournament } from "../coreAnalysis/teamAverageFastTournament";
 
 
 //worker for picklists

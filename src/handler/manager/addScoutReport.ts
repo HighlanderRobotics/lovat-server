@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
-import { match } from "assert";
 import z from 'zod'
-import { singleMatchSingleScoutReport } from "../analysis/coreAnalysis/singleMatchSingleScoutReport";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { EventAction } from "@prisma/client";
-import { ADDRGETNETWORKPARAMS } from "dns";
 import { PickUpMap, PositionMap, MatchTypeMap, HighNoteMap, StageResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
