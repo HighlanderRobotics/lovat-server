@@ -11,7 +11,6 @@ export default async function fetchTeams() {
         `${url}/teams/${page}/simple`,
         { headers: { "X-TBA-Auth-Key": process.env.TBA_KEY } }
     );
-    //test
     // Keep going until we get an empty page
     let page = 0;
     let emptyPage = false;
