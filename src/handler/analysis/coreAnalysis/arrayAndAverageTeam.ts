@@ -6,7 +6,7 @@ import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { User } from "@prisma/client";
 
 
-export const arrayAndAverageTeam = async (user: User, metric: string, team: number): Promise<{ average: number, timeLine: Array<{ match: string, dataPoint: number }> }> => {
+export const arrayAndAverageTeam = async (user: User, metric: string, team: number): Promise<{ average: number, timeLine: { match: string, dataPoint: number }[] }> => {
     try {
         const params = z.object({
             team: z.number(),
@@ -89,14 +89,14 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
                     ]
             })
         }
-        type Match = {
+        interface Match {
             key: string;
             tournamentKey: string;
             matchNumber: number;
             teamNumber: number;
             matchType: string;
             tournamentName: string
-        };
+        }
 
         const groupedByTournament = matchKeys.reduce<Record<string, Match[]>>((acc, match) => {
             acc[match.tournamentKey] = acc[match.tournamentKey] || [];

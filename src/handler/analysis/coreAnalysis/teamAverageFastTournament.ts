@@ -5,7 +5,7 @@ import { EventAction, Position, User } from "@prisma/client";
 
 
 
-export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: string, tournamentKey: string, timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
+export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: string, tournamentKey: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
         if (metric1 === "ampscores") {

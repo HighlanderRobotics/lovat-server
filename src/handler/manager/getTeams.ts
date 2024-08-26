@@ -142,7 +142,7 @@ export const getTeams = async (req: AuthenticatedRequest, res: Response): Promis
         let count = 0
         if(req.query.filter != undefined)
         {
-            const tempRows : Array<any> = await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${req.query.filter + '%'} OR name ILIKE ${req.query.filter + '%'}`;
+            const tempRows : any[] = await prismaClient.$queryRaw`SELECT * FROM "Team" WHERE CAST("number" AS TEXT) LIKE ${req.query.filter + '%'} OR name ILIKE ${req.query.filter + '%'}`;
             count = tempRows.length
         }
         else

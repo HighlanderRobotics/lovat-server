@@ -1,7 +1,7 @@
 
 
 
-export const checkOnlyOneInstanceOfScouter = async (teamOne: Array<string>, teamTwo: Array<string>, teamThree: Array<string>, teamFour: Array<string>, teamFive: Array<string>, teamSix: Array<string>) => {
+export const checkOnlyOneInstanceOfScouter = async (teamOne: string[], teamTwo: string[], teamThree: string[], teamFour: string[], teamFive: string[], teamSix: string[]) => {
     try {
         const scouterSet = new Set<string>()
         const teamOneData = await checkTeam(teamOne, scouterSet)
@@ -21,7 +21,7 @@ export const checkOnlyOneInstanceOfScouter = async (teamOne: Array<string>, team
     }
 
 };
-async function checkTeam(arrayOfScouters: Array<string>, scouterSet: Set<string>){
+async function checkTeam(arrayOfScouters: string[], scouterSet: Set<string>){
     for(const scouter of arrayOfScouters)
     {
         if(scouterSet.has(scouter))

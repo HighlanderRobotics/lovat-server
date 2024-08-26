@@ -81,7 +81,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
 };
 
 
-function generateAlphanumericCode(length: number = 6): string {
+function generateAlphanumericCode(length = 6): string {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
     for (let i = 0; i < length; i++) {

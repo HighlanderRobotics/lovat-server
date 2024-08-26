@@ -4,7 +4,7 @@ import { teamLowerBound, tournamentLowerBound } from "../analysisConstants";
 import { arrayAndAverageTeamFast } from "./arrayAndAverageTeamFast";
 
 
-export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string): Promise<{ average: number, timeLine: Array<number> }> => {
+export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string): Promise<{ average: number, timeLine: number[] }> => {
     try {
         return new Promise(async (resolve, reject) => {
             let teams = []
@@ -87,14 +87,14 @@ export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: 
                     })
                 }
             }
-            const uniqueTeams: Set<number> = new Set();
+            const uniqueTeams = new Set<number>();
 
             for (const element of teams) {
                 if (element) {
                     uniqueTeams.add(element.teamMatchData.teamNumber);
                 }
             };
-            const uniqueTeamsArray: Array<number> = Array.from(uniqueTeams);
+            const uniqueTeamsArray: number[] = Array.from(uniqueTeams);
             let timeLineArray = []
             for (const element of uniqueTeamsArray) {
                 const currAvg = (arrayAndAverageTeamFast(req.user, metric, element))

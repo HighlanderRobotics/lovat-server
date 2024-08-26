@@ -35,10 +35,10 @@ export const addTournamentMatches = async (tournamentKey) => {
             for (let i = 0; i < response.data.length; i++) {
                 if (response.data[i].comp_level == 'qm') {
                     //all teams in the match
-                    var teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];
+                    const teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];
                     let matchesString = ``;
                     //make matches with trailing _0, _1, _2 etc
-                    for (var k = 0; k < teams.length; k++) {
+                    for (let k = 0; k < teams.length; k++) {
                         matchesString = matchesString + `('${response.data[i].key}_${k}', '${tournamentKey}', ${response.data[i].match_number}, '${teams[k]}', '${response.data[i].comp_level}'), `;
                         const currMatchKey = `${response.data[i].key}_${k}`;
                         const currTeam = Number(teams[k].substring(3))
@@ -84,9 +84,9 @@ export const addTournamentMatches = async (tournamentKey) => {
                 }
                 else {
                     
-                    var teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];
+                    const teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];
 
-                    for (var k = 0; k < 6; k++) {
+                    for (let k = 0; k < 6; k++) {
                         const currTeam = Number(teams[k].substring(3))
 
                         const currMatchKey = `${tournamentKey}_em${nonQM}_${k}`;

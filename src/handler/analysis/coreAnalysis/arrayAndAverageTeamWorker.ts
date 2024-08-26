@@ -53,14 +53,14 @@ import flatted from 'flatted'
 
                         ]
                 })
-                type Match = {
+                interface Match {
                     key: string;
                     tournamentKey: string;
                     matchNumber: number;
                     teamNumber: number;
                     matchType: string;
                     tournamentName: string
-                };
+                }
 
                 const groupedByTournament = matchKeys.reduce<Record<string, Match[]>>((acc, match) => {
                     acc[match.tournamentKey] = acc[match.tournamentKey] || [];

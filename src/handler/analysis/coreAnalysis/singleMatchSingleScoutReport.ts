@@ -5,7 +5,7 @@ import { EventAction, Position, User } from "@prisma/client";
 
 
 
-export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: string, timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
+export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
         if(metric1 === "ampscores"  || metric1 === "ampScores")
