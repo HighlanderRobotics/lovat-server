@@ -1,16 +1,20 @@
 import { EventAction, HighNoteResult, Position, RobotRole, StageResult } from "@prisma/client"
 //add cooperation
 
-
 const metricsCategory = ["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "feeds", "drops", "defense", "scores"]
-const metricsBreakdown = ["robotRole", "pickUp", "highNote", "stage"]
+
+// IMPORTANT!!! toString() must return a property of ScoutReport
+enum MetricsBreakdown {robotRole, pickUp, highNote, stage}
+
 //includes picklist sliders
 //havent done stage or highnote yet 
 const picklistSliders = ["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "feeds", "defense"]
+
 const autoEnd = 18
 const teleopStart = 19
 //much longer than needed in case they go over time/start match early
 const matchTimeEnd = 3000
+
 const specificMatchPageMetrics = ["defense", "ampscores", "speakerscores", "trapscores", "pickups"]
 const driverAbility = "driverability"
 const exludedAutoEvents = [EventAction.DROP_RING, EventAction.DEFENSE, EventAction.FEED_RING]
@@ -108,6 +112,6 @@ const swrConstant = 300
 const ttlConstant = 200
 
 const multiplerBaseAnalysis = 4
-export {metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant};
+export {metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, MetricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant};
 
 
