@@ -167,11 +167,11 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         //assuming scouted matches always come before non scouted, add sort to comfim that
         let finalMatches = []
         if (params.data.teamNumbers && params.data.teamNumbers.length > 0 && params.data.teamNumbers.length <= 6) {
-            for (let i = 0; i < matchKeyAndNumber.length; i++) {
+            for (const currMatchKeyAndNumber of matchKeyAndNumber) {
                 const currMatch = await prismaClient.teamMatchData.findMany({
                     where: {
-                        matchNumber: matchKeyAndNumber[i].matchNumber,
-                        matchType: matchKeyAndNumber[i].matchType,
+                        matchNumber: currMatchKeyAndNumber.matchNumber,
+                        matchType: currMatchKeyAndNumber.matchType,
                         tournamentKey: params.data.tournamentKey
                     }
                 })
@@ -180,7 +180,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     currMatchTeamNumbers.includes(teamNumber)
                 );
                 if (allTeamsPresent) {
-                    finalMatches.push(matchKeyAndNumber[i])
+                    finalMatches.push(currMatchKeyAndNumber)
                 }
             }
 

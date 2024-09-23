@@ -18,10 +18,9 @@ export const flag = async (req: AuthenticatedRequest, flagName: Metric | "rank",
 
             })
                 .then(async (response) => {
-                    for (let i = 0; i < response.data.rankings.length; i++) {
-
-                        if (response.data.rankings[i].team_key === ("frc" + teamNumber)) {
-                            const x = response.data.rankings[i].rank
+                    for(const currRanking of response.data.rankings){
+                        if (currRanking.team_key === ("frc" + teamNumber)) {
+                            const x = currRanking.rank
                             return x.toString()
                         }
                     }

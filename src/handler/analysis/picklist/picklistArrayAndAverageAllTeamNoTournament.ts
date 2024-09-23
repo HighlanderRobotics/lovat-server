@@ -3,12 +3,12 @@ import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast
 import { Metric } from "../analysisConstants";
 
 
-export const picklistArrayAndAverageAllTeamNoTournament = async (user: User, metric: Metric, teams: Array<number>): Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }> => {
+export const picklistArrayAndAverageAllTeamNoTournament = async (user: User, metric: Metric, teams: number[]): Promise<{ average: number, teamAverages: Map<number, number>, timeLine: number[] }> => {
     try {
 
 
         let timeLineArray = []
-        const teamAveragesMap: Map<number, number> = new Map()
+        const teamAveragesMap = new Map<number, number>()
         let average = 0
         for (const team of teams) {
             let currAvg = (await (arrayAndAverageTeamFast(user, metric, team))).average

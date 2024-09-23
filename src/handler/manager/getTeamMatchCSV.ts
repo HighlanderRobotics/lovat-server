@@ -6,7 +6,7 @@ import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction, 
 import { autoEnd } from "../analysis/analysisConstants";
 import { z } from "zod";
 
-type AggregatedTeamMatchData = {
+interface AggregatedTeamMatchData {
     match: string
     teamNumber: number
     role: string
@@ -29,7 +29,7 @@ type AggregatedTeamMatchData = {
 }
 
 // Simplified scouting report with properties required for aggregation
-type PointsReport = {
+interface PointsReport {
     robotRole: RobotRole
     stage: StageResult
     highNote: HighNoteResult

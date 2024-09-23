@@ -15,12 +15,11 @@ export const rankFlag = async (user: User, teamKey: string, eventKey: string) =>
         });
 
         const rankings = response.data.rankings;
-        for (let i = 0; i < rankings.length; i++) {
-            if (rankings[i].team_key === teamKey) {
-                return rankings[i].rank;
+        for (const currRanking of rankings){
+            if (currRanking.team_key === teamKey) {
+                return currRanking.rank;
             }
         }
-
         return 0;
     } catch (err) {
         // console.error("Error fetching rankings:", err);

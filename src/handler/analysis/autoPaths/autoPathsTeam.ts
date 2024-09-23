@@ -15,19 +15,19 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
             throw(params)
         };
 
-        type Position = {
+        interface Position {
             location: number;
             event: number;
             time?: number;
-        };
+        }
         
-        type AutoData = {
+        interface AutoData {
             autoPoints: number;
             positions: Position[];
             match: string;
-            score : Array<number>,
+            score : number[],
             tournamentName : string,
-        };
+        }
         
         const isSubsetPositions = (listOne: Position[], listTwo: Position[]): boolean => {
             const isSubset = (a: Position[], b: Position[]): boolean => 

@@ -4,8 +4,7 @@ import { highNoteMap, matchTimeEnd, Metric, metricToEvent, swrConstant, teamLowe
 import { EventAction, HighNoteResult, Position, StageResult, User } from "@prisma/client";
 
 
-
-export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: Metric, tournamentKey: string, timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
+export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: Metric, tournamentKey: string, timeMin = 0, timeMax = matchTimeEnd): Promise<number> => {
     try {
         let position = null
         switch (metric1) {

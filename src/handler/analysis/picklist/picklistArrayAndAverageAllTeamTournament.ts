@@ -3,7 +3,7 @@ import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast
 import { Metric } from "../analysisConstants";
 
 
-export const picklistArrayAndAverageAllTeamTournament = async (user: User, metric: Metric, teams : Array<number>) : Promise<{average : number, teamAverages : Map<number, number>, timeLine : Array<number>}>=> {
+export const picklistArrayAndAverageAllTeamTournament = async (user: User, metric: Metric, teams : number[]) : Promise<{average : number, teamAverages : Map<number, number>, timeLine : number[]}>=> {
     try {
 
        
@@ -15,7 +15,7 @@ export const picklistArrayAndAverageAllTeamTournament = async (user: User, metri
         };
         //change to null possibly
         let average = 0
-        const teamAveragesMap : Map<number, number> = new Map()
+        const teamAveragesMap  = new Map<number, number>()
         await Promise.all(timeLineArray).then((values) => {
             if (values.length !== 0) {
                 average = values.reduce((acc, cur) => acc + cur.average, 0) / values.length;

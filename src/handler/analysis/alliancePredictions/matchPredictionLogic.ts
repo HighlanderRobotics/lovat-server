@@ -123,10 +123,10 @@ async function getZPercent(z: number) {
 
     return sum;
 }
-async function getMean(teamArray: Array<number>) {
+async function getMean(teamArray: number[]) {
     let total = 0;
-    for (let i = 0; i < teamArray.length; i++) {
-        total += teamArray[i];
+    for (const currTeamArray of teamArray) {
+        total += currTeamArray;
     }
     return total / teamArray.length;
 

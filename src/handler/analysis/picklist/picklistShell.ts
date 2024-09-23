@@ -70,7 +70,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         const usedMetrics = []
         const metricAllTeamMaps = {}
         let includedTeamNumbers:number[] = []
-        const allTeamData: { average: number, teamAverages: Map<number, number>, timeLine: Array<number> }[] = []
+        const allTeamData: { average: number, teamAverages: Map<number, number>, timeLine: number[] }[] = []
         if (params.data.tournamentKey) {
             const teamsAtTournament = await prismaClient.teamMatchData.groupBy({
                 by: ["teamNumber"],
@@ -132,10 +132,8 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
         const dataArr = []
         await Promise.all(teamBreakdowns).then(function (data) {
-            for (let i = 0; i < data.length; i++) {
-                const currTeamData = data[i]
-                for (let j = 0; j < currTeamData.length; j++) {
-                    const currZscores = currTeamData[j]
+            for(const currTeamData of data){
+                for (const currZscores of currTeamData) {
                     if (!isNaN(currZscores.zScore)) {
                         const temp = { "team": currZscores.team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
                         dataArr.push(temp)
@@ -154,9 +152,9 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
     }
 
 }
-function splitTeams(teams: Array<number>, n: number): Array<Array<number>> {
+function splitTeams(teams: number[], n: number): number[][] {
     const splitSize = Math.ceil(teams.length / n);
-    const result: Array<Array<number>> = [];
+    const result: number[][] = [];
 
     for (let i = 0; i < n; i++) {
         const start = i * splitSize;

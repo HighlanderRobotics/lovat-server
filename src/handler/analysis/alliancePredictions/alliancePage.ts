@@ -5,7 +5,7 @@ import { User } from "@prisma/client";
 import { Metric } from "../analysisConstants";
 
 
-export const alliancePage = async (user : User, team1 : number, team2 : number, team3 : number): Promise<{totalPoints : number, teams : Array<object>, speakerScores : number, ampScores : number}> =>{
+export const alliancePage = async (user : User, team1 : number, team2 : number, team3 : number): Promise<{totalPoints : number, teams : object[], speakerScores : number, ampScores : number}> =>{
     try {
         const teamOnePoints = await arrayAndAverageTeam(user, Metric.totalpoints, team1)    
         const teamTwoPoints = await arrayAndAverageTeam(user, Metric.totalpoints, team2)

@@ -121,11 +121,11 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         const eventDataArray = []
         const events = req.body.events;
         let ampOn = false
-        for (let i = 0; i < events.length; i++) {
+        for(const event of events) {
             let points = 0;
-            const time = events[i][0];
-            const position = PositionMap[events[i][2]][0];
-            const action = EventActionMap[events[i][1]][0]
+            const time = event[0];
+            const position = PositionMap[event[2]][0];
+            const action = EventActionMap[event[1]][0]
             if (action === "START") {
                 ampOn = true
             }

@@ -1,8 +1,17 @@
 import unusedImports from "eslint-plugin-unused-imports";
 import typescriptEslintPlugin from "@typescript-eslint/eslint-plugin";
 import typescriptEslintParser from "@typescript-eslint/parser";
+import js from "@eslint/js";
+import tseslint from 'typescript-eslint';
+
+
+
 
 export default [
+    // js.configs.recommended,
+    ...tseslint.configs.stylistic,
+
+
     {
         files: ["**/*.js", "**/*.ts"],
         languageOptions: {
@@ -31,6 +40,7 @@ export default [
                     argsIgnorePattern: "^_",
                 },
             ],
+            "@typescript-eslint/prefer-for-of" : "warn"
         },
     },
 ];
