@@ -2,6 +2,7 @@ import z from 'zod'
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import ss from 'simple-statistics';
 import { User } from "@prisma/client";
+import { Metric } from '../analysisConstants';
 
 
 
@@ -25,9 +26,9 @@ export const matchPredictionLogic = async (user: User, red1, red2, red3, blue1, 
         if (!params.success) {
             throw (params)
         };
-        const redArr1 = (await arrayAndAverageTeam(user, "totalpoints", params.data.red1)).timeLine.map(item => item.dataPoint);
-        const redArr2 = (await arrayAndAverageTeam(user, "totalpoints", params.data.red2)).timeLine.map(item => item.dataPoint)
-        const redArr3 = (await arrayAndAverageTeam(user, "totalpoints", params.data.red3)).timeLine.map(item => item.dataPoint)
+        const redArr1 = (await arrayAndAverageTeam(user, Metric.totalpoints, params.data.red1)).timeLine.map(item => item.dataPoint);
+        const redArr2 = (await arrayAndAverageTeam(user, Metric.totalpoints, params.data.red2)).timeLine.map(item => item.dataPoint)
+        const redArr3 = (await arrayAndAverageTeam(user, Metric.totalpoints, params.data.red3)).timeLine.map(item => item.dataPoint)
 
 
         if (redArr1.length <= 1 || redArr2.length <= 1 || redArr3.length <= 1) {
@@ -41,9 +42,9 @@ export const matchPredictionLogic = async (user: User, red1, red2, red3, blue1, 
         const redAllianceSDV = Math.sqrt(Math.pow(red1SDV, 2) + Math.pow(red2SDV, 2) + Math.pow(red3SDV, 2))
         const redAllianceMean = await getMean(redArr1) + await getMean(redArr2) + await getMean(redArr3)
 
-        const blueArr1 = (await arrayAndAverageTeam(user, "totalpoints", params.data.blue1)).timeLine.map(item => item.dataPoint);
-        const blueArr2 = (await arrayAndAverageTeam(user, "totalpoints", params.data.blue2)).timeLine.map(item => item.dataPoint)
-        const blueArr3 = (await arrayAndAverageTeam(user, "totalpoints", params.data.blue3)).timeLine.map(item => item.dataPoint)
+        const blueArr1 = (await arrayAndAverageTeam(user, Metric.totalpoints, params.data.blue1)).timeLine.map(item => item.dataPoint);
+        const blueArr2 = (await arrayAndAverageTeam(user, Metric.totalpoints, params.data.blue2)).timeLine.map(item => item.dataPoint)
+        const blueArr3 = (await arrayAndAverageTeam(user, Metric.totalpoints, params.data.blue3)).timeLine.map(item => item.dataPoint)
 
         if (blueArr1.length <= 1 || blueArr2.length <= 1 || blueArr3.length <= 1) {
             //not enough data

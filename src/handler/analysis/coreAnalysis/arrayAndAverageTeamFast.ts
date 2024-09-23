@@ -3,10 +3,11 @@ import z from 'zod'
 import { autoEnd, matchTimeEnd, swrConstant, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { teamAverageFastTournament } from "./teamAverageFastTournament";
+import { Metric } from "../analysisConstants";
 import { User } from "@prisma/client";
 
 
-export const arrayAndAverageTeamFast = async (user: User, metric: string, team: number): Promise<{ average: number }> => {
+export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: number): Promise<{ average: number }> => {
     try {
         const params = z.object({
             team: z.number(),
@@ -16,6 +17,11 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
         if (!params.success) {
             throw (params)
         };
+
+        if (metric === Metric.stage) {
+            return { average: await stagePicklistTeam(user, team) }
+        }
+
         let matchKeys = []
         if (user.tournamentSource.length >= tournamentLowerBound) {
             matchKeys = await prismaClient.teamMatchData.findMany({
@@ -106,24 +112,22 @@ export const arrayAndAverageTeamFast = async (user: User, metric: string, team: 
             return acc;
         }, {});
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
-        if (metric === "stage") {
-            return { average: await stagePicklistTeam(user, team) }
-        }
+
         const tournamentAverages = []
         //group into tournaments, calculate all averages indivudally so they can all be properly weighted after the nested loops
         for (const tournamentMatchRows of tournamentGroups) {
             const currAvg = null
-            if (metric.includes("teleop") || metric.includes("Teleop")) {
-                const currData = await teamAverageFastTournament(user, team, metric.includes("point") || metric.includes("Point"), metric, tournamentMatchRows[0].tournamentKey, teleopStart, matchTimeEnd)
+            if (metric === Metric.teleoppoints) {
+                const currData = await teamAverageFastTournament(user, team, true, Metric.teleoppoints, tournamentMatchRows[0].tournamentKey, teleopStart, matchTimeEnd)
                 tournamentAverages.push(currData)
             }
-            else if (metric.includes("auto") || metric.includes("Auto")) {
-                const currData = await teamAverageFastTournament(user, team, metric.includes("point") || metric.includes("Point"), metric, tournamentMatchRows[0].tournamentKey, 0, autoEnd)
+            else if (metric === Metric.autopoints) {
+                const currData = await teamAverageFastTournament(user, team, true, Metric.autopoints, tournamentMatchRows[0].tournamentKey, 0, autoEnd)
                 tournamentAverages.push(currData)
 
             }
             else {
-                const currData = await teamAverageFastTournament(user, team, metric.includes("point") || metric.includes("Point"), metric, tournamentMatchRows[0].tournamentKey)
+                const currData = await teamAverageFastTournament(user, team, metric === Metric.totalpoints, metric, tournamentMatchRows[0].tournamentKey)
                 tournamentAverages.push(currData)
             }
 
