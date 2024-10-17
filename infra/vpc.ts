@@ -1,4 +1,4 @@
 export const vpc = new sst.aws.Vpc("LovatVPC", {
-  nat: "managed",
+  nat: "ec2",
   bastion: true,
 });
