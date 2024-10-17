@@ -6,7 +6,7 @@ import { User } from "@prisma/client";
 // import { cooperationSingleMatch } from "./cooperationSingleMatch";
 
 
-export const singleMatchEventsAverage = async (user: User,  isPointAverage: boolean, matchKey: string, team: number, metric1: Metric, timeMin = 0, timeMax = matchTimeEnd): Promise<number> => {
+export const singleMatchEventsAverage = async (user: User,  isPointAverage: boolean, matchKey: string, team: number, metric1: Metric, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         const scoutReports = await prismaClient.scoutReport.findMany({
             where :
