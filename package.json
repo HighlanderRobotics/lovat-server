@@ -6,8 +6,8 @@
   ],
   "private": true,
   "dependencies": {
-    "@tsconfig/node20": "^20.1.4",
-    "sst": "^3.2.19"
+    "@tsconfig/node18": "^18.2.4",
+    "sst": "^3.2.38"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.145"

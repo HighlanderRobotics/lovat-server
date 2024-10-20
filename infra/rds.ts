@@ -1,7 +1,7 @@
 import { tbaKey } from "./secrets";
 import { vpc } from "./vpc";
 
-export const rds = new sst.aws.Postgres("LovatDB", { vpc });
+export const rds = new sst.aws.Postgres("LovatDB", { vpc, proxy: true });
 
 // MARK: Migrations
 const migrationFunction = new sst.aws.Function("DeploymentMigrate", {
@@ -146,6 +146,15 @@ if (!$dev) {
 }
 
 // MARK: Dev commands
+new sst.x.DevCommand("DrizzleStudio", {
+  dev: {
+    command: "npx drizzle-kit studio",
+    directory: "packages/api",
+    autostart: true,
+  },
+  link: [rds],
+});
+
 new sst.x.DevCommand("PrismaStudio", {
   dev: {
     command: "npx prisma studio --browser none",
