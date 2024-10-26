@@ -10,7 +10,7 @@ async function main() {
   const stage = z.string().parse(process.env.STAGE);
 
   const collectionCode = await toString(
-    "com.frc8033.lovatcollection://set-api-url" +
+    "com.frc8033.lovatcollection://set-api-url?" +
       new URLSearchParams({ url: urlString, stage }),
     {
       type: "terminal",
@@ -23,7 +23,7 @@ async function main() {
   );
 
   const dashboardCode = await toString(
-    "com.frc8033.lovatdashboard://set-api-url" +
+    "com.frc8033.lovatdashboard:///set-api-url?" +
       new URLSearchParams({ url: urlString, stage }),
     {
       type: "terminal",
