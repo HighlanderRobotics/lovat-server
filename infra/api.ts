@@ -20,3 +20,17 @@ export const lovatAPI = new sst.aws.Function("LovatAPI", {
     },
   ],
 });
+
+new sst.x.DevCommand("QRCodes", {
+  dev: {
+    title: "QR Codes",
+    command: "npx ts-node src/apiQRCodes.ts",
+    directory: "packages/scripts",
+    autostart: true,
+  },
+  environment: {
+    API_URL: lovatAPI.url,
+    STAGE: $app.stage,
+  },
+  link: [lovatAPI],
+});

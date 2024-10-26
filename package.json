@@ -10,6 +10,7 @@
     "sst": "^3.2.38"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.145"
+    "@types/aws-lambda": "8.10.145",
+    "ts-node": "^10.9.2"
   }
 }
