@@ -19,7 +19,7 @@ export const getMatches = async (
     const user = req.user;
     const teamNumber = user.teamNumber || 0;
 
-    // Parse and validate parameters
+    // parse and validate 
     const isScouted =
       req.query.isScouted !== undefined
         ? req.query.isScouted === "true"
@@ -302,6 +302,7 @@ export const getMatches = async (
 
     res.status(200).send(finalFormatedMatches);
   } catch (error) {
+    console.log(error)
     res.status(500).send(error);
   }
 };
