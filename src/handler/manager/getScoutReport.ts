@@ -1,13 +1,11 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
 export const getScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    try {
-        const user = req.user
-       
+    try {       
         const params = z.object({
             uuid: z.string()
         }).safeParse({

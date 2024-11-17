@@ -1,11 +1,7 @@
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
-import z, { array } from 'zod'
+import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
-import { metricsCategory } from "../analysisConstants";
-import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 import { rankFlag } from "../rankFlag";
 
 
@@ -23,7 +19,7 @@ export const flag = async (req: AuthenticatedRequest, metric: string) => {
             throw (params);
         };
         if (params.data.flag === "rank") {
-            let tourament = await prismaClient.tournament.findFirst({
+            const tourament = await prismaClient.tournament.findFirst({
                 where:
                 {
                     teamMatchData:
@@ -43,12 +39,12 @@ export const flag = async (req: AuthenticatedRequest, metric: string) => {
                 return { flag: params.data.flag, "data": 0 }
             }
             else {
-                let data = await rankFlag(req.user, "frc" + params.data.team, tourament.key)
+                const data = await rankFlag(req.user, "frc" + params.data.team, tourament.key)
                 return { flag: params.data.flag, "data": data }
             }
         }
         else {
-            let data = await arrayAndAverageTeam(req.user, params.data.flag, params.data.team)
+            const data = await arrayAndAverageTeam(req.user, params.data.flag, params.data.team)
             console.log(data)
             return { flag: params.data.flag, data: data.average }
         }

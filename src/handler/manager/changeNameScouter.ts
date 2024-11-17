@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
 export const changeNameScouter = async (req: Request, res: Response): Promise<void> => {
@@ -18,7 +17,7 @@ export const changeNameScouter = async (req: Request, res: Response): Promise<vo
             res.status(400).send({"error" : params, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
-        const user = await prismaClient.scouter.update({
+        await prismaClient.scouter.update({
             where : 
             {
                 uuid : params.data.uuid

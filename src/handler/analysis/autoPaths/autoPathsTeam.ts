@@ -1,7 +1,5 @@
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { autoPathSingleMatchSingleScoutReport } from "./autoPathSingleMatchSingleScoutReport";
 import { User } from "@prisma/client";
 
@@ -17,19 +15,19 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
             throw(params)
         };
 
-        type Position = {
+        interface Position {
             location: number;
             event: number;
             time?: number;
-        };
+        }
         
-        type AutoData = {
+        interface AutoData {
             autoPoints: number;
             positions: Position[];
             match: string;
-            score : Array<number>,
+            score : number[],
             tournamentName : string,
-        };
+        }
         
         const isSubsetPositions = (listOne: Position[], listTwo: Position[]): boolean => {
             const isSubset = (a: Position[], b: Position[]): boolean => 
@@ -103,7 +101,7 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
                 }
             }
         })
-        let autoPaths  = []
+        const autoPaths  = []
         for(const element of matches)
         {
             const currAutoPath = await autoPathSingleMatchSingleScoutReport(user, element.teamMatchKey, element.uuid)

@@ -1,14 +1,8 @@
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
-import z, { date } from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
+import z from 'zod'
 import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teleopStart } from "../analysisConstants";
-import { run } from "node:test";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
-import { match } from "assert";
 import { parentPort } from "worker_threads";
-import { deflateRawSync } from "zlib";
 import { teamAverageFastTournament } from "./teamAverageFastTournament";
 import flatted from 'flatted'
 
@@ -17,7 +11,7 @@ import flatted from 'flatted'
 
         new Promise(async (resolve, reject) => {
 
-            let teamsDataArray = []
+            const teamsDataArray = []
             const req = flatted.parse(data.req)
             for (const team of data.teams) {
                 const params = z.object({
@@ -28,8 +22,8 @@ import flatted from 'flatted'
                 if (!params.success) {
                     throw (params)
                 };
-                let metric = data.metric
-                let matchKeys = await prismaClient.teamMatchData.findMany({
+                const metric = data.metric
+                const matchKeys = await prismaClient.teamMatchData.findMany({
                     where: {
                         tournamentKey:
                         {
@@ -45,7 +39,7 @@ import flatted from 'flatted'
                     {
                         tournament: true
                     },
-                    orderBy:
+                   orderBy :
                         [
                             {
                                 tournament: {
@@ -59,18 +53,18 @@ import flatted from 'flatted'
 
                         ]
                 })
-                type Match = {
+                interface Match {
                     key: string;
                     tournamentKey: string;
                     matchNumber: number;
                     teamNumber: number;
                     matchType: string;
                     tournamentName: string
-                };
+                }
 
                 const groupedByTournament = matchKeys.reduce<Record<string, Match[]>>((acc, match) => {
                     acc[match.tournamentKey] = acc[match.tournamentKey] || [];
-                    let matchMap = { key: match.key, tournamentKey: match.tournamentKey, matchNumber: match.matchNumber, teamNumber: match.teamNumber, matchType: match.matchType, tournamentName: match.tournament.name }
+                    const matchMap = { key: match.key, tournamentKey: match.tournamentKey, matchNumber: match.matchNumber, teamNumber: match.teamNumber, matchType: match.matchType, tournamentName: match.tournament.name }
                     acc[match.tournamentKey].push(matchMap);
                     return acc;
                 }, {});
@@ -86,16 +80,16 @@ import flatted from 'flatted'
                     const currDatas = []
 
                     if (metric.includes("teleop") || metric.includes("Teleop")) {
-                        let currData = await teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, teleopStart, matchTimeEnd)
+                        const currData = await teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, teleopStart, matchTimeEnd)
                         currDatas.push(currData)
                     }
                     else if (metric.includes("auto") || metric.includes("Auto")) {
-                        let currData = await teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, 0, autoEnd)
+                        const currData = await teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, 0, autoEnd)
                         currDatas.push(currData)
 
                     }
                     else {
-                        let currData = teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey)
+                        const currData = teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey)
                         currDatas.push(currData)
                     }
 

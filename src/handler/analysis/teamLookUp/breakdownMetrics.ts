@@ -1,5 +1,4 @@
-import { Request, Response } from "express";
-import prismaClient from '../../../prismaClient'
+import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
@@ -17,7 +16,7 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
             res.status(400).send(params);
             return;
         };
-        let result = {}
+        const result = {}
         for (const element of metricsBreakdown) {
             result[element] = await nonEventMetric(req.user, params.data.team, element )
         };

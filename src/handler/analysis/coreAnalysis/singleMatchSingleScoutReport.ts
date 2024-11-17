@@ -1,16 +1,11 @@
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap, teleopStart } from "../analysisConstants";
-import { sum } from "simple-statistics";
+import { highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
 import { EventAction, Position, User } from "@prisma/client";
-import { match } from "assert";
-import { time } from "console";
 
 
 
-export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: string, timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
+export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
         if(metric1 === "ampscores"  || metric1 === "ampScores")

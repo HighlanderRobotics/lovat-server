@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
@@ -20,7 +20,7 @@ export const addScouterDashboard = async (req: AuthenticatedRequest, res: Respon
             res.status(403).send("Not authorized to make a scouter")
             return
         }
-        const scouter = await prismaClient.scouter.create({
+        await prismaClient.scouter.create({
             data :
             {
                 name : params.data.name,

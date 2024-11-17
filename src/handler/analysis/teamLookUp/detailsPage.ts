@@ -1,10 +1,7 @@
-import { Request, Response } from "express";
-import prismaClient from '../../../prismaClient'
+import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
-import { metricsCategory } from "../analysisConstants";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 import { averageAllTeamOneQuerey } from "../coreAnalysis/averageAllTeamsOneQuerey";
 
@@ -29,13 +26,13 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             return
         }
         else if (params.data.metric === "scores") {
-            let teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
-            let allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
-            let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
-            let speakerScores = await arrayAndAverageTeam(req.user, "speakerscores", params.data.team)
+            const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
+            const allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
+            // let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
+            const speakerScores = await arrayAndAverageTeam(req.user, "speakerscores", params.data.team)
 
-            let result = {
-                arrays: {"amp" : ampScores, "speaker" : speakerScores},
+            const result = {
+                array: speakerScores,
                 result: teamAverageAndTimeLine.average,
                 all: allTeamAverage,
                 difference: teamAverageAndTimeLine.average - allTeamAverage,
@@ -44,9 +41,9 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             res.status(200).send(result)
         }
         else {
-            let teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
-            let allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
-            let result = {
+            const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
+            const allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
+            const result = {
                 array: teamAverageAndTimeLine.timeLine,
                 result: teamAverageAndTimeLine.average,
                 all: allTeamAverage,

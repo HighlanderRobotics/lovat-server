@@ -1,14 +1,11 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../prismaClient'
-import z, { late } from 'zod'
+import z from 'zod'
 import axios from "axios";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { matchPredictionLogic } from "../analysis/alliancePredictions/matchPredictionLogic";
-import { time } from "console";
-import { $Enums, MatchType } from "@prisma/client";
-import { MatchEnumToAbrivation, MatchTypeEnumToFull, MatchTypeToAbrivation } from "./managerConstants";
-import { match } from "assert";
-import { addTournamentMatches } from "./addTournamentMatches";
+import { MatchType } from "@prisma/client";
+import { MatchEnumToAbrivation } from "./managerConstants";
 
 
 export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -29,7 +26,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
             res.status(400).send(params);
             return;
         };
-        let data = { "matches": {}, "teamMatchTimeline": {}, "webcasts": null, "rankingBlocks": null }
+        const data = { "matches": {}, "teamMatchTimeline": {}, "webcasts": null, "rankingBlocks": null }
         // await addTournamentMatches(params.data.tournamentKey)
         const matchesWithTeam = await prismaClient.teamMatchData.findMany({
             where :
@@ -45,7 +42,6 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
         }
 
         const headers = { 'X-TBA-Auth-Key': process.env.TBA_KEY };
-        const teamKey = "frc" + params.data.team
         await axios.get(`https://www.thebluealliance.com/api/v3/event/${params.data.tournamentKey}`, { headers })
             .then(async response => {
 
@@ -72,7 +68,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
                     else
                     {
                         let arrRankings = mappedData.slice(0, params.data.topTeamCount)
-                        let startingIndex = findTeamIndex - params.data.teamsAboveCount || 0
+                        const startingIndex = findTeamIndex - params.data.teamsAboveCount || 0
                         arrRankings.push({"type": "collapsedDivider",
                         "teamCount": (startingIndex +1)- params.data.topTeamCount})
                         arrRankings = arrRankings.concat(mappedData.slice(startingIndex))
@@ -87,7 +83,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
 
             })
 
-        let nowPlaying = await prismaClient.teamMatchData.findFirst({
+        const nowPlaying = await prismaClient.teamMatchData.findFirst({
                 where:
                 {
                     tournamentKey: params.data.tournamentKey,
@@ -107,7 +103,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
             nowPlaying.matchNumber = nowPlaying.matchNumber + 1
         
         if (nowPlaying) {
-            let matchesData: any = {}
+            const matchesData: any = {}
             matchesData.nowPlaying= await matchFormat(params.data.tournamentKey, nowPlaying.matchNumber, nowPlaying.matchType)
             matchesData.next = await matchFormat(params.data.tournamentKey, nowPlaying.matchNumber + 1, nowPlaying.matchType)
             //if there are more matches left
@@ -129,7 +125,7 @@ export const pitDisplay = async (req: AuthenticatedRequest, res: Response): Prom
                         }
                    }
                 })
-                let prevMatchAllKeys = []
+                const prevMatchAllKeys = []
                 prevMatchAllRows.filter(match => (
                     prevMatchAllKeys.push(match.key)
 

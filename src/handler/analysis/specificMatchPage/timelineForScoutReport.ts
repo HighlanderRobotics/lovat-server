@@ -1,13 +1,8 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
-import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import { FlippedActionMap, FlippedPositionMap, specificMatchPageMetrics } from "../analysisConstants";
-import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
-import { match } from "assert";
-import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingleMatchSingleScoutReport";
+import { FlippedActionMap, FlippedPositionMap } from "../analysisConstants";
 
 
 export const timelineForScoutReport = async (req: AuthenticatedRequest, res: Response) => {
@@ -29,7 +24,7 @@ export const timelineForScoutReport = async (req: AuthenticatedRequest, res: Res
                 scoutReportUuid : params.data.uuid
             }
         })
-        let timelineArray = []
+        const timelineArray = []
         for(const element of events)
         {
             timelineArray.push([element.time, FlippedActionMap[element.action], FlippedPositionMap[element.position]])

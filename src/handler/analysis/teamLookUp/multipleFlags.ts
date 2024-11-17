@@ -1,12 +1,6 @@
-import { Request, Response } from "express";
-import prismaClient from '../../../prismaClient'
+import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import { arrayAndAverageAllTeam } from "../coreAnalysis/arrayAndAverageAllTeams";
-import { metricsCategory } from "../analysisConstants";
-import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
-import { rankFlag } from "../rankFlag";
 import { flag } from "./flag";
 
 
@@ -25,7 +19,7 @@ export const multipleFlags = async (req: AuthenticatedRequest, res: Response) =>
             res.status(400).send(params);
             return;
         };
-        let arr = []
+        const arr = []
         for(const metric of params.data.flags)
         {
             if(metric === "rank" && !params.data.tournamentKey)

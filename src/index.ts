@@ -30,7 +30,7 @@ import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
 import { addScoutReport } from "./handler/manager/addScoutReport";
 import { getScoutReport } from "./handler/manager/getScoutReport";
-import { getMatches } from "./handler/manager/getMatches";
+// import { getMatches } from "./handler/manager/getMatches";
 import { getSinglePicklist } from "./handler/manager/getSinglePicklist";
 import { getSingleMutablePicklist } from "./handler/manager/getSingleMutablePicklist";
 import { updatePicklist } from "./handler/manager/updatePicklist";
@@ -50,7 +50,6 @@ import { breakdownMetrics } from "./handler/analysis/teamLookUp/breakdownMetrics
 import { checkCodeScouter } from "./handler/manager/checkCodeScouter";
 import { changeNameScouter } from "./handler/manager/changeNameScouter";
 import { getScoutersOnTeam } from "./handler/manager/getScoutersOnTeam";
-import { getTournamentsWithSchedule } from "./handler/manager/getTournamentWithSchedule";
 import { getScheduleForScouter } from "./handler/manager/getScheduleForScouter";
 import { addNewScouter } from "./handler/manager/addNewScouter";
 import { updateNotes } from "./handler/manager/updateNotes";
@@ -58,7 +57,6 @@ import { getTeamCode } from "./handler/manager/getTeamCode";
 import { getAnalysts } from "./handler/manager/getAnalysts";
 import { updateSettings } from "./handler/manager/updateSettings";
 import { getNotes } from "./handler/analysis/teamLookUp/getNotes";
-import { alliancePage } from "./handler/analysis/alliancePredictions/alliancePage";
 import { alliancePageResponse } from "./handler/analysis/alliancePredictions/alliancePageResponse";
 import { matchPrediction } from "./handler/analysis/alliancePredictions/matchPrediction";
 import { getTeamSource } from "./handler/manager/getTeamSource";
@@ -72,7 +70,6 @@ import { matchPageSpecificScouter } from "./handler/analysis/specificMatchPage/m
 import { scoutReportForMatch } from "./handler/analysis/specificMatchPage/scoutReportForMatch";
 import { timelineForScoutReport } from "./handler/analysis/specificMatchPage/timelineForScoutReport";
 import { getTournamentForScouterWithSchedule } from "./handler/manager/getTournamentForScouterWithSchedule";
-import { flag } from "./handler/analysis/teamLookUp/flag";
 import { multipleFlags } from "./handler/analysis/teamLookUp/multipleFlags";
 import { updateTeamEmail } from "./handler/manager/updateTeamEmail";
 import { addNotOnTeam } from "./handler/manager/addNotOnTeam";
@@ -82,6 +79,11 @@ import { scoutingLeadProgressPage } from "./handler/manager/scoutingLeadProgress
 import { addScouterDashboard } from "./handler/manager/addScouterDashboard";
 import { scouterScoutReports } from "./handler/analysis/scoutingLead/scouterScoutReports";
 import { pitDisplay } from "./handler/manager/pitDisplay";
+import { getTeamCSV } from "./handler/manager/getTeamCSV";
+import { getTeamMatchCSV } from "./handler/manager/getTeamMatchCSV";
+import { getReportCSV } from "./handler/manager/getReportCSV";
+import { getMatches } from "./handler/manager/getMatchesFaster";
+// import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -241,6 +243,12 @@ app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScout
 app.get("/v1/analysis/pitdisplay", pitDisplay)
 
 
+// app.get('/v1/addtourny', addTournamentMatchesOneTime)
+
+// csv export
+app.get('/v1/analysis/csvplain', requireAuth, getTeamCSV) // tested
+app.get('/v1/analysis/matchcsv', requireAuth, getTeamMatchCSV)
+app.get('/v1/analysis/reportcsv', requireAuth, getReportCSV)
 
 getTBAData();
 
