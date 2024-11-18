@@ -3,7 +3,7 @@ import z from "zod"
 import axios from "axios";
 
 // Returns top four teams from given tournament with rank, RP, and qual matches played
-export const tournamentWinners = async (req: Request, res: Response) => {
+export const topTournamentRanks = async (req: Request, res: Response) => {
     try {
         const params = z.object({
             eventKey: z.string(),

@@ -83,7 +83,7 @@ import { getTeamCSV } from "./handler/manager/getTeamCSV";
 import { getTeamMatchCSV } from "./handler/manager/getTeamMatchCSV";
 import { getReportCSV } from "./handler/manager/getReportCSV";
 import { getMatches } from "./handler/manager/getMatchesFaster";
-import { tournamentWinners } from "./handler/analysis/tournamentWinners";
+import { topTournamentRanks } from "./handler/analysis/topTournamentRanks";
 import { teamTournamentRank } from "./handler/analysis/teamTournamentRank";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
@@ -253,7 +253,7 @@ app.get('/v1/analysis/matchcsv', requireAuth, getTeamMatchCSV)
 app.get('/v1/analysis/reportcsv', requireAuth, getReportCSV)
 
 // MyEvent page
-app.get('/v1/analysis/tournamentwinners/:event', tournamentWinners)
+app.get('/v1/analysis/tournamentwinners/:event', topTournamentRanks)
 app.get('/v1/analysis/teambanner/:event', teamTournamentRank)
 
 getTBAData();
