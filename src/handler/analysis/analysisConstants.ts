@@ -1,5 +1,4 @@
 import { EventAction, HighNoteResult, Position, RobotRole, StageResult } from "@prisma/client"
-import { singleMatchEventsAverage } from "./coreAnalysis/singleMatchEventsAverage"
 //add cooperation
 
 
@@ -102,9 +101,13 @@ const FlippedPositionMap = {
     [Position.GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE]: 14,
     [Position.GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE]: 15,
 }
+const tournamentLowerBound = 497
+const teamLowerBound = 3300
 
+const swrConstant = 300
+const ttlConstant = 200
 
 const multiplerBaseAnalysis = 4
-export {metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap };
+export {metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant};
 
 

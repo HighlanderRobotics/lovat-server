@@ -1,20 +1,13 @@
-import { Request, Response } from "express";
-import prismaClient from '../../../prismaClient'
-import z from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
-import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import { error, time } from "console";
-import { Position, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
 
 
-export const picklistArrayAndAverageAllTeamNoTournament = async (user: User, metric: string, teams: Array<number>): Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }> => {
+export const picklistArrayAndAverageAllTeamNoTournament = async (user: User, metric: string, teams: number[]): Promise<{ average: number, teamAverages: Map<number, number>, timeLine: number[] }> => {
     try {
 
 
         let timeLineArray = []
-        let teamAveragesMap: Map<number, number> = new Map()
+        const teamAveragesMap = new Map<number, number>()
         let average = 0
         for (const team of teams) {
             let currAvg = (await (arrayAndAverageTeamFast(user, metric, team))).average

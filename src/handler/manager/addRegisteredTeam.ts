@@ -1,9 +1,8 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { Resend } from 'resend';
-import { sendSlackVerification } from "./sendSlackVerification";
 
 
 
@@ -29,7 +28,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             }
         })
         if (!toggleFeatureRow.enabled) {
-            const row = await prismaClient.registeredTeam.create({
+        await prismaClient.registeredTeam.create({
                 data: {
                     email: params.data.email,
                     number: params.data.number,
@@ -39,7 +38,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             })
         }
         else {
-            const row = await prismaClient.registeredTeam.create({
+            await prismaClient.registeredTeam.create({
                 data: {
                     email: params.data.email,
                     number: params.data.number,
@@ -50,7 +49,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
 
         const user = req.user
 
-        const userRow = await prismaClient.user.update({
+        await prismaClient.user.update({
             data: {
                 teamNumber: req.body.number,
                 role: "SCOUTING_LEAD"
@@ -61,7 +60,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             }
         })
         //sending email
-        let verificationUrl = `lovat.app/verify/${params.data.code}`
+        const verificationUrl = `lovat.app/verify/${params.data.code}`
         const resend = new Resend(process.env.RESEND_KEY);
 
         resend.emails.send({
@@ -82,7 +81,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
 };
 
 
-function generateAlphanumericCode(length: number = 6): string {
+function generateAlphanumericCode(length = 6): string {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
     for (let i = 0; i < length; i++) {

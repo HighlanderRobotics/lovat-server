@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
@@ -30,7 +30,7 @@ export const updateTeamEmail = async (req: AuthenticatedRequest, res: Response):
             }
         })
 
-        let verificationUrl = `lovat.app/verify/${emailRow.code}`
+        const verificationUrl = `lovat.app/verify/${emailRow.code}`
         const resend = new Resend(process.env.RESEND_KEY);
 
         resend.emails.send({

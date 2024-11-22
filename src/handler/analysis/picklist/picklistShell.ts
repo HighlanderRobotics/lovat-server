@@ -1,20 +1,15 @@
 
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../../prismaClient'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import ss from 'simple-statistics';
-import prisma from '../../../prismaClient';
-import z, { array } from 'zod'
+import z from 'zod'
 const { Worker } = require('worker_threads');
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
 import { picklistSliders } from "../analysisConstants";
 import { picklistArrayAndAverageAllTeamTournament } from "./picklistArrayAndAverageAllTeamTournament";
-import { workerData } from "worker_threads";
 import flatted from 'flatted';
-import { resolve } from "dns/promises";
 import os from 'os'
-import { picklistArrayAndAverageAllTeamNoTournament } from "./picklistArrayAndAverageAllTeamNoTournament";
-import { all } from "axios";
 
 
 
@@ -72,10 +67,10 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             await addTournamentMatches(params.data.tournamentKey)
         }
         const allTeamAvgSTD = {}
-        let usedMetrics = []
-        let metricAllTeamMaps = {}
+        const usedMetrics = []
+        const metricAllTeamMaps = {}
         let includedTeamNumbers:number[] = []
-        let allTeamData: Promise<{ average: number, teamAverages: Map<number, number>, timeLine: Array<number> }>[] = []
+        const allTeamData: { average: number, teamAverages: Map<number, number>, timeLine: number[] }[] = []
         if (params.data.tournamentKey) {
             const teamsAtTournament = await prismaClient.teamMatchData.groupBy({
                 by: ["teamNumber"],
@@ -87,7 +82,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             includedTeamNumbers = teamsAtTournament.map(team => team.teamNumber);
             for (const metric of picklistSliders) {
                 if (params.data[metric] || params.data.flags.includes(metric)) {
-                    const currData = picklistArrayAndAverageAllTeamTournament(req.user, metric, includedTeamNumbers);
+                    const currData = await picklistArrayAndAverageAllTeamTournament(req.user, metric, includedTeamNumbers);
                     allTeamData.push(currData)
                     usedMetrics.push(metric)
                 }
@@ -99,13 +94,11 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
            res.status(200).send([])
            return
         }
+    
         
-        
-        
-        await Promise.all(allTeamData).then((allTeamDataResolved) => {
-            for (let i = 0; i < allTeamDataResolved.length; i++) {
-                let currData = allTeamDataResolved[i]
-                let metric = usedMetrics[i]
+            for (let i = 0; i < allTeamData.length; i++) {
+                const currData = allTeamData[i]
+                const metric = usedMetrics[i]
                 if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2 && (ss.standardDeviation(currData.timeLine))) {
                     allTeamAvgSTD[metric] = {
                         "allAvg": currData.average,
@@ -129,23 +122,20 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 }
                 metricAllTeamMaps[metric] = currData.teamAverages
             }
-        })
-       let teamBreakdowns = []
-        let teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
+        
+       const teamBreakdowns = []
+        const teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
         for (const teams of teamChunks) {
             if (teams.length > 0) {
                 teamBreakdowns.push(createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req))
             }
         }
-        let dataArr = []
-        console.log(metricAllTeamMaps)
+        const dataArr = []
         await Promise.all(teamBreakdowns).then(function (data) {
-            for (let i = 0; i < data.length; i++) {
-                let currTeamData = data[i]
-                for (let j = 0; j < currTeamData.length; j++) {
-                    let currZscores = currTeamData[j]
+            for(const currTeamData of data){
+                for (const currZscores of currTeamData) {
                     if (!isNaN(currZscores.zScore)) {
-                        let temp = { "team": currZscores.team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
+                        const temp = { "team": currZscores.team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
                         dataArr.push(temp)
                     }
                 }
@@ -162,13 +152,13 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
     }
 
 }
-function splitTeams(teams: Array<number>, n: number): Array<Array<number>> {
+function splitTeams(teams: number[], n: number): number[][] {
     const splitSize = Math.ceil(teams.length / n);
-    const result: Array<Array<number>> = [];
+    const result: number[][] = [];
 
     for (let i = 0; i < n; i++) {
-        let start = i * splitSize;
-        let end = start + splitSize;
+        const start = i * splitSize;
+        const end = start + splitSize;
         result.push(teams.slice(start, end));
     }
 
@@ -177,7 +167,7 @@ function splitTeams(teams: Array<number>, n: number): Array<Array<number>> {
 function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
     return new Promise((resolve, reject) => {
 
-        let data = {
+        const data = {
             teams: teams,
             metricTeamAverages: flatted.stringify(metricAllTeamMaps),
             allTeamAvgSTD: allTeamAvgSTD,
@@ -200,7 +190,9 @@ function createWorker(teams, metricAllTeamMaps, allTeamAvgSTD, params, req) {
         });
     })
 }
-
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 

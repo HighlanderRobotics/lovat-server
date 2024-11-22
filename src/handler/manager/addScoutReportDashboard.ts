@@ -1,12 +1,8 @@
 //importing necessary things from other files like prisma, zod, authentication, maps
 import { Response } from "express";
 import prismaClient from '../../prismaClient'
-import { match } from "assert";
 import z from 'zod'
-import { singleMatchSingleScoutReport } from "../analysis/coreAnalysis/singleMatchSingleScoutReport";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { EventAction } from "@prisma/client";
-import { ADDRGETNETWORKPARAMS } from "dns";
 import { PickUpMap, PositionMap, MatchTypeMap, HighNoteMap, StageResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
@@ -233,7 +229,7 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
         await prismaClient.event.createMany({
             data : eventDataArray
         })
-        const totalPoints = await totalPointsScoutingLead(scoutReportUuid)
+        await totalPointsScoutingLead(scoutReportUuid)
         //recalibrate the max resonable points for every year 
         //uncomment for scouting lead page
         // if (totalPoints === 0 || totalPoints > 80) {

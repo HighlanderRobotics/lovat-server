@@ -5,6 +5,8 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+
 }
 
 model Event {
@@ -15,6 +17,7 @@ model Event {
   points          Int
   scoutReportUuid String
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
+  @@index([scoutReportUuid])
 }
 
 enum Position {
@@ -66,6 +69,8 @@ model TeamMatchData {
   teamNumber    Int
   matchType     MatchType
   scoutReports  ScoutReport[]
+  @@index([tournamentKey, teamNumber])
+
 }
 
 enum MatchType {
@@ -97,6 +102,7 @@ model ScoutReport {
   scouterUuid        String
   scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
   events             Event[]   
+
   // flaggedScoutReport FlaggedScoutReport?
 }
 
@@ -157,6 +163,7 @@ model Scouter {
   Team4Shifts                ScouterScheduleShift[] @relation(name: "Team4")
   Team5Shifts                ScouterScheduleShift[] @relation(name: "Team5")
   Team6Shifts                ScouterScheduleShift[] @relation(name: "Team6")
+  @@index([sourceTeamNumber])
 
 }
 

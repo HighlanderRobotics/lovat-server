@@ -1,5 +1,4 @@
 import { EventAction, Position, HighNoteResult, RobotRole, StageResult, PickUp, MatchType } from "@prisma/client"
-import { robotRole } from "../analysis/coreAnalysis/robotRole"
 
 const EventActionMap = {
     0 : [EventAction.LEAVE],

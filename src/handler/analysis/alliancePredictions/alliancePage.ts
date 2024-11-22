@@ -1,19 +1,14 @@
-import { Request, Response } from "express";
-import prismaClient from '../../../prismaClient'
-import z, { number } from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { robotRole } from "../coreAnalysis/robotRole";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 import { User } from "@prisma/client";
 
 
-export const alliancePage = async (user : User, team1 : number, team2 : number, team3 : number): Promise<{totalPoints : number, teams : Array<Object>, speakerScores : number, ampScores : number}> =>{
+export const alliancePage = async (user : User, team1 : number, team2 : number, team3 : number): Promise<{totalPoints : number, teams : object[], speakerScores : number, ampScores : number}> =>{
     try {
-        let teamOnePoints = await arrayAndAverageTeam(user, "totalpoints", team1)    
-        let teamTwoPoints = await arrayAndAverageTeam(user, "totalpoints", team2)
-        let teamThreePoints = await arrayAndAverageTeam(user, "totalpoints", team3)
+        const teamOnePoints = await arrayAndAverageTeam(user, "totalpoints", team1)    
+        const teamTwoPoints = await arrayAndAverageTeam(user, "totalpoints", team2)
+        const teamThreePoints = await arrayAndAverageTeam(user, "totalpoints", team3)
 
         const teamOneMainRole = (await robotRole(user, team1)).mainRole
         const teamTwoMainRole = (await robotRole(user, team2)).mainRole
@@ -28,9 +23,9 @@ export const alliancePage = async (user : User, team1 : number, team2 : number, 
         const teamTwoAmpScores = await arrayAndAverageTeam(user, "ampscores", team2)
         const teamThreeAmpScores = await arrayAndAverageTeam(user, "ampscores", team3)
 
-        let teamOneAutoPaths = await autoPathsTeam(user, team1)
-        let teamTwoAutoPaths = await autoPathsTeam(user, team2)
-        let teamThreeAutoPaths = await autoPathsTeam(user, team3)
+        const teamOneAutoPaths = await autoPathsTeam(user, team1)
+        const teamTwoAutoPaths = await autoPathsTeam(user, team2)
+        const teamThreeAutoPaths = await autoPathsTeam(user, team3)
 
 
 

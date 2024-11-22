@@ -1,6 +1,5 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prismaClient from '../../prismaClient'
-import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 
@@ -25,7 +24,7 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response): Prom
         }
         else
         {
-            const deleteUser = await prismaClient.user.delete({
+            await prismaClient.user.delete({
                 where : 
                 {
                     id : req.user.id

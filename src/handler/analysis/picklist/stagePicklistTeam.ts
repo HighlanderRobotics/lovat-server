@@ -1,12 +1,9 @@
 
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import ss from 'simple-statistics';
-import prisma from '../../../prismaClient';
 import z from 'zod'
 import { error } from "console";
 import { User } from "@prisma/client";
+import { teamLowerBound, tournamentLowerBound } from "../analysisConstants";
 
 
 
@@ -209,8 +206,7 @@ export const stagePicklistTeam = async (user: User, team: number) => {
                 }
             }
         });
-        if(totalAttemptsStage === 0)
-        {
+        if (totalAttemptsStage === 0) {
             //can be tuned, baseline value
             return 1.5
         }
@@ -229,14 +225,12 @@ export const stagePicklistTeam = async (user: User, team: number) => {
         if (isNaN(onstage)) {
             onstage = 1
         }
-        let onstageHarmony = ((stageMap["ONSTAGE_HARMONY"] || 0 + 1 )/(totalAttemptsStage + 3)) * 5
-        if(isNaN(onstageHarmony))
-        {
+        let onstageHarmony = ((stageMap["ONSTAGE_HARMONY"] || 0 + 1) / (totalAttemptsStage + 3)) * 5
+        if (isNaN(onstageHarmony)) {
             onstageHarmony = 1
         }
-        let park = ((stageMap["PARK"] + 1)/(totalAttemptsStage + 2))
-        if(isNaN(park))
-        {
+        let park = ((stageMap["PARK"] + 1) / (totalAttemptsStage + 2))
+        if (isNaN(park)) {
             park = 1
         }
         let averageRuleOfSucsession = onstage + onstageHarmony + park
@@ -246,17 +240,17 @@ export const stagePicklistTeam = async (user: User, team: number) => {
                 map[item.highNote] = item._count.highNote;
                 return map;
             }, {});
-            const highNote = (highNoteMap["SUCCESSFUL"]+1)/(totalAttempsHighNote+4)
+            const highNote = (highNoteMap["SUCCESSFUL"] + 1) / (totalAttempsHighNote + 4)
             averageRuleOfSucsession += highNote
         }
         return averageRuleOfSucsession
-        
+
 
 
     }
     catch (error) {
         console.log(error)
-        throw(error)
+        throw (error)
     }
 
 

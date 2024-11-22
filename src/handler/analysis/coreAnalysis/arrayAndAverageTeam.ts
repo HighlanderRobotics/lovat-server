@@ -1,16 +1,12 @@
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
-import z, { date } from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import z from 'zod'
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teleopStart } from "../analysisConstants";
-import { run } from "node:test";
+import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, swrConstant, teamLowerBound, teleopStart, ttlConstant } from "../analysisConstants";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
-import { match } from "assert";
 import { User } from "@prisma/client";
 
 
-export const arrayAndAverageTeam = async (user: User, metric: string, team: number): Promise<{ average: number, timeLine: Array<{ match: string, dataPoint: number }> }> => {
+export const arrayAndAverageTeam = async (user: User, metric: string, team: number): Promise<{ average: number, timeLine: { match: string, dataPoint: number }[] }> => {
     try {
         const params = z.object({
             team: z.number(),
@@ -20,48 +16,91 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
         if (!params.success) {
             throw (params)
         };
-        let matchKeys = await prismaClient.teamMatchData.findMany({
-            where: {
-                tournamentKey:
+        let matchKeys = []
+        if (user.tournamentSource.length >= teamLowerBound) {
+            matchKeys = await prismaClient.teamMatchData.findMany({
+                cacheStrategy :
                 {
-                    in: user.tournamentSource
+                    swr : swrConstant,
+                    ttl : ttlConstant,
                 },
-                teamNumber: team,
-                scoutReports :
-                {
-                    some : {}
-                }
-            },
-            include:
-            {
-                tournament: true
-            },
-            orderBy:
-                [
+                where: {
+                    teamNumber: team,
+                    scoutReports:
                     {
-                        tournament: {
-                            date: "asc"
-                        }
+                        some: {}
+                    }
+                },
+                include:
+                {
+                    tournament: true
+                },
+                orderBy:
+                    [
+                        {
+                            tournament: {
+                                date: "asc"
+                            }
+                        },
+                        //aplhabetical with QUALIFICATION first, then ELIMINATION
+
+                        { matchType: "asc" },
+                        { matchNumber: "asc" },
+
+                    ]
+            })
+        }
+        else
+        {
+            matchKeys = await prismaClient.teamMatchData.findMany({
+                cacheStrategy :
+                {
+                    swr : swrConstant,
+                    ttl : ttlConstant,
+                },
+                where: {
+                    
+                    teamNumber: team,
+                    scoutReports:
+                    {
+                        some: {}
                     },
-                    //aplhabetical with QUALIFICATION first, then ELIMINATION
+                    tournamentKey :
+                    {
+                        in : user.tournamentSource
+                    }
+                },
+                include:
+                {
+                    tournament: true
+                },
+                orderBy:
+                    [
+                        {
+                            tournament: {
+                                date: "asc"
+                            }
+                        },
+                        //aplhabetical with QUALIFICATION first, then ELIMINATION
 
-                    { matchType: "asc" },
-                    { matchNumber: "asc" },
+                        { matchType: "asc" },
+                        { matchNumber: "asc" },
 
-                ]
-        })
-        type Match = {
+                    ]
+            })
+        }
+        interface Match {
             key: string;
             tournamentKey: string;
             matchNumber: number;
             teamNumber: number;
             matchType: string;
             tournamentName: string
-        };
+        }
 
         const groupedByTournament = matchKeys.reduce<Record<string, Match[]>>((acc, match) => {
             acc[match.tournamentKey] = acc[match.tournamentKey] || [];
-            let matchMap = { key: match.key, tournamentKey: match.tournamentKey, matchNumber: match.matchNumber, teamNumber: match.teamNumber, matchType: match.matchType, tournamentName: match.tournament.name }
+            const matchMap = { key: match.key, tournamentKey: match.tournamentKey, matchNumber: match.matchNumber, teamNumber: match.teamNumber, matchType: match.matchType, tournamentName: match.tournament.name }
             acc[match.tournamentKey].push(matchMap);
             return acc;
         }, {});
@@ -79,32 +118,32 @@ export const arrayAndAverageTeam = async (user: User, metric: string, team: numb
                 //add time constraints if nessissary
 
                 if (metric.includes("teleop") || metric.includes("Teleop")) {
-                    let currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, teleopStart, matchTimeEnd)
+                    const currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, teleopStart, matchTimeEnd)
                     currDatas.push(currData)
                 }
                 else if (metric.includes("auto") || metric.includes("Auto")) {
-                    let currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, 0, autoEnd)
+                    const currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric, 0, autoEnd)
                     currDatas.push(currData)
 
                 }
                 else {
-                    let currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
+                    const currData = singleMatchEventsAverage(user, metric.includes("point") || metric.includes("Point"), match.key, team, metric)
                     currDatas.push(currData)
                 }
 
             }
             await Promise.all(currDatas).then((values) => {
+                let sum = 0;
+                let count = 0;
                 for (let i = 0; i < values.length; i++) {
                     if (values[i] !== null) {
-                        timeLineArray.push({ match: tournament[i].key, dataPoint: values[i], tournamentName: tournament[i].tournamentName })
-                        if (currAvg === null) {
-                            currAvg = values[i]
-                        }
-                        else {
-                            currAvg = (currAvg + values[i]) / 2
-                        }
+                        sum += values[i];
+                        count++;
+                        timeLineArray.push({ match: tournament[i].key, dataPoint: values[i], tournamentName: tournament[i].tournamentName });
                     }
                 }
+
+                currAvg = count > 0 ? sum / count : null;
             })
             if (currAvg !== null) {
                 tournamentAverages.push(currAvg)

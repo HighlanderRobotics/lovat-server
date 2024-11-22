@@ -1,10 +1,5 @@
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
-import { FlippedActionMap, FlippedPositionMap, autoEnd, exludedAutoEvents } from "../analysisConstants";
-import { PositionMap } from "../../manager/managerConstants";
+import { FlippedActionMap, FlippedPositionMap, autoEnd } from "../analysisConstants";
 import { User } from "@prisma/client";
 
 
@@ -26,13 +21,13 @@ export const autoPathScouter = async (user: User, matchKey : string, scoutReport
            
 
         })
-        let scoutReport = await prismaClient.scoutReport.findUnique({
+        const scoutReport = await prismaClient.scoutReport.findUnique({
             where :
             {
                 uuid : scoutReportUuid
             }
         })
-        let match = await prismaClient.teamMatchData.findUnique({
+        const match = await prismaClient.teamMatchData.findUnique({
             where :
             {
                 key : scoutReport.teamMatchKey

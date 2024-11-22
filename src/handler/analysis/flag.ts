@@ -1,5 +1,3 @@
-import { Request, Response } from "express";
-import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import axios from "axios";
@@ -21,16 +19,15 @@ export const flag = async (req: AuthenticatedRequest, flagName: string, tourname
                 return "-"
             }
 
-            var url = 'https://www.thebluealliance.com/api/v3'
+            const url = 'https://www.thebluealliance.com/api/v3'
             axios.get(`${url}/event/${tournamentKey}/rankings`, {
                 headers: { 'X-TBA-Auth-Key': process.env.KEY }
 
             })
                 .then(async (response) => {
-                    for (let i = 0; i < response.data.rankings.length; i++) {
-
-                        if (response.data.rankings[i].team_key === ("frc" + teamNumber)) {
-                            let x = response.data.rankings[i].rank
+                    for(const currRanking of response.data.rankings){
+                        if (currRanking.team_key === ("frc" + teamNumber)) {
+                            const x = currRanking.rank
                             return x.toString()
                         }
                     }

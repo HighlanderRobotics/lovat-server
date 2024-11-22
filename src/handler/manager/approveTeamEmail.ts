@@ -33,7 +33,7 @@ export const approveTeamEmail = async (req: Request, res: Response): Promise<voi
            }
            else
            {
-                const changeRow = await prismaClient.registeredTeam.update({
+                await prismaClient.registeredTeam.update({
                     where : {
                         code : params.data.code
                     },

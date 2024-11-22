@@ -1,17 +1,12 @@
-import { Request, Response } from "express";
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
-import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingleMatchSingleScoutReport";
+import { matchTimeEnd } from "../analysisConstants";
 import { singleMatchSingleScoutReport } from "./singleMatchSingleScoutReport";
 import { cooperationSingleMatch } from "./cooperationSingleMatch";
-import { match } from "assert";
 import { User } from "@prisma/client";
 // import { cooperationSingleMatch } from "./cooperationSingleMatch";
 
 
-export const singleMatchEventsAverage = async (user: User,  isPointAverage: boolean, matchKey: string, team: number, metric1 : string, timeMin: number = 0, timeMax : number = matchTimeEnd): Promise<number> => {
+export const singleMatchEventsAverage = async (user: User,  isPointAverage: boolean, matchKey: string, team: number, metric1 : string, timeMin = 0, timeMax : number = matchTimeEnd): Promise<number> => {
     try {
         const scoutReports = await prismaClient.scoutReport.findMany({
             where :
@@ -40,7 +35,7 @@ export const singleMatchEventsAverage = async (user: User,  isPointAverage: bool
         }
         else
         {
-            let matchDataArray = []
+            const matchDataArray = []
 
             for(const element of scoutReports)
             {

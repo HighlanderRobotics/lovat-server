@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
-import { match } from "assert";
 import z from 'zod'
-import { singleMatchSingleScoutReport } from "../analysis/coreAnalysis/singleMatchSingleScoutReport";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { EventAction } from "@prisma/client";
-import { ADDRGETNETWORKPARAMS } from "dns";
 import { PickUpMap, PositionMap, MatchTypeMap, HighNoteMap, StageResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
@@ -101,7 +96,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             res.status(404).send({"error" : `There are no matches that meet these requirements. ${paramsScoutReport.data.tournamentKey}, ${paramsScoutReport.data.matchNumber}, ${paramsScoutReport.data.matchType}, ${paramsScoutReport.data.teamNumber}`, "displayError" : "Match does not exist"})
             return
         }
-        let matchKey = matchRow.key
+        const matchKey = matchRow.key
         
         const row = await prismaClient.scoutReport.create(
             {
@@ -123,14 +118,14 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             }
         )
         const scoutReportUuid = row.uuid
-        let eventDataArray = []
-        let events = req.body.events;
+        const eventDataArray = []
+        const events = req.body.events;
         let ampOn = false
-        for (let i = 0; i < events.length; i++) {
+        for(const event of events) {
             let points = 0;
-            let time = events[i][0];
-            let position = PositionMap[events[i][2]][0];
-            let action = EventActionMap[events[i][1]][0]
+            const time = event[0];
+            const position = PositionMap[event[2]][0];
+            const action = EventActionMap[event[1]][0]
             if (action === "START") {
                 ampOn = true
             }

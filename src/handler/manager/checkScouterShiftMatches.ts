@@ -1,7 +1,5 @@
 
 import prismaClient from '../../prismaClient'
-import z from 'zod'
-import e, { Request, Response } from "express";
 import { AuthenticatedRequest } from '../../lib/middleware/requireAuth';
 
 //uuid is when editing a shift so it doesnt check that its over lapping with itself
@@ -47,7 +45,7 @@ export const checkScouterShiftMatches = async (req : AuthenticatedRequest, tourn
         }
         for(let i = 0; i < shifts.length; i ++)
         {
-            let currShift = shifts[i]
+            const currShift = shifts[i]
             if(i == 0 && currStart < currShift.startMatchOrdinalNumber && currEnd < currShift.startMatchOrdinalNumber)
             {
                 return true
