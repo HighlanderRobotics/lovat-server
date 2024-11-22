@@ -13,6 +13,7 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const params = z.object({
             team: z.number(),
+            //change position specific things like ampscores, speakerscores, trapscores
             metric: z.enum(["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "feeds", "trapscores", "drops", "scores"])
         }).safeParse({
             team: Number(req.params.team),
@@ -29,10 +30,11 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             return
         }
         else if (params.data.metric === "scores") {
-            let teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
-            let allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
-            let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
-            let speakerScores = await arrayAndAverageTeam(req.user, "speakerscores", params.data.team)
+            const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
+            const allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
+            // let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
+            //not speakerScores change to different metric depending on game
+            const speakerScores = await arrayAndAverageTeam(req.user, "speakerscores", params.data.team)
 
             let result = {
                 arrays: {"amp" : ampScores, "speaker" : speakerScores},

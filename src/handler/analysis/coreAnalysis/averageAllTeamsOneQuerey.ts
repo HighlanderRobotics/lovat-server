@@ -36,6 +36,7 @@ export const averageAllTeamOneQuerey = async (user: User, metric: string): Promi
         }
         else {
             let position = null
+            //change positions based on game
             if (metric === "ampscores" || metric === "ampScores") {
                 position = Position.AMP
             }
@@ -48,6 +49,7 @@ export const averageAllTeamOneQuerey = async (user: User, metric: string): Promi
             else {
                 position = Position.NONE
             }
+            //might need to distinguish between different pickups
             if (metric === "pickups") {
                 const allTeamData = await prismaClient.event.groupBy({
                     by : ["scoutReportUuid"],

@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { autoPathSingleMatchSingleScoutReport } from "./autoPathSingleMatchSingleScoutReport";
 import { User } from "@prisma/client";
 
-
+//consistant each new game
 export const autoPathsTeam = async (user: User, teamNumber : number) => {
     try {
         const params = z.object({

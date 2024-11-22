@@ -11,7 +11,7 @@ import { User } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 
 
-
+//pretty consistant each game
 export const matchPredictionLogic = async (user: User, red1, red2, red3, blue1, blue2, blue3): Promise<{red1 : number, red2 : number, red3 : number, blue1 : number, blue2 : number, blue3 : number, redWinning : number, blueWinning : number, winningAlliance : number}> => {
     try {
         const params = z.object({

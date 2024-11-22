@@ -7,7 +7,7 @@ import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { roleMap } from "../analysisConstants";
 import { User } from "@prisma/client";
 
-
+//very standard every game
 export const robotRole = async (user: User, team: number): Promise<{mainRole : string}> => {
     try {
         const params = z.object({

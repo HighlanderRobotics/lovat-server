@@ -13,6 +13,7 @@ import { time } from "console";
 export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: string, timeMin: number = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
+        //update positions based on game
         if(metric1 === "ampscores"  || metric1 === "ampScores")
         {
             position = Position.AMP
@@ -94,6 +95,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
             return match._count._all
         
         }
+        //maybe need to disinguish between different pickups
         if(metric1 === "pickups")
         {
             const match = await prismaClient.event.aggregate({
@@ -181,6 +183,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
        
         else {
             const params = z.object({
+                //change events and position depending on game
                 metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE]),
                 position : z.enum([Position.NONE, Position.AMP, Position.TRAP, Position.SPEAKER])
             }).safeParse({

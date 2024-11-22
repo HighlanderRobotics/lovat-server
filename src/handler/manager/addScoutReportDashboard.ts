@@ -1,4 +1,5 @@
-import { Request, Response } from "express";
+//importing necessary things from other files like prisma, zod, authentication, maps
+import { Response } from "express";
 import prismaClient from '../../prismaClient'
 import { match } from "assert";
 import z from 'zod'
@@ -14,6 +15,7 @@ import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsSco
 export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
 
     try {
+        //type verification
         const paramsScoutReport = z.object({
             uuid : z.string(),
             startTime: z.number(),
@@ -55,22 +57,26 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             res.status(400).send({"error" : paramsScoutReport, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
+        //getting scouter uuid
         const scouter = await prismaClient.scouter.findUnique({
             where :
             {
                 uuid : paramsScoutReport.data.scouterUuid
             }
         })
+        //making sure "scouter" is a valid scouter
         if(!scouter)
         {
             res.status(400).send({"error" : `This ${paramsScoutReport.data.scouterUuid} has been deleted or never existed.`, "displayError" : "This scouter has been deleted. Have the scouter reset their settings and choose a new scouter."})
             return
         }
+        //making sure the team number exists and is the same as the scource team number
         if(req.user.teamNumber === null || scouter.sourceTeamNumber !== req.user.teamNumber )
         {
             res.status(401).send({error : `User with the id ${req.user.id} is not on the same team as the scouter with the uuid ${scouter.uuid}`, displayError : "Not on the same team as the scouter."})
             return
         }
+        //getting the row in the scout report table to make sure it doesn't already exist
         const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
             where :
             {
@@ -83,17 +89,19 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             return
         }
         
-
+        //getting the rows in teamMatchData where the tournament key is the tournament key of the user
         const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
             where :
             {
                 tournamentKey : paramsScoutReport.data.tournamentKey
             }
         })
+        //checking length of tournamentMatchRows and calling addTournamentMatches if there are no rows
         if(tournamentMatchRows === null || tournamentMatchRows.length === 0)
         {
             await addTournamentMatches(paramsScoutReport.data.tournamentKey)
         }
+        //getting the first row with the desired tournament key, match number, match type, and team number
         const matchRow = await prismaClient.teamMatchData.findFirst({
             where :
             {
@@ -103,13 +111,14 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
                 teamNumber : paramsScoutReport.data.teamNumber
             }
         })
+        //if there are no matches that meet ^^^ requirement
         if(!matchRow)
         {
             res.status(404).send({"error" : `There are no matches that meet these requirements. ${paramsScoutReport.data.tournamentKey}, ${paramsScoutReport.data.matchNumber}, ${paramsScoutReport.data.matchType}, ${paramsScoutReport.data.teamNumber}`, "displayError" : "Match does not exist"})
             return
         }
-        let matchKey = matchRow.key
-        
+        const matchKey = matchRow.key
+        //adding a scout report to scout report table
         const row = await prismaClient.scoutReport.create(
             {
                 data: {
@@ -130,54 +139,68 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             }
         )
         const scoutReportUuid = row.uuid
-        let eventDataArray = []
-        let events = req.body.events;
+        const eventDataArray = []
+        const events = req.body.events;
+        //setting default amp to not on
         let ampOn = false
+        //for every row in events
         for (let i = 0; i < events.length; i++) {
+            //setting default points to 0 and position to none and the action to leave
             let points = 0;
-            let time = events[i][0];
-            let position = PositionMap[events[i][2]][0];
-            let action = EventActionMap[events[i][1]][0]
+            const time = events[i][0];
+            const position = PositionMap[events[i][2]][0];
+            const action = EventActionMap[events[i][1]][0]
+            //changing ampOn status to true if amplication period started
             if (action === "START") {
                 ampOn = true
             }
+            //changing ampOn status to false if amplification period ended
             else if (action === "STOP") {
                 ampOn = false
             }
+            //if in the auto period...
             else if (time <= 18) {
+                // a robot scores...
                 if (action === "SCORE") {
+                    //in the amp updates points to 2
                     if (position === "AMP") {
                         points = 2
                     }
+                    //in the speaker updates points to 5
                     else if (position === "SPEAKER") {
                         points = 5
                     }
                 }
-
+                // a robot leaves updates points to 2
                 else if (action === "LEAVE") {
                     points = 2
                 }
             }
+            //if not in auto period (in teleop)...
             else {
+                //a robot scores...
                 if (action === "SCORE") {
+                    //in the amp updates points to 1
                     if (position === "AMP") {
                         points = 1
                     }
+                    //in the speaker and the amp is on update points to 5
                     else if (position === "SPEAKER" && ampOn) {
                         points = 5
                     }
+                    //in the speaker and the amp is not on update points to 2
                     else if (position === "SPEAKER") {
                         points = 2
                     }
+                    //in the trap updates points to 5
                     else if (action === "TRAP") {
                         points = 5
                     }
                 }
-
             }
+            //if the action stop and start are both not true
             if (action !== "START" && action !== "STOP") {
-
-
+                //type verification
                 const paramsEvents = z.object({
                     time: z.number(),
                     action: z.enum(["DEFENSE", "SCORE", "PICK_UP", "LEAVE", "DROP_RING", "FEED_RING", "STARTING_POSITION"]),
@@ -195,6 +218,7 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
                     res.status(400).send({"error" : paramsEvents, "displayError" : "Invalid input. Make sure you are using the correct input."});
                     return;
                 };
+                //push time, action, position, points, scoutReportUuid 
                 eventDataArray.push( {
                         time: paramsEvents.data.time,
                         action: paramsEvents.data.action,
@@ -205,7 +229,8 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
                 
             }
         }
-        const rows = await prismaClient.event.createMany({
+        //create all rows pushed from eventDataArray
+        await prismaClient.event.createMany({
             data : eventDataArray
         })
         const totalPoints = await totalPointsScoutingLead(scoutReportUuid)

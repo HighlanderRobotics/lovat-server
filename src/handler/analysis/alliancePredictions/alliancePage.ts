@@ -15,18 +15,18 @@ export const alliancePage = async (user : User, team1 : number, team2 : number, 
         let teamTwoPoints = await arrayAndAverageTeam(user, "totalpoints", team2)
         let teamThreePoints = await arrayAndAverageTeam(user, "totalpoints", team3)
 
-        let teamOneMainRole = (await robotRole(user, team1)).mainRole
-        let teamTwoMainRole = (await robotRole(user, team2)).mainRole
-        let teamThreeMainRole = (await robotRole(user, team3)).mainRole
+        const teamOneMainRole = (await robotRole(user, team1)).mainRole
+        const teamTwoMainRole = (await robotRole(user, team2)).mainRole
+        const teamThreeMainRole = (await robotRole(user, team3)).mainRole
+        //speakerscores is game specific so update with new game
+        const teamOneSpeakerScores = await arrayAndAverageTeam(user, "speakerscores", team1)
+        const teamTwoSpeakerScores = await arrayAndAverageTeam(user, "speakerscores", team2)
+        const teamThreeSpeakerScores = await arrayAndAverageTeam(user, "speakerscores", team3)
 
-        let teamOneSpeakerScores = await arrayAndAverageTeam(user, "speakerscores", team1)
-        let teamTwoSpeakerScores = await arrayAndAverageTeam(user, "speakerscores", team2)
-        let teamThreeSpeakerScores = await arrayAndAverageTeam(user, "speakerscores", team3)
-
-
-        let teamOneAmpScores = await arrayAndAverageTeam(user, "ampscores", team1)
-        let teamTwoAmpScores = await arrayAndAverageTeam(user, "ampscores", team2)
-        let teamThreeAmpScores = await arrayAndAverageTeam(user, "ampscores", team3)
+        //ampscores is game specific so update with new game
+        const teamOneAmpScores = await arrayAndAverageTeam(user, "ampscores", team1)
+        const teamTwoAmpScores = await arrayAndAverageTeam(user, "ampscores", team2)
+        const teamThreeAmpScores = await arrayAndAverageTeam(user, "ampscores", team3)
 
         let teamOneAutoPaths = await autoPathsTeam(user, team1)
         let teamTwoAutoPaths = await autoPathsTeam(user, team2)
@@ -42,6 +42,7 @@ export const alliancePage = async (user : User, team1 : number, team2 : number, 
                 {team : team2, role : teamTwoMainRole, averagePoints : teamTwoPoints.average, paths : teamTwoAutoPaths},
                 {team : team3, role : teamThreeMainRole, averagePoints : teamThreePoints.average, paths : teamThreeAutoPaths}
             ],
+            //game specific so change with new game
             speakerScores : teamOneSpeakerScores.average + teamTwoSpeakerScores.average + teamThreeSpeakerScores.average,
             ampScores : teamOneAmpScores.average + teamTwoAmpScores.average + teamThreeAmpScores.average
         }

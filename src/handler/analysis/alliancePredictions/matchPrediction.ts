@@ -11,8 +11,8 @@ import { matchPredictionLogic } from "./matchPredictionLogic";
 import { User } from "@prisma/client";
 
 
-
-export const matchPrediction = async (req: AuthenticatedRequest, res: Response): Promise<Object> => {
+//pretty much the same for each game
+export const matchPrediction = async (req: AuthenticatedRequest, res: Response): Promise<object> => {
     try {
         
         const params = z.object({

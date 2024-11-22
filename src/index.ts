@@ -82,6 +82,10 @@ import { scoutingLeadProgressPage } from "./handler/manager/scoutingLeadProgress
 import { addScouterDashboard } from "./handler/manager/addScouterDashboard";
 import { scouterScoutReports } from "./handler/analysis/scoutingLead/scouterScoutReports";
 import { pitDisplay } from "./handler/manager/pitDisplay";
+// import { getTeamCSV } from "./handler/manager/getTeamCSV";
+// import { getTeamMatchCSV } from "./handler/manager/getTeamMatchCSV";
+// import { getReportCSV } from "./handler/manager/getReportCSV";
+import { scouterComparisonChart } from "./handler/analysis/scoutingLead/scouterComparisonChart";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -241,6 +245,17 @@ app.get('/v1/analysis/timeline/scoutreport/:uuid', requireAuth, timelineForScout
 app.get("/v1/analysis/pitdisplay", pitDisplay)
 
 
+// app.get('/v1/addtourny', addTournamentMatchesOneTime)
+
+// csv export
+// app.get('/v1/analysis/csvplain', requireAuth, getTeamCSV) // tested
+// app.get('/v1/analysis/matchcsv', requireAuth, getTeamMatchCSV)
+// app.get('/v1/analysis/reportcsv', requireAuth, getReportCSV)
+
+
+
+//testing section
+app.get('/v1/analysis/scoutercomparison', requireAuth, scouterComparisonChart)
 
 getTBAData();
 

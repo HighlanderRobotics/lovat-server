@@ -7,7 +7,7 @@ import { FlippedActionMap, FlippedPositionMap, autoEnd, exludedAutoEvents } from
 import { PositionMap } from "../../manager/managerConstants";
 import { User } from "@prisma/client";
 
-
+//consistant each new game
 export const autoPathSingleMatchSingleScoutReport = async (user: User, matchKey : string, scoutReportUuid : string) => {
     try {
         const autoData = await prismaClient.event.findMany({

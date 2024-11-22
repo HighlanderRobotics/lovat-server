@@ -21,32 +21,176 @@ export const stagePicklistTeam = async (user: User, team: number) => {
         if (!params.success) {
             throw (error)
         };
-        const stageRows = await prismaClient.scoutReport.groupBy({
-            by: ['stage'],
-            _count: {
-                stage: true,
-            },
-            where: {
-                teamMatchData: {
-                    tournamentKey: {
-                        in: user.tournamentSource
+        // let stageRows = []
+        let stageRows;
+        let highNoteRows;
+        if (user.tournamentSource.length >= tournamentLowerBound) {
+            if (user.teamSource.length >= teamLowerBound) {
+                stageRows = await prismaClient.scoutReport.groupBy({
+                    by: ['stage'],
+                    _count: {
+                        stage: true,
                     },
-                    teamNumber: team,
-                },
-                scouter: {
-                    sourceTeamNumber: {
-                        in: user.teamSource
+                    where: {
+                        teamMatchData: {
+                            teamNumber: team,
+                        }
                     }
-                }
+                });
+                //game specific
+                highNoteRows = await prismaClient.scoutReport.groupBy({
+                    by: ['highNote'],
+                    _count: {
+                        highNote: true,
+                    },
+                    where: {
+                        teamMatchData: {
+                           
+                            teamNumber: team,
+                        }
+                    }
+                });
             }
-        });
+            else
+            {
+                stageRows = await prismaClient.scoutReport.groupBy({
+                    by: ['stage'],
+                    _count: {
+                        stage: true,
+                    },
+                    where: {
+                        teamMatchData: {
+                            teamNumber: team,
+                        },
+                        scouter :
+                        {
+                            sourceTeamNumber : {
+                                in : user.teamSource
+                               }
+                        }
+                    }
+                });
+                //game specific
+                highNoteRows = await prismaClient.scoutReport.groupBy({
+                    by: ['highNote'],
+                    _count: {
+                        highNote: true,
+                    },
+                    where: {
+                        teamMatchData: {
+                           
+                            teamNumber: team,
+                        },
+                        scouter: {
+                           sourceTeamNumber : {
+                            in : user.teamSource
+                           }
+                        }
+                    }
+                });
+            }
+        }
+        else
+        {
+            if(user.teamSource.length > teamLowerBound)
+            {
+                stageRows = await prismaClient.scoutReport.groupBy({
+                    by: ['stage'],
+                    _count: {
+                        stage: true,
+                    },
+                    where: {
+                        teamMatchData: {
+                            teamNumber: team,
+                            tournamentKey :
+                            {
+                                in : user.tournamentSource
+                            }
+                        },
+                        
+                    }
+                });
+                //game specific
+                highNoteRows = await prismaClient.scoutReport.groupBy({
+                    by: ['highNote'],
+                    _count: {
+                        highNote: true,
+                    },
+                    where: {
+                        teamMatchData: {
+                           
+                            teamNumber: team,
+                            tournamentKey :
+                            {
+                                in : user.tournamentSource
+                            }
+                        },
+                        
+                    }
+                });
+            
+            }
+            else
+            {
+                stageRows = await prismaClient.scoutReport.groupBy({
+                    by: ['stage'],
+                    _count: {
+                        stage: true,
+                    },
+                    where: {
+                        teamMatchData: {
+                            teamNumber: team,
+                            tournamentKey :
+                            {
+                                in : user.tournamentSource
+                            }
+                        },
+                        scouter :
+                        {
+                            sourceTeamNumber :
+                            {
+                                in : user.teamSource
+                            }
+                        }
+                        
+                    }
+                });
+                //game specific
+                highNoteRows = await prismaClient.scoutReport.groupBy({
+                    by: ['highNote'],
+                    _count: {
+                        highNote: true,
+                    },
+                    where: {
+                        teamMatchData: {
+                           
+                            teamNumber: team,
+                            tournamentKey :
+                            {
+                                in : user.tournamentSource
+                            }
+                        },
+                        scouter :
+                        {
+                            sourceTeamNumber :
+                            {
+                                in : user.teamSource
+                            }
+                        }
+                        
+                    }
+                });
+            }
+        }
+
         const totalAttemptsStage = stageRows.reduce((total, item) => {
             if (item.stage !== "NOTHING") {
                 return total + item._count.stage;
             }
             return total;
         }, 0);
-        const highNoteRows = await prismaClient.scoutReport.groupBy({
+        //game specific
+        highNoteRows = await prismaClient.scoutReport.groupBy({
             by: ['highNote'],
             _count: {
                 highNote: true,
@@ -80,9 +224,9 @@ export const stagePicklistTeam = async (user: User, team: number) => {
             map[item.stage] = item._count.stage;
             return map;
         }, {});
-        let onstage = ((stageMap["ONSTAGE"] + 1 )/(totalAttemptsStage + 3)) * 3
-        if(isNaN(onstage))
-        {
+        //change climb options 
+        let onstage = ((stageMap["ONSTAGE"] + 1) / (totalAttemptsStage + 3)) * 3
+        if (isNaN(onstage)) {
             onstage = 1
         }
         let onstageHarmony = ((stageMap["ONSTAGE_HARMONY"] || 0 + 1 )/(totalAttemptsStage + 3)) * 5
@@ -96,8 +240,8 @@ export const stagePicklistTeam = async (user: User, team: number) => {
             park = 1
         }
         let averageRuleOfSucsession = onstage + onstageHarmony + park
-        if(totalAttempsHighNote !== 0)
-        {
+        //game specific
+        if (totalAttempsHighNote !== 0) {
             const highNoteMap = highNoteRows.reduce((map, item) => {
                 map[item.highNote] = item._count.highNote;
                 return map;
