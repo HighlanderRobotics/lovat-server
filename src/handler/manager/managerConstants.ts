@@ -1,60 +1,59 @@
-import { EventAction, Position, HighNoteResult, RobotRole, StageResult, PickUp, MatchType } from "@prisma/client"
+import { EventAction, Position, EndChargingResult, RobotRole, AutoChargingResult, PickUp, MatchType } from "@prisma/client"
 
 const EventActionMap = {
     0 : [EventAction.LEAVE],
-    1 : [EventAction.PICK_UP],
-    2 : [EventAction.DROP_RING],
+    1 : [EventAction.PICK_UP_CONE],
+    2 : [EventAction.PICK_UP_CUBE],
     3 : [EventAction.SCORE],
     4 : [EventAction.DEFENSE],
-    5 : [EventAction.FEED_RING],
-    6 : ["START"],
-    7 : ["STOP"],
-    8 : [EventAction.STARTING_POSITION]
+    5 : [EventAction.STARTING_POSITION]
 
   }
   const PositionMap = {
     0 : [Position.NONE],
-    1 : [Position.AMP],
-    2 : [Position.SPEAKER],
-    3 : [Position.TRAP],
-    4 : [Position.WING_NEAR_AMP],
-    5 : [Position.WING_FRONT_OF_SPEAKER],
-    6 : [Position.WING_CENTER],
-    7 : [Position.WING_NEAR_SOURCE],
-    8 : [Position.GROUND_NOTE_ALLIANCE_NEAR_AMP],
-    9 : [Position.GROUND_NOTE_ALLIANCE_FRONT_OF_SPEAKER],
-    10 : [Position.GROUND_NOTE_ALLIANCE_BY_SPEAKER],
-    11 : [Position.GROUND_NOTE_CENTER_FARTHEST_AMP_SIDE],
-    12 : [Position.GROUND_NOTE_CENTER_TOWARD_AMP_SIDE],
-    13 : [Position.GROUND_NOTE_CENTER_CENTER],
-    14 : [Position.GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE],
-    15 : [Position.GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE]
-
+    1 : [Position.GRID_ONE_LOW],
+    2 : [Position.GRID_ONE_MID],
+    3 : [Position.GRID_ONE_HIGH],
+    4 : [Position.GRID_TWO_LOW],
+    5 : [Position.GRID_TWO_MID],
+    6 : [Position.GRID_TWO_HIGH],
+    7 : [Position.GRID_THREE_LOW],
+    8 : [Position.GRID_THREE_MID],
+    9 : [Position.GRID_THREE_HIGH],
+    10 : [Position.SCORE_HIGH],
+    11 : [Position.SCORE_MID],
+    12 : [Position.SCORE_LOW],
+    13 : [Position.AUTO_PIECE_ONE],
+    14 : [Position.AUTO_PIECE_TWO],
+    15 : [Position.AUTO_PIECE_THREE],
+    16 : [Position.AUTO_PIECE_FOUR],
+    17 : [Position.START_ONE],
+    18 : [Position.START_TWO],
+    19 : [Position.START_THREE]
   }
   const RobotRoleMap = {
     0 : [RobotRole.OFFENSE],
     1 : [RobotRole.DEFENSE],
-    2 : [RobotRole.FEEDER],
-    3 : [RobotRole.IMMOBILE]
-  }
-  const StageResultMap = {
-    0 : [StageResult.NOTHING],
-    1 : [StageResult.PARK],
-    2 : [StageResult.ONSTAGE],
-    3 : [StageResult.ONSTAGE_HARMONY]
-  
+    2 : [RobotRole.IMMOBILE]
   }
   const PickUpMap = {
     0 : [PickUp.GROUND],
     1 : [PickUp.CHUTE],
-    2 : [PickUp.BOTH]
+    2 : [PickUp.SHELF]
   }
-  const HighNoteMap = 
-  {
-    0 : [HighNoteResult.NOT_ATTEMPTED],
-    1 : [HighNoteResult.FAILED],
-    2 : [HighNoteResult.SUCCESSFUL]
+  const AutoChargingResultMap = {
+    0 : [AutoChargingResult.NOTHING],
+    1 : [AutoChargingResult.FAILED],
+    2 : [AutoChargingResult.TIPPED],
+    3 : [AutoChargingResult.ENGAGED]
   }
+  const EndChargingResultMap = {
+    0 : [EndChargingResult.NOTHING],
+    1 : [EndChargingResult.FAILED],
+    2 : [EndChargingResult.TIPPED],
+    3 : [EndChargingResult.ENGAGED]
+  }
+  
   const MatchTypeMap = 
   {
     0 : [MatchType.QUALIFICATION],
@@ -95,6 +94,6 @@ const EventActionMap = {
     0 : MatchType.QUALIFICATION,
     1 : MatchType.ELIMINATION
   }
-export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation}
+export {EventActionMap, PositionMap, RobotRoleMap, PickUpMap, AutoChargingResultMap, EndChargingResultMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation}
 
   

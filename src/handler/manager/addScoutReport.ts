@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { PickUpMap, PositionMap, MatchTypeMap, HighNoteMap, StageResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
+import { PickUpMap, PositionMap, MatchTypeMap, EndChargingResultMap, AutoChargingResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
 
@@ -13,18 +13,10 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             uuid : z.string(),
             startTime: z.number(),
             notes: z.string(),
-            robotRole: z.enum(["OFFENSE",
-                "DEFENSE",
-                "FEEDER",
-                "IMMOBILE"]),
-            stage: z.enum(["NOTHING",
-                "PARK",
-                "ONSTAGE",
-                "ONSTAGE_HARMONY"
-            ]),
-            highNote: z.enum(["NOT_ATTEMPTED", "FAILED", "SUCCESSFUL"]),
-            pickUp: z.enum(["GROUND", "CHUTE", "BOTH"]),
-
+            robotRole: z.enum(["OFFENSE", "DEFENSE", "IMMOBILE"]),
+            pickUp: z.enum(["GROUND", "CHUTE", "SHELF"]),
+            autoChargingResult: z.enum(["NOTHING", "FAILED", "TIPPED", "ENGAGED"]),
+            endChargingResult: z.enum(["NOTHING", "FAILED", "TIPPED", "ENGAGED"]),
             driverAbility: z.number(),
             scouterUuid: z.string(),
             matchType : z.enum(["QUALIFICATION", "ELIMINATION"]),
@@ -38,9 +30,9 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             notes: req.body.notes,
             robotRole:  RobotRoleMap[req.body.robotRole][0],
             driverAbility:  req.body.driverAbility,
-            highNote:  HighNoteMap[req.body.highNote][0],
+            autoChargingResult:  AutoChargingResultMap[req.body.AutoChargingResult][0],
             pickUp:  PickUpMap[req.body.pickUp][0],
-            stage:  StageResultMap[req.body.stage][0],
+            endChargingResult:  EndChargingResultMap[req.body.EndChargingResult][0],
             matchType : MatchTypeMap[req.body.matchType][0],
             matchNumber : req.body.matchNumber,
             teamNumber : req.body.teamNumber,
@@ -110,10 +102,10 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
                     //game specfific
-                    highNote: paramsScoutReport.data.highNote,
-                    stage: paramsScoutReport.data.stage,
-                    pickUp: paramsScoutReport.data.pickUp
-                
+
+                    pickUp: paramsScoutReport.data.pickUp,
+                    autoChargingResult: paramsScoutReport.data.autoChargingResult,
+                    endChargingResult: paramsScoutReport.data.endChargingResult
                 }
             }
         )
@@ -126,72 +118,60 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             const time = event[0];
             const position = PositionMap[event[2]][0];
             const action = EventActionMap[event[1]][0]
-            if (action === "START") {
-                ampOn = true
-            }
-            else if (action === "STOP") {
-                ampOn = false
-            }
-            else if (time <= 18) {
+            if (time <= 18) {
                 if (action === "SCORE") {
-                    if (position === "AMP") {
-                        points = 2
+                    if (position === "GRID_ONE_LOW" || position === "GRID_TWO_LOW" || position === "GRID_THREE_LOW") {
+                        points = 3
                     }
-                    else if (position === "SPEAKER") {
-                        points = 5
+                    else if (position === "GRID_ONE_MID" || position === "GRID_TWO_MID" || position === "GRID_THREE_MID") {
+                        points = 4
+                    }
+                    else if (position === "GRID_ONE_HIGH" || position === "GRID_TWO_HIGH" || position === "GRID_THREE_HIGH") {
+                        points = 6
                     }
                 }
 
                 else if (action === "LEAVE") {
-                    points = 2
+                    points = 3
                 }
             }
             else {
                 if (action === "SCORE") {
-                    if (position === "AMP") {
-                        points = 1
-                    }
-                    else if (position === "SPEAKER" && ampOn) {
-                        points = 5
-                    }
-                    else if (position === "SPEAKER") {
+                    if (position === "GRID_ONE_LOW" || position === "GRID_TWO_LOW" || position === "GRID_THREE_LOW") {
                         points = 2
                     }
-                    else if (action === "TRAP") {
+                    else if (position === "GRID_ONE_MID" || position === "GRID_TWO_MID" || position === "GRID_THREE_MID") {
+                        points = 3
+                    }
+                    else if (position === "GRID_ONE_HIGH" || position === "GRID_TWO_HIGH" || position === "GRID_THREE_HIGH") {
                         points = 5
                     }
                 }
-
             }
-            if (action !== "START" && action !== "STOP") {
-
-
-                const paramsEvents = z.object({
-                    time: z.number(),
-                    action: z.enum(["DEFENSE", "SCORE", "PICK_UP", "LEAVE", "DROP_RING", "FEED_RING", "STARTING_POSITION"]),
-                    position: z.enum(["NONE", "AMP", "SPEAKER", "TRAP", "WING_NEAR_AMP", "WING_FRONT_OF_SPEAKER", "WING_CENTER", "WING_NEAR_SOURCE", "GROUND_NOTE_ALLIANCE_NEAR_AMP", "GROUND_NOTE_ALLIANCE_FRONT_OF_SPEAKER", "GROUND_NOTE_ALLIANCE_BY_SPEAKER", "GROUND_NOTE_CENTER_FARTHEST_AMP_SIDE", "GROUND_NOTE_CENTER_TOWARD_AMP_SIDE", "GROUND_NOTE_CENTER_CENTER", "GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE", "GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE"]),
-                    points: z.number(),
-                    scoutReportUuid: z.string()
-                }).safeParse({
-                    scoutReportUuid: scoutReportUuid,
-                    time: time,
-                    action: action,
-                    position: position,
-                    points: points
-                })
-                if (!paramsEvents.success) {
-                    res.status(400).send({"error" : paramsEvents, "displayError" : "Invalid input. Make sure you are using the correct input."});
-                    return;
-                };
-                eventDataArray.push( {
-                        time: paramsEvents.data.time,
-                        action: paramsEvents.data.action,
-                        position: paramsEvents.data.position,
-                        points: paramsEvents.data.points,
-                        scoutReportUuid: scoutReportUuid
-                })
-                
-            }
+            const paramsEvents = z.object({
+                time: z.number(),
+                action: z.enum(["LEAVE", "PICK_UP_CONE", "PICK_UP_CUBE", "SCORE", "DEFENSE", "STARTING_POSITION"]),
+                position: z.enum(["NONE", "GRID_ONE_LOW", "GRID_ONE_MID", "GRID_ONE_HIGH", "GRID_TWO_LOW", "GRID_TWO_MID", "GRID_TWO_HIGH", "GRID_THREE_LOW", "GRID_THREE_MID", "GRID_THREE_HIGH", "SCORE_HIGH", "SCORE_MID", "SCORE_LOW", "AUTO_PIECE_ONE", "AUTO_PIECE_TWO", "AUTO_PIECE_THREE", "AUTO_PIECE_FOUR", "START_ONE", "START_TWO", "START_THREE"]),
+                points: z.number(),
+                scoutReportUuid: z.string()
+            }).safeParse({
+                scoutReportUuid: scoutReportUuid,
+                time: time,
+                action: action,
+                position: position,
+                points: points
+            })
+            if (!paramsEvents.success) {
+                res.status(400).send({"error" : paramsEvents, "displayError" : "Invalid input. Make sure you are using the correct input."});
+                return;
+            };
+            eventDataArray.push( {
+                time: paramsEvents.data.time,
+                action: paramsEvents.data.action,
+                position: paramsEvents.data.position,
+                points: paramsEvents.data.points,
+                scoutReportUuid: scoutReportUuid
+            })
         }
         const rows = await prismaClient.event.createMany({
             data : eventDataArray
