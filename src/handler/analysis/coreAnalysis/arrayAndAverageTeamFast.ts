@@ -7,17 +7,16 @@ import { Metric } from "../analysisConstants";
 import { User } from "@prisma/client";
 
 
+/**
+ * Performance optimized heuristic for finding the average value of a metric for a team
+ * 
+ * @param user user requesting
+ * @param metric metric to average
+ * @param team team to check
+ * @returns object with average property
+ */
 export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: number): Promise<{ average: number }> => {
     try {
-        const params = z.object({
-            team: z.number(),
-        }).safeParse({
-            team: team,
-        })
-        if (!params.success) {
-            throw (params)
-        };
-
         if (metric === Metric.stage) {
             return { average: await stagePicklistTeam(user, team) }
         }
@@ -31,10 +30,10 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
                     ttl : ttlConstant,
                 },
                 where: {
-                    teamNumber: team,
+                    teamNumber: team, // if (teamNumber === team)
                     scoutReports:
                     {
-                        some: {}
+                        some: {} // if scoutReports exist
                     }
                 },
                 include:
@@ -72,7 +71,7 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
                     },
                     tournamentKey:
                     {
-                        in: user.tournamentSource
+                        in: user.tournamentSource // user.tournamentSource includes tournamentKey
                     },
                 },
                 include:
@@ -96,7 +95,7 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
             })
         }
 
-        interface Match {
+        type Match = {
             key: string;
             tournamentKey: string;
             matchNumber: number;
@@ -114,7 +113,8 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
 
         const tournamentAverages = []
-        //group into tournaments, calculate all averages indivudally so they can all be properly weighted after the nested loops
+        // Group into tournaments, calculate all averages individually so they can all be properly weighted after the nested loops
+        // IMO needs a refactor to take scout reports in with initial query
         for (const tournamentMatchRows of tournamentGroups) {
             const currAvg = null
             if (metric === Metric.teleoppoints) {

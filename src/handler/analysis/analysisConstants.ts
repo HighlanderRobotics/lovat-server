@@ -90,7 +90,7 @@ const FlippedPositionMap = {
 }
 
 const tournamentLowerBound = 497
-const teamLowerBound = 3300
+const teamLowerBound = 3300 // Total 3468 as of 2024 season
 
 const swrConstant = 300
 const ttlConstant = 200
