@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
+  // directUrl = env("DIRECT_DATABASE_URL")
 
 }
 
@@ -22,31 +22,46 @@ model Event {
 
 enum Position {
   NONE
-  AMP
-  SPEAKER
-  TRAP
-  WING_NEAR_AMP
-  WING_FRONT_OF_SPEAKER
-  WING_CENTER
-  WING_NEAR_SOURCE
-  GROUND_NOTE_ALLIANCE_NEAR_AMP
-  GROUND_NOTE_ALLIANCE_FRONT_OF_SPEAKER
-  GROUND_NOTE_ALLIANCE_BY_SPEAKER
-  GROUND_NOTE_CENTER_FARTHEST_AMP_SIDE
-  GROUND_NOTE_CENTER_TOWARD_AMP_SIDE
-  GROUND_NOTE_CENTER_CENTER
-  GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE
-  GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE
+  START_ONE
+  START_TWO
+  START_THREE
+  START_FOUR
+  LEVEL_ONE
+  LEVEL_TWO
+  LEVEL_THREE
+  LEVEL_FOUR
+  LEVEL_ONE_A
+  LEVEL_ONE_B
+  LEVEL_ONE_C
+  LEVEL_TWO_A
+  LEVEL_TWO_B
+  LEVEL_TWO_C
+  LEVEL_THREE_A
+  LEVEL_THREE_B
+  LEVEL_THREE_C
+  LEVEL_FOUR_A
+  LEVEL_FOUR_B
+  LEVEL_FOUR_C
+  GROUND_PIECE_A
+  GROUND_PIECE_B
+  GROUND_PIECE_C
+  CORAL_STATION_ONE
+  CORAL_STATION_TWO
 }
 
 enum EventAction {
-  LEAVE
-  PICK_UP
-  DROP_RING
-  SCORE
-  DEFENSE
-  FEED_RING
-  STARTING_POSITION
+  PICKUP_CORAL
+  PICKUP_ALGAE
+  FEED
+  AUTO_LEAVE
+  DEFEND
+  SCORE_NET
+  FAIL_NET
+  SCORE_PROCESSOR
+  SCORE_CORAL
+  DROP_ALGAE
+  DROP_CORAL
+  START_POSITION
 }
 
 model FeatureToggle {
@@ -95,9 +110,9 @@ model ScoutReport {
   startTime          DateTime
   notes              String
   robotRole          RobotRole
-  stage              StageResult
-  highNote           HighNoteResult
-  pickUp             PickUp
+  algaePickup        AlgaePickup
+  coralPickup        CoralPickup
+  bargeResult         BargeResult
   driverAbility      Int
   scouterUuid        String
   scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
@@ -113,24 +128,29 @@ enum RobotRole {
   IMMOBILE
 }
 
-enum HighNoteResult {
-  NOT_ATTEMPTED
-  FAILED
-  SUCCESSFUL
+enum AlgaePickup {
+ NONE
+ GROUND
+ REEF
+ BOTH
 }
 
-enum StageResult {
-  NOTHING
-  PARK
-  ONSTAGE
-  ONSTAGE_HARMONY
+enum CoralPickup {
+ NONE
+ GROUND
+ STATION
+ BOTH
+}
+enum BargeResult {
+ NOT_ATTEMPTED
+ PARKED
+ SHALLOW
+ FAILED_SHALLOW
+ DEEP
+ FAILED_DEEP
 }
 
-enum PickUp {
-  GROUND
-  CHUTE
-  BOTH
-}
+
 
 model ScouterScheduleShift {
   uuid                    String         @id @default(uuid())
