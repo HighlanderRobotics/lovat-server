@@ -113,6 +113,8 @@ model ScoutReport {
   algaePickup        AlgaePickup
   coralPickup        CoralPickup
   bargeResult         BargeResult
+  KnocksAlgae         KnocksAlgae
+  UnderShallowCage    UnderShallowCage
   driverAbility      Int
   scouterUuid        String
   scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
@@ -133,6 +135,14 @@ enum AlgaePickup {
  GROUND
  REEF
  BOTH
+}
+enum KnocksAlgae {
+ TRUE 
+ FALSE
+}
+enum UnderShallowCage {
+ TRUE 
+ FALSE
 }
 
 enum CoralPickup {
@@ -192,15 +202,19 @@ model SharedPicklist {
   name          String
   totalPoints   Float    
   defense       Float 
-  pickUps       Float
-  stage         Float
+  coralPickups       Float
+  climb         Float
   autoPoints    Float
   driverAbility Float
-  speakerScores Float
-  ampScores     Float
+  coralLevel1Scores Float
+  coralLevel2Scores Float
+  coralLevel3Scores Float
+  coralLevel4Scores Float
+  algaeProcessor Float
+  algaeNet Float
   teleopPoints  Float
-  trapScores    Float
   feeds         Float
+
 
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)

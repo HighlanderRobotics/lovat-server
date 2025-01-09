@@ -1,35 +1,46 @@
-import { EventAction, Position, HighNoteResult, RobotRole, StageResult, PickUp, MatchType } from "@prisma/client"
+import { EventAction, Position, RobotRole, MatchType, BargeResult, AlgaePickup, CoralPickup } from "@prisma/client"
 
 const EventActionMap = {
-    0 : [EventAction.LEAVE],
-    1 : [EventAction.PICK_UP],
-    2 : [EventAction.DROP_RING],
-    3 : [EventAction.SCORE],
-    4 : [EventAction.DEFENSE],
-    5 : [EventAction.FEED_RING],
-    6 : ["START"],
-    7 : ["STOP"],
-    8 : [EventAction.STARTING_POSITION]
-
+    0 : [EventAction.PICKUP_CORAL],
+    1 : [EventAction.PICKUP_ALGAE],
+    2 : [EventAction.FEED],
+    3 : [EventAction.AUTO_LEAVE],
+    4 : [EventAction.DEFEND],
+    5 : [EventAction.SCORE_NET],
+    6 : [EventAction.FAIL_NET],
+    7 : [EventAction.SCORE_PROCESSOR],
+    8 : [EventAction.SCORE_CORAL],
+    9 : [EventAction.DROP_ALGAE],
+    10 : [EventAction.DROP_CORAL],
+    11 : [EventAction.START_POSITION]
   }
   const PositionMap = {
     0 : [Position.NONE],
-    1 : [Position.AMP],
-    2 : [Position.SPEAKER],
-    3 : [Position.TRAP],
-    4 : [Position.WING_NEAR_AMP],
-    5 : [Position.WING_FRONT_OF_SPEAKER],
-    6 : [Position.WING_CENTER],
-    7 : [Position.WING_NEAR_SOURCE],
-    8 : [Position.GROUND_NOTE_ALLIANCE_NEAR_AMP],
-    9 : [Position.GROUND_NOTE_ALLIANCE_FRONT_OF_SPEAKER],
-    10 : [Position.GROUND_NOTE_ALLIANCE_BY_SPEAKER],
-    11 : [Position.GROUND_NOTE_CENTER_FARTHEST_AMP_SIDE],
-    12 : [Position.GROUND_NOTE_CENTER_TOWARD_AMP_SIDE],
-    13 : [Position.GROUND_NOTE_CENTER_CENTER],
-    14 : [Position.GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE],
-    15 : [Position.GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE]
-
+    1 : [Position.START_ONE],
+    2 : [Position.START_TWO],
+    3 : [Position.START_THREE],
+    4 : [Position.START_FOUR],
+    5 : [Position.LEVEL_ONE],
+    6 : [Position.LEVEL_TWO],
+    7 : [Position.LEVEL_THREE],
+    8 : [Position.LEVEL_FOUR],
+    9 : [Position.LEVEL_ONE_A],
+    10 : [Position.LEVEL_ONE_B],
+    11 : [Position.LEVEL_ONE_C],
+    12 : [Position.LEVEL_TWO_A],
+    13 : [Position.LEVEL_TWO_B],
+    14 : [Position.LEVEL_TWO_C],
+    15 : [Position.LEVEL_THREE_A],
+    16 : [Position.LEVEL_THREE_B],
+    17 : [Position.LEVEL_THREE_C],
+    18 : [Position.LEVEL_FOUR_A],
+    19 : [Position.LEVEL_FOUR_B],
+    20 : [Position.LEVEL_FOUR_C],
+    21 : [Position.GROUND_PIECE_A],
+    22 : [Position.GROUND_PIECE_B],
+    23 : [Position.GROUND_PIECE_C],
+    24 : [Position.CORAL_STATION_ONE],
+    25 : [Position.CORAL_STATION_TWO]
   }
   const RobotRoleMap = {
     0 : [RobotRole.OFFENSE],
@@ -37,23 +48,25 @@ const EventActionMap = {
     2 : [RobotRole.FEEDER],
     3 : [RobotRole.IMMOBILE]
   }
-  const StageResultMap = {
-    0 : [StageResult.NOTHING],
-    1 : [StageResult.PARK],
-    2 : [StageResult.ONSTAGE],
-    3 : [StageResult.ONSTAGE_HARMONY]
-  
+  const BargeResultMap = {
+    0 : [BargeResult.NOT_ATTEMPTED],
+    1 : [BargeResult.PARKED],
+    2 : [BargeResult.SHALLOW],
+    3 : [BargeResult.FAILED_SHALLOW],
+    4 : [BargeResult.DEEP],
+    5 : [BargeResult.FAILED_DEEP]  
   }
-  const PickUpMap = {
-    0 : [PickUp.GROUND],
-    1 : [PickUp.CHUTE],
-    2 : [PickUp.BOTH]
+  const AlgaePickupMap = {
+    0 : [AlgaePickup.NONE],
+    1 : [AlgaePickup.GROUND],
+    2 : [AlgaePickup.REEF],
+    3 : [AlgaePickup.BOTH]
   }
-  const HighNoteMap = 
-  {
-    0 : [HighNoteResult.NOT_ATTEMPTED],
-    1 : [HighNoteResult.FAILED],
-    2 : [HighNoteResult.SUCCESSFUL]
+  const CoralPickupMap = {
+    0 : [CoralPickup.NONE],
+    1 : [CoralPickup.GROUND],
+    2 : [CoralPickup.STATION],
+    3 : [CoralPickup.BOTH]
   }
   const MatchTypeMap = 
   {
@@ -95,6 +108,6 @@ const EventActionMap = {
     0 : MatchType.QUALIFICATION,
     1 : MatchType.ELIMINATION
   }
-export {EventActionMap, PositionMap, RobotRoleMap, StageResultMap, PickUpMap, HighNoteMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation}
+export {EventActionMap, PositionMap, RobotRoleMap, BargeResultMap, AlgaePickupMap, CoralPickupMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation}
 
   
