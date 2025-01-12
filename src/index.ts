@@ -30,7 +30,7 @@ import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
 import { addScoutReport } from "./handler/manager/addScoutReport";
 import { getScoutReport } from "./handler/manager/getScoutReport";
-import { getMatches } from "./handler/manager/getMatches";
+// import { getMatches } from "./handler/manager/getMatches";
 import { getSinglePicklist } from "./handler/manager/getSinglePicklist";
 import { getSingleMutablePicklist } from "./handler/manager/getSingleMutablePicklist";
 import { updatePicklist } from "./handler/manager/updatePicklist";
@@ -82,6 +82,8 @@ import { pitDisplay } from "./handler/manager/pitDisplay";
 import { getTeamCSV } from "./handler/manager/getTeamCSV";
 import { getTeamMatchCSV } from "./handler/manager/getTeamMatchCSV";
 import { getReportCSV } from "./handler/manager/getReportCSV";
+import { getMatches } from "./handler/manager/getMatchesFaster";
+// import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
