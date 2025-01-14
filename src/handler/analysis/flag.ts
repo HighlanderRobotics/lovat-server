@@ -2,19 +2,12 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import axios from "axios";
 import { arrayAndAverageTeam } from "./coreAnalysis/arrayAndAverageTeam";
+import { Metric } from './analysisConstants';
 
 
-export const flag = async (req: AuthenticatedRequest, flagName: string, tournamentKey: string = null, teamNumber: number) => {
+export const flag = async (req: AuthenticatedRequest, flagName: Metric | "rank", tournamentKey: string = null, teamNumber: number) => {
     try {
-        const params = z.object({
-            flagName: z.enum(["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "feeds", "drops", "rank"])
-        }).safeParse({
-            flagName: flagName
-        })
-        if (!params.success) {
-            throw (params)
-        };
-        if (params.data.flagName === "rank") {
+        if (flagName === "rank") {
             if (tournamentKey === null) {
                 return "-"
             }

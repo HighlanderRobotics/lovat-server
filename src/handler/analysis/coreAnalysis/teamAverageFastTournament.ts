@@ -1,630 +1,309 @@
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { highNoteMap, matchTimeEnd, metricToEvent, swrConstant, teamLowerBound, ttlConstant } from "../analysisConstants";
-import { EventAction, Position, User } from "@prisma/client";
+import { highNoteMap, matchTimeEnd, Metric, metricToEvent, swrConstant, teamLowerBound, ttlConstant } from "../analysisConstants";
+import { EventAction, HighNoteResult, Position, StageResult, User } from "@prisma/client";
 
 
-
-export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: string, tournamentKey: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
+export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: Metric, tournamentKey: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
-        if (metric1 === "ampscores") {
-            position = Position.AMP
+        switch (metric1) {
+            case Metric.ampscores:
+                position = Position.AMP
+                break;
+            case Metric.speakerscores:
+                position = Position.SPEAKER
+                break;
+            case Metric.trapscores:
+                position = Position.TRAP
+                break;
+            default:
+                position = Position.NONE
+                break;
         }
-        else if (metric1 === "speakerscores") {
-            position = Position.SPEAKER
+
+        // Could still cause problems at tournaments, would have to be tested - failure should be treated by changing first condition to a tolerance
+        const allTeamNumbers = (await prismaClient.team.findMany()).map(team => team.number);
+        let scoutReportFilter: {
+            teamMatchData: {
+                tournamentKey: string;
+                teamNumber: number;
+            }
+            scouter?: {
+                sourceTeamNumber:
+                    { notIn: number[] } | { in: number[] }
+            }
+        };
+
+        // Variable stores scout report filter
+        if (user.teamSource.length === allTeamNumbers.length) {
+            // If no teams are filtered, don't check teams in prisma request
+            scoutReportFilter = {
+                teamMatchData:
+                {
+                    tournamentKey: tournamentKey,
+                    teamNumber: team
+                }
+            }
+        } else if (user.teamSource.length >= allTeamNumbers.length / 2) {
+            // Many users will only filter a few teams, invert checks if this is the case for faster performance
+            const unsourcedTeams = allTeamNumbers.filter(val => !user.teamSource.includes(val));
+            scoutReportFilter = {
+                teamMatchData:
+                {
+                    tournamentKey: tournamentKey,
+                    teamNumber: team
+                },
+                scouter:
+                {
+                    sourceTeamNumber:
+                    {
+                        notIn: unsourcedTeams
+                    }
+                }
+            }
+        } else {
+            // Case where user only accepts data from some teams
+            scoutReportFilter = {
+                teamMatchData:
+                {
+                    tournamentKey: tournamentKey,
+                    teamNumber: team
+                },
+                scouter:
+                {
+                    sourceTeamNumber:
+                    {
+                        in: user.teamSource
+                    }
+                }
+            }
         }
-        else if (metric1 === "trapscores") {
-            position = Position.TRAP
+
+        if (metric1 === Metric.pickups) {
+            // Returns average pickups per scout report
+            const counts = await prismaClient.event.groupBy({
+                cacheStrategy :
+                {
+                    swr : swrConstant,
+                    ttl : ttlConstant,
+                },
+                by: ["scoutReportUuid"],
+                _count:
+                {
+                    _all: true
+                },
+                where:
+                {
+                    scoutReport: scoutReportFilter,
+                    action: EventAction.PICK_UP,
+                    time:
+                    {
+                        lte: timeMax,
+                        gte: timeMin
+                    },
+                }
+            })
+
+            return counts.reduce((acc, cur) => acc + cur._count._all, 0) / counts.length;
         }
-        else {
-            position = Position.NONE
+        else if (metric1 === Metric.driverability) {
+            // Returns average driverAbility per scout report
+            const driverAbilityAvg = await prismaClient.scoutReport.aggregate({
+                cacheStrategy :
+                {
+                    swr : swrConstant,
+                    ttl : ttlConstant,
+                },
+                _avg:
+                {
+                    driverAbility: true
+                },
+                where: scoutReportFilter
+            })
+            //avg could be multiple results from one scout
+            let avg = driverAbilityAvg._avg.driverAbility
+            if (!avg) {
+                avg = 0
+            }
+            return avg
         }
-        const metric = metricToEvent[metric1][0]
-        if (user.teamSource.length >= teamLowerBound) {
-            if (metric1 === "pickups") {
-                const counts = await prismaClient.event.groupBy({
-                    cacheStrategy :
+        else if (isPointAverage) {
+            // Returns average points for teleop and/or auto per scout report
+            const sumOfMatches = await prismaClient.event.groupBy({
+                cacheStrategy:
+                {
+                    swr: swrConstant,
+                    ttl: ttlConstant,
+                },
+                by: ["scoutReportUuid"],
+                _sum:
+                {
+                    points: true
+                },
+                where:
+                {
+                    scoutReport: scoutReportFilter,
+                    time:
                     {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
-                    },
-                    by: ["scoutReportUuid"],
-                    _count:
-                    {
-                        _all: true
-                    },
-                    where:
-                    {
-                        scoutReport:
-                        {
-                            teamMatchData:
-                            {
-                                tournamentKey: tournamentKey,
-                                teamNumber: team
-                            },
-                           
-    
-                        },
-                        action: EventAction.PICK_UP,
-                        time:
-                        {
-                            lte: timeMax,
-                            gte: timeMin
-                        },
+                        lte: timeMax,
+                        gte: timeMin
                     }
-                })
-    
-                return counts.reduce((acc, cur) => acc + cur._count._all, 0) / counts.length;
-    
+
+                },
+            })
+
+            // Average points from events
+            let eventsAverage = 0
+            if (sumOfMatches.length > 0) {
+                eventsAverage = sumOfMatches.reduce((acc, item) => acc + item._sum.points, 0) / sumOfMatches.length;
             }
-            else if (metric1 === "driverability") {
-    
-                const driverAbilityAvg = await prismaClient.scoutReport.aggregate({
-                    cacheStrategy :
-                    {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
-                    },
-                    _avg:
-                    {
-                        driverAbility: true
-                    },
-                    where:
-                    {
-                        teamMatchData:
-                        {
-                            tournamentKey: tournamentKey,
-                            teamNumber: team,
-    
-                        },
-                       
-                    }
-                })
-                //avg could be multiple results from one scout
-                let avg = driverAbilityAvg._avg.driverAbility
-                if (!avg) {
-                    avg = 0
-                }
-                return avg
+
+            // Return if endgame points are not necessary
+            if (metric1 !== Metric.totalpoints && metric1 !== Metric.teleoppoints) {
+                return eventsAverage;
             }
-            else if (isPointAverage) {
-                
-                const sumOfMatches = await prismaClient.event.groupBy({
-                    cacheStrategy :
-                    {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
-                    },
-                    by: ["scoutReportUuid"],
-                    _sum:
-                    {
-                        points: true
-                    },
-                    where:
-                    {
-                        scoutReport: {
-                            teamMatchData:
-                            {
-                                tournamentKey: tournamentKey,
-                                teamNumber: team
-                            },
-                           
-                        },
-                        time:
-                        {
-                            lte: timeMax,
-                            gte: timeMin
-                        }
-    
-                    },
-                    
-                })
-                let eventsAverage = sumOfMatches.reduce((acc, item) => acc + item._sum.points, 0) / sumOfMatches.length;
-    
-    
-                if (!eventsAverage || eventsAverage === Infinity) {
-                    eventsAverage = 0
+
+            /**********
+             STAGE
+             **********/
+            const stageRows = await prismaClient.scoutReport.groupBy({
+                cacheStrategy:
+                {
+                    swr: swrConstant,
+                    ttl: ttlConstant,
+                },
+                by: ['stage'],
+                _count: {
+                    stage: true,
+                },
+                where: scoutReportFilter,
+            });
+
+            // Count of reports by stage result
+            const stageDataMap: Partial<Record<StageResult, number>> = {}
+            stageRows.forEach(row => {
+                stageDataMap[row.stage] = row._count.stage;
+            });
+
+            // Count of stage interactions
+            const stageAttempts = stageRows.reduce((total, row) => {
+                if (row.stage !== StageResult.NOTHING) {
+                    return total + row._count.stage;
                 }
-                //adds endgame points if nessisary
-                if (metric1 === "totalpoints" || metric1 === "teleoppoints") {
-                    const stageRows = await prismaClient.scoutReport.groupBy({
-                        cacheStrategy :
-                        {
-                            swr : swrConstant,
-                            ttl : ttlConstant,
-                        },
-                        by: ['stage'],
-                        _count: {
-                            stage: true,
-                        },
-                        where: {
-                            teamMatchData: {
-                                teamNumber: team,
-                            },
-                            
-                        },
-                    });
-                    const stageDataMap ={}
-    
-                      stageRows.forEach(row => {
-                        stageDataMap[row.stage] = row._count.stage;
-                    });
-                 
-                    const totalAttemptsStage = stageRows.reduce((total, item) => {
-                        if (item.stage !== "NOTHING") {
-                            return total + item._count.stage;
-                        }
-                        return total;
-                    }, 0);
-                    let stagePoints = 0
-                    if (totalAttemptsStage !== 0) {
-                        stagePoints = (((stageDataMap["ONSTAGE"] || 0) / totalAttemptsStage) * 3) +
-                            (((stageDataMap["ONSTAGE_HARMONY"] || 0) / totalAttemptsStage) * 5) +
-                            ((stageDataMap["PARK"] || 0) / totalAttemptsStage);
-                        }
-    
-                    const highNoteRows = await prismaClient.scoutReport.groupBy({
-                        by: ['highNote'],
-                        _count: {
-                            highNote: true,
-                        },
-                        where: {
-                            teamMatchData: {
-                                teamNumber: team,
-                            },
-                           
-                        }
-                    });
-                    const totalAttempsHighNote = highNoteRows.reduce((total, item) => {
-                        if (item.highNote !== "NOT_ATTEMPTED") {
-                            return total + item._count.highNote;
-                        }
-                        return total;
-                    }, 0);
-                    let highNotePoints = 0
-                   
-                    if (highNotePoints !== 0) {
-                        highNotePoints = highNoteMap["SUCCESSFUL"] / totalAttempsHighNote
-                    }
-    
-                    if (!highNotePoints || highNotePoints === Infinity) {
-                        highNotePoints = 0
-                    }
-                    if (!stagePoints || highNotePoints === Infinity) {
-                        stagePoints = 0
-                    }
-                    
-                    
-                    return eventsAverage + highNotePoints + stagePoints
-                }
-                else {
-    
-                    return eventsAverage
-                }
+                return total;
+            }, 0);
+
+            // Average stage points, excluding non-attempts
+            let avgStagePoints = 0
+            if (stageAttempts !== 0) {
+                avgStagePoints = (((stageDataMap[StageResult.ONSTAGE] || 0) * 3) +
+                    ((stageDataMap[StageResult.ONSTAGE_HARMONY] || 0) * 5) +
+                    ((stageDataMap[StageResult.PARK] || 0))) / stageAttempts;
             }
-            else if(metric1 === "scores")
-            {
-                const groupedMatches = await prismaClient.event.groupBy({
-                    cacheStrategy :
-                    {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
-                    },
-                    by: ["scoutReportUuid"],
-                    _count:
-                    {
-                        _all: true
-                    },
-                    where:
-                    {
-                        scoutReport: {
-                            teamMatchData:
-                            {
-                                tournamentKey: tournamentKey,
-                                teamNumber: team
-                            },
-                        
-                        },
-    
-                        action: EventAction.SCORE,
-                        time:
-                        {
-                            lte: timeMax,
-                            gte: timeMin
-                        },
-    
-                    }
-                })
-    
-                let avg = groupedMatches.reduce((accumulator, current) => {
-                    return accumulator + current._count._all;
-                }, 0) / groupedMatches.length;
-                if (!avg) {
-                    avg = 0
+
+            /**********
+             HIGH NOTE
+             **********/
+            const highNoteRows = await prismaClient.scoutReport.groupBy({
+                by: ['highNote'],
+                _count: {
+                    highNote: true,
+                },
+                where: scoutReportFilter
+            });
+
+            // Count of high note interactions
+            const highNoteAttempts = highNoteRows.reduce((total, item) => {
+                if (item.highNote !== HighNoteResult.NOT_ATTEMPTED) {
+                    return total + item._count.highNote;
                 }
-                return avg
-    
-            
+                return total;
+            }, 0);
+
+            // Average high note points
+            let avgHighNotePoints = highNoteRows.find(row => row.highNote = HighNoteResult.SUCCESSFUL)._count.highNote / highNoteAttempts;
+            if (!isFinite(avgHighNotePoints)) {
+                avgHighNotePoints = 0;
             }
-            else {
-                const params = z.object({
-                    metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE]),
-                    position: z.enum([Position.NONE, Position.AMP, Position.TRAP, Position.SPEAKER])
-                }).safeParse({
-                    metric: metric,
-                    position: position
-                })
-                if (!params.success) {
-                    throw (params)
-                };
-    
-                const groupedMatches = await prismaClient.event.groupBy({
-                    cacheStrategy :
+
+            return eventsAverage + avgHighNotePoints + avgStagePoints;
+        }
+        else if (metric1 === Metric.scores) {
+            // Returns average scores per scout report
+            const groupedMatches = await prismaClient.event.groupBy({
+                cacheStrategy :
+                {
+                    swr : swrConstant,
+                    ttl : ttlConstant,
+                },
+                by: ["scoutReportUuid"],
+                _count:
+                {
+                    _all: true
+                },
+                where:
+                {
+                    scoutReport: scoutReportFilter,
+                    action: EventAction.SCORE,
+                    time:
                     {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
+                        lte: timeMax,
+                        gte: timeMin
                     },
-                    by: ["scoutReportUuid"],
-                    _count:
-                    {
-                        _all: true
-                    },
-                    where:
-                    {
-                        scoutReport: {
-                            teamMatchData:
-                            {
-                                tournamentKey: tournamentKey,
-                                teamNumber: team
-                            }
-                        },
-    
-                        action: params.data.metric,
-                        time:
-                        {
-                            lte: timeMax,
-                            gte: timeMin
-                        },
-                        position: params.data.position
-    
-                    }
-                })
-    
-                let avg = groupedMatches.reduce((accumulator, current) => {
-                    return accumulator + current._count._all;
-                }, 0) / groupedMatches.length;
-                if (!avg) {
-                    avg = 0
                 }
-                return avg
-    
+            })
+
+            let avg = groupedMatches.reduce((acc, cur) => {
+                return acc + cur._count._all;
+            }, 0) / groupedMatches.length;
+            if (!avg) {
+                avg = 0
             }
+
+            return avg
         }
         else {
+            // Returns average of given EventAction per scout report
 
+            // Attempt to convert metric to an EventAction
+            const metric = metricToEvent[metric1];
+            if (!(metric in EventAction)) {
+                throw "Metric failed conversion to event action";
+            };
 
-            if (metric1 === "pickups") {
-                const counts = await prismaClient.event.groupBy({
-                    cacheStrategy :
+            const groupedMatches = await prismaClient.event.groupBy({
+                cacheStrategy :
+                {
+                    swr : swrConstant,
+                    ttl : ttlConstant,
+                },
+                by: ["scoutReportUuid"],
+                _count:
+                {
+                    _all: true
+                },
+                where:
+                {
+                    scoutReport: scoutReportFilter,
+                    action: metric,
+                    time:
                     {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
+                        lte: timeMax,
+                        gte: timeMin
                     },
-                    by: ["scoutReportUuid"],
-                    _count:
-                    {
-                        _all: true
-                    },
-                    where:
-                    {
-                        scoutReport:
-                        {
-                            teamMatchData:
-                            {
-                                tournamentKey: tournamentKey,
-                                teamNumber: team
-                            },
-                            scouter:
-                            {
-                                sourceTeamNumber:
-                                {
-                                    in: user.teamSource
-                                }
-                            },
-
-                        },
-                        action: EventAction.PICK_UP,
-                        time:
-                        {
-                            lte: timeMax,
-                            gte: timeMin
-                        },
-                    }
-                })
-
-                return counts.reduce((acc, cur) => acc + cur._count._all, 0) / counts.length;
-
-            }
-            else if (metric1 === "driverability") {
-
-                const driverAbilityAvg = await prismaClient.scoutReport.aggregate({
-                    cacheStrategy :
-                    {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
-                    },
-                    _avg:
-                    {
-                        driverAbility: true
-                    },
-                    where:
-                    {
-                        teamMatchData:
-                        {
-                            tournamentKey: tournamentKey,
-                            teamNumber: team,
-
-                        },
-                        scouter:
-                        {
-                            sourceTeamNumber:
-                            {
-                                in: user.teamSource
-                            }
-                        }
-                    }
-                })
-                //avg could be multiple results from one scout
-                let avg = driverAbilityAvg._avg.driverAbility
-                if (!avg) {
-                    avg = 0
-                }
-                return avg
-            }
-            else if (isPointAverage) {
-                const sumOfMatches = await prismaClient.event.groupBy({
-                    cacheStrategy :
-                    {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
-                    },
-                    by: ["scoutReportUuid"],
-                    _sum:
-                    {
-                        points: true
-                    },
-                    where:
-                    {
-                        scoutReport: {
-                            teamMatchData:
-                            {
-                                tournamentKey: tournamentKey,
-                                teamNumber: team
-                            },
-                            scouter:
-                            {
-                                sourceTeamNumber:
-                                {
-                                    in: user.teamSource
-                                }
-                            }
-                        },
-                        time:
-                        {
-                            lte: timeMax,
-                            gte: timeMin
-                        }
-
-                    },
-
-                })
-                let eventsAverage = sumOfMatches.reduce((acc, item) => acc + item._sum.points, 0) / sumOfMatches.length;
-
-
-                if (!eventsAverage || eventsAverage === Infinity) {
-                    eventsAverage = 0
-                }
-                //adds endgame points if nessisary
-                if (metric1 === "totalpoints" || metric1 === "teleoppoints") {
-                    const stageRows = await prismaClient.scoutReport.groupBy({
-                        cacheStrategy :
-                        {
-                            swr : swrConstant,
-                            ttl : ttlConstant,
-                        },
-                        by: ['stage'],
-                        _count: {
-                            stage: true,
-                        },
-                        where: {
-                            teamMatchData: {
-                                tournamentKey: {
-                                    in: user.tournamentSource
-                                },
-                                teamNumber: team,
-                            },
-                            scouter: {
-                                sourceTeamNumber: {
-                                    in: user.teamSource
-                                }
-                            }
-                        },
-                    });
-                    const stageDataMap = {}
-
-                    stageRows.forEach(row => {
-                        stageDataMap[row.stage] = row._count.stage;
-                    });
-
-                    const totalAttemptsStage = stageRows.reduce((total, item) => {
-                        if (item.stage !== "NOTHING") {
-                            return total + item._count.stage;
-                        }
-                        return total;
-                    }, 0);
-                    let stagePoints = 0
-                    if (totalAttemptsStage !== 0) {
-                        stagePoints = (((stageDataMap["ONSTAGE"] || 0) / totalAttemptsStage) * 3) +
-                            (((stageDataMap["ONSTAGE_HARMONY"] || 0) / totalAttemptsStage) * 5) +
-                            ((stageDataMap["PARK"] || 0) / totalAttemptsStage);
-                    }
-
-                    const highNoteRows = await prismaClient.scoutReport.groupBy({
-                        by: ['highNote'],
-                        _count: {
-                            highNote: true,
-                        },
-                        where: {
-                            teamMatchData: {
-                                tournamentKey: {
-                                    in: user.tournamentSource
-                                },
-                                teamNumber: team,
-                            },
-                            scouter: {
-                                sourceTeamNumber: {
-                                    in: user.teamSource
-                                }
-                            }
-                        }
-                    });
-                    const totalAttempsHighNote = highNoteRows.reduce((total, item) => {
-                        if (item.highNote !== "NOT_ATTEMPTED") {
-                            return total + item._count.highNote;
-                        }
-                        return total;
-                    }, 0);
-                    let highNotePoints = 0
-
-                    if (highNotePoints !== 0) {
-                        highNotePoints = highNoteMap["SUCCESSFUL"] / totalAttempsHighNote
-                    }
-
-                    if (!highNotePoints || highNotePoints === Infinity) {
-                        highNotePoints = 0
-                    }
-                    if (!stagePoints || highNotePoints === Infinity) {
-                        stagePoints = 0
-                    }
-
-
-                    return eventsAverage + highNotePoints + stagePoints
-                }
-                else {
-
-                    return eventsAverage
-                }
-            }
-            else if (metric1 === "scores") {
-                const groupedMatches = await prismaClient.event.groupBy({
-                    cacheStrategy :
-                    {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
-                    },
-                    by: ["scoutReportUuid"],
-                    _count:
-                    {
-                        _all: true
-                    },
-                    where:
-                    {
-                        scoutReport: {
-                            teamMatchData:
-                            {
-                                tournamentKey: tournamentKey,
-                                teamNumber: team
-                            },
-                            scouter:
-                            {
-                                sourceTeamNumber:
-                                {
-                                    in: user.teamSource
-                                }
-                            }
-                        },
-
-                        action: EventAction.SCORE,
-                        time:
-                        {
-                            lte: timeMax,
-                            gte: timeMin
-                        },
-
-                    }
-                })
-
-                let avg = groupedMatches.reduce((accumulator, current) => {
-                    return accumulator + current._count._all;
-                }, 0) / groupedMatches.length;
-                if (!avg) {
-                    avg = 0
-                }
-                return avg
-
-
-            }
-            else {
-                const params = z.object({
-                    metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE]),
-                    position: z.enum([Position.NONE, Position.AMP, Position.TRAP, Position.SPEAKER])
-                }).safeParse({
-                    metric: metric,
                     position: position
-                })
-                if (!params.success) {
-                    throw (params)
-                };
-
-                const groupedMatches = await prismaClient.event.groupBy({
-                    cacheStrategy :
-                    {
-                        swr : swrConstant,
-                        ttl : ttlConstant,
-                    },
-                    by: ["scoutReportUuid"],
-                    _count:
-                    {
-                        _all: true
-                    },
-                    where:
-                    {
-                        scoutReport: {
-                            teamMatchData:
-                            {
-                                tournamentKey: tournamentKey,
-                                teamNumber: team
-                            },
-                            scouter:
-                            {
-                                sourceTeamNumber:
-                                {
-                                    in: user.teamSource
-                                }
-                            }
-                        },
-
-                        action: params.data.metric,
-                        time:
-                        {
-                            lte: timeMax,
-                            gte: timeMin
-                        },
-                        position: params.data.position
-
-                    }
-                })
-
-                let avg = groupedMatches.reduce((accumulator, current) => {
-                    return accumulator + current._count._all;
-                }, 0) / groupedMatches.length;
-                if (!avg) {
-                    avg = 0
                 }
-                return avg
+            })
 
+            let avg = groupedMatches.reduce((accumulator, current) => {
+                return accumulator + current._count._all;
+            }, 0) / groupedMatches.length;
+            if (!avg) {
+                avg = 0
             }
+
+            return avg
         }
     }
     catch (error) {

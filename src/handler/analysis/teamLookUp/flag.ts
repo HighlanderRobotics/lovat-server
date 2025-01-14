@@ -3,21 +3,22 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { rankFlag } from "../rankFlag";
+import { Metric } from '../analysisConstants';
 
 
 export const flag = async (req: AuthenticatedRequest, metric: string) => {
     try {
         const params = z.object({
             team: z.number(),
-            flag: z.enum(["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "feeds", "trapscores", "drops", "rank", "defense"])
+            flag: z.nativeEnum(Metric).or(z.enum(["rank"]))
         }).safeParse({
             team: Number(req.params.team),
             flag: metric
-
         })
         if (!params.success) {
             throw (params);
         };
+
         if (params.data.flag === "rank") {
             const tourament = await prismaClient.tournament.findFirst({
                 where:
