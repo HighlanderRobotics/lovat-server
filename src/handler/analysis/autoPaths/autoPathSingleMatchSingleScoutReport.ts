@@ -1,6 +1,6 @@
 import prismaClient from '../../../prismaClient'
-import { FlippedActionMap, FlippedPositionMap, autoEnd, exludedAutoEvents } from "../analysisConstants";
-import { User } from "@prisma/client";
+import { FlippedActionMap, FlippedPositionMap, autoEnd } from "../analysisConstants";
+import { EventAction, User } from "@prisma/client";
 
 
 export const autoPathSingleMatchSingleScoutReport = async (user: User, matchKey : string, scoutReportUuid : string) => {
@@ -18,7 +18,16 @@ export const autoPathSingleMatchSingleScoutReport = async (user: User, matchKey 
                 },
                 action :
                 {
-                    notIn : exludedAutoEvents
+                    // All auton-associated event actions/positions
+                    in: [
+                        EventAction.FAIL_NET,
+                        EventAction.PICKUP_ALGAE,
+                        EventAction.PICKUP_CORAL,
+                        EventAction.SCORE_CORAL,
+                        EventAction.SCORE_NET,
+                        EventAction.SCORE_PROCESSOR,
+                        EventAction.START_POSITION,
+                    ]
                 }
             
             },
