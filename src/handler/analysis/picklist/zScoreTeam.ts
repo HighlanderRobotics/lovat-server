@@ -1,4 +1,4 @@
-import { picklistSliders } from "../analysisConstants";
+import { Metric, picklistSliders } from "../analysisConstants";
 import { parentPort } from 'worker_threads';
 import { rankFlag } from '../rankFlag';
 import flatted from 'flatted';

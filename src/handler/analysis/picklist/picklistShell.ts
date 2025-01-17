@@ -6,7 +6,7 @@ import ss from 'simple-statistics';
 import z from 'zod'
 const { Worker } = require('worker_threads');
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
-import { picklistSliders } from "../analysisConstants";
+import { Metric, picklistSliders } from "../analysisConstants";
 import { picklistArrayAndAverageAllTeamTournament } from "./picklistArrayAndAverageAllTeamTournament";
 import flatted from 'flatted';
 import os from 'os'
@@ -81,7 +81,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             })
             includedTeamNumbers = teamsAtTournament.map(team => team.teamNumber);
             for (const metric of picklistSliders) {
-                if (params.data[metric] || params.data.flags.includes(metric)) {
+                if (params.data[metric] || params.data.flags.includes(metric.toString())) {
                     const currData = await picklistArrayAndAverageAllTeamTournament(req.user, metric, includedTeamNumbers);
                     allTeamData.push(currData)
                     usedMetrics.push(metric)
@@ -96,34 +96,34 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
     
         
-            for (let i = 0; i < allTeamData.length; i++) {
-                const currData = allTeamData[i]
-                const metric = usedMetrics[i]
-                if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2 && (ss.standardDeviation(currData.timeLine))) {
+        for (let i = 0; i < allTeamData.length; i++) {
+            const currData = allTeamData[i]
+            const metric = usedMetrics[i]
+            if (currData.average !== null && !isNaN(currData.average) && currData.average !== undefined && currData.timeLine.length >= 2 && (ss.standardDeviation(currData.timeLine))) {
+                allTeamAvgSTD[metric] = {
+                    "allAvg": currData.average,
+                    "arraySTD": ss.standardDeviation(currData.timeLine)
+                };
+            }
+            //will only happen at the very start of new season when theres not a lot of data
+            else {
+                if (isNaN(currData.average)) {
                     allTeamAvgSTD[metric] = {
-                        "allAvg": currData.average,
-                        "arraySTD": ss.standardDeviation(currData.timeLine)
+                        "allAvg": 0,
+                        "arraySTD": 0.1
                     };
                 }
-                //will only happen at the very start of new season when theres not a lot of data
                 else {
-                    if (isNaN(currData.average)) {
-                        allTeamAvgSTD[metric] = {
-                            "allAvg": 0,
-                            "arraySTD": 0.1
-                        };
-                    }
-                    else {
-                        allTeamAvgSTD[metric] = {
-                            "allAvg": currData.average,
-                            "arraySTD": 0.1
-                        };
-                    }
+                    allTeamAvgSTD[metric] = {
+                        "allAvg": currData.average,
+                        "arraySTD": 0.1
+                    };
                 }
-                metricAllTeamMaps[metric] = currData.teamAverages
             }
+            metricAllTeamMaps[metric] = currData.teamAverages
+        }
         
-       const teamBreakdowns = []
+        const teamBreakdowns = []
         const teamChunks = splitTeams(includedTeamNumbers, os.cpus().length - 1)
         for (const teams of teamChunks) {
             if (teams.length > 0) {
