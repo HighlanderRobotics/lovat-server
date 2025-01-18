@@ -118,12 +118,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         // Fetch data for matches and attach scouted and finished flags
         const finalFormattedMatches: {
             matchNumber: number, matchType: number, scouted: boolean, finished: boolean,
-            team1: {number: number, alliance: string, scouters: any[], externalReports: number},
-            team2: {number: number, alliance: string, scouters: any[], externalReports: number},
-            team3: {number: number, alliance: string, scouters: any[], externalReports: number},
-            team4: {number: number, alliance: string, scouters: any[], externalReports: number},
-            team5: {number: number, alliance: string, scouters: any[], externalReports: number},
-            team6: {number: number, alliance: string, scouters: any[], externalReports: number},
+            team1: {number: number, scouters: any[], externalReports: number},
+            team2: {number: number, scouters: any[], externalReports: number},
+            team3: {number: number, scouters: any[], externalReports: number},
+            team4: {number: number, scouters: any[], externalReports: number},
+            team5: {number: number, scouters: any[], externalReports: number},
+            team6: {number: number, scouters: any[], externalReports: number},
         }[] = []
 
         // For..in should iterate through array indices first, then other properties by insertion order
@@ -136,12 +136,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 matchType: ReverseMatchTypeMap[match[0].matchType],
                 scouted: match.some(team => team._count.scoutReports >= 1),
                 finished: !(match[0].matchType === MatchType.ELIMINATION || match[0].matchNumber > lastFinishedMatch.matchNumber),
-                team1: { number: match[0].teamNumber, alliance: "red", scouters: [], externalReports: 0 },
-                team2: { number: match[1].teamNumber, alliance: "red", scouters: [], externalReports: 0 },
-                team3: { number: match[2].teamNumber, alliance: "red", scouters: [], externalReports: 0 },
-                team4: { number: match[3].teamNumber, alliance: "blue", scouters: [], externalReports: 0 },
-                team5: { number: match[4].teamNumber, alliance: "blue", scouters: [], externalReports: 0 },
-                team6: { number: match[5].teamNumber, alliance: "blue", scouters: [], externalReports: 0 },
+                team1: { number: match[0].teamNumber, scouters: [], externalReports: 0 },
+                team2: { number: match[1].teamNumber, scouters: [], externalReports: 0 },
+                team3: { number: match[2].teamNumber, scouters: [], externalReports: 0 },
+                team4: { number: match[3].teamNumber, scouters: [], externalReports: 0 },
+                team5: { number: match[4].teamNumber, scouters: [], externalReports: 0 },
+                team6: { number: match[5].teamNumber, scouters: [], externalReports: 0 },
             }
 
             if (i > 0) {
