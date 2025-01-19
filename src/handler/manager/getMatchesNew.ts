@@ -87,8 +87,21 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             }
         });
 
+        /**
+         * SELECT matchNumber, matchType, teamNumber, key
+         * (SELECT COUNT(*)
+         *     FROM scoutReports
+         *     WHERE scouter.sourceTeamNumber IN (${[9143, 8033].join(",")})) AS _reports
+         * (SELECT COUNT(*)
+         *     FROM scoutReports
+         *     WHERE (NOT scouter.sourceTeamNumber = (${9143}))
+         *         AND (scouter.sourceTeamNumber IN (${[9143, 8033].join(",")}))) AS _external
+         * FROM TeamMatchData
+         *     WHERE tournamentKey = ${"2024casf"};
+         */
+
         // Group teamMatchData by match
-        let groupedData: { matchNumber: number, teamNumber: number, matchType: MatchType, _count: { scoutReports: number }}[][] = rawData.reduce((acc, curr) => {
+        let groupedData: { matchNumber: number, teamNumber: number, matchType: MatchType, key: string, _count: { scoutReports: number }}[][] = rawData.reduce((acc, curr) => {
             // Positive indices are quals, negatives are elims
             const i = curr.matchNumber * (curr.matchType === MatchType.ELIMINATION ? -1 : 1)
             acc[i] ??= [];
@@ -102,7 +115,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         // If team filters are set, limit matches to those including all selected teams
         if (params.data.teamNumbers && params.data.teamNumbers.length > 0) {
             let tempArray: typeof groupedData;
-            
+
             // For..in to iterate over positive and negative properties
             for (const k in groupedData) {
                 const i = parseInt(k);
@@ -126,28 +139,88 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             team6: {number: number, scouters: any[], externalReports: number},
         }[] = []
 
-        // For..in should iterate through array indices first, then other properties by insertion order
-        // Here, this means qual matches first, then eliminations
-        for (const k in groupedData) {
-            const i = parseInt(k);
-            const match = groupedData[i];
-            const currData = {
-                matchNumber: match[0].matchNumber,
-                matchType: ReverseMatchTypeMap[match[0].matchType],
-                scouted: match.some(team => team._count.scoutReports >= 1),
-                finished: !(match[0].matchType === MatchType.ELIMINATION || match[0].matchNumber > lastFinishedMatch.matchNumber),
-                team1: { number: match[0].teamNumber, scouters: [], externalReports: 0 },
-                team2: { number: match[1].teamNumber, scouters: [], externalReports: 0 },
-                team3: { number: match[2].teamNumber, scouters: [], externalReports: 0 },
-                team4: { number: match[3].teamNumber, scouters: [], externalReports: 0 },
-                team5: { number: match[4].teamNumber, scouters: [], externalReports: 0 },
-                team6: { number: match[5].teamNumber, scouters: [], externalReports: 0 },
-            }
+        if (user.teamNumber) {
+            const extReportData = await prismaClient.teamMatchData.findMany({
+                where: {
+                    tournamentKey: params.data.tournamentKey
+                },
+                select: {
+                    matchNumber: true,
+                    matchType: true,
+                    key: true,
+                    _count: {
+                        select: {
+                            scoutReports: {
+                                where: {
+                                    scouter: {
+                                        sourceTeamNumber: {
+                                            not: user.teamNumber,
+                                            in: user.teamSource
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
 
-            if (i > 0) {
-                finalFormattedMatches[i] = currData;
-            } else {
-                finalFormattedMatches[lastQualMatch - i] = currData;
+            const extCount: number[][] = extReportData.reduce((acc, curr) => {
+                // Positive indices are quals, negatives are elims
+                const i = curr.matchNumber * (curr.matchType === MatchType.ELIMINATION ? -1 : 1)
+                acc[i] ??= [];
+                // Order match by team index [0-5]
+                acc[i][Number(curr.key.at(-1))] = curr._count;
+                return acc;
+            }, []);
+
+            // For..in should iterate through array indices first, then other properties by insertion order
+            // Here, this means qual matches first, then eliminations
+            for (const k in groupedData) {
+                const i = parseInt(k);
+                const match = groupedData[i];
+                const currData = {
+                    matchNumber: match[0].matchNumber,
+                    matchType: ReverseMatchTypeMap[match[0].matchType],
+                    scouted: match.some(team => team._count.scoutReports >= 1),
+                    finished: !(match[0].matchType === MatchType.ELIMINATION || match[0].matchNumber > lastFinishedMatch.matchNumber),
+                    team1: { number: match[0].teamNumber, scouters: [], externalReports: extCount[i][0] },
+                    team2: { number: match[1].teamNumber, scouters: [], externalReports: extCount[i][1] },
+                    team3: { number: match[2].teamNumber, scouters: [], externalReports: extCount[i][2] },
+                    team4: { number: match[3].teamNumber, scouters: [], externalReports: extCount[i][3] },
+                    team5: { number: match[4].teamNumber, scouters: [], externalReports: extCount[i][4] },
+                    team6: { number: match[5].teamNumber, scouters: [], externalReports: extCount[i][5] },
+                }
+
+                if (i > 0) {
+                    finalFormattedMatches[i] = currData;
+                } else {
+                    finalFormattedMatches[lastQualMatch - i] = currData;
+                }
+            }
+        } else {
+            // No team number is set, so all reports are external
+            for (const k in groupedData) {
+                const i = parseInt(k);
+                const match = groupedData[i];
+                const currData = {
+                    matchNumber: match[0].matchNumber,
+                    matchType: ReverseMatchTypeMap[match[0].matchType],
+                    scouted: match.some(team => team._count.scoutReports >= 1),
+                    finished: !(match[0].matchType === MatchType.ELIMINATION || match[0].matchNumber > lastFinishedMatch.matchNumber),
+                    team1: { number: match[0].teamNumber, scouters: [], externalReports: match[0]._count.scoutReports },
+                    team2: { number: match[1].teamNumber, scouters: [], externalReports: match[1]._count.scoutReports },
+                    team3: { number: match[2].teamNumber, scouters: [], externalReports: match[2]._count.scoutReports },
+                    team4: { number: match[3].teamNumber, scouters: [], externalReports: match[3]._count.scoutReports },
+                    team5: { number: match[4].teamNumber, scouters: [], externalReports: match[4]._count.scoutReports },
+                    team6: { number: match[5].teamNumber, scouters: [], externalReports: match[5]._count.scoutReports },
+                }
+
+                if (i > 0) {
+                    finalFormattedMatches[i] = currData;
+                } else {
+                    finalFormattedMatches[lastQualMatch - i] = currData;
+                }
             }
         }
 
@@ -213,10 +286,6 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                         promises.push(addScoutedTeamNotOnSchedule(req, "team6", element))
 
                     }
-                    if(element.scouted)
-                    {
-                        promises.push(addExternalReports(req, element))
-                    }
 
 
 
@@ -230,21 +299,12 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     promises.push(addScoutedTeamNotOnSchedule(req, "team4", match))
                     promises.push(addScoutedTeamNotOnSchedule(req, "team5", match))
                     promises.push(addScoutedTeamNotOnSchedule(req, "team6", match))
-                    if(match.scouted)
-                    {
-                        await addExternalReports(req, match)
-                    }
                 }
 
             }
 
 
 
-        }
-        else {
-            for (const match of finalFormattedMatches) {
-                promises.push(addExternalReports(req, match))
-            }
         }
 
         await Promise.all(promises);
@@ -347,41 +407,4 @@ async function addScoutedTeam(req: AuthenticatedRequest, scouterShifts, currInde
     catch (error) {
         throw (error)
     }
-}
-
-async function addExternalReports(req: AuthenticatedRequest, match) {
-    //don't use null for "not" in prisma below
-    const teamNumber = req.user.teamNumber || 0
-    const externalReports = await prismaClient.scoutReport.groupBy({
-        by : ["teamMatchKey"],
-        _count :
-        {
-            _all : true
-        },
-        where :
-        {
-            teamMatchData :
-            {
-                tournamentKey : match.tournamentKey,
-                matchType : MatchTypeEnumToFull[match.matchType],
-                matchNumber: match.matchNumber
-            },
-            scouter :
-            {
-                sourceTeamNumber :
-                {
-                    in : req.user.teamSource,
-                    not : teamNumber
-                }
-            }
-        }
-
-
-    })
-
-    externalReports.forEach(externalReport => {
-        const team = ScouterScheduleMap[externalReport.teamMatchKey[externalReport.teamMatchKey.length - 1]]
-        match[team].externalReports = externalReport._count._all
-    });
-    return true
 }
