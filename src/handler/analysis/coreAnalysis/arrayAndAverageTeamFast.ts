@@ -1,5 +1,4 @@
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
 import { autoEnd, matchTimeEnd, swrConstant, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { teamAverageFastTournament } from "./teamAverageFastTournament";

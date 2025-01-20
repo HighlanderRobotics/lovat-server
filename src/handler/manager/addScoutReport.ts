@@ -3,7 +3,6 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { PickUpMap, PositionMap, MatchTypeMap, HighNoteMap, StageResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
-import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
 
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {

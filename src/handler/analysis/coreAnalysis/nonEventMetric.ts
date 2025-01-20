@@ -1,5 +1,4 @@
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
 import { User, ScoutReport } from "@prisma/client";
 import { MetricsBreakdown } from "../analysisConstants";
 

@@ -1,5 +1,4 @@
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { autoEnd, matchTimeEnd, Metric, multiplerBaseAnalysis, swrConstant, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
@@ -51,7 +50,7 @@ export const arrayAndAverageTeam = async (user: User, metric: Metric, team: numb
                 ]
         })
 
-        type Match = {
+        interface Match {
             key: string;
             tournamentKey: string;
             matchNumber: number;
