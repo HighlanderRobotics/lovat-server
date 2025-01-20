@@ -3,10 +3,9 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { addTournamentMatches } from "./addTournamentMatches";
-import { MatchTypeEnumToFull, MatchTypeToAbrivation, ReverseMatchTypeMap, ReverseScouterScheduleMap, ScouterScheduleMap } from "./managerConstants";
+import { ReverseMatchTypeMap } from "./managerConstants";
 import { MatchType, Prisma } from "@prisma/client";
 import { swrConstant, ttlConstant } from "../analysis/analysisConstants";
-import { InternalArgs } from "@prisma/client/runtime/library";
 
 /**
  * @param params.tournament tournament to pull from
@@ -65,21 +64,19 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         });
 
         // Filter to return a list of user's team's scout reports for each row, only valid if user has a team number
-        let includeTeamReports: Prisma.TeamMatchDataInclude = null;
+        let includeTeamReports: Prisma.TeamMatchData$scoutReportsArgs | undefined = undefined;
         if (user.teamNumber) {
             includeTeamReports = {
-                scoutReports: {
-                    where: {
-                        scouter: {
-                            sourceTeamNumber: user.teamNumber // can use for external reports by subtracting this count from count of total sourced scout reports?
-                        }
-                    },
-                    select: {
-                        scouter: {
-                            select: {
-                                name: true,
-                                uuid: true
-                            }
+                where: {
+                    scouter: {
+                        sourceTeamNumber: user.teamNumber
+                    }
+                },
+                select: {
+                    scouter: {
+                        select: {
+                            name: true,
+                            uuid: true
                         }
                     }
                 }
@@ -111,9 +108,9 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                             }
                         }
                     }
-                }
-            },
-            include: includeTeamReports
+                },
+                scoutReports: includeTeamReports
+            }
         });
 
         /*
@@ -131,7 +128,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
         // Group data by match (first layer, elimination matches are negative indices) and team (second layer, 0-5)
         // !!!IMPORTANT: the scoutReports property only exists if user.teamNumber exists
-        let groupedData: { matchNumber: number, teamNumber: number, matchType: MatchType, key: string, _count: { scoutReports: number }, scoutReports: { scouter: { name: string, uuid: string }[] } }[][] = rawData.reduce((acc, curr) => {
+        let groupedData: { matchNumber: number, teamNumber: number, matchType: MatchType, key: string, _count: { scoutReports: number }, scoutReports: { scouter: { name: string, uuid: string }[] | undefined } }[][] = rawData.reduce((acc, curr) => {
             // Positive indices are quals, negatives are elims
             const i = curr.matchNumber * (curr.matchType === MatchType.ELIMINATION ? -1 : 1)
             acc[i] ??= [];
@@ -187,11 +184,11 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     team6: { number: match[5].teamNumber, scouters: [], externalReports: match[5]._count.scoutReports },
                 }
 
-                // Index = ordinal match number
+                // Index = ordinal match number, 0 indexed
                 if (i > 0) {
-                    finalFormattedMatches[i] = currData;
+                    finalFormattedMatches[i - 1] = currData;
                 } else {
-                    finalFormattedMatches[lastQualMatch - i] = currData;
+                    finalFormattedMatches[lastQualMatch - i - 1] = currData;
                 }
             }
 
@@ -234,14 +231,14 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             // Add all scout reports from user's team
             const matchScouters: { name: string, scouted: boolean }[][] = [];
             for (let i = 0; i < 5; i++) {
-                matchScouters[i] = match[i].scoutReports.scouter.map(e => ({ name: e.name, scouted: true })) ?? [];
+                matchScouters[i] = match[i].scoutReports?.scouter?.map(e => ({ name: e.name, scouted: true })) ?? [];
 
                 // If the current match number is within a scouter shift, add incomplete scout reports
                 if (scouterShifts[currShiftIndex] && ordinalMatchNumber > scouterShifts[currShiftIndex].startMatchOrdinalNumber) {
                     // Sketchy but iterates through team1-6, could cause problems if schema is changed
                     for (const currScouter of scouterShifts[currShiftIndex][`team${i + 1}`]) {
                         // If the sourced scout reports do not include ones from the shift, add those as incomplete
-                        if (!match[i].scoutReports.scouter.some(e => e.uuid === currScouter.uuid)) {
+                        if (!match[i].scoutReports?.scouter?.some(e => e.uuid === currScouter.uuid)) {
                             matchScouters[i].push({ name: currScouter.name, scouted: false });
                         }
                     }
@@ -259,21 +256,21 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 scouted: match.some(team => team._count.scoutReports >= 1),
                 finished: match[0].matchType === MatchType.QUALIFICATION || match[0].matchNumber <= lastFinishedMatch.matchNumber,
                 team1: { number: match[0].teamNumber, scouters: matchScouters[0],
-                    externalReports: match[0]._count.scoutReports - match[0].scoutReports.scouter.length },
+                    externalReports: match[0]._count.scoutReports - (match[0].scoutReports?.scouter?.length ?? 0) },
                 team2: { number: match[1].teamNumber, scouters: matchScouters[1],
-                    externalReports: match[1]._count.scoutReports - match[1].scoutReports.scouter.length },
+                    externalReports: match[1]._count.scoutReports - (match[1].scoutReports?.scouter?.length ?? 0) },
                 team3: { number: match[2].teamNumber, scouters: matchScouters[2],
-                    externalReports: match[2]._count.scoutReports - match[2].scoutReports.scouter.length },
+                    externalReports: match[2]._count.scoutReports - (match[2].scoutReports?.scouter?.length ?? 0) },
                 team4: { number: match[3].teamNumber, scouters: matchScouters[3],
-                    externalReports: match[3]._count.scoutReports - match[3].scoutReports.scouter.length },
+                    externalReports: match[3]._count.scoutReports - (match[3].scoutReports?.scouter?.length ?? 0) },
                 team5: { number: match[4].teamNumber, scouters: matchScouters[4],
-                    externalReports: match[4]._count.scoutReports - match[4].scoutReports.scouter.length },
+                    externalReports: match[4]._count.scoutReports - (match[4].scoutReports?.scouter?.length ?? 0) },
                 team6: { number: match[5].teamNumber, scouters: matchScouters[5],
-                    externalReports: match[5]._count.scoutReports - match[5].scoutReports.scouter.length },
+                    externalReports: match[5]._count.scoutReports - (match[5].scoutReports?.scouter?.length ?? 0) },
             }
 
-            // Ordered by ordinal match number
-            finalFormattedMatches[ordinalMatchNumber] = currData;
+            // Ordered by ordinal match number, 0 indexed
+            finalFormattedMatches[ordinalMatchNumber - 1] = currData;
         }
 
         res.status(200).send(finalFormattedMatches);
