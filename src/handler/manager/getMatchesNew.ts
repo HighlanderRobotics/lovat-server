@@ -230,16 +230,16 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
             // Add all scout reports from user's team
             const matchScouters: { name: string, scouted: boolean }[][] = [];
-            for (let i = 0; i < 5; i++) {
-                matchScouters[i] = match[i].scoutReports?.scouter?.map(e => ({ name: e.name, scouted: true })) ?? [];
+            for (let j = 0; j < 5; j++) {
+                matchScouters[j] = match[j].scoutReports?.scouter?.map(e => ({ name: e.name, scouted: true })) ?? [];
 
                 // If the current match number is within a scouter shift, add incomplete scout reports
                 if (scouterShifts[currShiftIndex] && ordinalMatchNumber > scouterShifts[currShiftIndex].startMatchOrdinalNumber) {
                     // Sketchy but iterates through team1-6, could cause problems if schema is changed
-                    for (const currScouter of scouterShifts[currShiftIndex][`team${i + 1}`]) {
+                    for (const currScouter of scouterShifts[currShiftIndex][`team${j + 1}`]) {
                         // If the sourced scout reports do not include ones from the shift, add those as incomplete
-                        if (!match[i].scoutReports?.scouter?.some(e => e.uuid === currScouter.uuid)) {
-                            matchScouters[i].push({ name: currScouter.name, scouted: false });
+                        if (!match[j].scoutReports?.scouter?.some(e => e.uuid === currScouter.uuid)) {
+                            matchScouters[j].push({ name: currScouter.name, scouted: false });
                         }
                     }
                 }
