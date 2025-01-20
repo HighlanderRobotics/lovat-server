@@ -30,7 +30,7 @@ import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
 import { addScoutReport } from "./handler/manager/addScoutReport";
 import { getScoutReport } from "./handler/manager/getScoutReport";
-import { getMatches } from "./handler/manager/getMatches";
+import { getMatches } from "./handler/manager/getMatchesNew";
 import { getSinglePicklist } from "./handler/manager/getSinglePicklist";
 import { getSingleMutablePicklist } from "./handler/manager/getSingleMutablePicklist";
 import { updatePicklist } from "./handler/manager/updatePicklist";
