@@ -95,7 +95,7 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
             })
         }
 
-        type Match = {
+        interface Match {
             key: string;
             tournamentKey: string;
             matchNumber: number;
