@@ -104,7 +104,7 @@ const FlippedPositionMap: Record<Position, number> = {
 
 // For occasional query optimizations
 const tournamentLowerBound = 497
-const teamLowerBound = 3300
+const teamLowerBound = 3300 // Total 3468 as of 2024 season
 
 // For large database requests
 const swrConstant = 300

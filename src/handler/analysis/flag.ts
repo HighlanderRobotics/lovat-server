@@ -1,4 +1,3 @@
-import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import axios from "axios";
 import { arrayAndAverageTeam } from "./coreAnalysis/arrayAndAverageTeam";

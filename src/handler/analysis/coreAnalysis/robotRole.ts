@@ -4,7 +4,8 @@ import { FlippedRoleMap } from "../analysisConstants";
 import { User } from "@prisma/client";
 
 
-export const robotRole = async (user: User, team: number): Promise<{mainRole : string}> => {
+// Finds main robot role for a team
+export const robotRole = async (user: User, team: number): Promise<{mainRole: string}> => {
     try {
         const params = z.object({
             team: z.number()
@@ -14,13 +15,15 @@ export const robotRole = async (user: User, team: number): Promise<{mainRole : s
         if (!params.success) {
             throw (params)
         };
+
+        // Counts robot roles for selected team from selected teams and tournaments
         const roles = await prismaClient.scoutReport.groupBy({
             by: ['robotRole'],
             _count:
             {
                 robotRole: true
             },
-            where:
+            where: // Filter for:
             {
                 scouter:
                 {
@@ -39,23 +42,26 @@ export const robotRole = async (user: User, team: number): Promise<{mainRole : s
                 }
             }
         })
+
+
         let eventTypeWithMostOccurrences = null;
         let maxCount = 0;
+
+        // Iterate through robot roles
         for (const element of roles) {
             if (element._count.robotRole > maxCount) {
                 maxCount = element._count.robotRole;
                 eventTypeWithMostOccurrences = element.robotRole;
             }
         };
+
         return {
             mainRole : FlippedRoleMap[eventTypeWithMostOccurrences]
         }
-
-
     }
+
     catch (error) {
         console.error(error)
         throw (error)
     }
-
 };
