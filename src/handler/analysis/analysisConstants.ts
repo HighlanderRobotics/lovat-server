@@ -1,33 +1,24 @@
 import { EventAction, HighNoteResult, Position, RobotRole, StageResult } from "@prisma/client"
 //add cooperation
 
+enum Metric {totalpoints, driverability, teleoppoints, autopoints, pickups, ampscores, speakerscores, trapscores, feeds, defense, drops, scores, stage, cooperation}
 
-const metricsCategory = ["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "feeds", "drops", "defense", "scores"]
-const metricsBreakdown = ["robotRole", "pickUp", "highNote", "stage"]
-//includes picklist sliders
-//havent done stage or highnote yet 
-const picklistSliders = ["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "trapscores", "stage", "feeds", "defense"]
+// Ranking metrics - havent done stage or highnote yet 
+const metricsCategory = [Metric.totalpoints, Metric.driverability, Metric.teleoppoints, Metric.autopoints, Metric.pickups, Metric.ampscores, Metric.speakerscores, Metric.trapscores, Metric.feeds, Metric.drops, Metric.defense, Metric.scores]
+
+// Picklist sliders for app
+const picklistSliders = [Metric.totalpoints, Metric.driverability, Metric.teleoppoints, Metric.autopoints, Metric.pickups, Metric.ampscores, Metric.speakerscores, Metric.trapscores, Metric.stage, Metric.feeds, Metric.defense]
+
+// IMPORTANT!!! toString() must return a property of ScoutReport
+enum MetricsBreakdown {robotRole, pickUp, highNote, stage}
+
 const autoEnd = 18
 const teleopStart = 19
 //much longer than needed in case they go over time/start match early
 const matchTimeEnd = 3000
-const specificMatchPageMetrics = ["defense", "ampscores", "speakerscores", "trapscores", "pickups"]
-const driverAbility = "driverability"
+
+const specificMatchPageMetrics = [Metric.defense, Metric.ampscores, Metric.speakerscores, Metric.trapscores, Metric.pickups]
 const exludedAutoEvents = [EventAction.DROP_RING, EventAction.DEFENSE, EventAction.FEED_RING]
-// const picklistSliderMap = {
-//     "totalpoints": "totalPoints",
-//     "driverability": "driverAbility",
-//     "teleoppoints": "teleopPoints",
-//     "autopoints": "autoPoints",
-//     "pickups": "pickUps",
-//     "ampscores": "ampScores",
-//     "speakerscores": "speakerScores",
-//     "trapscores": "trapScores",
-//     "stage": "stage",
-//     "cooperation": "cooperation",
-//     "feeds": "feeds",
-//     "defense": "defense"
-// }
 
 const stageMap = {
     [StageResult.NOTHING]: 0,
@@ -36,11 +27,13 @@ const stageMap = {
     [StageResult.ONSTAGE_HARMONY]: 3
 
 }
+
 // const trapMap = {
 //     [] :0,
 //     "FAILED" : 0,
 //     "SUCCESSFUL" : 5
 // }
+
 const highNoteMap = {
     [HighNoteResult.NOT_ATTEMPTED]: 0,
     [HighNoteResult.FAILED]: 0,
@@ -53,24 +46,18 @@ const roleMap = {
     [RobotRole.FEEDER]: 2,
     [RobotRole.IMMOBILE]: 3
 }
-const metricToEvent = {
-    "totalpoints": "totalpoints",
-    "teleoppoints": "teleoppoints",
-    "driverability": "driverability",
-    "autopoints": "autopoints",
-    //use locations
-    "pickups": [EventAction.PICK_UP],
-    "ampscores": [EventAction.SCORE],
-    "speakerscores": [EventAction.SCORE],
-    "trapscores": [EventAction.SCORE],
-    "stage": "stage",
-    "cooperation": "cooperation",
-    "feeds": [EventAction.FEED_RING],
-    "drops": [EventAction.DROP_RING],
-    "defense": [EventAction.DEFENSE],
-    "scores" : "scores"
 
+const metricToEvent: Partial<Record<Metric, EventAction>> = {
+    //use locations
+    [Metric.pickups]: EventAction.PICK_UP,
+    [Metric.ampscores]: EventAction.SCORE,
+    [Metric.speakerscores]: EventAction.SCORE,
+    [Metric.trapscores]: EventAction.SCORE,
+    [Metric.feeds]: EventAction.FEED_RING,
+    [Metric.defense]: EventAction.DEFENSE,
+    [Metric.drops]: EventAction.DROP_RING,
 }
+
 const FlippedActionMap = {
     [EventAction.LEAVE]: 0,
     [EventAction.PICK_UP]: 1,
@@ -81,8 +68,8 @@ const FlippedActionMap = {
     // 6 : ["START"],
     // 7 : ["STOP"],
     [EventAction.STARTING_POSITION]: 8
-
 }
+
 const FlippedPositionMap = {
     [Position.NONE]: 0,
     [Position.AMP]: 1,
@@ -101,13 +88,14 @@ const FlippedPositionMap = {
     [Position.GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE]: 14,
     [Position.GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE]: 15,
 }
+
 const tournamentLowerBound = 497
-const teamLowerBound = 3300
+const teamLowerBound = 3300 // Total 3468 as of 2024 season
 
 const swrConstant = 300
 const ttlConstant = 200
 
 const multiplerBaseAnalysis = 4
-export {metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, driverAbility, metricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant};
+export {Metric, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, stageMap, highNoteMap, metricToEvent, exludedAutoEvents, FlippedPositionMap, FlippedActionMap, roleMap, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant};
 
 

@@ -7,7 +7,9 @@ import { teamLowerBound, tournamentLowerBound } from "../analysisConstants";
 
 
 
-
+/**
+ * Averages stage points for a given team
+ */
 export const stagePicklistTeam = async (user: User, team: number) => {
     try {
         const params = z.object({
