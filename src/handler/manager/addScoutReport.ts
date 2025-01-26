@@ -3,6 +3,7 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { PickUpMap, PositionMap, MatchTypeMap, HighNoteMap, StageResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
+import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
 
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
@@ -49,8 +50,6 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             res.status(400).send({"error" : paramsScoutReport, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         };
-
-        // Make sure UUID does not already exist in database
         const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
             where :
             {
@@ -62,8 +61,6 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             res.status(400).send({"error" : `The scout report uuid ${paramsScoutReport.data.uuid} already exists.`, "displayError" : "Scout report already uploaded"})
             return
         }
-
-        // Check that scouter exists
         const scouter = await prismaClient.scouter.findUnique({
             where :
             {
@@ -75,8 +72,6 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             res.status(400).send({"error" : `This ${paramsScoutReport.data.scouterUuid} has been deleted or never existed.`, "displayError" : "This scouter has been deleted. Reset your settings and choose a new scouter."})
             return
         }
-
-        // Add tournament matches if they dont exist
         const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
             where :
             {
@@ -87,9 +82,6 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         {
             await addTournamentMatches(paramsScoutReport.data.tournamentKey)
         }
-
-
-        // Get key for relevant TeamMatchData
         const matchRow = await prismaClient.teamMatchData.findFirst({
             where :
             {
@@ -106,9 +98,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         }
         const matchKey = matchRow.key
         
-
-        // Create scout report in database
-        await prismaClient.scoutReport.create(
+        const row = await prismaClient.scoutReport.create(
             {
                 data: {
                     //constants
@@ -127,19 +117,15 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 }
             }
         )
-        const scoutReportUuid = paramsScoutReport.data.uuid
-        
-
+        const scoutReportUuid = row.uuid
         const eventDataArray = []
         const events = req.body.events;
         let ampOn = false
-        for (const event of events) {
+        for(const event of events) {
             let points = 0;
             const time = event[0];
-            const action = EventActionMap[event[1]][0];
             const position = PositionMap[event[2]][0];
-            
-            // Calculate points for event
+            const action = EventActionMap[event[1]][0]
             if (action === "START") {
                 ampOn = true
             }
@@ -177,10 +163,9 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 }
 
             }
-
-
             if (action !== "START" && action !== "STOP") {
-                // Parameter verification
+
+
                 const paramsEvents = z.object({
                     time: z.number(),
                     action: z.enum(["DEFENSE", "SCORE", "PICK_UP", "LEAVE", "DROP_RING", "FEED_RING", "STARTING_POSITION"]),
@@ -198,8 +183,6 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     res.status(400).send({"error" : paramsEvents, "displayError" : "Invalid input. Make sure you are using the correct input."});
                     return;
                 };
-                
-                // Creating event row
                 eventDataArray.push( {
                         time: paramsEvents.data.time,
                         action: paramsEvents.data.action,
@@ -207,18 +190,15 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                         points: paramsEvents.data.points,
                         scoutReportUuid: scoutReportUuid
                 })
+                
             }
         }
-
-        // Push event rows to prisma database
         const rows = await prismaClient.event.createMany({
             data : eventDataArray
         })
-
-        //recalibrate the max reasonable points for every year 
+        const totalPoints = await totalPointsScoutingLead(scoutReportUuid)
+        //recalibrate the max resonable points for every year 
         //uncomment for scouting lead
-
-        // const totalPoints = await totalPointsScoutingLead(scoutReportUuid)
         // if (totalPoints === 0 || totalPoints > 80) {
         //     await prismaClient.flaggedScoutReport.create({
         //         data:
@@ -226,15 +206,16 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         //             note: `${totalPoints} recorded, not including endgame`,
         //             scoutReportUuid: scoutReportUuid
         //         }
+
         //     })
         // }
-
         res.status(200).send('done adding data');
     }
 
     catch (error) {
         console.log(error)
         res.status(500).send({"error" : error, "displayError" : "Error"});
+
     }
 }
 

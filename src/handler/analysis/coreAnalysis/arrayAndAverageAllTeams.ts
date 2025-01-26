@@ -1,10 +1,10 @@
 import prismaClient from '../../../prismaClient'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { Metric, teamLowerBound, tournamentLowerBound } from "../analysisConstants";
+import { teamLowerBound, tournamentLowerBound } from "../analysisConstants";
 import { arrayAndAverageTeamFast } from "./arrayAndAverageTeamFast";
 
-// This is never used?
-export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: Metric): Promise<{ average: number, timeLine: number[] }> => {
+
+export const arrayAndAverageAllTeam = async (req: AuthenticatedRequest, metric: string): Promise<{ average: number, timeLine: number[] }> => {
     try {
         return new Promise(async (resolve, reject) => {
             let teams = []

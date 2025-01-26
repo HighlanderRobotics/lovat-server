@@ -1,9 +1,8 @@
 import { User } from "@prisma/client";
 import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
-import { Metric } from "../analysisConstants";
 
 
-export const picklistArrayAndAverageAllTeamNoTournament = async (user: User, metric: Metric, teams: number[]): Promise<{ average: number, teamAverages: Map<number, number>, timeLine: number[] }> => {
+export const picklistArrayAndAverageAllTeamNoTournament = async (user: User, metric: string, teams: number[]): Promise<{ average: number, teamAverages: Map<number, number>, timeLine: number[] }> => {
     try {
 
 

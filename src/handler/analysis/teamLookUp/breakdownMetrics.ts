@@ -2,7 +2,7 @@ import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
-import { MetricsBreakdown } from "../analysisConstants";
+import { metricsBreakdown } from "../analysisConstants";
 
 
 export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response) => {
@@ -17,8 +17,8 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
             return;
         };
         const result = {}
-        for (const element in MetricsBreakdown) {
-            result[element] = await nonEventMetric(req.user, params.data.team, MetricsBreakdown[element as keyof typeof MetricsBreakdown])
+        for (const element of metricsBreakdown) {
+            result[element] = await nonEventMetric(req.user, params.data.team, element )
         };
         res.status(200).send(result)
     }

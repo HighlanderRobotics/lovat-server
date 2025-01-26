@@ -1,11 +1,11 @@
 import prismaClient from '../../../prismaClient'
-import { autoEnd, matchTimeEnd, Metric, teleopStart } from "../analysisConstants";
+import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
 import { Position, User } from "@prisma/client";
 
 
-export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promise<number> => {
+export const averageAllTeamOneQuerey = async (user: User, metric: string): Promise<number> => {
     try {
-        if (metric === Metric.driverability) {
+        if (metric === "driverability" || metric === "driverAbility") {
             const data = await prismaClient.scoutReport.aggregate({
                 _avg: {
                     driverAbility: true
@@ -31,19 +31,19 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
         }
         else {
             let position = null
-            if (metric === Metric.ampscores) {
+            if (metric === "ampscores" || metric === "ampScores") {
                 position = Position.AMP
             }
-            else if (metric === Metric.speakerscores) {
+            else if (metric === "speakerscores" || metric === "speakerScores") {
                 position = Position.SPEAKER
             }
-            else if (metric === Metric.trapscores) {
+            else if (metric === "trapscores" || metric === "trapScores") {
                 position = Position.TRAP
             }
             else {
                 position = Position.NONE
             }
-            if (metric === Metric.pickups) {
+            if (metric === "pickups") {
                 const allTeamData = await prismaClient.event.groupBy({
                     by : ["scoutReportUuid"],
                     _count :
@@ -76,21 +76,21 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
                 let averagePickups = allTeamData.reduce((acc, curr) => {
                     return acc + curr._count._all; 
                 }, 0) / allTeamData.length;
-                if (!averagePickups)
+                if(!averagePickups)
                 {
                     averagePickups = 0
                 }
                 return averagePickups
             }
-            else if (metric === Metric.teleoppoints || metric === Metric.autopoints || metric === Metric.totalpoints)
+            else if(metric.includes("points") || metric.includes("Points"))
             {
                 let timeMin = 0
                 let timeMax = matchTimeEnd
-                if (metric === Metric.teleoppoints)
+                if(metric.includes("teleop") || metric.includes("Teleop"))
                 {
                     timeMin = teleopStart
                 }
-                else if (metric === Metric.autopoints)
+                else if(metric.includes("auto") || metric.includes("Auto"))
                 {
                     timeMax = autoEnd
                 }

@@ -3,7 +3,6 @@ import z from 'zod'
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { arrayAndAverageTeam } from "./arrayAndAverageTeam";
 import { User } from "@prisma/client";
-import { Metric } from '../analysisConstants';
 
 
 export const cooperationSingleMatch = async (user: User, matchKey: string, team: number): Promise<number> => {
@@ -80,8 +79,8 @@ export const cooperationSingleMatch = async (user: User, matchKey: string, team:
 
 };
 async function getDifferenceOneTeam(user : User, matchKey: string, teamNumber: number) {
-    const averageTotalTeamPoints = (await arrayAndAverageTeam(user, Metric.totalpoints, teamNumber)).average
-    const teamPointsInThisMatch = await (await singleMatchEventsAverage(user, true, matchKey, teamNumber, Metric.totalpoints))
+    const averageTotalTeamPoints = (await arrayAndAverageTeam(user, "totalpoints", teamNumber)).average
+    const teamPointsInThisMatch = await (await singleMatchEventsAverage(user, true, matchKey, teamNumber, "totalPoints"))
     if (teamPointsInThisMatch !== null) {
         return teamPointsInThisMatch - averageTotalTeamPoints
     }

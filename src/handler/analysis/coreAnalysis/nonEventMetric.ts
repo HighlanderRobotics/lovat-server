@@ -1,11 +1,27 @@
 import prismaClient from '../../../prismaClient'
+import z from 'zod'
 import { User, ScoutReport } from "@prisma/client";
-import { MetricsBreakdown } from "../analysisConstants";
 
-/** Counts percentage reports of given metric */
-export const nonEventMetric = async (user: User, team: number, metric: MetricsBreakdown): Promise<object> => {
+
+export const nonEventMetric = async (user: User, team : number, metric: string): Promise<object> => {
     try {
-        // Group reports by metric and count responses
+        const params = z.object({
+            // UPDATE WITH COLUMNS IN THE SCHEMA EACH YEAR
+            column: z.enum([
+                checkPropertyKey<ScoutReport>("robotRole"),
+                checkPropertyKey<ScoutReport>("pickUp"),
+                checkPropertyKey<ScoutReport>("highNote"),
+                checkPropertyKey<ScoutReport>("stage")
+            ]),
+            team: z.number()
+        }).safeParse({
+            column: metric,
+            team: team
+        })
+        if (!params.success) {
+            throw (params)
+        };
+
         const countArray = await prismaClient.scoutReport.groupBy({
             _count:
             {
@@ -15,36 +31,38 @@ export const nonEventMetric = async (user: User, team: number, metric: MetricsBr
             {
                 teamMatchData:
                 {
-                    teamNumber: team,
-                    tournamentKey:
+                    teamNumber: params.data.team,
+                    tournamentKey :
                     {
-                        in: user.tournamentSource
+                        in : user.tournamentSource
                     }
                 },
-                scouter:
+                scouter : 
                 {
-                    sourceTeamNumber:
+                    sourceTeamNumber :
                     {
-                        in: user.teamSource
+                        in : user.teamSource
                     }
                 }
             },
-            by: [metric.toString() as keyof ScoutReport]
+            by: [params.data.column]
         })
-
-        // Change into map of metric value -> percentage of reports
         const totalCount = countArray.reduce((acc, group) => acc + group._count.scouterUuid, 0);
         const transformedData = countArray.reduce((acc, group) => {
-            const columnValue = group[metric.toString()].toLowerCase();
+            const columnValue = group[params.data.column as string].toLowerCase();
             const percentage = group._count.scouterUuid / totalCount;
             acc[columnValue] = percentage;
             return acc;
         }, {});
-
-        return transformedData;
-    }
+        return transformedData
+    } 
     catch (error) {
         console.error(error)
         throw (error)
     }
 };
+
+// Throws compiler error if keys do not match properties
+function checkPropertyKey<T>(key: keyof T) {
+    return key;
+}

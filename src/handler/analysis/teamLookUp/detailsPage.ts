@@ -3,15 +3,14 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
-import { averageAllTeamOneQuery } from "../coreAnalysis/averageAllTeamsOneQuery";
-import { Metric } from "../analysisConstants";
+import { averageAllTeamOneQuerey } from "../coreAnalysis/averageAllTeamsOneQuerey";
 
 
 export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const params = z.object({
             team: z.number(),
-            metric: z.nativeEnum(Metric)
+            metric: z.enum(["totalpoints", "driverability", "teleoppoints", "autopoints", "pickups", "ampscores", "speakerscores", "feeds", "trapscores", "drops", "scores"])
         }).safeParse({
             team: Number(req.params.team),
             metric: req.params.metric
@@ -21,16 +20,16 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             res.status(400).send(params);
             return;
         };
-        if (params.data.metric === Metric.autopoints) {
+        if (params.data.metric === "autopoints") {
             const autoPaths = await autoPathsTeam(req.user, params.data.team)
             res.status(200).send({ paths: autoPaths })
             return
         }
-        else if (params.data.metric === Metric.scores) {
+        else if (params.data.metric === "scores") {
             const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
-            const allTeamAverage = await averageAllTeamOneQuery(req.user, params.data.metric)
+            const allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
             // let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
-            const speakerScores = await arrayAndAverageTeam(req.user, Metric.speakerscores, params.data.team)
+            const speakerScores = await arrayAndAverageTeam(req.user, "speakerscores", params.data.team)
 
             const result = {
                 array: speakerScores,
@@ -43,7 +42,7 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
         }
         else {
             const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
-            const allTeamAverage = await averageAllTeamOneQuery(req.user, params.data.metric)
+            const allTeamAverage = await averageAllTeamOneQuerey(req.user, params.data.metric)
             const result = {
                 array: teamAverageAndTimeLine.timeLine,
                 result: teamAverageAndTimeLine.average,

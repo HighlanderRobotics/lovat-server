@@ -1,25 +1,28 @@
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { highNoteMap, matchTimeEnd, Metric, metricToEvent, stageMap } from "../analysisConstants";
+import { highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants";
 import { EventAction, Position, User } from "@prisma/client";
 
 
-export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: Metric, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
+
+export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
-        switch (metric1) {
-            case Metric.ampscores:
-                position = Position.AMP
-                break;
-            case Metric.speakerscores:
-                position = Position.SPEAKER
-                break;
-            case Metric.trapscores:
-                position = Position.TRAP
-                break;
-            default:
-                position = Position.NONE
-                break;
+        if(metric1 === "ampscores"  || metric1 === "ampScores")
+        {
+            position = Position.AMP
+        }
+        else if(metric1 === "speakerscores" || metric1 === "speakerScores")
+        {
+            position = Position.SPEAKER
+        }
+        else if(metric1 === "trapscores" || metric1 === "trapScores")
+        {
+            position = Position.TRAP
+        }
+        else
+        {
+            position = Position.NONE
         }
 
         // const params = z.object({
@@ -30,6 +33,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
         //     matchKey: matchKey,
         //     metric: metric1
         // })
+        const metric = metricToEvent[metric1][0]
         // if (metric1 === "stage") {
         //     const scoutReports = await prismaClient.scoutReport.findMany({
         //         where:
@@ -61,7 +65,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
         //     }
         //     return stagePointsAverage
         // }
-        if (metric1 === Metric.scores)
+        if(metric1=== "scores")
         {
             const match = await prismaClient.event.aggregate({
                 _count:
@@ -85,7 +89,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
             return match._count._all
         
         }
-        if (metric1 === Metric.pickups)
+        if(metric1 === "pickups")
         {
             const match = await prismaClient.event.aggregate({
                 _count:
@@ -108,7 +112,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
             
             return match._count._all
         }
-        else if (metric1 === Metric.driverability) {
+        else if (metric1 === "driverability") {
 
             const match = await prismaClient.scoutReport.findUnique({
                
@@ -150,11 +154,11 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
                 eventsAverage = 0
             }
             //adds endgame points if nessisary
-            if (metric1 === Metric.totalpoints) {
+            if (metric1 === "totalpoints" || metric1 === "teleoppoints") {
                 const element = await prismaClient.scoutReport.findUnique({
                     where:
                     {
-                        uuid: scoutReportUuid
+                        uuid : scoutReportUuid
                     }
                 })
                 let stagePoints = stageMap[element.stage] + highNoteMap[element.highNote]
@@ -171,8 +175,6 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
         }
        
         else {
-            const metric = metricToEvent[metric1][0]
-
             const params = z.object({
                 metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE]),
                 position : z.enum([Position.NONE, Position.AMP, Position.TRAP, Position.SPEAKER])
@@ -201,6 +203,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
                         gte: timeMin
                     },
                     position : position
+
                 }
             })
             return match._count._all
@@ -211,4 +214,5 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
         console.error(error.error)
         throw (error)
     }
+
 };
