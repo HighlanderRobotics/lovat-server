@@ -161,9 +161,9 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
 }
 
 // Less verbose and don't want to create new arrays constantly
-const posL1: Partial<Position>[] = [Position.LEVEL_ONE_A, Position.LEVEL_ONE_B, Position.LEVEL_ONE_C];
-const posL2: Partial<Position>[] = [Position.LEVEL_TWO_A, Position.LEVEL_TWO_B, Position.LEVEL_TWO_C];
-const posL3: Partial<Position>[] = [Position.LEVEL_THREE_A, Position.LEVEL_THREE_B, Position.LEVEL_THREE_C];
+const posL1: Position[] = [Position.LEVEL_ONE_A, Position.LEVEL_ONE_B, Position.LEVEL_ONE_C];
+const posL2: Position[] = [Position.LEVEL_TWO_A, Position.LEVEL_TWO_B, Position.LEVEL_TWO_C];
+const posL3: Position[] = [Position.LEVEL_THREE_A, Position.LEVEL_THREE_B, Position.LEVEL_THREE_C];
 
 function condenseReport(report: PointsReport, userTeam: number): CondensedReport {
     const data: CondensedReport = {
