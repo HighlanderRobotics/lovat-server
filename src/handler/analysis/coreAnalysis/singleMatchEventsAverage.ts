@@ -39,19 +39,11 @@ export const singleMatchEventsAverage = async (user: User,  isPointAverage: bool
 
             for(const element of scoutReports)
             {
-                let data = null
-                if (metric1 === Metric.cooperation)
-                {
-                    data = await cooperationSingleMatch(user, matchKey, team)
-                }
-                else
-                {
-                    data = await singleMatchSingleScoutReport(user, isPointAverage, element.uuid, metric1, timeMin, timeMax)
-                }
+                let data = await singleMatchSingleScoutReport(user, isPointAverage, element.uuid, metric1, timeMin, timeMax)
+                
                 if(data !== null)
                 {
                     matchDataArray.push(data)
-                    
                 }
             }
             if(matchDataArray.length !== 0)

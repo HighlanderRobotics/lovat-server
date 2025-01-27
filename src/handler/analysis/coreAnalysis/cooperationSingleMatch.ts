@@ -80,8 +80,8 @@ export const cooperationSingleMatch = async (user: User, matchKey: string, team:
 
 };
 async function getDifferenceOneTeam(user : User, matchKey: string, teamNumber: number) {
-    const averageTotalTeamPoints = (await arrayAndAverageTeam(user, Metric.totalpoints, teamNumber)).average
-    const teamPointsInThisMatch = await (await singleMatchEventsAverage(user, true, matchKey, teamNumber, Metric.totalpoints))
+    const averageTotalTeamPoints = (await arrayAndAverageTeam(user, Metric.totalPoints, teamNumber)).average
+    const teamPointsInThisMatch = await (await singleMatchEventsAverage(user, true, matchKey, teamNumber, Metric.totalPoints))
     if (teamPointsInThisMatch !== null) {
         return teamPointsInThisMatch - averageTotalTeamPoints
     }

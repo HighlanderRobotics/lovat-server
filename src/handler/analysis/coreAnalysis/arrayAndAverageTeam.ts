@@ -67,7 +67,7 @@ export const arrayAndAverageTeam = async (user: User, metric: Metric, team: numb
             return acc;
         }, {});
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
-        if (metric === Metric.stage) {
+        if (metric === Metric.bargePoints) {
             return { average: await stagePicklistTeam(user, team), timeLine: null }
         }
         const timeLineArray = []
@@ -80,16 +80,16 @@ export const arrayAndAverageTeam = async (user: User, metric: Metric, team: numb
             // IMO needs a refactor to take scout reports in with initial query
             for (const match of tournament) {
                 // Add time constraints if necessary
-                if (metric === Metric.teleoppoints) {
+                if (metric === Metric.teleopPoints) {
                     const currData = singleMatchEventsAverage(user, true, match.key, team, metric, teleopStart, matchTimeEnd)
                     currDatas.push(currData)
                 }
-                else if (metric === Metric.autopoints) {
+                else if (metric === Metric.autoPoints) {
                     const currData = singleMatchEventsAverage(user, true, match.key, team, metric, 0, autoEnd)
                     currDatas.push(currData)
                 }
                 else {
-                    const currData = singleMatchEventsAverage(user, metric === Metric.totalpoints, match.key, team, metric)
+                    const currData = singleMatchEventsAverage(user, metric === Metric.totalPoints, match.key, team, metric)
                     currDatas.push(currData)
                 }
             }

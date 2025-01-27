@@ -26,7 +26,7 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             }
         })
         const data = {
-            totalPoints: await singleMatchSingleScoutReport(req.user, true, scoutReport.uuid, Metric.totalpoints),
+            totalPoints: await singleMatchSingleScoutReport(req.user, true, scoutReport.uuid, Metric.totalPoints),
             driverAbility: scoutReport.driverAbility,
             role : FlippedRoleMap[scoutReport.robotRole],
             stage : stageMap[scoutReport.stage],

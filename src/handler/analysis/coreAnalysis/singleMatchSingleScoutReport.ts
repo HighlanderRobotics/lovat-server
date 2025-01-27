@@ -1,21 +1,45 @@
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { highNoteMap, matchTimeEnd, Metric, metricToEvent, stageMap } from "../analysisConstants";
+import { matchTimeEnd, Metric, metricToEvent } from "../analysisConstants";
 import { EventAction, Position, User } from "@prisma/client";
+import { BargeResultMap, BargeResultPointMap } from '../../manager/managerConstants';
 
 
 export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: Metric, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
+        let action = null
         switch (metric1) {
-            case Metric.ampscores:
-                position = Position.AMP
+            case Metric.coralL1:
+                action = EventAction.SCORE_CORAL
+                position = Position.LEVEL_ONE
                 break;
-            case Metric.speakerscores:
-                position = Position.SPEAKER
+            case Metric.coralL2:
+                action = EventAction.SCORE_CORAL
+                position = Position.LEVEL_TWO
                 break;
-            case Metric.trapscores:
-                position = Position.TRAP
+            case Metric.coralL3:
+                action = EventAction.SCORE_CORAL
+                position = Position.LEVEL_THREE
+                break;
+            case Metric.coralL4:
+                action = EventAction.SCORE_CORAL
+                position = Position.LEVEL_FOUR
+                break;
+            case Metric.netScores:
+                action = EventAction.SCORE_NET
+                break;
+            case Metric.netFails:
+                action = EventAction.FAIL_NET
+                break;
+            case Metric.algaeDrops:
+                action = EventAction.DROP_ALGAE
+                break;
+            case Metric.coralDrops:
+                action = EventAction.DROP_CORAL
+                break;
+            case Metric.processorScores:
+                action = EventAction.SCORE_PROCESSOR
                 break;
             default:
                 position = Position.NONE
@@ -61,65 +85,286 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
         //     }
         //     return stagePointsAverage
         // }
-        if (metric1 === Metric.scores)
-        {
-            const match = await prismaClient.event.aggregate({
-                _count:
-                {
-                    _all: true
-                },
-                where:
-                {
-                    scoutReport: {
-                        uuid : scoutReportUuid
-                    },
-                    action: "SCORE",
-                    time:
-                    {
-                        lte: timeMax,
-                        gte: timeMin
-                    },
-                }
-            })
-            
-            return match._count._all
-        
-        }
-        if (metric1 === Metric.pickups)
-        {
-            const match = await prismaClient.event.aggregate({
-                _count:
-                {
-                    _all: true
-                },
-                where:
-                {
-                    scoutReport: {
-                        uuid : scoutReportUuid
-                    },
-                    action: "PICK_UP",
-                    time:
-                    {
-                        lte: timeMax,
-                        gte: timeMin
-                    },
-                }
-            })
-            
-            return match._count._all
-        }
-        else if (metric1 === Metric.driverability) {
+        //     if (metric1 === Metric.netScores) {
+        //         const match = await prismaClient.event.aggregate({
+        //             _count:
+        //             {
+        //                 _all: true
+        //             },
+        //             where:
+        //             {
+        //                 scoutReport: {
+        //                     uuid: scoutReportUuid
+        //                 },
+        //                 action: "SCORE_NET",
+        //                 time:
+        //                 {
+        //                     lte: timeMax,
+        //                     gte: timeMin
+        //                 },
+        //             }
+        //         })
+        //     }
+        //     else if (metric1 === Metric.coralL1) {
+        //         const match = await prismaClient.event.aggregate({
+        //             _count:
+        //             {
+        //                 _all: true
+        //             },
+        //             where:
+        //             {
+        //                 scoutReport: {
+        //                     uuid: scoutReportUuid
+        //                 },
+        //                 action: "SCORE_CORAL",
+        //                 position: "LEVEL_ONE",
+        //                 time:
+        //                 {
+        //                     lte: timeMax,
+        //                     gte: timeMin
+        //                 },
+        //             }
+        //         })
+        //     }
+        //     else if (metric1 === Metric.coralL2) {
+        //         const match = await prismaClient.event.aggregate({
+        //             _count:
+        //             {
+        //                 _all: true
+        //             },
+        //             where:
+        //             {
+        //                 scoutReport: {
+        //                     uuid: scoutReportUuid
+        //                 },
+        //                 action: "SCORE_CORAL",
+        //                 position: "LEVEL_TWO",
+        //                 time:
+        //                 {
+        //                     lte: timeMax,
+        //                     gte: timeMin
+        //                 },
+        //             }
+        //         })
+        //         return match._count._all
+
+        //     }
+        //     else if (metric1 === Metric.coralL3) {
+        //         const match = await prismaClient.event.aggregate({
+        //             _count:
+        //             {
+        //                 _all: true
+        //             },
+        //             where:
+        //             {
+        //                 scoutReport: {
+        //                     uuid: scoutReportUuid
+        //                 },
+        //                 action: "SCORE_CORAL",
+        //                 position: "LEVEL_THREE",
+        //                 time:
+        //                 {
+        //                     lte: timeMax,
+        //                     gte: timeMin
+        //                 },
+        //             }
+        //         })
+        //         return match._count._all
+
+        //     }
+        //     else if (metric1 === Metric.coralL4) {
+        //         const match = await prismaClient.event.aggregate({
+        //             _count:
+        //             {
+        //                 _all: true
+        //             },
+        //             where:
+        //             {
+        //                 scoutReport: {
+        //                     uuid: scoutReportUuid
+        //                 },
+        //                 action: "SCORE_CORAL",
+        //                 position: "LEVEL_FOUR",
+        //                 time:
+        //                 {
+        //                     lte: timeMax,
+        //                     gte: timeMin
+        //                 },
+        //             }
+        //         })
+        //         return match._count._all
+
+        //     }
+        //     if (metric1 === Metric.processorScores) {
+        //         const match = await prismaClient.event.aggregate({
+        //             _count:
+        //             {
+        //                 _all: true
+        //             },
+        //             where:
+        //             {
+        //                 scoutReport: {
+        //                     uuid: scoutReportUuid
+        //                 },
+        //                 action: "SCORE_PROCESSOR",
+
+        //                 time:
+        //                 {
+        //                     lte: timeMax,
+        //                     gte: timeMin
+        //                 },
+        //             }
+        //         })
+        //         return match._count._all
+        //     }
+
+        //     if (metric1 === Metric.algaePickups) {
+        //     const match = await prismaClient.event.aggregate({
+        //         _count:
+        //         {
+        //             _all: true
+        //         },
+        //         where:
+        //         {
+        //             scoutReport: {
+        //                 uuid: scoutReportUuid
+        //             },
+        //             action: "PICKUP_ALGAE",
+        //             time:
+        //             {
+        //                 lte: timeMax,
+        //                 gte: timeMin
+        //             },
+        //         }
+        //     })
+
+        //     return match._count._all
+        // }
+        // if (metric1 === Metric.coralPickups) {
+        //     const match = await prismaClient.event.aggregate({
+        //         _count:
+        //         {
+        //             _all: true
+        //         },
+        //         where:
+        //         {
+        //             scoutReport: {
+        //                 uuid: scoutReportUuid
+        //             },
+        //             action: "PICKUP_CORAL",
+        //             time:
+        //             {
+        //                 lte: timeMax,
+        //                 gte: timeMin
+        //             },
+        //         }
+        //     })
+
+        //     return match._count._all
+        // }
+        // if (metric1 === Metric.algaeDrops) {
+        //     const match = await prismaClient.event.aggregate({
+        //         _count:
+        //         {
+        //             _all: true
+        //         },
+        //         where:
+        //         {
+        //             scoutReport: {
+        //                 uuid: scoutReportUuid
+        //             },
+        //             action: "DROP_ALGAE",
+        //             time:
+        //             {
+        //                 lte: timeMax,
+        //                 gte: timeMin
+        //             },
+        //         }
+        //     })
+
+        //     return match._count._all
+        // }
+        // if (metric1 === Metric.coralDrops) {
+        //     const match = await prismaClient.event.aggregate({
+        //         _count:
+        //         {
+        //             _all: true
+        //         },
+        //         where:
+        //         {
+        //             scoutReport: {
+        //                 uuid: scoutReportUuid
+        //             },
+        //             action: "DROP_CORAL",
+        //             time:
+        //             {
+        //                 lte: timeMax,
+        //                 gte: timeMin
+        //             },
+        //         }
+        //     })
+
+        //     return match._count._all
+        // }
+        // if (metric1 === Metric.netFails) {
+        //     const match = await prismaClient.event.aggregate({
+        //         _count:
+        //         {
+        //             _all: true
+        //         },
+        //         where:
+        //         {
+        //             scoutReport: {
+        //                 uuid: scoutReportUuid
+        //             },
+        //             action: "FAIL_NET",
+        //             time:
+        //             {
+        //                 lte: timeMax,
+        //                 gte: timeMin
+        //             },
+        //         }
+        //     })
+
+        //     return match._count._all
+        // }
+        if (metric1 === Metric.driverAbility) {
 
             const match = await prismaClient.scoutReport.findUnique({
-               
+
                 where:
                 {
-                    uuid : scoutReportUuid
+                    uuid: scoutReportUuid
                 }
             })
             //avg could be multiple results from one scout
             return match.driverAbility
         }
+        else if (metric1 === Metric.autonLeaves) {
+            const match = await prismaClient.event.aggregate({
+                _count:
+                {
+                    _all: true
+                },
+                where:
+                {
+                    scoutReport: {
+                        uuid: scoutReportUuid
+                    },
+                    action: "AUTO_LEAVE",
+                    time:
+                    {
+                        lte: timeMax,
+                        gte: timeMin
+                    },
+                }
+            })
+
+
+            return match._count._all
+
+        }
+
         else if (isPointAverage) {
             const sumOfMatches = await prismaClient.event.aggregate({
                 _sum:
@@ -129,7 +374,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
                 where:
                 {
                     scoutReport: {
-                        uuid : scoutReportUuid
+                        uuid: scoutReportUuid
 
                     },
                     //no need for action, either has points or has 0
@@ -145,45 +390,29 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
                 }
             })
             let eventsAverage = sumOfMatches._sum.points
-            if(!eventsAverage)
-            {
+            if (!eventsAverage) {
                 eventsAverage = 0
             }
             //adds endgame points if nessisary
-            if (metric1 === Metric.totalpoints) {
+            if (metric1 === Metric.totalPoints) {
                 const element = await prismaClient.scoutReport.findUnique({
                     where:
                     {
                         uuid: scoutReportUuid
                     }
                 })
-                let stagePoints = stageMap[element.stage] + highNoteMap[element.highNote]
-                if(!stagePoints)
-                {
+                let stagePoints = BargeResultPointMap[element.bargeResult]
+                if (!stagePoints) {
                     stagePoints = 0
                 }
                 return eventsAverage + stagePoints
             }
-            else
-            {
+            else {
                 return eventsAverage
             }
         }
-       
+
         else {
-            const metric = metricToEvent[metric1][0]
-
-            const params = z.object({
-                metric: z.enum([EventAction.PICK_UP, EventAction.DEFENSE, EventAction.DROP_RING, EventAction.FEED_RING, EventAction.LEAVE, EventAction.SCORE]),
-                position : z.enum([Position.NONE, Position.AMP, Position.TRAP, Position.SPEAKER])
-            }).safeParse({
-                metric: metric,
-                position : position
-            })
-            if (!params.success) {
-                throw (params)
-            };
-
             const match = await prismaClient.event.aggregate({
                 _count:
                 {
@@ -192,19 +421,19 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
                 where:
                 {
                     scoutReport: {
-                        uuid : scoutReportUuid
+                        uuid: scoutReportUuid
                     },
-                    action: params.data.metric,
+                    action: action,
+                    position: position,
                     time:
                     {
                         lte: timeMax,
                         gte: timeMin
                     },
-                    position : position
                 }
             })
-            return match._count._all
 
+            return match._count._all
         }
     }
     catch (error) {
