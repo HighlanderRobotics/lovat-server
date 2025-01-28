@@ -59,6 +59,7 @@ interface PointsReport {
 /**
  * Sends csv file of rows of AggregatedTeamData instances, organized by team.
  * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
+ * Non-averaged results default to highest report, except in the case of robot roles.
  */
 export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -211,6 +212,7 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
         numReports: reports.length,
     };
 
+    // Out of scope iteration variables
     const roles: Record<RobotRole, number> = {
         OFFENSE: 0,
         DEFENSE: 0,
@@ -219,6 +221,7 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
     };
     let coral: CoralPickup = CoralPickup.NONE;
     let algae: AlgaePickup = AlgaePickup.NONE;
+
     // Main iteration for most aggregation summing
     reports.forEach(report => {
         // Sum driver ability and robot role
@@ -229,15 +232,15 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
         // Implement a safety for this? One incorrect report could mess up the data
         data.algaeKnocking ||= report.KnocksAlgae === KnocksAlgae.TRUE;
         data.underShallowCage ||= report.UnderShallowCage === UnderShallowCage.TRUE;
-        if (report.coralPickup === CoralPickup.BOTH || (coral !== report.coralPickup && report.coralPickup !== CoralPickup.NONE)) {
-            coral === CoralPickup.BOTH;
-        } else if (coral === CoralPickup.NONE) {
+        if (coral === CoralPickup.NONE) {
             coral = report.coralPickup;
+        } else if (coral !== report.coralPickup && report.coralPickup !== CoralPickup.NONE) {
+            coral === CoralPickup.BOTH;
         }
-        if (report.algaePickup === AlgaePickup.BOTH || (algae !== report.algaePickup && report.algaePickup !== AlgaePickup.NONE)) {
-            algae === AlgaePickup.BOTH;
-        } else if (algae === AlgaePickup.NONE) {
+        if (algae === AlgaePickup.NONE) {
             algae = report.algaePickup;
+        } else if (algae !== report.algaePickup && report.algaePickup !== AlgaePickup.NONE) {
+            algae === AlgaePickup.BOTH;
         }
 
         // Sum endgame results
@@ -335,6 +338,9 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
         });
     });
 
+    data.coralPickup = coral;
+    data.algaePickup = algae;
+
     data.matchesImmobile = roles.IMMOBILE || 0;
     // Remove IMMOBILE state from main roles
     delete roles.IMMOBILE;
@@ -369,12 +375,6 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
         }
     }
 
-    // Add endgame points to teleop
-    data.avgTeleopPoints +=
-        data.percBargePark * endgameToPoints[BargeResult.PARKED]
-        + data.percBargeShallow * endgameToPoints[BargeResult.SHALLOW]
-        + data.percBargeDeep * endgameToPoints[BargeResult.DEEP]
-
     // Divide relevent sums by number of matches to get mean
     data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints / numMatches);
     data.avgAutoPoints = roundToHundredth(data.avgAutoPoints / numMatches);
@@ -401,7 +401,14 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
     data.percBargeDeep = Math.round(data.percBargeDeep / numMatches * 1000) / 10;
     data.percBargeFail = Math.round(data.percBargeFail / numMatches * 1000) / 10;
 
+    // Add endgame points to teleop
+    data.avgTeleopPoints +=
+        data.percBargePark * endgameToPoints[BargeResult.PARKED]
+        + data.percBargeShallow * endgameToPoints[BargeResult.SHALLOW]
+        + data.percBargeDeep * endgameToPoints[BargeResult.DEEP]
+
     // Trim remaining datapoints
+    data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints);
     data.matchesImmobile = roundToHundredth(data.matchesImmobile);
 
     return data;

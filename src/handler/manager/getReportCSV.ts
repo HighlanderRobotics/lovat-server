@@ -7,7 +7,7 @@ import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
-class CondensedReport {
+export interface CondensedReport {
     match: string
     teamNumber: number
     role: string
@@ -193,7 +193,7 @@ function condenseReport(report: PointsReport, userTeam: number): CondensedReport
         activeAuton: false,
         endgame: report.bargeResult,
         scouter: "",
-        notes: report.notes.replace(/,/g, ";", ) // Avoid commas in a csv...
+        notes: report.notes.replace(/,/g, ";") // Avoid commas in a csv...
     };
 
     // Sum match points and actions
@@ -270,7 +270,7 @@ function condenseReport(report: PointsReport, userTeam: number): CondensedReport
     data.teleopPoints += endgameToPoints[data.endgame as BargeResult];
 
     if (report.scouter.sourceTeamNumber === userTeam) {
-        data.scouter = report.scouter.name;
+        data.scouter = report.scouter.name.replace(/,/g, ";"); // Avoid commas in a csv...
     }
 
     return data;

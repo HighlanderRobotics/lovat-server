@@ -2,49 +2,54 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
-import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction, Position } from "@prisma/client";
-import { autoEnd } from "../analysis/analysisConstants";
+import { UserRole, RobotRole, EventAction, Position, AlgaePickup, CoralPickup, BargeResult, KnocksAlgae, UnderShallowCage, Scouter, Event } from "@prisma/client";
+import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
+import { CondensedReport } from "./getReportCSV";
 
-interface AggregatedTeamMatchData {
+// Essentially the same as CondensedReport ::: maybe use condensed report, remove notes, make scouter an array?
+// interface AggregatedTeamMatchData = Omit<CondensedReport, "notes"> {}
+
+interface TTTest {
     match: string
     teamNumber: number
     role: string
-    groundPickup: boolean
-    chutePickup: boolean
-    avgTeleopPoints: number
-    avgAutoPoints: number
-    avgDriverAbility: number
-    avgPickups: number
-    avgFeeds: number
-    avgDrops: number
-    avgScores: number
-    avgAmpScores: number
-    avgSpeakerScores: number
-    avgTrapScores: number
-    avgDefense: number
-    stage: string
-    highNoteSuccess: boolean
-    scouters: string
+    coralPickup: string
+    algaePickup: string
+    algaeKnocking: boolean
+    underShallowCage: boolean
+    teleopPoints: number
+    autoPoints: number
+    driverAbility: number
+    feeds: number
+    defends: number
+    coralPickups: number
+    algaePickups: number
+    coralDrops: number
+    algaeDrops: number
+    coralL1: number
+    coralL2: number
+    coralL3: number
+    coralL4: number
+    processorScores: number
+    netScores: number
+    netFails: number
+    activeAuton: boolean
+    endgame: string
+    scouter: string
 }
 
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
     robotRole: RobotRole
-    stage: StageResult
-    highNote: HighNoteResult
-    pickUp: PickUp
+    algaePickup: AlgaePickup
+    coralPickup: CoralPickup
+    bargeResult: BargeResult
+    KnocksAlgae: KnocksAlgae
+    UnderShallowCage: UnderShallowCage
     driverAbility: number
-    events: {
-        time: number
-        action: EventAction
-        position: Position
-        points: number
-    }[]
-    scouter: {
-        sourceTeamNumber: number
-        name: string
-    }
+    events: Partial<Event>[]
+    scouter: Partial<Scouter>
 }
 
 // Map of stage events to points given
@@ -56,7 +61,7 @@ const stagePointMap = {
 }
 
 /**
- * Sends csv file of rows of AggregatedTeamMatchData instances, organized by match.
+ * Sends csv file of rows of AggregatedTeamMatchData instances, organized by team AND match.
  * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
  * Non-averaged results default to highest report, except in the case of robot roles (to coincide with getTeamCSV).
  */
@@ -99,16 +104,12 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
                     },
                     select: {
                         robotRole: true,
-                        stage: true,
-                        highNote: true,
-                        pickUp: true,
+                        algaePickup: true,
+                        coralPickup: true,
+                        bargeResult: true,
+                        KnocksAlgae: true,
+                        UnderShallowCage: true,
                         driverAbility: true,
-                        scouter: {
-                            select: {
-                                sourceTeamNumber: true,
-                                name: true
-                            }
-                        },
                         events: {
                             select: {
                                 time: true,
@@ -116,10 +117,17 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
                                 position: true,
                                 points: true
                             }
+                        },
+                        scouter: {
+                            select: {
+                                sourceTeamNumber: true,
+                                name: true
+                            }
                         }
                     }
                 }
             },
+            // Ordering prioritizes top to bottom
             orderBy: [
                 {matchType: "desc"},
                 {matchNumber: "asc"},
@@ -132,36 +140,30 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
             return;
         }
 
-        // Group reports by match type, match number, and team number (match first to reduce the size of recursive arrays)
-        const groupedByMatch = datapoints.reduce<Record<string, PointsReport[][][]>>((acc, cur) => {
-            acc[cur.matchType] ||= []
-
-            acc[cur.matchType][cur.matchNumber] ||= [];
-
-            acc[cur.matchType][cur.matchNumber][cur.teamNumber] = cur.scoutReports;
-
+        // Group reports by match, then team number (match first for ordering purposes)
+        const groupedByMatch = datapoints.reduce<Record<string, PointsReport[][]>>((acc, cur) => {
+            acc[cur.matchType.at(0) + cur.matchNumber] ||= []
+            acc[cur.matchType.at(0) + cur.matchNumber][cur.teamNumber] = cur.scoutReports;
             return acc;
         }, {});
 
         // Here comes the mouthful
-        const aggregatedData: AggregatedTeamMatchData[] = [];
-        for (const [matchType, i] of Object.entries(groupedByMatch)) {
-            i.forEach((j, matchNumber) => {
-                j.forEach((reports, teamNumber) => {
-                    const match = matchType.at(0) + matchNumber;
-                    if (reports.length !== 0) {
-                        // Append names of scouters from the same team as the user
-                        const scouterNames = reports.filter(e => e.scouter.sourceTeamNumber === req.user.teamNumber).map(e => e.scouter.name);
-                        aggregatedData.push(aggregateTeamMatchReports(match, teamNumber, reports, scouterNames));
-                    } else {
-                        // Push empty row if there are no reports available
-                        // @ts-expect-error
-                        aggregatedData.push({
-                            match: match,
-                            teamNumber: teamNumber
-                        });
-                    }
-                })
+        const aggregatedData: Omit<CondensedReport, "notes">[] = [];
+        for (const [match, teams] of Object.entries(groupedByMatch)) {
+            teams.forEach((reports, teamNumber) => {
+                // Iterate through all TMD
+                if (reports.length === 0) {
+                    // Push empty row if there are no reports available
+                    aggregatedData.push({
+                        ...new Object() as Omit<CondensedReport, "notes">,
+                        match: match,
+                        teamNumber: teamNumber
+                    });
+                } else {
+                    // Append names of scouters from the same team as the user
+                    const scouterNames = reports.filter(e => e.scouter.sourceTeamNumber === req.user.teamNumber).map(e => e.scouter.name.replace(/,/g, ";")); // Avoid commas in a csv...
+                    aggregatedData.push(aggregateTeamMatchReports(match, teamNumber, reports, scouterNames));
+                }
             });
         }
 
@@ -191,126 +193,192 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
     }
 }
 
-function aggregateTeamMatchReports(match: string, teamNumber: number, reports: Omit<PointsReport, "scouter">[], scouters: string[]): AggregatedTeamMatchData {
-    const data: AggregatedTeamMatchData = {
+// Less verbose and don't want to create new arrays constantly
+const posL1: Position[] = [Position.LEVEL_ONE_A, Position.LEVEL_ONE_B, Position.LEVEL_ONE_C];
+const posL2: Position[] = [Position.LEVEL_TWO_A, Position.LEVEL_TWO_B, Position.LEVEL_TWO_C];
+const posL3: Position[] = [Position.LEVEL_THREE_A, Position.LEVEL_THREE_B, Position.LEVEL_THREE_C];
+
+function aggregateTeamMatchReports(match: string, teamNumber: number, reports: Omit<PointsReport, "scouter">[], scouters: string[]): Omit<CondensedReport, "notes"> {
+    const data: Omit<CondensedReport, "notes"> = {
         match: match,
         teamNumber: teamNumber,
         role: null,
-        groundPickup: false,
-        chutePickup: false,
-        avgTeleopPoints: 0,
-        avgAutoPoints: 0,
-        avgDriverAbility: 0,
-        avgPickups: 0,
-        avgFeeds: 0,
-        avgDrops: 0,
-        avgScores: 0,
-        avgAmpScores: 0,
-        avgSpeakerScores: 0,
-        avgTrapScores: 0,
-        avgDefense: 0,
-        stage: null,
-        highNoteSuccess: false,
-        scouters: scouters.join(",")
-    }
+        coralPickup: null,
+        algaePickup: null,
+        algaeKnocking: false,
+        underShallowCage: false,
+        teleopPoints: 0,
+        autoPoints: 0,
+        driverAbility: 0,
+        feeds: 0,
+        defends: 0,
+        coralPickups: 0,
+        algaePickups: 0,
+        coralDrops: 0,
+        algaeDrops: 0,
+        coralL1: 0,
+        coralL2: 0,
+        coralL3: 0,
+        coralL4: 0,
+        processorScores: 0,
+        netScores: 0,
+        netFails: 0,
+        activeAuton: false,
+        endgame: null,
+        scouter: scouters.join(",")
+    };
 
+    // Out of scope iteration variables
     const roleCount: Record<RobotRole, number> = {
         OFFENSE: 0,
         DEFENSE: 0,
         FEEDER: 0,
         IMMOBILE: 0
     };
-
-    const stageCount: Record<StageResult, number> = {
-        ONSTAGE_HARMONY: 0,
-        ONSTAGE: 0,
-        PARK: 0,
-        NOTHING: 0
+    const endgameCount: Record<BargeResult, number> = {
+        DEEP: 0,
+        SHALLOW: 0,
+        FAILED_DEEP: 0,
+        FAILED_SHALLOW: 0,
+        PARKED: 0,
+        NOT_ATTEMPTED: 0
     }
+    let coral: CoralPickup = CoralPickup.NONE;
+    let algae: AlgaePickup = AlgaePickup.NONE;
 
     reports.forEach(report => {
-        data.avgDriverAbility += report.driverAbility;
+        data.driverAbility += report.driverAbility;
         roleCount[report.robotRole]++;
-        stageCount[report.stage]++;
+        endgameCount[report.bargeResult]++;
 
-        // Set if chute/groud pickup and high note scoring has been observed
-        data.chutePickup ||= report.pickUp !== PickUp.GROUND;
-        data.groundPickup ||= report.pickUp !== PickUp.CHUTE;
-        data.highNoteSuccess ||= report.highNote == HighNoteResult.SUCCESSFUL;
+        // Set discrete robot capabilities
+        data.algaeKnocking ||= report.KnocksAlgae === KnocksAlgae.TRUE;
+        data.underShallowCage ||= report.UnderShallowCage === UnderShallowCage.TRUE;
+        if (coral === CoralPickup.NONE) {
+            coral = report.coralPickup;
+        } else if (coral !== report.coralPickup && report.coralPickup !== CoralPickup.NONE) {
+            coral === CoralPickup.BOTH;
+        }
+        if (algae === AlgaePickup.NONE) {
+            algae = report.algaePickup;
+        } else if (algae !== report.algaePickup && report.algaePickup !== AlgaePickup.NONE) {
+            algae === AlgaePickup.BOTH;
+        }
 
         // Sum match points and actions
         report.events.forEach(event => {
             if (event.time < autoEnd) {
-                data.avgAutoPoints += event.points;
+                data.autoPoints += event.points;
             } else {
-                data.avgTeleopPoints += event.points;
+                data.teleopPoints += event.points
             }
 
             switch (event.action) {
-                case EventAction.DEFENSE:
-                    data.avgDefense++;
+                case EventAction.PICKUP_CORAL:
+                    data.coralPickups++;
                     break;
-                case EventAction.DROP_RING:
-                    data.avgDrops++;
+                case EventAction.PICKUP_ALGAE:
+                    data.algaePickups++;
                     break;
-                case EventAction.FEED_RING:
-                    data.avgFeeds++;
+                case EventAction.FEED:
+                    data.feeds++;
                     break;
-                case EventAction.PICK_UP:
-                    data.avgPickups++;
+                case EventAction.AUTO_LEAVE:
+                    data.activeAuton = true;
                     break;
-                case EventAction.SCORE:
-                    data.avgScores++;
+                case EventAction.DEFEND:
+                    data.defends++;
+                    break;
+                case EventAction.SCORE_NET:
+                    data.netScores++;
+                    break;
+                case EventAction.FAIL_NET:
+                    data.netFails++;
+                    break;
+                case EventAction.SCORE_PROCESSOR:
+                    data.processorScores++;
+                    break;
+                case EventAction.SCORE_CORAL:
                     switch (event.position) {
-                        case Position.AMP:
-                            data.avgAmpScores++;
+                        case Position.LEVEL_ONE:
+                            data.coralL1++;
                             break;
-                        case Position.SPEAKER:
-                            data.avgSpeakerScores++;
+                        case Position.LEVEL_TWO:
+                            data.coralL2++;
                             break;
-                        case Position.TRAP:
-                            data.avgTrapScores++;
+                        case Position.LEVEL_THREE:
+                            data.coralL3++;
+                            break;
+                        case Position.LEVEL_FOUR:
+                            data.coralL4++;
+                            break;
+                        default:
+                            // During auto
+                            if (posL1.includes(event.position)) {
+                                data.coralL1++;
+                            } else if (posL2.includes(event.position)) {
+                                data.coralL2++;
+                            } else if (posL3.includes(event.position)) {
+                                data.coralL3++;
+                            } else {
+                                data.coralL4++;
+                            }
                             break;
                     }
+                    break;
+                case EventAction.DROP_ALGAE:
+                    data.algaeDrops++;
+                    break;
+                case EventAction.DROP_CORAL:
+                    data.coralDrops++;
                     break;
             }
         });
     })
 
-    // Find highest-reported robot role and stage interaction
+    data.coralPickup = coral;
+    data.algaePickup = algae;
+
+    // Find highest-reported robot role and endgame interaction
     Object.entries(roleCount).reduce((highest, role) => {
-        // Using >= gives precedence to lower-frequency roles such as Feeder
+        // Using >= gives precedence to later keys
         if (role[1] >= highest) {
             highest = role[1];
             data.role = role[0];
         }
         return highest;
     }, 0);
-
-    Object.entries(stageCount).reduce((highest, stage) => {
-        // Using > gives precedence to highest report
-        if (stage[1] > highest) {
-            highest = stage[1];
-            data.stage = stage[0];
+    Object.entries(endgameCount).reduce((most, val) => {
+        // Using > gives precedence to earlier keys
+        if (val[1] > most) {
+            most = val[1];
+            data.endgame = val[0];
         }
-        return highest;
+        return most;
     }, 0);
 
-    // Add stage points to teleop
-    data.avgTeleopPoints += stagePointMap[data.stage];
-
     // Divide relevent sums by number of matches to get mean
-    data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints / reports.length);
-    data.avgAutoPoints = roundToHundredth(data.avgAutoPoints / reports.length);
-    data.avgDriverAbility = roundToHundredth(data.avgDriverAbility / reports.length);
-    data.avgPickups = roundToHundredth(data.avgPickups / reports.length);
-    data.avgFeeds = roundToHundredth(data.avgFeeds / reports.length);
-    data.avgDrops = roundToHundredth(data.avgDrops / reports.length);
-    data.avgScores = roundToHundredth(data.avgScores / reports.length);
-    data.avgAmpScores = roundToHundredth(data.avgAmpScores / reports.length);
-    data.avgSpeakerScores = roundToHundredth(data.avgSpeakerScores / reports.length);
-    data.avgTrapScores = roundToHundredth(data.avgTrapScores / reports.length);
-    data.avgDefense = roundToHundredth(data.avgDefense / reports.length);
+    if (reports.length > 1) {
+        data.teleopPoints = roundToHundredth(data.teleopPoints / reports.length);
+        data.autoPoints = roundToHundredth(data.autoPoints / reports.length);
+        data.driverAbility = roundToHundredth(data.driverAbility / reports.length);
+        data.feeds = roundToHundredth(data.feeds / reports.length);
+        data.defends = roundToHundredth(data.defends / reports.length);
+        data.coralPickups = roundToHundredth(data.coralPickups / reports.length);
+        data.algaePickups = roundToHundredth(data.algaePickups / reports.length);
+        data.coralDrops = roundToHundredth(data.coralDrops / reports.length);
+        data.algaeDrops = roundToHundredth(data.algaeDrops / reports.length);
+        data.coralL1 = roundToHundredth(data.coralL1 / reports.length);
+        data.coralL2 = roundToHundredth(data.coralL2 / reports.length);
+        data.coralL3 = roundToHundredth(data.coralL3 / reports.length);
+        data.coralL4 = roundToHundredth(data.coralL4 / reports.length);
+        data.processorScores = roundToHundredth(data.processorScores / reports.length);
+        data.netScores = roundToHundredth(data.netScores / reports.length);
+        data.netFails = roundToHundredth(data.netFails / reports.length);
+    }
+
+    // Add endgame points to teleop
+    data.teleopPoints += endgameToPoints[data.endgame];
 
     return data;
 }
