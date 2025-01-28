@@ -1,7 +1,6 @@
 import prismaClient from '../../../prismaClient'
 import { matchTimeEnd, Metric } from "../analysisConstants";
 import { singleMatchSingleScoutReport } from "./singleMatchSingleScoutReport";
-import { cooperationSingleMatch } from "./cooperationSingleMatch";
 import { User } from "@prisma/client";
 // import { cooperationSingleMatch } from "./cooperationSingleMatch";
 
@@ -39,7 +38,7 @@ export const singleMatchEventsAverage = async (user: User,  isPointAverage: bool
 
             for(const element of scoutReports)
             {
-                let data = await singleMatchSingleScoutReport(user, isPointAverage, element.uuid, metric1, timeMin, timeMax)
+                const data = await singleMatchSingleScoutReport(user, isPointAverage, element.uuid, metric1, timeMin, timeMax)
                 
                 if(data !== null)
                 {

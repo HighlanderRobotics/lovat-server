@@ -1,8 +1,7 @@
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
-import { matchTimeEnd, Metric, metricToEvent } from "../analysisConstants";
+import { matchTimeEnd, Metric } from "../analysisConstants";
 import { EventAction, Position, User } from "@prisma/client";
-import { BargeResultMap, BargeResultPointMap } from '../../manager/managerConstants';
+import { BargeResultPointMap } from '../../manager/managerConstants';
 
 
 export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: Metric, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {

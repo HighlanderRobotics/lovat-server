@@ -7,38 +7,6 @@ import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
 import { CondensedReport } from "./getReportCSV";
 
-// Essentially the same as CondensedReport ::: maybe use condensed report, remove notes, make scouter an array?
-// interface AggregatedTeamMatchData = Omit<CondensedReport, "notes"> {}
-
-interface TTTest {
-    match: string
-    teamNumber: number
-    role: string
-    coralPickup: string
-    algaePickup: string
-    algaeKnocking: boolean
-    underShallowCage: boolean
-    teleopPoints: number
-    autoPoints: number
-    driverAbility: number
-    feeds: number
-    defends: number
-    coralPickups: number
-    algaePickups: number
-    coralDrops: number
-    algaeDrops: number
-    coralL1: number
-    coralL2: number
-    coralL3: number
-    coralL4: number
-    processorScores: number
-    netScores: number
-    netFails: number
-    activeAuton: boolean
-    endgame: string
-    scouter: string
-}
-
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
     robotRole: RobotRole
@@ -50,14 +18,6 @@ interface PointsReport {
     driverAbility: number
     events: Partial<Event>[]
     scouter: Partial<Scouter>
-}
-
-// Map of stage events to points given
-const stagePointMap = {
-    ONSTAGE_HARMONY: 5,
-    ONSTAGE: 3,
-    PARK: 1,
-    NOTHING: 0
 }
 
 /**

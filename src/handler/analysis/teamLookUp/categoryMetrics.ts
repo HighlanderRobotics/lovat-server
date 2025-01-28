@@ -1,7 +1,7 @@
 import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { Metric, metricsCategory } from "../analysisConstants";
+import { metricsCategory } from "../analysisConstants";
 import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
 
 
