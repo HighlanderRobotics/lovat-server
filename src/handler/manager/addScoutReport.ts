@@ -24,7 +24,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             ]),
             coralPickup: z.enum(["NONE", "GROUND", "STATION", "BOTH"]),
             algaePickup: z.enum(["NONE","GROUND", "REEF", "BOTH"]),
-            knocksAlgae: z.
+            knocksAlgae: z,
             driverAbility: z.number(),
             scouterUuid: z.string(),
             matchType : z.enum(["QUALIFICATION", "ELIMINATION"]),

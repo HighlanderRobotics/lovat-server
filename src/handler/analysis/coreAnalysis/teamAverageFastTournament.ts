@@ -1,5 +1,4 @@
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
 import { matchTimeEnd, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
 import { BargeResult, EventAction, Position, User } from "@prisma/client";
 
@@ -252,34 +251,42 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
             //         ((stageDataMap[StageResult.PARK] || 0))) / stageAttempts;
             // }
         }
-        // else if (metric1 === Metric.scores) {
-        //     // Returns average scores per scout report
-        //     const groupedMatches = await prismaClient.event.groupBy({
-        //         cacheStrategy:
-        //         {
-        //             swr: swrConstant,
-        //             ttl: ttlConstant,
-        //         },
-        //         by: ["scoutReportUuid"],
-        //         _count:
-        //         {
-        //             _all: true
-        //         },
-        //         where:
-        //         {
-        //             scoutReport: {
-        //                 uuid: scoutReportUuid
-        //             },
-        //             action: action,
-        //             position: position,
-        //             time:
-        //             {
-        //                 lte: timeMax,
-        //                 gte: timeMin
-        //             },
-        //         }
-        //     })
-    }
+        else {
+     // Returns average of given EventAction per scout report
+
+    // Attempt to convert metric to an EventAction
+            const metric = metricToEvent[metric1];
+            if (!(metric in EventAction)) {
+                throw "Metric failed conversion to event action";
+            };
+                        // Returns average scores per scout report
+
+            const groupedMatches = await prismaClient.event.groupBy({
+                cacheStrategy:
+                {
+                    swr: swrConstant,
+                    ttl: ttlConstant,
+                },
+                by: ["scoutReportUuid"],
+                _count:
+                {
+                    _all: true
+                },
+                where:
+                {
+                    scoutReport: {
+                        uuid: scoutReportUuid
+                    },
+                    action: action,
+                    position: position,
+                    time:
+                    {
+                        lte: timeMax,
+                        gte: timeMin
+                    },
+                }
+            })
+
             
 
 
@@ -293,48 +300,10 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
 
     return avg
 }
-        else {
-    // Returns average of given EventAction per scout report
 
-    // Attempt to convert metric to an EventAction
-    const metric = metricToEvent[metric1];
-    if (!(metric in EventAction)) {
-        throw "Metric failed conversion to event action";
-    };
+   
 
-    const groupedMatches = await prismaClient.event.groupBy({
-        cacheStrategy:
-        {
-            swr: swrConstant,
-            ttl: ttlConstant,
-        },
-        by: ["scoutReportUuid"],
-        _count:
-        {
-            _all: true
-        },
-        where:
-        {
-            scoutReport: scoutReportFilter,
-            action: metric,
-            time:
-            {
-                lte: timeMax,
-                gte: timeMin
-            },
-            position: position
-        }
-    })
 
-    let avg = groupedMatches.reduce((accumulator, current) => {
-        return accumulator + current._count._all;
-    }, 0) / groupedMatches.length;
-    if (!avg) {
-        avg = 0
-    }
-    
-    return avg
-}
     }
     catch (error) {
     console.error(error.error)
