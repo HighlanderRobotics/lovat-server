@@ -48,6 +48,15 @@ const EventActionMap = {
     2 : [RobotRole.FEEDER],
     3 : [RobotRole.IMMOBILE]
   }
+
+  const BargeResultPointMap = {
+    [BargeResult.NOT_ATTEMPTED] : 0,
+    [BargeResult.PARKED] : 2,
+    [BargeResult.SHALLOW] : 6,
+    [BargeResult.FAILED_SHALLOW]: 0,
+    [BargeResult.DEEP] : 12,
+    [BargeResult.FAILED_DEEP] : 0,
+  }
   const BargeResultMap = {
     0 : [BargeResult.NOT_ATTEMPTED],
     1 : [BargeResult.PARKED],

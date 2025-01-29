@@ -1,11 +1,11 @@
 import prismaClient from '../../../prismaClient'
 import { autoEnd, matchTimeEnd, Metric, teleopStart } from "../analysisConstants";
-import { Position, User } from "@prisma/client";
+import { EventAction, Position, User } from "@prisma/client";
 
 
 export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promise<number> => {
     try {
-        if (metric === Metric.driverability) {
+        if (metric === Metric.driverAbility) {
             const data = await prismaClient.scoutReport.aggregate({
                 _avg: {
                     driverAbility: true
@@ -31,19 +31,22 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
         }
         else {
             let position = null
-            if (metric === Metric.ampscores) {
-                position = Position.AMP
+            if (metric === Metric.coralL1) {
+                position = Position.LEVEL_ONE
             }
-            else if (metric === Metric.speakerscores) {
-                position = Position.SPEAKER
+            else if (metric === Metric.coralL2) {
+                position = Position.LEVEL_TWO
             }
-            else if (metric === Metric.trapscores) {
-                position = Position.TRAP
+            else if (metric === Metric.coralL3) {
+                position = Position.LEVEL_THREE
+            }
+            else if (metric === Metric.coralL4) {
+                position = Position.LEVEL_FOUR
             }
             else {
                 position = Position.NONE
             }
-            if (metric === Metric.pickups) {
+            if (metric === Metric.coralPickups || metric === Metric.algaePickups) {
                 const allTeamData = await prismaClient.event.groupBy({
                     by : ["scoutReportUuid"],
                     _count :
@@ -68,7 +71,10 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
                                 }
                             }
                         },
-                        action : "PICK_UP"
+                        action : {
+                            [Metric.algaePickups]: EventAction.PICKUP_ALGAE,
+                            [Metric.coralPickups]: EventAction.PICKUP_CORAL,
+                        }[metric]
 
                     }
 
@@ -82,15 +88,15 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
                 }
                 return averagePickups
             }
-            else if (metric === Metric.teleoppoints || metric === Metric.autopoints || metric === Metric.totalpoints)
+            else if (metric === Metric.teleopPoints || metric === Metric.autoPoints || metric === Metric.totalPoints)
             {
                 let timeMin = 0
                 let timeMax = matchTimeEnd
-                if (metric === Metric.teleoppoints)
+                if (metric === Metric.teleopPoints)
                 {
                     timeMin = teleopStart
                 }
-                else if (metric === Metric.autopoints)
+                else if (metric === Metric.autoPoints)
                 {
                     timeMax = autoEnd
                 }
@@ -162,7 +168,13 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
                                 }
                             }
                         },
-                        action : "SCORE",
+                        action : {
+                            in: [
+                                EventAction.SCORE_CORAL,
+                                EventAction.SCORE_NET,
+                                EventAction.SCORE_PROCESSOR,
+                            ]
+                        },
                         position : position
 
                     }

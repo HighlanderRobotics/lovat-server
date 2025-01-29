@@ -1,11 +1,11 @@
-import { EventAction, CoralPickup, AlgaePickup, BargeResult, KnocksAlgae, UnderShallowCage, Position, RobotRole, } from "@prisma/client"
+import { EventAction, BargeResult, Position, RobotRole} from "@prisma/client"
 //add cooperation
 
 // General numeric metrics
 enum Metric {
     totalPoints, driverAbility, teleopPoints, autoPoints, feeds, defends, // General game metrics
     coralPickups, algaePickups, coralDrops, algaeDrops, // Game piece interactions
-    coralL1, coralL2, coralL3, coralL4, coralScores, processorScores, netScores, netFails, // Game piece scoring
+    coralL1, coralL2, coralL3, coralL4, processorScores, netScores, netFails, // Game piece scoring
     autonLeaves, bargePoints // Auto/Endgame
 }
 
@@ -14,17 +14,17 @@ enum Metric {
 enum MetricsBreakdown {robotRole, algaePickup, coralPickup, bargeResult, KnocksAlgae, UnderShallowCage}
 
 // Ranking metrics
-const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails, Metric.autonLeaves]
+const metricsCategory: Metric[] = [Metric.bargePoints, Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails, Metric.autonLeaves]
 
 // Picklist sliders for app
-const picklistSliders = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.bargePoints, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4]
+const picklistSliders = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4]
 
 const autoEnd = 18
 const teleopStart = 19
 //much longer than needed in case they go over time/start match early
 const matchTimeEnd = 3000
 
-const specificMatchPageMetrics = [Metric.defends, Metric.algaePickups, Metric.coralPickups, Metric.coralScores, Metric.processorScores, Metric.netScores, Metric.netFails]
+const specificMatchPageMetrics = [Metric.defends, Metric.algaePickups, Metric.coralPickups, Metric.processorScores, Metric.netScores, Metric.netFails]
 
 // Easy point calculation
 const endgameToPoints: Record<BargeResult, number> = {
@@ -44,7 +44,6 @@ const metricToEvent: Partial<Record<Metric, EventAction>> = {
     [Metric.algaePickups]: EventAction.PICKUP_ALGAE,
     [Metric.coralDrops]: EventAction.DROP_CORAL,
     [Metric.algaeDrops]: EventAction.DROP_ALGAE,
-    [Metric.coralScores]: EventAction.SCORE_CORAL,
     [Metric.processorScores]: EventAction.SCORE_PROCESSOR,
     [Metric.netScores]: EventAction.SCORE_NET,
     [Metric.netFails]: EventAction.FAIL_NET,
@@ -104,7 +103,7 @@ const FlippedPositionMap: Record<Position, number> = {
 
 // For occasional query optimizations
 const tournamentLowerBound = 497
-const teamLowerBound = 3300
+const teamLowerBound = 3300 // Total 3468 as of 2024 season
 
 // For large database requests
 const swrConstant = 300

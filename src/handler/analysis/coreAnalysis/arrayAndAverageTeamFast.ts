@@ -1,5 +1,4 @@
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
 import { autoEnd, matchTimeEnd, swrConstant, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
 import { teamAverageFastTournament } from "./teamAverageFastTournament";
@@ -7,8 +6,19 @@ import { Metric } from "../analysisConstants";
 import { User } from "@prisma/client";
 
 
+/**
+ * Performance optimized heuristic for finding the average value of a metric for a team
+ * 
+ * @param user user requesting
+ * @param metric metric to average
+ * @param team team to check
+ * @returns object with average property
+ */
 export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: number): Promise<{ average: number }> => {
     try {
+<<<<<<< Updated upstream
+        if (metric === Metric.stage) {
+=======
         const params = z.object({
             team: z.number(),
         }).safeParse({
@@ -18,7 +28,8 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
             throw (params)
         };
 
-        if (metric === Metric.stage) {
+        if (metric === Metric.bargePoints) {
+>>>>>>> Stashed changes
             return { average: await stagePicklistTeam(user, team) }
         }
 
@@ -31,10 +42,10 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
                     ttl : ttlConstant,
                 },
                 where: {
-                    teamNumber: team,
+                    teamNumber: team, // if (teamNumber === team)
                     scoutReports:
                     {
-                        some: {}
+                        some: {} // if scoutReports exist
                     }
                 },
                 include:
@@ -72,7 +83,7 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
                     },
                     tournamentKey:
                     {
-                        in: user.tournamentSource
+                        in: user.tournamentSource // user.tournamentSource includes tournamentKey
                     },
                 },
                 include:
@@ -114,20 +125,21 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
 
         const tournamentAverages = []
-        //group into tournaments, calculate all averages indivudally so they can all be properly weighted after the nested loops
+        // Group into tournaments, calculate all averages individually so they can all be properly weighted after the nested loops
+        // IMO needs a refactor to take scout reports in with initial query
         for (const tournamentMatchRows of tournamentGroups) {
             const currAvg = null
-            if (metric === Metric.teleoppoints) {
-                const currData = await teamAverageFastTournament(user, team, true, Metric.teleoppoints, tournamentMatchRows[0].tournamentKey, teleopStart, matchTimeEnd)
+            if (metric === Metric.teleopPoints) {
+                const currData = await teamAverageFastTournament(user, team, true, Metric.teleopPoints, tournamentMatchRows[0].tournamentKey, teleopStart, matchTimeEnd)
                 tournamentAverages.push(currData)
             }
-            else if (metric === Metric.autopoints) {
-                const currData = await teamAverageFastTournament(user, team, true, Metric.autopoints, tournamentMatchRows[0].tournamentKey, 0, autoEnd)
+            else if (metric === Metric.autoPoints) {
+                const currData = await teamAverageFastTournament(user, team, true, Metric.autoPoints, tournamentMatchRows[0].tournamentKey, 0, autoEnd)
                 tournamentAverages.push(currData)
 
             }
             else {
-                const currData = await teamAverageFastTournament(user, team, metric === Metric.totalpoints, metric, tournamentMatchRows[0].tournamentKey)
+                const currData = await teamAverageFastTournament(user, team, metric === Metric.totalPoints, metric, tournamentMatchRows[0].tournamentKey)
                 tournamentAverages.push(currData)
             }
 

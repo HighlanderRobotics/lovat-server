@@ -2,34 +2,41 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
-import { UserRole, RobotRole, StageResult, HighNoteResult, PickUp, EventAction, Position } from "@prisma/client";
-import { autoEnd } from "../analysis/analysisConstants";
+import { UserRole, RobotRole, EventAction, Position, AlgaePickup, CoralPickup, BargeResult, KnocksAlgae, UnderShallowCage, Event } from "@prisma/client";
+import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
 
 interface AggregatedTeamData {
     teamNumber: number
     mainRole: string
     secondaryRole: string
-    groundPickup: boolean
-    chutePickup: boolean
+    coralPickup: string
+    algaePickup: string
+    algaeKnocking: boolean
+    underShallowCage: boolean
     avgTeleopPoints: number
     avgAutoPoints: number
     avgDriverAbility: number
-    avgPickups: number
     avgFeeds: number
-    avgDrops: number
-    avgScores: number
-    avgAmpScores: number
-    avgSpeakerScores: number
-    avgTrapScores: number
-    avgDefense: number
-    // avgOffensePoints: number
-    percStagePark: number
-    percStageClimb: number
-    percStageClimbHarmony: number
-    percStageNone: number
-    highNoteFails: number
-    highNoteSuccesses: number
+    avgDefends: number
+    avgCoralPickups: number
+    avgAlgaePickups: number
+    avgCoralDrops: number
+    avgAlgaeDrops: number
+    avgCoralL1: number
+    avgCoralL2: number
+    avgCoralL3: number
+    avgCoralL4: number
+    avgProcessorScores: number
+    avgNetScores: number
+    avgNetFails: number
+    // avgOffensePoints: number - idea to calculate avgPoints only during offense matches, breaks down with conflicting role reports
+    percActiveAutons: number
+    percBargeNone: number
+    percBargePark: number
+    percBargeShallow: number
+    percBargeDeep: number
+    percBargeFail: number
     matchesImmobile: number
     numMatches: number
     numReports: number
@@ -38,16 +45,13 @@ interface AggregatedTeamData {
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
     robotRole: RobotRole
-    stage: StageResult
-    highNote: HighNoteResult
-    pickUp: PickUp
+    algaePickup: AlgaePickup
+    coralPickup: CoralPickup
+    bargeResult: BargeResult
+    KnocksAlgae: KnocksAlgae
+    UnderShallowCage: UnderShallowCage
     driverAbility: number
-    events: {
-        time: number
-        action: EventAction
-        position: Position
-        points: number
-    }[]
+    events: Partial<Event>[]
     // This property represents the weighting of this report in the final aggregation [0..1]
     weight: number
 }
@@ -55,6 +59,7 @@ interface PointsReport {
 /**
  * Sends csv file of rows of AggregatedTeamData instances, organized by team.
  * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
+ * Non-averaged results default to highest report, except in the case of robot roles.
  */
 export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -75,8 +80,7 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
             return;
         }
 
-        // TeamMatchData instances have unique combinations of team, match, and tournament keys
-        // These instances will be sorted by team number and then looped through and aggregated
+        // TMD instances will be sorted by team number and then looped through and aggregated
         const datapoints = await prismaClient.teamMatchData.findMany({
             where: {
                 tournamentKey: params.data.tournamentKey
@@ -93,9 +97,11 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
                     },
                     select: {
                         robotRole: true,
-                        stage: true,
-                        highNote: true,
-                        pickUp: true,
+                        algaePickup: true,
+                        coralPickup: true,
+                        bargeResult: true,
+                        KnocksAlgae: true,
+                        UnderShallowCage: true,
                         driverAbility: true,
                         events: {
                             select: {
@@ -165,73 +171,95 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
     }
 }
 
+// Less verbose and don't want to create new arrays constantly
+const posL1: Position[] = [Position.LEVEL_ONE_A, Position.LEVEL_ONE_B, Position.LEVEL_ONE_C];
+const posL2: Position[] = [Position.LEVEL_TWO_A, Position.LEVEL_TWO_B, Position.LEVEL_TWO_C];
+const posL3: Position[] = [Position.LEVEL_THREE_A, Position.LEVEL_THREE_B, Position.LEVEL_THREE_C];
+
 function aggregateTeamReports(teamNum: number, numMatches: number, reports: PointsReport[]): AggregatedTeamData {
     const data: AggregatedTeamData = {
         teamNumber: teamNum,
         mainRole: null,
         secondaryRole: null,
-        groundPickup: false,
-        chutePickup: false,
+        coralPickup: null,
+        algaePickup: null,
+        algaeKnocking: false,
+        underShallowCage: false,
         avgTeleopPoints: 0,
         avgAutoPoints: 0,
         avgDriverAbility: 0,
-        avgPickups: 0,
         avgFeeds: 0,
-        avgDrops: 0,
-        avgScores: 0,
-        avgAmpScores: 0,
-        avgSpeakerScores: 0,
-        avgTrapScores: 0,
-        avgDefense: 0,
-        percStagePark: 0,
-        percStageClimb: 0,
-        percStageClimbHarmony: 0,
-        percStageNone : 0,
-        highNoteFails: 0,
-        highNoteSuccesses: 0,
+        avgDefends: 0,
+        avgCoralPickups: 0,
+        avgAlgaePickups: 0,
+        avgCoralDrops: 0,
+        avgAlgaeDrops: 0,
+        avgCoralL1: 0,
+        avgCoralL2: 0,
+        avgCoralL3: 0,
+        avgCoralL4: 0,
+        avgProcessorScores: 0,
+        avgNetScores: 0,
+        avgNetFails: 0,
+        percActiveAutons: 0,
+        percBargeNone: 0,
+        percBargePark: 0,
+        percBargeShallow: 0,
+        percBargeDeep: 0,
+        percBargeFail: 0,
         matchesImmobile: 0,
         numMatches: numMatches,
-        numReports: reports.length
+        numReports: reports.length,
     };
 
+    // Out of scope iteration variables
     const roles: Record<RobotRole, number> = {
         OFFENSE: 0,
         DEFENSE: 0,
         FEEDER: 0,
         IMMOBILE: 0
     };
+    let coral: CoralPickup = CoralPickup.NONE;
+    let algae: AlgaePickup = AlgaePickup.NONE;
+
     // Main iteration for most aggregation summing
     reports.forEach(report => {
         // Sum driver ability and robot role
         data.avgDriverAbility += report.driverAbility * report.weight;
         roles[report.robotRole] += report.weight;
 
+        // Set discrete robot capabilities
         // Implement a safety for this? One incorrect report could mess up the data
-        // Set if chute/groud pickup has been observed
-        data.chutePickup ||= report.pickUp !== PickUp.GROUND;
-        data.groundPickup ||= report.pickUp !== PickUp.CHUTE;
-
-        // Sum stage results
-        switch (report.stage) {
-            case StageResult.PARK:
-                data.percStagePark += report.weight;
-                break;
-            case StageResult.ONSTAGE:
-                data.percStageClimb += report.weight;
-                break;
-            case StageResult.ONSTAGE_HARMONY:
-                data.percStageClimbHarmony += report.weight;
-                break;
-            case StageResult.NOTHING:
-                data.percStageNone += report.weight;
-                break;
+        data.algaeKnocking ||= report.KnocksAlgae === KnocksAlgae.TRUE;
+        data.underShallowCage ||= report.UnderShallowCage === UnderShallowCage.TRUE;
+        if (coral === CoralPickup.NONE) {
+            coral = report.coralPickup;
+        } else if (coral !== report.coralPickup && report.coralPickup !== CoralPickup.NONE) {
+            coral === CoralPickup.BOTH;
+        }
+        if (algae === AlgaePickup.NONE) {
+            algae = report.algaePickup;
+        } else if (algae !== report.algaePickup && report.algaePickup !== AlgaePickup.NONE) {
+            algae === AlgaePickup.BOTH;
         }
 
-        // Sum high note successes/failures
-        if (report.highNote === HighNoteResult.SUCCESSFUL) {
-            data.highNoteSuccesses += report.weight;
-        } else if (report.highNote === HighNoteResult.FAILED) {
-            data.highNoteFails += report.weight;
+        // Sum endgame results
+        switch (report.bargeResult) {
+            case BargeResult.NOT_ATTEMPTED:
+                data.percBargeNone += report.weight;
+                break;
+            case BargeResult.PARKED:
+                data.percBargePark += report.weight;
+                break;
+            case BargeResult.SHALLOW:
+                data.percBargeShallow += report.weight;
+                break;
+            case BargeResult.DEEP:
+                data.percBargeDeep += report.weight;
+                break;
+            default:
+                data.percBargeFail += report.weight;
+                break;
         }
 
         // Sum match points and actions
@@ -243,31 +271,63 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
             }
 
             switch (event.action) {
-                case EventAction.DEFENSE:
-                    data.avgDefense += report.weight;
+                case EventAction.PICKUP_CORAL:
+                    data.avgCoralPickups += report.weight;
                     break;
-                case EventAction.DROP_RING:
-                    data.avgDrops += report.weight;
+                case EventAction.PICKUP_ALGAE:
+                    data.avgAlgaePickups += report.weight;
                     break;
-                case EventAction.FEED_RING:
+                case EventAction.FEED:
                     data.avgFeeds += report.weight;
                     break;
-                case EventAction.PICK_UP:
-                    data.avgPickups += report.weight;
+                case EventAction.AUTO_LEAVE:
+                    data.percActiveAutons += report.weight;
                     break;
-                case EventAction.SCORE:
-                    data.avgScores += report.weight;
+                case EventAction.DEFEND:
+                    data.avgDefends += report.weight;
+                    break;
+                case EventAction.SCORE_NET:
+                    data.avgNetScores += report.weight;
+                    break;
+                case EventAction.FAIL_NET:
+                    data.avgNetFails += report.weight;
+                    break;
+                case EventAction.SCORE_PROCESSOR:
+                    data.avgProcessorScores += report.weight;
+                    break;
+                case EventAction.SCORE_CORAL:
                     switch (event.position) {
-                        case Position.AMP:
-                            data.avgAmpScores += report.weight;
+                        case Position.LEVEL_ONE:
+                            data.avgCoralL1 += report.weight;
                             break;
-                        case Position.SPEAKER:
-                            data.avgSpeakerScores += report.weight;
+                        case Position.LEVEL_TWO:
+                            data.avgCoralL2 += report.weight;
                             break;
-                        case Position.TRAP:
-                            data.avgTrapScores += report.weight;
+                        case Position.LEVEL_THREE:
+                            data.avgCoralL3 += report.weight;
+                            break;
+                        case Position.LEVEL_FOUR:
+                            data.avgCoralL4 += report.weight;
+                            break;
+                        default:
+                            // During auto
+                            if (posL1.includes(event.position)) {
+                                data.avgCoralL1 += report.weight;
+                            } else if (posL2.includes(event.position)) {
+                                data.avgCoralL2 += report.weight;
+                            } else if (posL3.includes(event.position)) {
+                                data.avgCoralL3 += report.weight;
+                            } else {
+                                data.avgCoralL4 += report.weight;
+                            }
                             break;
                     }
+                    break;
+                case EventAction.DROP_ALGAE:
+                    data.avgAlgaeDrops += report.weight;
+                    break;
+                case EventAction.DROP_CORAL:
+                    data.avgCoralDrops += report.weight;
                     break;
             }
 
@@ -278,13 +338,16 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
         });
     });
 
+    data.coralPickup = coral;
+    data.algaePickup = algae;
+
     data.matchesImmobile = roles.IMMOBILE || 0;
     // Remove IMMOBILE state from main roles
     delete roles.IMMOBILE;
 
     // Main method to find highest reported roles
     const highestOccurences = Object.entries(roles).reduce((highestOccurences, role) => {
-        // Using >= gives precedence to lower-frequency roles such as Feeder
+        // Using >= gives precedence to lower-indexed roles (defense, feeder)
         if (role[1] >= highestOccurences[1]) {
             if (role[1] >= highestOccurences[0]) {
                 // Push main role to secondary
@@ -312,31 +375,40 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
         }
     }
 
-    // Add stage points to teleop
-    data.avgTeleopPoints += data.percStagePark + data.percStageClimb * 3 + data.percStageClimbHarmony * 5;
-
     // Divide relevent sums by number of matches to get mean
     data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints / numMatches);
     data.avgAutoPoints = roundToHundredth(data.avgAutoPoints / numMatches);
     data.avgDriverAbility = roundToHundredth(data.avgDriverAbility / numMatches);
-    data.avgPickups = roundToHundredth(data.avgPickups / numMatches);
     data.avgFeeds = roundToHundredth(data.avgFeeds / numMatches);
-    data.avgDrops = roundToHundredth(data.avgDrops / numMatches);
-    data.avgScores = roundToHundredth(data.avgScores / numMatches);
-    data.avgAmpScores = roundToHundredth(data.avgAmpScores / numMatches);
-    data.avgSpeakerScores = roundToHundredth(data.avgSpeakerScores / numMatches);
-    data.avgTrapScores = roundToHundredth(data.avgTrapScores / numMatches);
-    data.avgDefense = roundToHundredth(data.avgDefense / numMatches);
+    data.avgDefends = roundToHundredth(data.avgDefends / numMatches);
+    data.avgCoralPickups = roundToHundredth(data.avgCoralPickups / numMatches);
+    data.avgAlgaePickups = roundToHundredth(data.avgAlgaePickups / numMatches);
+    data.avgCoralDrops = roundToHundredth(data.avgCoralDrops / numMatches);
+    data.avgAlgaeDrops = roundToHundredth(data.avgAlgaeDrops / numMatches);
+    data.avgCoralL1 = roundToHundredth(data.avgCoralL1 / numMatches);
+    data.avgCoralL2 = roundToHundredth(data.avgCoralL2 / numMatches);
+    data.avgCoralL3 = roundToHundredth(data.avgCoralL3 / numMatches);
+    data.avgCoralL4 = roundToHundredth(data.avgCoralL4 / numMatches);
+    data.avgProcessorScores = roundToHundredth(data.avgProcessorScores / numMatches);
+    data.avgNetScores = roundToHundredth(data.avgNetScores / numMatches);
+    data.avgNetFails = roundToHundredth(data.avgNetFails / numMatches);
     // data.avgOffensePoints = roundToHundredth(data.avgOffensePoints / numMatches);
 
-    data.percStagePark = Math.round(data.percStagePark / numMatches * 1000) / 10;
-    data.percStageClimb = Math.round(data.percStageClimb / numMatches * 1000) / 10;
-    data.percStageClimbHarmony = Math.round(data.percStageClimbHarmony / numMatches * 1000) / 10;
-    data.percStageNone = Math.round(data.percStageNone / numMatches * 1000) / 10;
+    data.percActiveAutons = Math.round(data.percActiveAutons / numMatches * 1000) / 10;
+    data.percBargeNone = Math.round(data.percBargeNone / numMatches * 1000) / 10;
+    data.percBargePark = Math.round(data.percBargePark / numMatches * 1000) / 10;
+    data.percBargeShallow = Math.round(data.percBargeShallow / numMatches * 1000) / 10;
+    data.percBargeDeep = Math.round(data.percBargeDeep / numMatches * 1000) / 10;
+    data.percBargeFail = Math.round(data.percBargeFail / numMatches * 1000) / 10;
+
+    // Add endgame points to teleop
+    data.avgTeleopPoints +=
+        data.percBargePark * endgameToPoints[BargeResult.PARKED]
+        + data.percBargeShallow * endgameToPoints[BargeResult.SHALLOW]
+        + data.percBargeDeep * endgameToPoints[BargeResult.DEEP]
 
     // Trim remaining datapoints
-    data.highNoteFails = roundToHundredth(data.highNoteFails);
-    data.highNoteSuccesses = roundToHundredth(data.highNoteSuccesses);
+    data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints);
     data.matchesImmobile = roundToHundredth(data.matchesImmobile);
 
     return data;

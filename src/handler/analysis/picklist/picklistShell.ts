@@ -6,7 +6,7 @@ import ss from 'simple-statistics';
 import z from 'zod'
 const { Worker } = require('worker_threads');
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
-import { Metric, picklistSliders } from "../analysisConstants";
+import { picklistSliders } from "../analysisConstants";
 import { picklistArrayAndAverageAllTeamTournament } from "./picklistArrayAndAverageAllTeamTournament";
 import flatted from 'flatted';
 import os from 'os'

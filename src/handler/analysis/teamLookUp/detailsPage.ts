@@ -21,7 +21,7 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             res.status(400).send(params);
             return;
         };
-        if (params.data.metric === Metric.autopoints) {
+        if (params.data.metric === Metric.autoPoints) {
             const autoPaths = await autoPathsTeam(req.user, params.data.team)
             res.status(200).send({ paths: autoPaths })
             return
