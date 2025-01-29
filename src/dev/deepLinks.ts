@@ -8,6 +8,8 @@ export default function getDeepLink(url: string, app: AppName): string {
   }
 
   if (app === "dashboard") {
-    return "com.frc8033.lovatdashboard://set-url/" + encodeURIComponent(url);
+    return (
+      "com.frc8033.lovatdashboard://set-url?" + new URLSearchParams({ u: url })
+    );
   }
 }
