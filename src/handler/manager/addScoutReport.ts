@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, RobotRoleMap, EventActionMap} from "./managerConstants";
+import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
 
@@ -9,27 +9,19 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
     try {
         const paramsScoutReport = z.object({
             uuid : z.string(),
-            startTime: z.number(),
-            notes: z.string(),
-            robotRole: z.enum(["OFFENSE",
-                "DEFENSE",
-                "FEEDER",
-                "IMMOBILE"]),
-            barge: z.enum(["NOT_ATTEMPTED",
-                "PARKED",
-                "SHALLOW",
-                "FAILED_SHALLOW",
-                "DEEP",
-                "FAILED_DEEP"
-            ]),
-            coralPickup: z.enum(["NONE", "GROUND", "STATION", "BOTH"]),
-            algaePickup: z.enum(["NONE","GROUND", "REEF", "BOTH"]),
-            knocksAlgae: z.
-            driverAbility: z.number(),
-            scouterUuid: z.string(),
+            tournamentKey : z.string(),
             matchType : z.enum(["QUALIFICATION", "ELIMINATION"]),
             matchNumber : z.number(),
-            tournamentKey : z.string(),
+            startTime: z.number(),
+            notes: z.string(),
+            robotRole: z.enum(["OFFENSE", "DEFENSE", "FEEDER", "IMMOBILE"]),
+            barge: z.enum(["NOT_ATTEMPTED", "PARKED", "SHALLOW", "FAILED_SHALLOW", "DEEP", "FAILED_DEEP"]),
+            coralPickUp: z.enum(["NONE", "GROUND", "STATION", "BOTH"]),
+            algaePickUp: z.enum(["NONE","GROUND", "REEF", "BOTH"]),
+            knocksAlgae: z.enum(["TRUE", "FALSE"]),
+            traversesUnderCage: z.enum(["TRUE", "FALSE"]),
+            driverAbility: z.number(),
+            scouterUuid: z.string(),
             teamNumber : z.number()
         }).safeParse({
             uuid : req.body.uuid,
@@ -39,8 +31,10 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             robotRole:  RobotRoleMap[req.body.robotRole][0],
             driverAbility:  req.body.driverAbility,
             barge:  BargeResultMap[req.body.barge][0],
-            algaePickup:  AlgaePickupMap[req.body.algaePickup][0],
-            coralPickup:  CoralPickupMap[req.body.coralPickup][0],
+            algaePickUp:  AlgaePickupMap[req.body.algaePickUp][0],
+            coralPickUp:  CoralPickupMap[req.body.coralPickUp][0],
+            knocksAlgae: KnocksAlgaeMap[req.body.knocksAlgae][0],
+            traversesUnderCage: UnderShallowCageMap[req.body.traversesUnderCage][0],
             matchType : MatchTypeMap[req.body.matchType][0],
             matchNumber : req.body.matchNumber,
             teamNumber : req.body.teamNumber,
@@ -110,10 +104,11 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
                     //game specfific
-                    coralPickup: paramsScoutReport.data.coralPickup,
+                    coralPickup: paramsScoutReport.data.coralPickUp,
                     bargeResult: paramsScoutReport.data.barge,
-                    algaePickup: paramsScoutReport.data.algaePickup
-                
+                    algaePickup: paramsScoutReport.data.algaePickUp,
+                    KnocksAlgae: paramsScoutReport.data.knocksAlgae,
+                    UnderShallowCage: paramsScoutReport.data.traversesUnderCage
                 }
             }
         )
@@ -141,7 +136,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                         points = 7
                     }
                 }
-                else if (action === "LEAVE") {
+                else if (action === "AUTO_LEAVE") {
                     points = 3
                 }
                 else if (action === "SCORE_PROCESSOR"){
@@ -175,7 +170,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             }
             const paramsEvents = z.object({
                 time: z.number(),
-                action: z.enum(["PICKUP_CORAL", "PICKUP_ALGAE", "FEED", "AUTO_LEAVE", "AUTO_LEAVE", "DEFEND", "SCORE_NET", "FAIL_NET", "SCORE_PROCESSOR", "SCORE_CORAL", "DROP_ALGAE", "DROP_CORAL", "START_POSITION"]),
+                action: z.enum(["PICKUP_CORAL", "PICKUP_ALGAE", "FEED", "AUTO_LEAVE", "DEFEND", "SCORE_NET", "FAIL_NET", "SCORE_PROCESSOR", "SCORE_CORAL", "DROP_ALGAE", "DROP_CORAL", "START_POSITION"]),
                 position: z.enum(["NONE", "START_ONE", "START_TWO", "START_THREE", "START_FOUR", "LEVEL_ONE", "LEVEL_TWO", "LEVEL_THREE", "LEVEL_FOUR", "LEVEL_ONE_A", "LEVEL_ONE_B", "LEVEL_ONE_C", "LEVEL_TWO_A", "LEVEL_TWO_B", "LEVEL_TWO_C", "LEVEL_THREE_A", "LEVEL_THREE_B", "LEVEL_THREE_C", "LEVEL_FOUR_A", "LEVEL_FOUR_B", "LEVEL_FOUR_C", "GROUND_PIECE_A", "GROUND_PIECE_B", "GROUND_PIECE_C", "CORAL_STATION_ONE", "CORAL_STATION_TWO"]),
                 points: z.number(),
                 scoutReportUuid: z.string()
@@ -214,14 +209,11 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
 
         //     })
         // }
-        res.status(200).send('done adding data');
+        res.status(200).send('done adding data'); 
     }
 
     catch (error) {
         console.log(error)
         res.status(500).send({"error" : error, "displayError" : "Error"});
-
     }
 }
-
-

@@ -1,4 +1,4 @@
-import { EventAction, Position, RobotRole, MatchType, BargeResult, AlgaePickup, CoralPickup } from "@prisma/client"
+import { EventAction, Position, RobotRole, MatchType, BargeResult, AlgaePickup, CoralPickup, KnocksAlgae, UnderShallowCage } from "@prisma/client"
 
 const EventActionMap = {
     0 : [EventAction.PICKUP_CORAL],
@@ -14,7 +14,7 @@ const EventActionMap = {
     10 : [EventAction.DROP_CORAL],
     11 : [EventAction.START_POSITION]
   }
-  const PositionMap = {
+  const PositionMap = { 
     0 : [Position.NONE],
     1 : [Position.START_ONE],
     2 : [Position.START_TWO],
@@ -68,6 +68,14 @@ const EventActionMap = {
     2 : [CoralPickup.STATION],
     3 : [CoralPickup.BOTH]
   }
+  const  KnocksAlgaeMap = {
+    0 : [KnocksAlgae.FALSE],
+    1 : [KnocksAlgae.TRUE]
+  }
+  const  UnderShallowCageMap = {
+    0 : [UnderShallowCage.FALSE],
+    1 : [UnderShallowCage.TRUE]
+  }
   const MatchTypeMap = 
   {
     0 : [MatchType.QUALIFICATION],
@@ -108,6 +116,6 @@ const EventActionMap = {
     0 : MatchType.QUALIFICATION,
     1 : MatchType.ELIMINATION
   }
-export {EventActionMap, PositionMap, RobotRoleMap, BargeResultMap, AlgaePickupMap, CoralPickupMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation}
+export {EventActionMap, PositionMap, RobotRoleMap, BargeResultMap, AlgaePickupMap, CoralPickupMap, KnocksAlgaeMap, UnderShallowCageMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation}
 
   
