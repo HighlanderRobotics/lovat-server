@@ -1,11 +1,11 @@
 import prismaClient from '../../../prismaClient'
-import { autoEnd, matchTimeEnd, teleopStart } from "../analysisConstants";
-import { Position, User } from "@prisma/client";
+import { autoEnd, matchTimeEnd, Metric, teleopStart } from "../analysisConstants";
+import { EventAction, Position, User } from "@prisma/client";
 
 
-export const averageAllTeamOneQuerey = async (user: User, metric: string): Promise<number> => {
+export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promise<number> => {
     try {
-        if (metric === "driverability" || metric === "driverAbility") {
+        if (metric === Metric.driverAbility) {
             const data = await prismaClient.scoutReport.aggregate({
                 _avg: {
                     driverAbility: true
@@ -31,19 +31,22 @@ export const averageAllTeamOneQuerey = async (user: User, metric: string): Promi
         }
         else {
             let position = null
-            if (metric === "ampscores" || metric === "ampScores") {
-                position = Position.AMP
+            if (metric === Metric.coralL1) {
+                position = Position.LEVEL_ONE
             }
-            else if (metric === "speakerscores" || metric === "speakerScores") {
-                position = Position.SPEAKER
+            else if (metric === Metric.coralL2) {
+                position = Position.LEVEL_TWO
             }
-            else if (metric === "trapscores" || metric === "trapScores") {
-                position = Position.TRAP
+            else if (metric === Metric.coralL3) {
+                position = Position.LEVEL_THREE
+            }
+            else if (metric === Metric.coralL4) {
+                position = Position.LEVEL_FOUR
             }
             else {
                 position = Position.NONE
             }
-            if (metric === "pickups") {
+            if (metric === Metric.coralPickups || metric === Metric.algaePickups) {
                 const allTeamData = await prismaClient.event.groupBy({
                     by : ["scoutReportUuid"],
                     _count :
@@ -68,7 +71,10 @@ export const averageAllTeamOneQuerey = async (user: User, metric: string): Promi
                                 }
                             }
                         },
-                        action : "PICK_UP"
+                        action : {
+                            [Metric.algaePickups]: EventAction.PICKUP_ALGAE,
+                            [Metric.coralPickups]: EventAction.PICKUP_CORAL,
+                        }[metric]
 
                     }
 
@@ -76,21 +82,21 @@ export const averageAllTeamOneQuerey = async (user: User, metric: string): Promi
                 let averagePickups = allTeamData.reduce((acc, curr) => {
                     return acc + curr._count._all; 
                 }, 0) / allTeamData.length;
-                if(!averagePickups)
+                if (!averagePickups)
                 {
                     averagePickups = 0
                 }
                 return averagePickups
             }
-            else if(metric.includes("points") || metric.includes("Points"))
+            else if (metric === Metric.teleopPoints || metric === Metric.autoPoints || metric === Metric.totalPoints)
             {
                 let timeMin = 0
                 let timeMax = matchTimeEnd
-                if(metric.includes("teleop") || metric.includes("Teleop"))
+                if (metric === Metric.teleopPoints)
                 {
                     timeMin = teleopStart
                 }
-                else if(metric.includes("auto") || metric.includes("Auto"))
+                else if (metric === Metric.autoPoints)
                 {
                     timeMax = autoEnd
                 }
@@ -162,7 +168,13 @@ export const averageAllTeamOneQuerey = async (user: User, metric: string): Promi
                                 }
                             }
                         },
-                        action : "SCORE",
+                        action : {
+                            in: [
+                                EventAction.SCORE_CORAL,
+                                EventAction.SCORE_NET,
+                                EventAction.SCORE_PROCESSOR,
+                            ]
+                        },
                         position : position
 
                     }

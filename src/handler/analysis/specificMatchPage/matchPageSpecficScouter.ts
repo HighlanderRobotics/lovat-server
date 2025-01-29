@@ -2,8 +2,9 @@ import { Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { highNoteMap, roleMap, specificMatchPageMetrics, stageMap } from "../analysisConstants";
 import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
+import { highNoteMap, Metric, FlippedRoleMap, specificMatchPageMetrics, stageMap } from "../analysisConstants";
+
 import { autoPathScouter } from "./autoPathScouter";
 
 
@@ -25,9 +26,9 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             }
         })
         const data = {
-            totalPoints: await singleMatchSingleScoutReport(req.user, true, scoutReport.uuid, "totalpoints"),
+            totalPoints: await singleMatchSingleScoutReport(req.user, true, scoutReport.uuid, Metric.totalPoints),
             driverAbility: scoutReport.driverAbility,
-            role : roleMap[scoutReport.robotRole],
+            role : FlippedRoleMap[scoutReport.robotRole],
             stage : stageMap[scoutReport.stage],
             highNote : highNoteMap[scoutReport.highNote],
             autoPath : await autoPathScouter(req.user, scoutReport.teamMatchKey, scoutReport.uuid),
