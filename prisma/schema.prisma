@@ -179,16 +179,17 @@ model SharedPicklist {
   name          String
   totalPoints   Float
   defense       Float
-  coralPickups       Float
-  climb         Float
-  autoPoints    Float
   driverAbility Float
+  autoPoints    Float
+  algaePickups  Float
+  coralPickups  Float
+  barge         Float
   coralLevel1Scores Float
   coralLevel2Scores Float
   coralLevel3Scores Float
   coralLevel4Scores Float
   algaeProcessor Float
-  algaeNet Float
+  algaeNet      Float
   teleopPoints  Float
   feeds         Float
   authorId String
