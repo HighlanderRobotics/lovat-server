@@ -1,14 +1,14 @@
 import prismaClient from '../../../prismaClient'
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { autoEnd, matchTimeEnd, Metric, multiplerBaseAnalysis, swrConstant, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
-import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
+import { bargePicklistTeam } from "../picklist/bargePicklistTeam";
 import { User } from "@prisma/client";
 
 
 export const arrayAndAverageTeam = async (user: User, metric: Metric, team: number): Promise<{ average: number, timeLine: { match: string, dataPoint: number }[] }> => {
     try {
-        if (metric === Metric.stage) {
-            return { average: await stagePicklistTeam(user, team), timeLine: null }
+        if (metric === Metric.bargePoints) {
+            return { average: await bargePicklistTeam(user, team), timeLine: null }
         }
 
         let tournamentFilter: {in?: string[]} = {}
@@ -68,7 +68,7 @@ export const arrayAndAverageTeam = async (user: User, metric: Metric, team: numb
         }, {});
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
         if (metric === Metric.bargePoints) {
-            return { average: await stagePicklistTeam(user, team), timeLine: null }
+            return { average: await bargePicklistTeam(user, team), timeLine: null }
         }
         const timeLineArray = []
         const tournamentAverages = []

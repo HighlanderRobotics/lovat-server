@@ -125,6 +125,7 @@ const EventActionMap = {
     0 : MatchType.QUALIFICATION,
     1 : MatchType.ELIMINATION
   }
-export {EventActionMap, PositionMap, RobotRoleMap, BargeResultMap, AlgaePickupMap, CoralPickupMap, KnocksAlgaeMap, UnderShallowCageMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation}
+
+export {EventActionMap, PositionMap, RobotRoleMap, BargeResultMap, AlgaePickupMap, CoralPickupMap, KnocksAlgaeMap, UnderShallowCageMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation, BargeResultPointMap}
 
   
