@@ -57,6 +57,15 @@ const EventActionMap = {
     [BargeResult.DEEP] : 12,
     [BargeResult.FAILED_DEEP] : 0,
   }
+
+  const BargeResultReverseMap = {
+    [BargeResult.NOT_ATTEMPTED] : 0,
+    [BargeResult.PARKED] : 1,
+    [BargeResult.SHALLOW] : 2,
+    [BargeResult.FAILED_SHALLOW]: 3,
+    [BargeResult.DEEP] : 4,
+    [BargeResult.FAILED_DEEP] : 5,
+  }
   const BargeResultMap = {
     0 : [BargeResult.NOT_ATTEMPTED],
     1 : [BargeResult.PARKED],
@@ -126,6 +135,6 @@ const EventActionMap = {
     1 : MatchType.ELIMINATION
   }
 
-export {EventActionMap, PositionMap, RobotRoleMap, BargeResultMap, AlgaePickupMap, CoralPickupMap, KnocksAlgaeMap, UnderShallowCageMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation, BargeResultPointMap}
+export {EventActionMap, PositionMap, RobotRoleMap, BargeResultMap, AlgaePickupMap, CoralPickupMap, KnocksAlgaeMap, UnderShallowCageMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchTypeEnumToFull, MatchEnumToAbrivation, BargeResultPointMap, BargeResultReverseMap}
 
   

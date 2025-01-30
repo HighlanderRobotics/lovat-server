@@ -26,21 +26,21 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
             res.status(200).send({ paths: autoPaths })
             return
         }
-        else if (params.data.metric === Metric.scores) {
-            const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
-            const allTeamAverage = await averageAllTeamOneQuery(req.user, params.data.metric)
-            // let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
-            const speakerScores = await arrayAndAverageTeam(req.user, Metric.speakerscores, params.data.team)
+        // else if (params.data.metric === Metric.scores) {
+        //     const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
+        //     const allTeamAverage = await averageAllTeamOneQuery(req.user, params.data.metric)
+        //     // let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
+        //     const speakerScores = await arrayAndAverageTeam(req.user, Metric.speakerscores, params.data.team)
 
-            const result = {
-                array: speakerScores,
-                result: teamAverageAndTimeLine.average,
-                all: allTeamAverage,
-                difference: teamAverageAndTimeLine.average - allTeamAverage,
-                team: params.data.team
-            }
-            res.status(200).send(result)
-        }
+        //     const result = {
+        //         array: speakerScores,
+        //         result: teamAverageAndTimeLine.average,
+        //         all: allTeamAverage,
+        //         difference: teamAverageAndTimeLine.average - allTeamAverage,
+        //         team: params.data.team
+        //     }
+        //     res.status(200).send(result)
+        // }
         else {
             const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
             const allTeamAverage = await averageAllTeamOneQuery(req.user, params.data.metric)

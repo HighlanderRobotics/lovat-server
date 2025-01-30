@@ -67,9 +67,9 @@ export const arrayAndAverageTeam = async (user: User, metric: Metric, team: numb
             return acc;
         }, {});
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
-        if (metric === Metric.bargePoints) {
-            return { average: await bargePicklistTeam(user, team), timeLine: null }
-        }
+        // if (metric === Metric.bargePoints) {
+        //     return { average: await bargePicklistTeam(user, team), timeLine: null }
+        // }
         const timeLineArray = []
         const tournamentAverages = []
         // Group into tournaments, calculate all averages individually so they can all be properly weighted after the nested loops
