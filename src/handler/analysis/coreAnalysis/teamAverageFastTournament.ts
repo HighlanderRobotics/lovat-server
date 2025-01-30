@@ -3,7 +3,7 @@ import { matchTimeEnd, Metric, metricToEvent, swrConstant, ttlConstant } from ".
 import { BargeResult, EventAction, Position, User } from "@prisma/client";
 
 
-export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: Metric, tournamentKey: string, timeMin = 0, timeMax: number = matchTimeEnd, scoutReportUuid: string): Promise<number> => {
+export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: Metric, tournamentKey: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         let position = null
         let action = null
@@ -252,14 +252,14 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
             // }
         }
         else {
-     // Returns average of given EventAction per scout report
+            // Returns average of given EventAction per scout report
 
-    // Attempt to convert metric to an EventAction
+            // Attempt to convert metric to an EventAction
             const metric = metricToEvent[metric1];
             if (!(metric in EventAction)) {
                 throw "Metric failed conversion to event action";
             };
-                        // Returns average scores per scout report
+            // Returns average scores per scout report
 
             const groupedMatches = await prismaClient.event.groupBy({
                 cacheStrategy:
@@ -274,9 +274,7 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 },
                 where:
                 {
-                    scoutReport: {
-                        uuid: scoutReportUuid
-                    },
+
                     action: action,
                     position: position,
                     time:
@@ -287,27 +285,27 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 }
             })
 
-            
+
 
 
 
             let avg = groupedMatches.reduce((acc, cur) => {
-        return acc + cur._count._all;
-    }, 0) / groupedMatches.length;
-    if (!avg) {
-        avg = 0
-    }
+                return acc + cur._count._all;
+            }, 0) / groupedMatches.length;
+            if (!avg) {
+                avg = 0
+            }
 
-    return avg
-}
+            return avg
+        }
 
-   
+
 
 
     }
     catch (error) {
-    console.error(error.error)
-    throw (error)
-}
+        console.error(error.error)
+        throw (error)
+    }
 
 };

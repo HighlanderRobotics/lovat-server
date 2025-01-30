@@ -118,7 +118,6 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
                     //game specfific
-                    highNote: paramsScoutReport.data.highNote,
                     stage: paramsScoutReport.data.stage,
                     pickUp: paramsScoutReport.data.pickUp
                 
@@ -129,6 +128,7 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
         const eventDataArray = []
         const events = req.body.events;
         let ampOn = false
+        // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < events.length; i++) {
             let points = 0;
             const time = events[i][0];

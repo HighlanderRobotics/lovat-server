@@ -1,10 +1,11 @@
 import prismaClient from '../../../prismaClient'
 import { autoEnd, matchTimeEnd, swrConstant, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
 import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
-import { teamAverageFastTournament } from "./teamAverageFastTournament";
+// import { teamAverageFastTournament } from "./teamAverageFastTournament";
 import { Metric } from "../analysisConstants";
 import { User } from "@prisma/client";
-
+import z from 'zod'
+import { teamAverageFastTournament } from './teamAverageFastTournament';
 
 /**
  * Performance optimized heuristic for finding the average value of a metric for a team
@@ -16,9 +17,6 @@ import { User } from "@prisma/client";
  */
 export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: number): Promise<{ average: number }> => {
     try {
-<<<<<<< Updated upstream
-        if (metric === Metric.stage) {
-=======
         const params = z.object({
             team: z.number(),
         }).safeParse({
@@ -29,7 +27,6 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
         };
 
         if (metric === Metric.bargePoints) {
->>>>>>> Stashed changes
             return { average: await stagePicklistTeam(user, team) }
         }
 
