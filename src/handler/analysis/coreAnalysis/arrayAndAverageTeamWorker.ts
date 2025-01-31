@@ -1,7 +1,7 @@
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teleopStart } from "../analysisConstants";
-import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
+import { bargePicklistTeam } from "../picklist/bargePicklistTeam";
 import { parentPort } from "worker_threads";
 import { teamAverageFastTournament } from "./teamAverageFastTournament";
 import flatted from 'flatted'
@@ -70,7 +70,7 @@ import flatted from 'flatted'
                 }, {});
                 const tournamentGroups: Match[][] = Object.values(groupedByTournament);
                 if (metric === "stage") {
-                    return { average: await stagePicklistTeam(req, params.data.team), timeLine: null }
+                    return { average: await bargePicklistTeam(req, params.data.team), timeLine: null }
                 }
                 const timeLineArray = []
                 const tournamentAverages = []

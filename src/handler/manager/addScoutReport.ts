@@ -3,7 +3,6 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
-import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -128,7 +127,6 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
 
         const eventDataArray = []
         const events = req.body.events;
-        let ampOn = false
         for (const event of events) {
             let points = 0;
             const time = event[0];
