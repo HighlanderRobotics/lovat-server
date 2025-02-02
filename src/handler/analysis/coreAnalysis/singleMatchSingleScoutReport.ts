@@ -40,6 +40,9 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
             case Metric.processorScores:
                 action = EventAction.SCORE_PROCESSOR
                 break;
+            case Metric.feeds:
+                action = EventAction.FEED
+                position = Position.NONE
             default:
                 position = Position.NONE
                 break;

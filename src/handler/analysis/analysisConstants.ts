@@ -101,6 +101,28 @@ const FlippedPositionMap: Record<Position, number> = {
     [Position.CORAL_STATION_TWO]: 25
 }
 
+const metricsToNumber: Record<string, number> ={
+    totalPoints : 0, 
+    driverAbility : 1, 
+    teleopPoints : 2,
+    autoPoints : 3, 
+    feeds : 4, 
+    defends : 5,
+    coralPickups : 6, 
+    algaePickups : 7, 
+    coralDrops : 8, 
+    algaeDrops : 9, 
+    coralL1 : 10, 
+    coralL2 : 11, 
+    coralL3 : 12, 
+    coralL4 : 13, 
+    processorScores : 14, 
+    netScores : 15, 
+    netFails : 16, 
+    autonLeaves : 17,
+    bargePoints : 18
+}
+
 // For occasional query optimizations
 const tournamentLowerBound = 497
 const teamLowerBound = 3300 // Total 3468 as of 2024 season
@@ -110,6 +132,6 @@ const swrConstant = 300
 const ttlConstant = 200
 
 const multiplerBaseAnalysis = 4
-export {Metric, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, };
+export {Metric, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber};
 
 

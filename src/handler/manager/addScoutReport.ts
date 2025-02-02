@@ -58,7 +58,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         }
 
         // Check that scouter exists
-        const scouter = await prismaClient.scouter.findUnique({
+        const scouter = await prismaClient.scouter.findFirst({
             where :
             {
                 uuid : paramsScoutReport.data.scouterUuid
