@@ -91,7 +91,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
         }
 
         else {
-            let position = null
+            let position = undefined
             let action = null
             switch (metric1) {
                 case Metric.coralL1:
