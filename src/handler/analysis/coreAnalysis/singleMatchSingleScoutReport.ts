@@ -92,7 +92,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
 
         else {
             let position = undefined
-            let action = null
+            let action = undefined
             switch (metric1) {
                 case Metric.coralL1:
                     action = EventAction.SCORE_CORAL
@@ -109,21 +109,6 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
                 case Metric.coralL4:
                     action = EventAction.SCORE_CORAL
                     position = Position.LEVEL_FOUR
-                    break;
-                case Metric.netScores:
-                    action = EventAction.SCORE_NET
-                    break;
-                case Metric.netFails:
-                    action = EventAction.FAIL_NET
-                    break;
-                case Metric.algaeDrops:
-                    action = EventAction.DROP_ALGAE
-                    break;
-                case Metric.coralDrops:
-                    action = EventAction.DROP_CORAL
-                    break;
-                case Metric.processorScores:
-                    action = EventAction.SCORE_PROCESSOR
                     break;
                 default:
                     action = metricToEvent[metric1] || undefined
