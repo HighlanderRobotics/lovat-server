@@ -168,8 +168,8 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
                     action = EventAction.SCORE_PROCESSOR
                     break;
                 default:
-                    action = metricToEvent[metric1] || null
-                    position = null
+                    action = metricToEvent[metric1] || undefined
+                    position = undefined
                     break;
             }
 
