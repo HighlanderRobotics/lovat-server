@@ -11,10 +11,17 @@ enum Metric {
 
 // !!!IMPORTANT!!! toString() must return a property of ScoutReport
 // Metrics for discrete ScoutReport fields
-enum MetricsBreakdown {robotRole, algaePickup, coralPickup, bargeResult, KnocksAlgae, UnderShallowCage}
+enum MetricsBreakdown {
+    robotRole = "robotRole",
+    algaePickup = "algaePickup",
+    coralPickup = "coralPickup",
+    bargeResult = "bargeResult",
+    KnocksAlgae = "KnocksAlgae",
+    UnderShallowCage = "UnderShallowCage"
+}
 
 // Ranking metrics
-const metricsCategory: Metric[] = [Metric.bargePoints, Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails, Metric.autonLeaves]
+const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails, Metric.autonLeaves]
 
 // Picklist sliders for app
 const picklistSliders = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4]
