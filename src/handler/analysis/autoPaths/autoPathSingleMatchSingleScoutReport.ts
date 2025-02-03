@@ -27,6 +27,7 @@ export const autoPathSingleMatchSingleScoutReport = async (user: User, matchKey 
                         EventAction.SCORE_NET,
                         EventAction.SCORE_PROCESSOR,
                         EventAction.START_POSITION,
+                        EventAction.AUTO_LEAVE
                     ]
                 }
             
