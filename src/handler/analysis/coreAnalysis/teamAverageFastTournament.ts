@@ -5,45 +5,6 @@ import { BargeResult, EventAction, Position, User } from "@prisma/client";
 
 export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: Metric, tournamentKey: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
-        let position = null
-        let action = null
-        switch (metric1) {
-            case Metric.coralL1:
-                action = EventAction.SCORE_CORAL
-                position = Position.LEVEL_ONE
-                break;
-            case Metric.coralL2:
-                action = EventAction.SCORE_CORAL
-                position = Position.LEVEL_TWO
-                break;
-            case Metric.coralL3:
-                action = EventAction.SCORE_CORAL
-                position = Position.LEVEL_THREE
-                break;
-            case Metric.coralL4:
-                action = EventAction.SCORE_CORAL
-                position = Position.LEVEL_FOUR
-                break;
-            case Metric.netScores:
-                action = EventAction.SCORE_NET
-                break;
-            case Metric.netFails:
-                action = EventAction.FAIL_NET
-                break;
-            case Metric.algaeDrops:
-                action = EventAction.DROP_ALGAE
-                break;
-            case Metric.coralDrops:
-                action = EventAction.DROP_CORAL
-                break;
-            case Metric.processorScores:
-                action = EventAction.SCORE_PROCESSOR
-                break;
-            default:
-                position = Position.NONE
-                break;
-        }
-
         // Could still cause problems at tournaments, would have to be tested - failure should be treated by changing first condition to a tolerance
         const allTeamNumbers = (await prismaClient.team.findMany()).map(team => team.number);
         let scoutReportFilter: {
@@ -254,9 +215,32 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
         else {
             // Returns average of given EventAction per scout report
 
+            let position = undefined
+            let action = undefined
+            switch (metric1) {
+                case Metric.coralL1:
+                    action = EventAction.SCORE_CORAL
+                    position = Position.LEVEL_ONE
+                    break;
+                case Metric.coralL2:
+                    action = EventAction.SCORE_CORAL
+                    position = Position.LEVEL_TWO
+                    break;
+                case Metric.coralL3:
+                    action = EventAction.SCORE_CORAL
+                    position = Position.LEVEL_THREE
+                    break;
+                case Metric.coralL4:
+                    action = EventAction.SCORE_CORAL
+                    position = Position.LEVEL_FOUR
+                    break;
+                default:
+                    action = metricToEvent[metric1] || undefined
+                    position = undefined
+                    break;
+            }
             // Attempt to convert metric to an EventAction
-            const metric = metricToEvent[metric1];
-            if (!(metric in EventAction)) {
+            if (!(action || position)) {
                 throw "Metric failed conversion to event action";
             };
             // Returns average scores per scout report

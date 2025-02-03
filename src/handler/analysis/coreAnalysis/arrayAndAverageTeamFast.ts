@@ -29,6 +29,7 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
         if (metric === Metric.bargePoints) {
             return { average: await bargePicklistTeam(user, team) }
         }
+        console.log("arrayAndAverageTeamFast " + metric)
 
         let matchKeys = []
         if (user.tournamentSource.length >= tournamentLowerBound) {

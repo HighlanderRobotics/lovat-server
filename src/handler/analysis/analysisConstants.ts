@@ -101,7 +101,7 @@ const FlippedPositionMap: Record<Position, number> = {
     [Position.CORAL_STATION_TWO]: 25
 }
 
-const metricsToNumber: Record<string, number> ={
+const metricsToNumber: Record<string, number> = {
     totalPoints : 0, 
     driverAbility : 1, 
     teleopPoints : 2,
@@ -123,6 +123,28 @@ const metricsToNumber: Record<string, number> ={
     bargePoints : 18
 }
 
+const metricToName: Record<Metric, string> = {
+    [Metric.totalPoints]: "totalPoints",
+    [Metric.driverAbility]: "driverAbility",
+    [Metric.teleopPoints]: "teleopPoints",
+    [Metric.autoPoints]: "autoPoints",
+    [Metric.feeds]: "feeds",
+    [Metric.defends]: "defends",
+    [Metric.coralPickups]: "coralPickups",
+    [Metric.algaePickups]: "algaePickups",
+    [Metric.coralDrops]: "coralDrops",
+    [Metric.algaeDrops]: "algaeDrops",
+    [Metric.coralL1]: "coralL1",
+    [Metric.coralL2]: "coralL2",
+    [Metric.coralL3]: "coralL3",
+    [Metric.coralL4]: "coralL4",
+    [Metric.processorScores]: "processorScores",
+    [Metric.netScores]: "netScores",
+    [Metric.netFails]: "netFails",
+    [Metric.autonLeaves]: "autonLeaves",
+    [Metric.bargePoints]: "bargePoints"
+}
+
 // For occasional query optimizations
 const tournamentLowerBound = 497
 const teamLowerBound = 3300 // Total 3468 as of 2024 season
@@ -132,6 +154,6 @@ const swrConstant = 300
 const ttlConstant = 200
 
 const multiplerBaseAnalysis = 4
-export {Metric, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber};
+export {Metric, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber};
 
 
