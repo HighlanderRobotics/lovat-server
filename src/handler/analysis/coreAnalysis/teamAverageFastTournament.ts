@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { matchTimeEnd, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
+import { endgameToPoints, matchTimeEnd, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
 import { BargeResult, EventAction, Position, User } from "@prisma/client";
 
 
@@ -177,7 +177,7 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
             /**********
              BARGE
              **********/
-            const bargeRows = await prismaClient.scoutReport.groupBy({
+            const endgameRows = await prismaClient.scoutReport.groupBy({
                 cacheStrategy:
                 {
                     swr: swrConstant,
@@ -190,27 +190,12 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                 where: scoutReportFilter,
             });
 
-            // Count of reports by stage result
-            const stageDataMap: Partial<Record<BargeResult, number>> = {}
-            bargeRows.forEach(row => {
-                stageDataMap[row.bargeResult] = row._count.bargeResult;
-            });
+            let endgamePoints = 0;
+            for (let i = 0; i < endgameRows.length; i++) {
+                endgamePoints += endgameToPoints[endgameRows[i].bargeResult] * endgameRows[i]._count.bargeResult;
+            }
 
-            // Count of stage interactions
-            const stageAttempts = bargeRows.reduce((total, row) => {
-                if (row.bargeResult !== BargeResult.NOT_ATTEMPTED) {
-                    return total + row._count.bargeResult;
-                }
-                return total;
-            }, 0);
-
-            // Average stage points, excluding non-attempts
-            // let avgStagePoints = 0
-            // if (stageAttempts !== 0) {
-            //     avgStagePoints = (((stageDataMap[StageResult.ONSTAGE] || 0) * 3) +
-            //         ((stageDataMap[StageResult.ONSTAGE_HARMONY] || 0) * 5) +
-            //         ((stageDataMap[StageResult.PARK] || 0))) / stageAttempts;
-            // }
+            return eventsAverage + (endgamePoints / sumOfMatches.length);
         }
         else {
             // Returns average of given EventAction per scout report
