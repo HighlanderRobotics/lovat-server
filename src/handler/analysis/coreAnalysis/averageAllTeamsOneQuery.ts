@@ -1,8 +1,8 @@
 import prismaClient from '../../../prismaClient'
-import { autoEnd, matchTimeEnd, Metric, metricToEvent, teleopStart } from "../analysisConstants";
+import { autoEnd, endgameToPoints, matchTimeEnd, Metric, metricToEvent, teleopStart } from "../analysisConstants";
 import { EventAction, Position, User } from "@prisma/client";
 
-
+/** Average all teams based on  */
 export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promise<number> => {
     try {
         if (metric === Metric.driverAbility) {
@@ -28,6 +28,9 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
                 }
             })
             return data._avg.driverAbility
+        }
+        if (metric === Metric.bargePoints) {
+            return 0;
         }
         if (metric === Metric.teleopPoints || metric === Metric.autoPoints || metric === Metric.totalPoints)
         {
@@ -73,14 +76,41 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
                 }
 
             })
-            let averagePoints = allTeamData.reduce((acc, curr) => {
+
+            if (allTeamData.length === 0) {
+                return 0;
+            }
+
+            const averagePoints = allTeamData.reduce((acc, curr) => {
                 return acc + curr._sum.points;
             }, 0) / allTeamData.length;
-            if(!averagePoints)
-            {
-                averagePoints = 0
+
+            let endgamePoints = 0
+            if (metric === Metric.totalPoints || metric === Metric.teleopPoints) {
+                const bargeResults = await prismaClient.scoutReport.findMany({
+                    where: {
+                        teamMatchData: {
+                            tournamentKey: {
+                                in: user.tournamentSource
+                            }
+                        },
+                        scouter: {
+                            sourceTeamNumber: {
+                                in: user.teamSource
+                            }
+                        }
+                    },
+                    select: {
+                        bargeResult: true
+                    }
+                });
+
+                for (let i = 0; i < bargeResults.length; i++) {
+                    endgamePoints += endgameToPoints[bargeResults[i].bargeResult];
+                }
             }
-            return averagePoints
+
+            return averagePoints + (endgamePoints / allTeamData.length);
 
         }
 
@@ -142,7 +172,7 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
             return 0;
         }
 
-        let averageScores = allTeamData.reduce((acc, curr) => {
+        const averageScores = allTeamData.reduce((acc, curr) => {
             return acc + curr._count._all;
         }, 0) / allTeamData.length;
 
