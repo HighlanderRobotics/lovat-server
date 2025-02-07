@@ -2,46 +2,59 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from "csv-stringify/sync";
-import { UserRole, HighNoteResult, PickUp, EventAction, Position } from "@prisma/client";
-import { autoEnd } from "../analysis/analysisConstants";
+import { UserRole, EventAction, Position, UnderShallowCage, KnocksAlgae, BargeResult, RobotRole, AlgaePickup, CoralPickup, Scouter, TeamMatchData, Event } from "@prisma/client";
+import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
-class CondensedReport {
+export interface CondensedReport {
     match: string
     teamNumber: number
     role: string
-    groundPickup: boolean
-    chutePickup: boolean
+    coralPickup: string
+    algaePickup: string
+    algaeKnocking: boolean
+    underShallowCage: boolean
     teleopPoints: number
     autoPoints: number
     driverAbility: number
-    pickups: number
     feeds: number
-    drops: number
-    scores: number
-    ampScores: number
-    speakerScores: number
-    trapScores: number
-    defense: number
-    stage: string
-    highNoteSuccess: boolean
+    defends: number
+    coralPickups: number
+    algaePickups: number
+    coralDrops: number
+    algaeDrops: number
+    coralL1: number
+    coralL2: number
+    coralL3: number
+    coralL4: number
+    processorScores: number
+    netScores: number
+    netFails: number
+    activeAuton: boolean
+    endgame: string
     scouter: string
     notes: string
 }
 
-// Map of stage events to points given
-const stagePointMap = {
-    ONSTAGE_HARMONY: 5,
-    ONSTAGE: 3,
-    PARK: 1,
-    NOTHING: 0
+// Simplified scouting report with properties required for aggregation
+interface PointsReport {
+    notes: string
+    robotRole: RobotRole
+    algaePickup: AlgaePickup
+    coralPickup: CoralPickup
+    bargeResult: BargeResult
+    KnocksAlgae: KnocksAlgae
+    UnderShallowCage: UnderShallowCage
+    driverAbility: number
+    events: Partial<Event>[]
+    scouter: Partial<Scouter>
+    teamMatchData: Partial<TeamMatchData>
 }
 
 /**
- * Sends csv file of rows of AggregatedTeamMatchData instances, organized by match.
- * Uses data from queried tournament and user"s teamSource. Available to Scouting Leads.
- * Non-averaged results default to highest report, except in the case of robot roles (to coincide with getTeamCSV).
+ * Sends csv file of rows of CondensedReport instances, organized by scout report.
+ * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
  */
 export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -78,9 +91,11 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
             select: {
                 notes: true,
                 robotRole: true,
-                stage: true,
-                highNote: true,
-                pickUp: true,
+                algaePickup: true,
+                coralPickup: true,
+                bargeResult: true,
+                KnocksAlgae: true,
+                UnderShallowCage: true,
                 driverAbility: true,
                 events: {
                     select: {
@@ -104,6 +119,7 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
                     }
                 }
             },
+            // Ordering prioritizes top to bottom
             orderBy: [
                 {teamMatchData: {matchType: "desc"}},
                 {teamMatchData: {matchNumber: "asc"}},
@@ -144,28 +160,40 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
     }
 }
 
-function condenseReport(report, userTeam: number): CondensedReport {
+// Less verbose and don't want to create new arrays constantly
+const posL1: Position[] = [Position.LEVEL_ONE_A, Position.LEVEL_ONE_B, Position.LEVEL_ONE_C];
+const posL2: Position[] = [Position.LEVEL_TWO_A, Position.LEVEL_TWO_B, Position.LEVEL_TWO_C];
+const posL3: Position[] = [Position.LEVEL_THREE_A, Position.LEVEL_THREE_B, Position.LEVEL_THREE_C];
+
+function condenseReport(report: PointsReport, userTeam: number): CondensedReport {
     const data: CondensedReport = {
         match: report.teamMatchData.matchType.at(0) + report.teamMatchData.matchNumber,
         teamNumber: report.teamMatchData.teamNumber,
         role: report.robotRole,
-        groundPickup: report.pickUp !== PickUp.CHUTE,
-        chutePickup: report.pickUp !== PickUp.GROUND,
+        coralPickup: report.coralPickup,
+        algaePickup: report.algaePickup,
+        algaeKnocking: report.KnocksAlgae === KnocksAlgae.TRUE,
+        underShallowCage: report.UnderShallowCage === UnderShallowCage.TRUE,
         teleopPoints: 0,
         autoPoints: 0,
         driverAbility: report.driverAbility,
-        pickups: 0,
         feeds: 0,
-        drops: 0,
-        scores: 0,
-        ampScores: 0,
-        speakerScores: 0,
-        trapScores: 0,
-        defense: 0,
-        stage: report.stage,
-        highNoteSuccess: report.highNote === HighNoteResult.SUCCESSFUL,
+        defends: 0,
+        coralPickups: 0,
+        algaePickups: 0,
+        coralDrops: 0,
+        algaeDrops: 0,
+        coralL1: 0,
+        coralL2: 0,
+        coralL3: 0,
+        coralL4: 0,
+        processorScores: 0,
+        netScores: 0,
+        netFails: 0,
+        activeAuton: false,
+        endgame: report.bargeResult,
         scouter: "",
-        notes: report.notes.replace(/,/g, ";", ) // Avoid commas in a csv...
+        notes: report.notes.replace(/,/g, ";") // Avoid commas in a csv...
     };
 
     // Sum match points and actions
@@ -177,42 +205,72 @@ function condenseReport(report, userTeam: number): CondensedReport {
         }
 
         switch (event.action) {
-            case EventAction.DEFENSE:
-                data.defense++;
+            case EventAction.PICKUP_CORAL:
+                data.coralPickups++;
                 break;
-            case EventAction.DROP_RING:
-                data.drops++;
+            case EventAction.PICKUP_ALGAE:
+                data.algaePickups++;
                 break;
-            case EventAction.FEED_RING:
+            case EventAction.FEED:
                 data.feeds++;
                 break;
-            case EventAction.PICK_UP:
-                data.pickups++;
+            case EventAction.AUTO_LEAVE:
+                data.activeAuton = true;
                 break;
-            case EventAction.SCORE:
-                data.scores++;
+            case EventAction.DEFEND:
+                data.defends++;
+                break;
+            case EventAction.SCORE_NET:
+                data.netScores++;
+                break;
+            case EventAction.FAIL_NET:
+                data.netFails++;
+                break;
+            case EventAction.SCORE_PROCESSOR:
+                data.processorScores++;
+                break;
+            case EventAction.SCORE_CORAL:
                 switch (event.position) {
-                    case Position.AMP:
-                        data.ampScores++;
+                    case Position.LEVEL_ONE:
+                        data.coralL1++;
                         break;
-                    case Position.SPEAKER:
-                        data.speakerScores++;
+                    case Position.LEVEL_TWO:
+                        data.coralL2++;
                         break;
-                    case Position.TRAP:
-                        data.trapScores++;
+                    case Position.LEVEL_THREE:
+                        data.coralL3++;
+                        break;
+                    case Position.LEVEL_FOUR:
+                        data.coralL4++;
+                        break;
+                    default:
+                        // During auto
+                        if (posL1.includes(event.position)) {
+                            data.coralL1++;
+                        } else if (posL2.includes(event.position)) {
+                            data.coralL2++;
+                        } else if (posL3.includes(event.position)) {
+                            data.coralL3++;
+                        } else {
+                            data.coralL4++;
+                        }
                         break;
                 }
+                break;
+            case EventAction.DROP_ALGAE:
+                data.algaeDrops++;
+                break;
+            case EventAction.DROP_CORAL:
+                data.coralDrops++;
                 break;
         }
     });
 
     // Add stage points to teleop
-    data.teleopPoints += stagePointMap[data.stage];
+    data.teleopPoints += endgameToPoints[data.endgame as BargeResult];
 
     if (report.scouter.sourceTeamNumber === userTeam) {
-        data.scouter = report.scouter.name;
-    } else {
-        data.scouter = "";
+        data.scouter = report.scouter.name.replace(/,/g, ";"); // Avoid commas in a csv...
     }
 
     return data;

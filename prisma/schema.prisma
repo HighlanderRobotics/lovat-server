@@ -1,14 +1,11 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
-
+  // directUrl = env("DIRECT_DATABASE_URL")
 }
-
 model Event {
   eventUuid       String      @id @default(uuid())
   time            Int
@@ -19,48 +16,58 @@ model Event {
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
   @@index([scoutReportUuid])
 }
-
 enum Position {
   NONE
-  AMP
-  SPEAKER
-  TRAP
-  WING_NEAR_AMP
-  WING_FRONT_OF_SPEAKER
-  WING_CENTER
-  WING_NEAR_SOURCE
-  GROUND_NOTE_ALLIANCE_NEAR_AMP
-  GROUND_NOTE_ALLIANCE_FRONT_OF_SPEAKER
-  GROUND_NOTE_ALLIANCE_BY_SPEAKER
-  GROUND_NOTE_CENTER_FARTHEST_AMP_SIDE
-  GROUND_NOTE_CENTER_TOWARD_AMP_SIDE
-  GROUND_NOTE_CENTER_CENTER
-  GROUND_NOTE_CENTER_TOWARD_SOURCE_SIDE
-  GROUND_NOTE_CENTER_FARTHEST_SOURCE_SIDE
+  START_ONE
+  START_TWO
+  START_THREE
+  START_FOUR
+  LEVEL_ONE
+  LEVEL_TWO
+  LEVEL_THREE
+  LEVEL_FOUR
+  LEVEL_ONE_A
+  LEVEL_ONE_B
+  LEVEL_ONE_C
+  LEVEL_TWO_A
+  LEVEL_TWO_B
+  LEVEL_TWO_C
+  LEVEL_THREE_A
+  LEVEL_THREE_B
+  LEVEL_THREE_C
+  LEVEL_FOUR_A
+  LEVEL_FOUR_B
+  LEVEL_FOUR_C
+  GROUND_PIECE_A
+  GROUND_PIECE_B
+  GROUND_PIECE_C
+  CORAL_STATION_ONE
+  CORAL_STATION_TWO
 }
-
 enum EventAction {
-  LEAVE
-  PICK_UP
-  DROP_RING
-  SCORE
-  DEFENSE
-  FEED_RING
-  STARTING_POSITION
+  PICKUP_CORAL
+  PICKUP_ALGAE
+  FEED
+  AUTO_LEAVE
+  DEFEND
+  SCORE_NET
+  FAIL_NET
+  SCORE_PROCESSOR
+  SCORE_CORAL
+  DROP_ALGAE
+  DROP_CORAL
+  START_POSITION
 }
-
 model FeatureToggle {
   feature String  @id
   enabled Boolean @default(true)
 }
-
 // model FlaggedScoutReport {
 //   uuid            String      @id @default(uuid())
 //   note            String
 //   scoutReportUuid String      @unique
 //   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
 // }
-
 model TeamMatchData {
   key           String        @id
   tournamentKey String
@@ -70,14 +77,11 @@ model TeamMatchData {
   matchType     MatchType
   scoutReports  ScoutReport[]
   @@index([tournamentKey, teamNumber])
-
 }
-
 enum MatchType {
   QUALIFICATION
   ELIMINATION
 }
-
 model MutablePicklist {
   uuid          String      @id @default(uuid())
   teams         Int[]
@@ -87,51 +91,58 @@ model MutablePicklist {
   tournamentKey String?
   tournament    Tournament? @relation(fields: [tournamentKey], references: [key])
 }
-
 model ScoutReport {
   uuid               String              @id @default(uuid())
-  teamMatchKey       String             
+  teamMatchKey       String
   teamMatchData      TeamMatchData       @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
   startTime          DateTime
   notes              String
   robotRole          RobotRole
-  stage              StageResult
-  highNote           HighNoteResult
-  pickUp             PickUp
+  algaePickup        AlgaePickup
+  coralPickup        CoralPickup
+  bargeResult         BargeResult
+  KnocksAlgae         KnocksAlgae
+  UnderShallowCage    UnderShallowCage
   driverAbility      Int
   scouterUuid        String
   scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
-  events             Event[]   
-
+  events             Event[]
   // flaggedScoutReport FlaggedScoutReport?
 }
-
 enum RobotRole {
   OFFENSE
   DEFENSE
   FEEDER
   IMMOBILE
 }
-
-enum HighNoteResult {
-  NOT_ATTEMPTED
-  FAILED
-  SUCCESSFUL
+enum AlgaePickup {
+ NONE
+ GROUND
+ REEF
+ BOTH
 }
-
-enum StageResult {
-  NOTHING
-  PARK
-  ONSTAGE
-  ONSTAGE_HARMONY
+enum KnocksAlgae {
+ TRUE
+ FALSE
 }
-
-enum PickUp {
-  GROUND
-  CHUTE
-  BOTH
+enum UnderShallowCage {
+ TRUE
+ FALSE
 }
-
+enum CoralPickup {
+ NONE
+ GROUND
+ STATION
+ BOTH
+}
+enum BargeResult {
+ NOT_ATTEMPTED
+ PARKED
+ SHALLOW
+ FAILED_SHALLOW
+ DEEP
+ FAILED_DEEP
+}
 model ScouterScheduleShift {
   uuid                    String         @id @default(uuid())
   sourceTeamNumber        Int
@@ -146,9 +157,7 @@ model ScouterScheduleShift {
   team4                   Scouter[] @relation(name: "Team4")
   team5                   Scouter[] @relation(name: "Team5")
   team6                   Scouter[] @relation(name: "Team6")
-
 }
-
 model Scouter {
   uuid               String         @id @default(uuid())
   name               String?
@@ -164,34 +173,33 @@ model Scouter {
   Team5Shifts                ScouterScheduleShift[] @relation(name: "Team5")
   Team6Shifts                ScouterScheduleShift[] @relation(name: "Team6")
   @@index([sourceTeamNumber])
-
 }
-
 model SharedPicklist {
   uuid          String @id @default(uuid())
   name          String
-  totalPoints   Float    
-  defense       Float 
-  pickUps       Float
-  stage         Float
-  autoPoints    Float
+  totalPoints   Float
+  defense       Float
   driverAbility Float
-  speakerScores Float
-  ampScores     Float
+  autoPoints    Float
+  algaePickups  Float
+  coralPickups  Float
+  barge         Float
+  coralLevel1Scores Float
+  coralLevel2Scores Float
+  coralLevel3Scores Float
+  coralLevel4Scores Float
+  algaeProcessor Float
+  algaeNet      Float
   teleopPoints  Float
-  trapScores    Float
   feeds         Float
-
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
-
 model Team {
   number         Int             @id
   name           String
   registeredTeam RegisteredTeam?
 }
-
 model RegisteredTeam {
   number                Int                    @id
   team                  Team                   @relation(fields: [number], references: [number], onDelete: Cascade)
@@ -200,11 +208,10 @@ model RegisteredTeam {
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
   website               String?
-  scouterScheduleShifts ScouterScheduleShift[] 
-  scouters              Scouter[] 
+  scouterScheduleShifts ScouterScheduleShift[]
+  scouters              Scouter[]
   users                 User[]
 }
-
 model Tournament {
   key                   String                 @id
   name                  String
@@ -214,7 +221,6 @@ model Tournament {
   scouterScheduleShifts ScouterScheduleShift[]
   mutablePicklists      MutablePicklist[]
 }
-
 model User {
   id               String            @id
   teamNumber       Int?
@@ -225,12 +231,19 @@ model User {
   role             UserRole          @default(ANALYST)
   tournamentSource String[]
   teamSource       Int[]
-  mutablePicklists MutablePicklist[] 
+  mutablePicklists MutablePicklist[]
   sharedPicklists  SharedPicklist[]
 }
-
 enum UserRole {
   ANALYST
   SCOUTING_LEAD
 }
+
+
+
+
+
+
+
+
 

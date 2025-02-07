@@ -1,6 +1,6 @@
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { roleMap } from "../analysisConstants";
+import { FlippedRoleMap } from "../analysisConstants";
 import { User } from "@prisma/client";
 
 
@@ -56,7 +56,7 @@ export const robotRole = async (user: User, team: number): Promise<{mainRole: st
         };
 
         return {
-            mainRole : roleMap[eventTypeWithMostOccurrences]
+            mainRole : FlippedRoleMap[eventTypeWithMostOccurrences]
         }
     }
 

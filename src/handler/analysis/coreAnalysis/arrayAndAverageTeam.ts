@@ -1,14 +1,14 @@
 import prismaClient from '../../../prismaClient'
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
 import { autoEnd, matchTimeEnd, Metric, multiplerBaseAnalysis, swrConstant, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
-import { stagePicklistTeam } from "../picklist/stagePicklistTeam";
+import { bargePicklistTeam } from "../picklist/bargePicklistTeam";
 import { User } from "@prisma/client";
 
 
 export const arrayAndAverageTeam = async (user: User, metric: Metric, team: number): Promise<{ average: number, timeLine: { match: string, dataPoint: number }[] }> => {
     try {
-        if (metric === Metric.stage) {
-            return { average: await stagePicklistTeam(user, team), timeLine: null }
+        if (metric === Metric.bargePoints) {
+            return { average: await bargePicklistTeam(user, team), timeLine: null }
         }
 
         let tournamentFilter: {in?: string[]} = {}
@@ -67,7 +67,9 @@ export const arrayAndAverageTeam = async (user: User, metric: Metric, team: numb
             return acc;
         }, {});
         const tournamentGroups: Match[][] = Object.values(groupedByTournament);
-
+        // if (metric === Metric.bargePoints) {
+        //     return { average: await bargePicklistTeam(user, team), timeLine: null }
+        // }
         const timeLineArray = []
         const tournamentAverages = []
         // Group into tournaments, calculate all averages individually so they can all be properly weighted after the nested loops
@@ -78,16 +80,16 @@ export const arrayAndAverageTeam = async (user: User, metric: Metric, team: numb
             // IMO needs a refactor to take scout reports in with initial query
             for (const match of tournament) {
                 // Add time constraints if necessary
-                if (metric === Metric.teleoppoints) {
+                if (metric === Metric.teleopPoints) {
                     const currData = singleMatchEventsAverage(user, true, match.key, team, metric, teleopStart, matchTimeEnd)
                     currDatas.push(currData)
                 }
-                else if (metric === Metric.autopoints) {
+                else if (metric === Metric.autoPoints) {
                     const currData = singleMatchEventsAverage(user, true, match.key, team, metric, 0, autoEnd)
                     currDatas.push(currData)
                 }
                 else {
-                    const currData = singleMatchEventsAverage(user, metric === Metric.totalpoints, match.key, team, metric)
+                    const currData = singleMatchEventsAverage(user, metric === Metric.totalPoints, match.key, team, metric)
                     currDatas.push(currData)
                 }
             }

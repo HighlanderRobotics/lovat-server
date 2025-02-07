@@ -2,6 +2,7 @@ import { Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AlgaePickup, CoralPickup } from "@prisma/client";
 
 
 export const updatePicklist = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -11,29 +12,34 @@ export const updatePicklist = async (req: AuthenticatedRequest, res: Response): 
             name: z.string(),
             totalPoints: z.number(),
             defense: z.number(),
-            pickUps :z.number() ,
-            stage : z.number(),
-            highNote : z.number(),
+            coralPickups :z.number() ,
+            algaePickups: z.number(),
+            barge : z.number(),
+            coralLevel1Scores: z.number(),
+            coralLevel2Scores: z.number(),
+            coralLevel3Scores: z.number(),
+            coralLevel4Scores: z.number(),
+            algaeProcessor: z.number(),
+            algaeNet: z.number(),
             autoPoints : z.number(),
             driverAbility :z.number() ,
-            speakerScores : z.number(),
-            ampScores : z.number(),
             teleopPoints : z.number(),
-            trapScores :z.number(),                   
             authorId: z.string()
         }).safeParse({
             name: req.body.name,
             totalPoints: req.body.totalPoints || 0,
             defense: req.body.defense || 0,
-            pickUps : req.body.pickUps || 0,
-            stage : req.body.stage || 0,
-            highNote : req.body.highNote || 0,
+            algaePickups : req.body.pickUps || 0,
+            barge : req.body.stage || 0,
+            coralLevel1Scores : req.body.coralLevel1Scores || 0,
+            coralLevel2Scores : req.body.coralLevel2Scores || 0,
+            coralLevel3Scores : req.body.coralLevel3Scores || 0,
+            coralLevel4Scores : req.body.coralLevel4Scores || 0,
             autoPoints : req.body.autoPoints || 0,
             driverAbility : req.body.driverAbility || 0,
-            speakerScores : req.body.speakerScores || 0,
-            ampScores : req.body.ampScores || 0,
-            teleopPoints : req.body.teleopPoints || 0,
-            trapScores : req.body.trapScores || 0,           
+            algaeProcessor : req.body.algaeProcessor || 0,
+            algaeNet : req.body.algaeNet || 0,
+            coralPickups : req.body.coralPickups || 0,
             authorId : user.id
 
         })
@@ -53,14 +59,18 @@ export const updatePicklist = async (req: AuthenticatedRequest, res: Response): 
                 name : params.data.name,
                 totalPoints: params.data.totalPoints,
                 defense: params.data.defense,
-                pickUps : params.data.pickUps,
-                stage : params.data.stage,
+                algaePickups : params.data.algaePickups,
+                coralPickups : params.data.coralPickups,
+                barge : params.data.barge,
                 autoPoints : params.data.autoPoints,
                 driverAbility : params.data.driverAbility,
-                speakerScores : params.data.speakerScores,
-                ampScores : params.data.ampScores,
+                coralLevel1Scores : params.data.coralLevel1Scores,
+                coralLevel2Scores : params.data.coralLevel2Scores,
+                coralLevel3Scores : params.data.coralLevel3Scores,
+                coralLevel4Scores : params.data.coralLevel4Scores,
+                algaeNet : params.data.algaeNet,
                 teleopPoints : params.data.teleopPoints,
-                trapScores : params.data.trapScores,
+                algaeProcessor : params.data.algaeProcessor,
                 authorId : params.data.authorId
             }
         })
