@@ -130,8 +130,8 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         for (const event of events) {
             let points = 0;
             const time = event[0];
+            const action = EventActionMap[event[1]][0];
             const position = PositionMap[event[2]][0];
-            const action = EventActionMap[event[1]][0]
             if (time <= 18) {
                 if (action === "SCORE_CORAL") {
                     if (position === "LEVEL_ONE_A" || position === "LEVEL_ONE_B" || position === "LEVEL_ONE_C") {

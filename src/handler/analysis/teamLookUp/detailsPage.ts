@@ -3,7 +3,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
-import { averageAllTeamOneQuery } from "../coreAnalysis/averageAllTeamsOneQuery";
+import { averageAllTeamOneQuery } from "../coreAnalysis/averageAllTeamOneQuery";
 import { Metric, metricsToNumber} from "../analysisConstants";
 
 
