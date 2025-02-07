@@ -49,7 +49,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
 
         // Assuming all elimination matches are not scouted, find the last scouted match (and pretend it is the last completed one)
-        const lastFinishedMatch = await prismaClient.teamMatchData.findFirst({
+        const last = await prismaClient.teamMatchData.findFirst({
             where: {
                 tournamentKey: params.data.tournamentKey,
                 matchType: MatchType.QUALIFICATION,
@@ -62,6 +62,8 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 matchNumber: true
             }
         });
+        // Default to 0
+        const lastFinishedMatch = last ? last.matchNumber : 0;
 
         // Filter to return a list of user's team's scout reports for each row, only valid if user has a team number
         let includeTeamReports: Prisma.TeamMatchData$scoutReportsArgs | undefined = undefined;
@@ -175,7 +177,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                     matchNumber: match[0].matchNumber,
                     matchType: ReverseMatchTypeMap[match[0].matchType],
                     scouted: match.some(team => team._count.scoutReports >= 1),
-                    finished: match[0].matchType === MatchType.QUALIFICATION && match[0].matchNumber <= lastFinishedMatch.matchNumber,
+                    finished: match[0].matchType === MatchType.QUALIFICATION && match[0].matchNumber <= lastFinishedMatch,
                     team1: { number: match[0].teamNumber, scouters: [], externalReports: match[0]._count.scoutReports },
                     team2: { number: match[1].teamNumber, scouters: [], externalReports: match[1]._count.scoutReports },
                     team3: { number: match[2].teamNumber, scouters: [], externalReports: match[2]._count.scoutReports },
@@ -224,7 +226,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             const ordinalMatchNumber = (i > 0) ? (i) : (lastQualMatch - i);
 
             // Increment the scouter shift if we passed the upper bound
-            if (ordinalMatchNumber > scouterShifts[currShiftIndex].endMatchOrdinalNumber) {
+            if (scouterShifts[currShiftIndex] && ordinalMatchNumber > scouterShifts[currShiftIndex].endMatchOrdinalNumber) {
                 currShiftIndex++;
             }
 
@@ -254,7 +256,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 matchNumber: match[0].matchNumber,
                 matchType: ReverseMatchTypeMap[match[0].matchType],
                 scouted: match.some(team => team._count.scoutReports >= 1),
-                finished: match[0].matchType === MatchType.QUALIFICATION || match[0].matchNumber <= lastFinishedMatch.matchNumber,
+                finished: match[0].matchType === MatchType.QUALIFICATION || match[0].matchNumber <= lastFinishedMatch,
                 team1: { number: match[0].teamNumber, scouters: matchScouters[0],
                     externalReports: match[0]._count.scoutReports - (match[0].scoutReports.length) },
                 team2: { number: match[1].teamNumber, scouters: matchScouters[1],
@@ -276,6 +278,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         res.status(200).send(finalFormattedMatches);
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error)
     }
 }
