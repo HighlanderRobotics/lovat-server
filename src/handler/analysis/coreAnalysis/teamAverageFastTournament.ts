@@ -1,6 +1,6 @@
 import prismaClient from '../../../prismaClient'
 import { endgameToPoints, matchTimeEnd, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
-import { BargeResult, EventAction, Position, User } from "@prisma/client";
+import {EventAction, Position, User } from "@prisma/client";
 
 
 export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: Metric, tournamentKey: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
@@ -191,6 +191,7 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
             });
 
             let endgamePoints = 0;
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
             for (let i = 0; i < endgameRows.length; i++) {
                 endgamePoints += endgameToPoints[endgameRows[i].bargeResult] * endgameRows[i]._count.bargeResult;
             }
