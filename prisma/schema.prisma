@@ -1,11 +1,13 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
   // directUrl = env("DIRECT_DATABASE_URL")
 }
+
 model Event {
   eventUuid       String      @id @default(uuid())
   time            Int
@@ -14,8 +16,10 @@ model Event {
   points          Int
   scoutReportUuid String
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
+
   @@index([scoutReportUuid])
 }
+
 enum Position {
   NONE
   START_ONE
@@ -44,6 +48,7 @@ enum Position {
   CORAL_STATION_ONE
   CORAL_STATION_TWO
 }
+
 enum EventAction {
   PICKUP_CORAL
   PICKUP_ALGAE
@@ -58,16 +63,19 @@ enum EventAction {
   DROP_CORAL
   START_POSITION
 }
+
 model FeatureToggle {
   feature String  @id
   enabled Boolean @default(true)
 }
+
 // model FlaggedScoutReport {
 //   uuid            String      @id @default(uuid())
 //   note            String
 //   scoutReportUuid String      @unique
 //   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
 // }
+
 model TeamMatchData {
   key           String        @id
   tournamentKey String
@@ -76,12 +84,15 @@ model TeamMatchData {
   teamNumber    Int
   matchType     MatchType
   scoutReports  ScoutReport[]
+
   @@index([tournamentKey, teamNumber])
 }
+
 enum MatchType {
   QUALIFICATION
   ELIMINATION
 }
+
 model MutablePicklist {
   uuid          String      @id @default(uuid())
   teams         Int[]
@@ -91,115 +102,128 @@ model MutablePicklist {
   tournamentKey String?
   tournament    Tournament? @relation(fields: [tournamentKey], references: [key])
 }
+
 model ScoutReport {
-  uuid               String              @id @default(uuid())
-  teamMatchKey       String
-  teamMatchData      TeamMatchData       @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
-  startTime          DateTime
-  notes              String
-  robotRole          RobotRole
-  algaePickup        AlgaePickup
-  coralPickup        CoralPickup
-  bargeResult         BargeResult
-  KnocksAlgae         KnocksAlgae
-  UnderShallowCage    UnderShallowCage
-  driverAbility      Int
-  scouterUuid        String
-  scouter            Scouter             @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
-  events             Event[]
+  uuid             String           @id @default(uuid())
+  teamMatchKey     String
+  teamMatchData    TeamMatchData    @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+  startTime        DateTime
+  notes            String
+  robotRole        RobotRole
+  algaePickup      AlgaePickup
+  coralPickup      CoralPickup
+  bargeResult      BargeResult
+  knocksAlgae      KnocksAlgae      @default(NO)
+  underShallowCage UnderShallowCage @default(NO)
+  driverAbility    Int
+  scouterUuid      String
+  scouter          Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
+  events           Event[]
   // flaggedScoutReport FlaggedScoutReport?
 }
+
 enum RobotRole {
   OFFENSE
   DEFENSE
   FEEDER
   IMMOBILE
 }
+
 enum AlgaePickup {
- NONE
- GROUND
- REEF
- BOTH
+  NONE
+  GROUND
+  REEF
+  BOTH
 }
+
 enum KnocksAlgae {
- TRUE
- FALSE
+  YES
+  NO
 }
+
 enum UnderShallowCage {
- TRUE
- FALSE
+  YES
+  NO
 }
+
 enum CoralPickup {
- NONE
- GROUND
- STATION
- BOTH
+  NONE
+  GROUND
+  STATION
+  BOTH
 }
+
 enum BargeResult {
- NOT_ATTEMPTED
- PARKED
- SHALLOW
- FAILED_SHALLOW
- DEEP
- FAILED_DEEP
+  NOT_ATTEMPTED
+  PARKED
+  SHALLOW
+  FAILED_SHALLOW
+  DEEP
+  FAILED_DEEP
 }
+
 model ScouterScheduleShift {
   uuid                    String         @id @default(uuid())
   sourceTeamNumber        Int
-  sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number], onDelete : Cascade)
+  sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
   tournamentKey           String
   tournament              Tournament     @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
   startMatchOrdinalNumber Int
   endMatchOrdinalNumber   Int
-  team1                   Scouter[] @relation(name: "Team1")
-  team2                   Scouter[] @relation(name: "Team2")
-  team3                   Scouter[] @relation(name: "Team3")
-  team4                   Scouter[] @relation(name: "Team4")
-  team5                   Scouter[] @relation(name: "Team5")
-  team6                   Scouter[] @relation(name: "Team6")
+  team1                   Scouter[]      @relation(name: "Team1")
+  team2                   Scouter[]      @relation(name: "Team2")
+  team3                   Scouter[]      @relation(name: "Team3")
+  team4                   Scouter[]      @relation(name: "Team4")
+  team5                   Scouter[]      @relation(name: "Team5")
+  team6                   Scouter[]      @relation(name: "Team6")
 }
+
 model Scouter {
-  uuid               String         @id @default(uuid())
+  uuid               String                 @id @default(uuid())
   name               String?
   sourceTeamNumber   Int
-  sourceTeam         RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
-  strikes            Int            @default(0)
-  scouterReliability Int            @default(0)
+  sourceTeam         RegisteredTeam         @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
+  strikes            Int                    @default(0)
+  scouterReliability Int                    @default(0)
   scoutReports       ScoutReport[]
-  Team1Shifts                ScouterScheduleShift[] @relation(name: "Team1")
-  Team2Shifts                ScouterScheduleShift[] @relation(name: "Team2")
-  Team3Shifts                ScouterScheduleShift[] @relation(name: "Team3")
-  Team4Shifts                ScouterScheduleShift[] @relation(name: "Team4")
-  Team5Shifts                ScouterScheduleShift[] @relation(name: "Team5")
-  Team6Shifts                ScouterScheduleShift[] @relation(name: "Team6")
+  team1Shifts        ScouterScheduleShift[] @relation(name: "Team1")
+  team2Shifts        ScouterScheduleShift[] @relation(name: "Team2")
+  team3Shifts        ScouterScheduleShift[] @relation(name: "Team3")
+  team4Shifts        ScouterScheduleShift[] @relation(name: "Team4")
+  team5Shifts        ScouterScheduleShift[] @relation(name: "Team5")
+  team6Shifts        ScouterScheduleShift[] @relation(name: "Team6")
+
   @@index([sourceTeamNumber])
 }
+
 model SharedPicklist {
-  uuid          String @id @default(uuid())
-  name          String
-  totalPoints   Float
-  defense       Float
-  driverAbility Float
-  autoPoints    Float
-  algaePickups  Float
-  coralPickups  Float
-  barge         Float
+  uuid              String @id @default(uuid())
+  name              String
+  totalPoints       Float
+  defense           Float
+  driverAbility     Float
+  autoPoints        Float
+  algaePickups      Float
+  coralPickups      Float
+  barge             Float
   coralLevel1Scores Float
   coralLevel2Scores Float
   coralLevel3Scores Float
   coralLevel4Scores Float
-  algaeProcessor Float
-  algaeNet      Float
-  teleopPoints  Float
-  feeds         Float
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  algaeProcessor    Float
+  algaeNet          Float
+  teleopPoints      Float
+  feeds             Float
+  authorId          String
+  author            User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
+
 model Team {
   number         Int             @id
   name           String
   registeredTeam RegisteredTeam?
 }
+
 model RegisteredTeam {
   number                Int                    @id
   team                  Team                   @relation(fields: [number], references: [number], onDelete: Cascade)
@@ -212,6 +236,7 @@ model RegisteredTeam {
   scouters              Scouter[]
   users                 User[]
 }
+
 model Tournament {
   key                   String                 @id
   name                  String
@@ -221,6 +246,7 @@ model Tournament {
   scouterScheduleShifts ScouterScheduleShift[]
   mutablePicklists      MutablePicklist[]
 }
+
 model User {
   id               String            @id
   teamNumber       Int?
@@ -234,16 +260,8 @@ model User {
   mutablePicklists MutablePicklist[]
   sharedPicklists  SharedPicklist[]
 }
+
 enum UserRole {
   ANALYST
   SCOUTING_LEAD
 }
-
-
-
-
-
-
-
-
-
