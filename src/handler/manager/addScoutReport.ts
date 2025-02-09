@@ -3,22 +3,23 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
+import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, MatchType, RobotRole, UnderShallowCage } from "@prisma/client";
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
     try {
         const paramsScoutReport = z.object({
             uuid : z.string(),
             tournamentKey : z.string(),
-            matchType : z.enum(["QUALIFICATION", "ELIMINATION"]),
+            matchType : z.nativeEnum(MatchType),
             matchNumber : z.number(),
             startTime: z.number(),
             notes: z.string(),
-            robotRole: z.enum(["OFFENSE", "DEFENSE", "FEEDER", "IMMOBILE"]),
-            barge: z.enum(["NOT_ATTEMPTED", "PARKED", "SHALLOW", "FAILED_SHALLOW", "DEEP", "FAILED_DEEP"]),
-            coralPickUp: z.enum(["NONE", "GROUND", "STATION", "BOTH"]),
-            algaePickUp: z.enum(["NONE","GROUND", "REEF", "BOTH"]),
-            knocksAlgae: z.enum(["NO", "YES"]),
-            traversesUnderCage: z.enum(["NO", "YES"]),
+            robotRole: z.nativeEnum(RobotRole),
+            barge: z.nativeEnum(BargeResult),
+            coralPickUp: z.nativeEnum(CoralPickup),
+            algaePickUp: z.nativeEnum(AlgaePickup),
+            knocksAlgae: z.nativeEnum(KnocksAlgae),
+            traversesUnderCage: z.nativeEnum(UnderShallowCage),
             driverAbility: z.number(),
             scouterUuid: z.string(),
             teamNumber : z.number()
@@ -27,14 +28,14 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             scouterUuid: req.body.scouterUuid,
             startTime: req.body.startTime,
             notes: req.body.notes,
-            robotRole:  RobotRoleMap[req.body.robotRole][0],
+            robotRole:  RobotRoleMap[req.body.robotRole],
             driverAbility:  req.body.driverAbility,
-            barge:  BargeResultMap[req.body.barge][0],
-            algaePickUp:  AlgaePickupMap[req.body.algaePickUp][0],
-            coralPickUp:  CoralPickupMap[req.body.coralPickUp][0],
-            knocksAlgae: KnocksAlgaeMap[req.body.knocksAlgae][0],
-            traversesUnderCage: UnderShallowCageMap[req.body.traversesUnderCage][0],
-            matchType : MatchTypeMap[req.body.matchType][0],
+            barge:  BargeResultMap[req.body.barge],
+            algaePickUp:  AlgaePickupMap[req.body.algaePickUp],
+            coralPickUp:  CoralPickupMap[req.body.coralPickUp],
+            knocksAlgae: KnocksAlgaeMap[req.body.knocksAlgae],
+            traversesUnderCage: UnderShallowCageMap[req.body.traversesUnderCage],
+            matchType : MatchTypeMap[req.body.matchType],
             matchNumber : req.body.matchNumber,
             teamNumber : req.body.teamNumber,
             tournamentKey : req.body.tournamentKey
