@@ -275,7 +275,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             finalFormattedMatches[ordinalMatchNumber - 1] = currData;
         }
 
-        res.status(200).send({finalFormattedMatches});
+        res.status(200).send(finalFormattedMatches);
     }
     catch (error) {
         console.log(error)
