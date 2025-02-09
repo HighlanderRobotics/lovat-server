@@ -131,53 +131,53 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         const events = req.body.events;
         for (const event of events) {
             let points = 0;
-            const time = event[0];
-            const action = EventActionMap[event[1]][0];
-            const position = PositionMap[event[2]][0];
+            const time = events[0][0];
+            const position = PositionMap[events[1][2]];
+            const action = EventActionMap[events[2][1]];
             if (time <= 18) {
-                if (action === "SCORE_CORAL") {
-                    if (position === "LEVEL_ONE_A" || position === "LEVEL_ONE_B" || position === "LEVEL_ONE_C") {
+                if (action === EventAction.SCORE_CORAL) {
+                    if (position === Position.LEVEL_ONE_A || position === Position.LEVEL_ONE_B || position === Position.LEVEL_ONE_C) {
                         points = 3
                     }
-                    else if (position === "LEVEL_TWO_A" || position === "LEVEL_TWO_B" || position === "LEVEL_TWO_C") {
+                    else if (position === Position.LEVEL_TWO_A || position === Position.LEVEL_TWO_B || position === Position.LEVEL_TWO_C) {
                         points = 4
                     }
-                    else if (position === "LEVEL_THREE_A" || position === "LEVEL_THREE_B" || position === "LEVEL_THREE_C") {
+                    else if (position === Position.LEVEL_THREE_A || position === Position.LEVEL_THREE_B || position === Position.LEVEL_THREE_C) {
                         points = 6
                     }
-                    else if (position === "LEVEL_FOUR_A" || position === "LEVEL_FOUR_B" || position === "LEVEL_FOUR_C") {
+                    else if (position === Position.LEVEL_FOUR_A || position === Position.LEVEL_FOUR_B || position === Position.LEVEL_FOUR_C) {
                         points = 7
                     }
                 }
-                else if (action === "AUTO_LEAVE") {
+                else if (action === EventAction.AUTO_LEAVE) {
                     points = 3
                 }
-                else if (action === "SCORE_PROCESSOR"){
+                else if (action === EventAction.SCORE_PROCESSOR) {
                     points = 6
                 }
-                else if (action === "SCORE_NET"){
+                else if (action === EventAction.SCORE_NET) {
                     points = 4
                 }
             }
             else {
-                if (action === "SCORE_CORAL") {
-                    if (position === "LEVEL_ONE") {
+                if (action === EventAction.SCORE_CORAL) {
+                    if (position === Position.LEVEL_ONE) {
                         points = 2
                     }
-                    else if (position === "LEVEL_TWO") {
+                    else if (position === Position.LEVEL_TWO) {
                         points = 3
                     }
-                    else if (position === "LEVEL_THREE") {
+                    else if (position === Position.LEVEL_THREE) {
                         points = 4
                     }
-                    else if (position === "LEVEL_FOUR") {
+                    else if (position === Position.LEVEL_FOUR) {
                         points = 5
                     }
                 }
-                else if (action === "SCORE_PROCESSOR"){
+                else if (action === EventAction.SCORE_PROCESSOR) {
                     points = 6
                 }
-                else if (action === "SCORE_NET"){
+                else if (action === EventAction.SCORE_NET) {
                     points = 4
                 }
             }
