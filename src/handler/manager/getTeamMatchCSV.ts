@@ -317,7 +317,7 @@ function aggregateTeamMatchReports(match: string, teamNumber: number, reports: O
         return most;
     }, 0);
 
-    // Divide relevent sums by number of matches to get mean
+    // Divide relevent sums by number of reports to get mean
     if (reports.length > 1) {
         data.teleopPoints = roundToHundredth(data.teleopPoints / reports.length);
         data.autoPoints = roundToHundredth(data.autoPoints / reports.length);

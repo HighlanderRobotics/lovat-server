@@ -129,7 +129,9 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
             acc[cur.teamNumber] ||= {reports: [], numMatches: 0};
 
             // Increment number of matches for team
-            acc[cur.teamNumber].numMatches++;
+            if (cur.scoutReports.length > 0) {
+                acc[cur.teamNumber].numMatches++;
+            }
 
             // Push reports for team from match
             cur.scoutReports.forEach(element => {
@@ -376,6 +378,9 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
     }
 
     // Divide relevent sums by number of matches to get mean
+    // Don't divide by 0
+    numMatches ||= 1;
+
     data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints / numMatches);
     data.avgAutoPoints = roundToHundredth(data.avgAutoPoints / numMatches);
     data.avgDriverAbility = roundToHundredth(data.avgDriverAbility / numMatches);
