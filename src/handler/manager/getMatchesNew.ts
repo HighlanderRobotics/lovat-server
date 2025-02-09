@@ -233,7 +233,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             const matchScouters: { name: string, scouted: boolean }[][] = [];
             for (let j = 0; j < 5; j++) {
                 // Add all complete scout reports from user's team
-                matchScouters[j] = match[j].scoutReports.map(e => ({ name: e.scouter.name, scouted: true }));
+                matchScouters[j] = match[j].scoutReports.map(e => ({ name: e.scouter.name, scouted: true })) || [];
 
                 // If the current match number is within a scouter shift, add incomplete scout reports
                 if (scouterShifts[currShiftIndex] && ordinalMatchNumber >= scouterShifts[currShiftIndex].startMatchOrdinalNumber) {
