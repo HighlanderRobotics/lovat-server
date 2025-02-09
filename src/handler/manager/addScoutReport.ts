@@ -3,7 +3,7 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
-import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, MatchType, RobotRole, UnderShallowCage } from "@prisma/client";
+import { AlgaePickup, BargeResult, CoralPickup, EventAction, KnocksAlgae, MatchType, Position, RobotRole, UnderShallowCage } from "@prisma/client";
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -182,8 +182,8 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             }
             const paramsEvents = z.object({
                 time: z.number(),
-                action: z.enum(["PICKUP_CORAL", "PICKUP_ALGAE", "FEED", "AUTO_LEAVE", "DEFEND", "SCORE_NET", "FAIL_NET", "SCORE_PROCESSOR", "SCORE_CORAL", "DROP_ALGAE", "DROP_CORAL", "START_POSITION"]),
-                position: z.enum(["NONE", "START_ONE", "START_TWO", "START_THREE", "START_FOUR", "LEVEL_ONE", "LEVEL_TWO", "LEVEL_THREE", "LEVEL_FOUR", "LEVEL_ONE_A", "LEVEL_ONE_B", "LEVEL_ONE_C", "LEVEL_TWO_A", "LEVEL_TWO_B", "LEVEL_TWO_C", "LEVEL_THREE_A", "LEVEL_THREE_B", "LEVEL_THREE_C", "LEVEL_FOUR_A", "LEVEL_FOUR_B", "LEVEL_FOUR_C", "GROUND_PIECE_A", "GROUND_PIECE_B", "GROUND_PIECE_C", "CORAL_STATION_ONE", "CORAL_STATION_TWO"]),
+                action: z.nativeEnum(EventAction),
+                position: z.nativeEnum(Position),
                 points: z.number(),
                 scoutReportUuid: z.string()
             }).safeParse({

@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { CoralPickupMap, AlgaePickupMap, PositionMap, MatchTypeMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap } from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
+import { AlgaePickup, BargeResult, CoralPickup, EventAction, KnocksAlgae, MatchType, Position, RobotRole, UnderShallowCage } from "@prisma/client";
 
 
 export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -14,15 +15,15 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             uuid: z.string(),
             startTime: z.number(),
             notes: z.string(),
-            robotRole: z.enum(["OFFENSE", "DEFENSE", "FEEDER", "IMMOBILE"]),
-            barge: z.enum(["NOT_ATTEMPTED", "PARKED", "SHALLOW", "FAILED_SHALLOW", "DEEP", "FAILED_DEEP"]),
-            coralPickUp: z.enum(["NONE", "GROUND", "STATION", "BOTH"]),
-            algaePickUp: z.enum(["NONE", "GROUND", "REEF", "BOTH"]),
-            knocksAlgae: z.enum(["NO", "YES"]),
-            traversesUnderCage: z.enum(["NO", "YES"]),
+            robotRole: z.nativeEnum(RobotRole),
+            barge: z.nativeEnum(BargeResult),
+            coralPickUp: z.nativeEnum(CoralPickup),
+            algaePickUp: z.nativeEnum(AlgaePickup),
+            knocksAlgae: z.nativeEnum(KnocksAlgae),
+            traversesUnderCage: z.nativeEnum(UnderShallowCage),
             driverAbility: z.number(),
             scouterUuid: z.string(),
-            matchType: z.enum(["QUALIFICATION", "ELIMINATION"]),
+            matchType: z.nativeEnum(MatchType),
             matchNumber: z.number(),
             tournamentKey: z.string(),
             teamNumber: z.number()
@@ -175,8 +176,8 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             }
             const paramsEvents = z.object({
                 time: z.number(),
-                action: z.enum(["PICKUP_CORAL", "PICKUP_ALGAE", "FEED", "AUTO_LEAVE", "DEFEND", "SCORE_NET", "FAIL_NET", "SCORE_PROCESSOR", "SCORE_CORAL", "DROP_ALGAE", "DROP_CORAL", "START_POSITION"]),
-                position: z.enum(["NONE", "START_ONE", "START_TWO", "START_THREE", "START_FOUR", "LEVEL_ONE", "LEVEL_TWO", "LEVEL_THREE", "LEVEL_FOUR", "LEVEL_ONE_A", "LEVEL_ONE_B", "LEVEL_ONE_C", "LEVEL_TWO_A", "LEVEL_TWO_B", "LEVEL_TWO_C", "LEVEL_THREE_A", "LEVEL_THREE_B", "LEVEL_THREE_C", "LEVEL_FOUR_A", "LEVEL_FOUR_B", "LEVEL_FOUR_C", "GROUND_PIECE_A", "GROUND_PIECE_B", "GROUND_PIECE_C", "CORAL_STATION_ONE", "CORAL_STATION_TWO"]),
+                action: z.nativeEnum(EventAction),
+                position: z.nativeEnum(Position),
                 points: z.number(),
                 scoutReportUuid: z.string()
             }).safeParse({

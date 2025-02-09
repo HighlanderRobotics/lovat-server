@@ -45,7 +45,6 @@ export const addTournamentMatches = async (tournamentKey) => {
                         
                         const params = z.object({
                             matchNumber: z.number(),
-                            matchType: z.enum(["QUALIFICATION", "ELIMINATION"]),
                             tournamentKey: z.string(),
                             key: z.string(),
                             teamNumber: z.number()
@@ -53,8 +52,7 @@ export const addTournamentMatches = async (tournamentKey) => {
                             key: currMatchKey,
                             tournamentKey: tournamentKey,
                             matchNumber: response.data[i].match_number,
-                            teamNumber: currTeam,
-                            matchType: 'QUALIFICATION'
+                            teamNumber: currTeam
                         })
                 
                         if (!params.success) {
@@ -93,7 +91,6 @@ export const addTournamentMatches = async (tournamentKey) => {
                         
                         const params = z.object({
                             matchNumber: z.number(),
-                            matchType: z.enum(["QUALIFICATION", "ELIMINATION"]),
                             tournamentKey: z.string(),
                             key: z.string(),
                             teamNumber: z.number()
@@ -102,7 +99,6 @@ export const addTournamentMatches = async (tournamentKey) => {
                             tournamentKey: tournamentKey,
                             matchNumber: nonQM,
                             teamNumber: currTeam,
-                            matchType: 'ELIMINATION'
                         })
                 
                         if (!params.success) {
