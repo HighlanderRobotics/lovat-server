@@ -1,6 +1,5 @@
 import prisma from "../../prismaClient";
 import axios from "axios";
-import prismaClient from '../../prismaClient'
 import { User } from '@prisma/client';
 import { Request as ExpressRequest } from 'express';
 import * as jose from 'jose';
@@ -11,15 +10,6 @@ export interface AuthenticatedRequest extends ExpressRequest {
 
 export const requireAuth = async (req: AuthenticatedRequest, res, next) => {
     try {
-        req.user = await prismaClient.user.findUnique({
-            where: {
-                id: 'auth0|655d8a8587cb3003c8718b59'
-            }
-        });
-        next();
-        return;
-
-
         console.log(`${req.method} ${req.path}`)
         // Validate JWT
         const tokenString = req.headers.authorization?.split(" ")[1]; // It would be in the format "Bearer <token>" so we split on the space and take the second part
