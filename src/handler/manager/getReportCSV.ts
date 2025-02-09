@@ -44,8 +44,8 @@ interface PointsReport {
     algaePickup: AlgaePickup
     coralPickup: CoralPickup
     bargeResult: BargeResult
-    KnocksAlgae: KnocksAlgae
-    UnderShallowCage: UnderShallowCage
+    knocksAlgae: KnocksAlgae
+    underShallowCage: UnderShallowCage
     driverAbility: number
     events: Partial<Event>[]
     scouter: Partial<Scouter>
@@ -94,8 +94,8 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
                 algaePickup: true,
                 coralPickup: true,
                 bargeResult: true,
-                KnocksAlgae: true,
-                UnderShallowCage: true,
+                knocksAlgae: true,
+                underShallowCage: true,
                 driverAbility: true,
                 events: {
                     select: {
@@ -172,8 +172,8 @@ function condenseReport(report: PointsReport, userTeam: number): CondensedReport
         role: report.robotRole,
         coralPickup: report.coralPickup,
         algaePickup: report.algaePickup,
-        algaeKnocking: report.KnocksAlgae === KnocksAlgae.TRUE,
-        underShallowCage: report.UnderShallowCage === UnderShallowCage.TRUE,
+        algaeKnocking: report.knocksAlgae === KnocksAlgae.YES,
+        underShallowCage: report.underShallowCage === UnderShallowCage.YES,
         teleopPoints: 0,
         autoPoints: 0,
         driverAbility: report.driverAbility,

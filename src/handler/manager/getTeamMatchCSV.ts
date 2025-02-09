@@ -13,8 +13,8 @@ interface PointsReport {
     algaePickup: AlgaePickup
     coralPickup: CoralPickup
     bargeResult: BargeResult
-    KnocksAlgae: KnocksAlgae
-    UnderShallowCage: UnderShallowCage
+    knocksAlgae: KnocksAlgae
+    underShallowCage: UnderShallowCage
     driverAbility: number
     events: Partial<Event>[]
     scouter: Partial<Scouter>
@@ -67,8 +67,8 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
                         algaePickup: true,
                         coralPickup: true,
                         bargeResult: true,
-                        KnocksAlgae: true,
-                        UnderShallowCage: true,
+                        knocksAlgae: true,
+                        underShallowCage: true,
                         driverAbility: true,
                         events: {
                             select: {
@@ -212,8 +212,8 @@ function aggregateTeamMatchReports(match: string, teamNumber: number, reports: O
         endgameCount[report.bargeResult]++;
 
         // Set discrete robot capabilities
-        data.algaeKnocking ||= report.KnocksAlgae === KnocksAlgae.TRUE;
-        data.underShallowCage ||= report.UnderShallowCage === UnderShallowCage.TRUE;
+        data.algaeKnocking ||= report.knocksAlgae === KnocksAlgae.YES;
+        data.underShallowCage ||= report.underShallowCage === UnderShallowCage.YES;
         if (coral === CoralPickup.NONE) {
             coral = report.coralPickup;
         } else if (coral !== report.coralPickup && report.coralPickup !== CoralPickup.NONE) {

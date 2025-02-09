@@ -113,8 +113,8 @@ model ScoutReport {
   algaePickup      AlgaePickup
   coralPickup      CoralPickup
   bargeResult      BargeResult
-  knocksAlgae      KnocksAlgae      @default(NO)
-  underShallowCage UnderShallowCage @default(NO)
+  knocksAlgae      KnocksAlgae     
+  underShallowCage UnderShallowCage
   driverAbility    Int
   scouterUuid      String
   scouter          Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
@@ -137,13 +137,13 @@ enum AlgaePickup {
 }
 
 enum KnocksAlgae {
-  YES
   NO
+  YES
 }
 
 enum UnderShallowCage {
-  YES
   NO
+  YES
 }
 
 enum CoralPickup {

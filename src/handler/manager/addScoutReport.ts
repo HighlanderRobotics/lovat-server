@@ -17,8 +17,8 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             barge: z.enum(["NOT_ATTEMPTED", "PARKED", "SHALLOW", "FAILED_SHALLOW", "DEEP", "FAILED_DEEP"]),
             coralPickUp: z.enum(["NONE", "GROUND", "STATION", "BOTH"]),
             algaePickUp: z.enum(["NONE","GROUND", "REEF", "BOTH"]),
-            knocksAlgae: z.enum(["TRUE", "FALSE"]),
-            traversesUnderCage: z.enum(["TRUE", "FALSE"]),
+            knocksAlgae: z.enum(["NO", "YES"]),
+            traversesUnderCage: z.enum(["NO", "YES"]),
             driverAbility: z.number(),
             scouterUuid: z.string(),
             teamNumber : z.number()
@@ -117,8 +117,8 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     coralPickup: paramsScoutReport.data.coralPickUp,
                     bargeResult: paramsScoutReport.data.barge,
                     algaePickup: paramsScoutReport.data.algaePickUp,
-                    KnocksAlgae: paramsScoutReport.data.knocksAlgae,
-                    UnderShallowCage: paramsScoutReport.data.traversesUnderCage
+                    knocksAlgae: paramsScoutReport.data.knocksAlgae,
+                    underShallowCage: paramsScoutReport.data.traversesUnderCage
                 }
             }
         )
