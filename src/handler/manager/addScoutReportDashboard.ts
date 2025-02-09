@@ -18,8 +18,8 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
             barge: z.enum(["NOT_ATTEMPTED", "PARKED", "SHALLOW", "FAILED_SHALLOW", "DEEP", "FAILED_DEEP"]),
             coralPickUp: z.enum(["NONE", "GROUND", "STATION", "BOTH"]),
             algaePickUp: z.enum(["NONE", "GROUND", "REEF", "BOTH"]),
-            knocksAlgae: z.enum(["TRUE", "FALSE"]),
-            traversesUnderCage: z.enum(["TRUE", "FALSE"]),
+            knocksAlgae: z.enum(["NO", "YES"]),
+            traversesUnderCage: z.enum(["NO", "YES"]),
             driverAbility: z.number(),
             scouterUuid: z.string(),
             matchType: z.enum(["QUALIFICATION", "ELIMINATION"]),
@@ -112,15 +112,14 @@ export const addScoutReportDashboard = async (req: AuthenticatedRequest, res: Re
                     bargeResult: paramsScoutReport.data.barge,
                     algaePickup: paramsScoutReport.data.algaePickUp,
                     coralPickup: paramsScoutReport.data.coralPickUp,
-                    UnderShallowCage: paramsScoutReport.data.traversesUnderCage,
-                    KnocksAlgae: paramsScoutReport.data.knocksAlgae
+                    underShallowCage: paramsScoutReport.data.traversesUnderCage,
+                    knocksAlgae: paramsScoutReport.data.knocksAlgae
                 }
             }
         )
         const scoutReportUuid = row.uuid
         const eventDataArray = []
         const events = req.body.events;
-        let ampOn = false
         // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < events.length; i++) {
             let points = 0;

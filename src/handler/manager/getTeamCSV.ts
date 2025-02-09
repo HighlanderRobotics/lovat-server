@@ -48,8 +48,8 @@ interface PointsReport {
     algaePickup: AlgaePickup
     coralPickup: CoralPickup
     bargeResult: BargeResult
-    KnocksAlgae: KnocksAlgae
-    UnderShallowCage: UnderShallowCage
+    knocksAlgae: KnocksAlgae
+    underShallowCage: UnderShallowCage
     driverAbility: number
     events: Partial<Event>[]
     // This property represents the weighting of this report in the final aggregation [0..1]
@@ -100,8 +100,8 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
                         algaePickup: true,
                         coralPickup: true,
                         bargeResult: true,
-                        KnocksAlgae: true,
-                        UnderShallowCage: true,
+                        knocksAlgae: true,
+                        underShallowCage: true,
                         driverAbility: true,
                         events: {
                             select: {
@@ -230,8 +230,8 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
 
         // Set discrete robot capabilities
         // Implement a safety for this? One incorrect report could mess up the data
-        data.algaeKnocking ||= report.KnocksAlgae === KnocksAlgae.TRUE;
-        data.underShallowCage ||= report.UnderShallowCage === UnderShallowCage.TRUE;
+        data.algaeKnocking ||= report.knocksAlgae === KnocksAlgae.YES;
+        data.underShallowCage ||= report.underShallowCage === UnderShallowCage.YES;
         if (coral === CoralPickup.NONE) {
             coral = report.coralPickup;
         } else if (coral !== report.coralPickup && report.coralPickup !== CoralPickup.NONE) {

@@ -87,12 +87,12 @@ const EventActionMap = {
     3 : [CoralPickup.BOTH]
   }
   const  KnocksAlgaeMap = {
-    0 : [KnocksAlgae.FALSE],
-    1 : [KnocksAlgae.TRUE]
+    0 : [KnocksAlgae.NO],
+    1 : [KnocksAlgae.YES]
   }
   const  UnderShallowCageMap = {
-    0 : [UnderShallowCage.FALSE],
-    1 : [UnderShallowCage.TRUE]
+    0 : [UnderShallowCage.NO],
+    1 : [UnderShallowCage.YES]
   }
   const MatchTypeMap = 
   {

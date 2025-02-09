@@ -47,7 +47,7 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                 include:
                 {
                     scoutReports: true,
-                    Team1Shifts : {
+                    team1Shifts : {
                         where :
                         {
                             tournamentKey : params.data.tournamentKey,
@@ -57,7 +57,7 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                             }
                         }
                     },
-                    Team2Shifts : {
+                    team2Shifts : {
                         where :
                         {
                             tournamentKey : params.data.tournamentKey,
@@ -67,7 +67,7 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                             }
                         }
                     },
-                    Team3Shifts : {
+                    team3Shifts : {
                         where :
                         {
                             tournamentKey : params.data.tournamentKey,
@@ -77,7 +77,7 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                             }
                         }
                     },
-                    Team4Shifts : {
+                    team4Shifts : {
                         where :
                         {
                             tournamentKey : params.data.tournamentKey,
@@ -87,7 +87,7 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                             }
                         }
                     },
-                    Team5Shifts : {
+                    team5Shifts : {
                         where :
                         {
                             tournamentKey : params.data.tournamentKey,
@@ -97,7 +97,7 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
                             }
                         }
                     },
-                    Team6Shifts : {
+                    team6Shifts : {
                         where :
                         {
                             tournamentKey : params.data.tournamentKey,
@@ -117,12 +117,12 @@ export const scoutingLeadProgressPage = async (req: AuthenticatedRequest, res: R
             for(const scouter of scouters)
             {
                 const allShifts = [
-                    ...scouter.Team1Shifts,
-                    ...scouter.Team2Shifts,
-                    ...scouter.Team3Shifts,
-                    ...scouter.Team4Shifts,
-                    ...scouter.Team5Shifts,
-                    ...scouter.Team6Shifts
+                    ...scouter.team1Shifts,
+                    ...scouter.team2Shifts,
+                    ...scouter.team3Shifts,
+                    ...scouter.team4Shifts,
+                    ...scouter.team5Shifts,
+                    ...scouter.team6Shifts
                 ];
             
                 // iterate over all shifts and sum total assigned matches

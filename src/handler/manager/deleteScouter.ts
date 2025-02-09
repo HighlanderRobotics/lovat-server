@@ -44,12 +44,12 @@ export const deleteScouter = async (req: AuthenticatedRequest, res: Response): P
             },
             include:
             {
-                Team1Shifts: true,
-                Team2Shifts: true,
-                Team3Shifts: true,
-                Team4Shifts: true,
-                Team5Shifts: true,
-                Team6Shifts: true
+                team1Shifts: true,
+                team2Shifts: true,
+                team3Shifts: true,
+                team4Shifts: true,
+                team5Shifts: true,
+                team6Shifts: true
             }
         })
         const deletedScouterUuid = params.data.uuid;
