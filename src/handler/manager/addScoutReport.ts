@@ -4,22 +4,23 @@ import z from 'zod'
 import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import {EventAction, Position} from "@prisma/client";
+import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, MatchType, RobotRole, UnderShallowCage } from "@prisma/client";
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
     try {
         const paramsScoutReport = z.object({
             uuid : z.string(),
             tournamentKey : z.string(),
-            matchType : z.enum(["QUALIFICATION", "ELIMINATION"]),
+            matchType : z.nativeEnum(MatchType),
             matchNumber : z.number(),
             startTime: z.number(),
             notes: z.string(),
-            robotRole: z.enum(["OFFENSE", "DEFENSE", "FEEDER", "IMMOBILE"]),
-            barge: z.enum(["NOT_ATTEMPTED", "PARKED", "SHALLOW", "FAILED_SHALLOW", "DEEP", "FAILED_DEEP"]),
-            coralPickUp: z.enum(["NONE", "GROUND", "STATION", "BOTH"]),
-            algaePickUp: z.enum(["NONE","GROUND", "REEF", "BOTH"]),
-            knocksAlgae: z.enum(["NO", "YES"]),
-            traversesUnderCage: z.enum(["NO", "YES"]),
+            robotRole: z.nativeEnum(RobotRole),
+            barge: z.nativeEnum(BargeResult),
+            coralPickUp: z.nativeEnum(CoralPickup),
+            algaePickUp: z.nativeEnum(AlgaePickup),
+            knocksAlgae: z.nativeEnum(KnocksAlgae),
+            traversesUnderCage: z.nativeEnum(UnderShallowCage),
             driverAbility: z.number(),
             scouterUuid: z.string(),
             teamNumber : z.number()
