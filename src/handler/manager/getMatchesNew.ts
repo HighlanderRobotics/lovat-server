@@ -68,6 +68,8 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         // Filter to return a list of user's team's scout reports for each row, only valid if user has a team number
         let includeTeamReports: Prisma.TeamMatchData$scoutReportsArgs | undefined = undefined;
         if (user.teamNumber) {
+            user.teamSource.push(user.teamNumber);
+
             includeTeamReports = {
                 where: {
                     scouter: {
