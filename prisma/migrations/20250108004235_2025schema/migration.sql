@@ -12,8 +12,7 @@
 
 */
 -- CreateEnum
-DROP TABLE IF EXISTS "Event" CASCADE;
-DROP TABLE IF EXISTS "ScoutReport" CASCADE;
+
 
 CREATE TYPE "AlgaePickup" AS ENUM ('NONE', 'GROUND', 'REEF', 'BOTH');
 
