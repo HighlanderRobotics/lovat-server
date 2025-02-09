@@ -258,24 +258,24 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 scouted: match.some(team => team._count.scoutReports >= 1),
                 finished: match[0].matchType === MatchType.QUALIFICATION || match[0].matchNumber <= lastFinishedMatch,
                 team1: { number: match[0].teamNumber, scouters: matchScouters[0],
-                    externalReports: match[0].scoutReports.length - match[0]._count.scoutReports },
+                    externalReports: match[0]._count.scoutReports - (match[0].scoutReports.length) },
                 team2: { number: match[1].teamNumber, scouters: matchScouters[1],
-                    externalReports: match[1].scoutReports.length - match[1]._count.scoutReports },
+                    externalReports: match[1]._count.scoutReports - (match[1].scoutReports.length) },
                 team3: { number: match[2].teamNumber, scouters: matchScouters[2],
-                    externalReports: match[2].scoutReports.length - match[2]._count.scoutReports },
+                    externalReports: match[2]._count.scoutReports - (match[2].scoutReports.length) },
                 team4: { number: match[3].teamNumber, scouters: matchScouters[3],
-                    externalReports: match[3].scoutReports.length - match[3]._count.scoutReports },
+                    externalReports: match[3]._count.scoutReports - (match[3].scoutReports.length) },
                 team5: { number: match[4].teamNumber, scouters: matchScouters[4],
-                    externalReports: match[4].scoutReports.length - match[4]._count.scoutReports },
+                    externalReports: match[4]._count.scoutReports - (match[4].scoutReports.length) },
                 team6: { number: match[5].teamNumber, scouters: matchScouters[5],
-                    externalReports: match[5].scoutReports.length - match[5]._count.scoutReports },
+                    externalReports: match[5]._count.scoutReports - (match[5].scoutReports.length) },
             }
 
             // Ordered by ordinal match number, 0 indexed
             finalFormattedMatches[ordinalMatchNumber - 1] = currData;
         }
 
-        res.status(200).send(finalFormattedMatches);
+        res.status(200).send({test: includeTeamReports, ...finalFormattedMatches});
     }
     catch (error) {
         console.log(error)
