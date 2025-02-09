@@ -1,7 +1,6 @@
 import prismaClient from '../../../prismaClient'
-import { matchTimeEnd, Metric, metricToEvent } from "../analysisConstants";
+import { endgameToPoints, matchTimeEnd, Metric, metricToEvent } from "../analysisConstants";
 import { EventAction, Position, User } from "@prisma/client";
-import { BargeResultPointMap } from '../../manager/managerConstants';
 
 
 export const singleMatchSingleScoutReport = async (user: User, isPointAverage: boolean, scoutReportUuid: string, metric1: Metric, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
@@ -79,7 +78,7 @@ export const singleMatchSingleScoutReport = async (user: User, isPointAverage: b
                         uuid: scoutReportUuid
                     }
                 })
-                let stagePoints = BargeResultPointMap[element.bargeResult]
+                let stagePoints = endgameToPoints[element.bargeResult]
                 if (!stagePoints) {
                     stagePoints = 0
                 }
