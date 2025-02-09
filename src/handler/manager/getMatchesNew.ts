@@ -231,7 +231,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             }
 
             const matchScouters: { name: string, scouted: boolean }[][] = [];
-            for (let j = 0; j < 5; j++) {
+            for (let j = 0; j < 6; j++) {
                 // Add all complete scout reports from user's team
                 matchScouters[j] = match[j].scoutReports.map(e => ({ name: e.scouter.name, scouted: true }));
 

@@ -4,7 +4,7 @@ import z from 'zod';
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { addTournamentMatches } from "./addTournamentMatches";
 import {
-  MatchTypeEnumToFull,
+  MatchTypeMap,
   MatchTypeToAbrivation,
   ReverseMatchTypeMap,
   ReverseScouterScheduleMap,
@@ -259,7 +259,7 @@ export const getMatches = async (
             ) &&
             report.teamMatchData.matchNumber === match.matchNumber &&
             report.teamMatchData.matchType ===
-              MatchTypeEnumToFull[match.matchType]
+              MatchTypeMap[match.matchType]
         );
 
         team.scouters = teamScoutReports.map((report) => ({

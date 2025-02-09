@@ -3,7 +3,7 @@ import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { addTournamentMatches } from "./addTournamentMatches";
-import { MatchTypeEnumToFull, MatchTypeToAbrivation, ReverseMatchTypeMap, ReverseScouterScheduleMap, ScouterScheduleMap } from "./managerConstants";
+import { MatchTypeMap, MatchTypeToAbrivation, ReverseMatchTypeMap, ReverseScouterScheduleMap, ScouterScheduleMap } from "./managerConstants";
 
 
 export const getMatches = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -439,7 +439,7 @@ async function addExternalReports(req: AuthenticatedRequest, match) {
             teamMatchData :
             {
                 tournamentKey : match.tournamentKey,
-                matchType : MatchTypeEnumToFull[match.matchType],
+                matchType : MatchTypeMap[match.matchType],
                 matchNumber: match.matchNumber
             },
             scouter :

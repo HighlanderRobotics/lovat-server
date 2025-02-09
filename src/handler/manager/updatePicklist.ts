@@ -2,7 +2,6 @@ import { Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { AlgaePickup, CoralPickup } from "@prisma/client";
 
 
 export const updatePicklist = async (req: AuthenticatedRequest, res: Response): Promise<void> => {

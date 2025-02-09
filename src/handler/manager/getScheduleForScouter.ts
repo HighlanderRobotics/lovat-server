@@ -99,7 +99,7 @@ export const getScheduleForScouter = async (req: Request, res: Response): Promis
                     {
                         tournamentKey: params.data.tournamentKey,
                         matchNumber: matchNumber,
-                        matchType: MatchTypeMap[matchType][0]
+                        matchType: MatchTypeMap[matchType]
                     },
                     orderBy : 
                     {

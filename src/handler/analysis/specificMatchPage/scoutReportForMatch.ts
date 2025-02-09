@@ -2,6 +2,7 @@ import { Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { UserRole } from "@prisma/client";
 
 
 export const scoutReportForMatch = async (req: AuthenticatedRequest, res: Response) => {
@@ -16,7 +17,7 @@ export const scoutReportForMatch = async (req: AuthenticatedRequest, res: Respon
             return
         };
         //comfirm if finding first is ideal
-        if (req.user.teamNumber === null || req.user.role !== "SCOUTING_LEAD") {
+        if (req.user.teamNumber === null || req.user.role !== UserRole.SCOUTING_LEAD) {
             res.status(403).send("Not authorized to acsess this endpoint.")
             return
         }
