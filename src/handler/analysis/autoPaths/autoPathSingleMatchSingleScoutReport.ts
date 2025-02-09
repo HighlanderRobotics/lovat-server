@@ -20,7 +20,6 @@ export const autoPathSingleMatchSingleScoutReport = async (user: User, matchKey 
                 {
                     // All auton-associated event actions/positions
                     in: [
-                        EventAction.FAIL_NET,
                         EventAction.PICKUP_ALGAE,
                         EventAction.PICKUP_CORAL,
                         EventAction.SCORE_CORAL,
