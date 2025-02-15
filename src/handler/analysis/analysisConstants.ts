@@ -31,7 +31,7 @@ const teleopStart = 19
 //much longer than needed in case they go over time/start match early
 const matchTimeEnd = 3000
 
-const specificMatchPageMetrics = [Metric.defends, Metric.algaePickups, Metric.coralPickups, Metric.processorScores, Metric.netScores, Metric.netFails]
+const specificMatchPageMetrics = [Metric.defends, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails]
 
 // Easy point calculation
 const endgameToPoints: Record<BargeResult, number> = {

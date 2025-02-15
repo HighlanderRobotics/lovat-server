@@ -3,7 +3,7 @@ import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
-import { Metric, FlippedRoleMap, specificMatchPageMetrics } from "../analysisConstants";
+import { Metric, FlippedRoleMap, specificMatchPageMetrics, metricToName } from "../analysisConstants";
 import { BargeResultReverseMap} from "../../manager/managerConstants"
 
 import { autoPathScouter } from "./autoPathScouter";
@@ -38,7 +38,7 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             timeStamp : scoutReport.startTime
         }
         for (const element of specificMatchPageMetrics) {
-            data[element] = await singleMatchSingleScoutReport(req.user, false, scoutReport.uuid, element)
+            data[metricToName[element]] = await singleMatchSingleScoutReport(req.user, false, scoutReport.uuid, element)
         };
 
         res.status(200).send(data)
