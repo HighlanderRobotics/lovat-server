@@ -131,7 +131,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         const events = req.body.events;
         for (const event of events) {
             let points = 0;
-            const time = events[0];
+            const time = event[0];
             const action = EventActionMap[event[1]];
             const position = PositionMap[event[2]];
             if (time <= 18) {
