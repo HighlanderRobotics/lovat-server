@@ -4,22 +4,23 @@ import z from 'zod'
 import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import {EventAction, Position} from "@prisma/client";
+import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, MatchType, RobotRole, UnderShallowCage } from "@prisma/client";
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
     try {
         const paramsScoutReport = z.object({
             uuid : z.string(),
             tournamentKey : z.string(),
-            matchType : z.enum(["QUALIFICATION", "ELIMINATION"]),
+            matchType : z.nativeEnum(MatchType),
             matchNumber : z.number(),
             startTime: z.number(),
             notes: z.string(),
-            robotRole: z.enum(["OFFENSE", "DEFENSE", "FEEDER", "IMMOBILE"]),
-            barge: z.enum(["NOT_ATTEMPTED", "PARKED", "SHALLOW", "FAILED_SHALLOW", "DEEP", "FAILED_DEEP"]),
-            coralPickUp: z.enum(["NONE", "GROUND", "STATION", "BOTH"]),
-            algaePickUp: z.enum(["NONE","GROUND", "REEF", "BOTH"]),
-            knocksAlgae: z.enum(["NO", "YES"]),
-            traversesUnderCage: z.enum(["NO", "YES"]),
+            robotRole: z.nativeEnum(RobotRole),
+            barge: z.nativeEnum(BargeResult),
+            coralPickUp: z.nativeEnum(CoralPickup),
+            algaePickUp: z.nativeEnum(AlgaePickup),
+            knocksAlgae: z.nativeEnum(KnocksAlgae),
+            traversesUnderCage: z.nativeEnum(UnderShallowCage),
             driverAbility: z.number(),
             scouterUuid: z.string(),
             teamNumber : z.number()
@@ -130,53 +131,53 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         const events = req.body.events;
         for (const event of events) {
             let points = 0;
-            const time = event[0];
-            const action = EventActionMap[event[1]][0];
-            const position = PositionMap[event[2]][0];
+            const time = events[0][0];
+            const action = EventActionMap[event[1]];
+            const position = PositionMap[event[2]];
             if (time <= 18) {
-                if (action === "SCORE_CORAL") {
-                    if (position === "LEVEL_ONE_A" || position === "LEVEL_ONE_B" || position === "LEVEL_ONE_C") {
+                if (action === EventAction.SCORE_CORAL) {
+                    if (position === Position.LEVEL_ONE_A || position === Position.LEVEL_ONE_B || position === Position.LEVEL_ONE_C) {
                         points = 3
                     }
-                    else if (position === "LEVEL_TWO_A" || position === "LEVEL_TWO_B" || position === "LEVEL_TWO_C") {
+                    else if (position === Position.LEVEL_TWO_A || position === Position.LEVEL_TWO_B || position === Position.LEVEL_TWO_C) {
                         points = 4
                     }
-                    else if (position === "LEVEL_THREE_A" || position === "LEVEL_THREE_B" || position === "LEVEL_THREE_C") {
+                    else if (position === Position.LEVEL_THREE_A || position === Position.LEVEL_THREE_B || position === Position.LEVEL_THREE_C) {
                         points = 6
                     }
-                    else if (position === "LEVEL_FOUR_A" || position === "LEVEL_FOUR_B" || position === "LEVEL_FOUR_C") {
+                    else if (position === Position.LEVEL_FOUR_A || position === Position.LEVEL_FOUR_B || position === Position.LEVEL_FOUR_C) {
                         points = 7
                     }
                 }
-                else if (action === "AUTO_LEAVE") {
+                else if (action === EventAction.AUTO_LEAVE) {
                     points = 3
                 }
-                else if (action === "SCORE_PROCESSOR"){
+                else if (action === EventAction.SCORE_PROCESSOR) {
                     points = 6
                 }
-                else if (action === "SCORE_NET"){
+                else if (action === EventAction.SCORE_NET) {
                     points = 4
                 }
             }
             else {
-                if (action === "SCORE_CORAL") {
-                    if (position === "LEVEL_ONE") {
+                if (action === EventAction.SCORE_CORAL) {
+                    if (position === Position.LEVEL_ONE) {
                         points = 2
                     }
-                    else if (position === "LEVEL_TWO") {
+                    else if (position === Position.LEVEL_TWO) {
                         points = 3
                     }
-                    else if (position === "LEVEL_THREE") {
+                    else if (position === Position.LEVEL_THREE) {
                         points = 4
                     }
-                    else if (position === "LEVEL_FOUR") {
+                    else if (position === Position.LEVEL_FOUR) {
                         points = 5
                     }
                 }
-                else if (action === "SCORE_PROCESSOR"){
+                else if (action === EventAction.SCORE_PROCESSOR) {
                     points = 6
                 }
-                else if (action === "SCORE_NET"){
+                else if (action === EventAction.SCORE_NET) {
                     points = 4
                 }
             }
