@@ -23,9 +23,6 @@ enum MetricsBreakdown {
 // Ranking metrics
 const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails, Metric.autonLeaves]
 
-// Picklist sliders for app
-const picklistSliders = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4]
-
 const autoEnd = 18
 const teleopStart = 19
 //much longer than needed in case they go over time/start match early
@@ -152,6 +149,24 @@ const metricToName: Record<Metric, string> = {
     [Metric.bargePoints]: "bargePoints"
 }
 
+const picklistToMetric: Record<string, Metric> = {
+    totalPoints: Metric.totalPoints,
+    defense: Metric.defends,
+    driverAbility: Metric.driverAbility,
+    autoPoints: Metric.autoPoints,
+    algaePickups: Metric.algaePickups,
+    coralPickups: Metric.coralPickups,
+    barge: Metric.bargePoints,
+    coralLevel1Scores: Metric.coralL1,
+    coralLevel2Scores: Metric.coralL2,
+    coralLevel3Scores: Metric.coralL3,
+    coralLevel4Scores: Metric.coralL4,
+    algaeProcessor: Metric.processorScores,
+    algaeNet: Metric.netScores,
+    teleopPoints: Metric.teleopPoints,
+    feeds: Metric.feeds
+}
+
 // For occasional query optimizations
 const tournamentLowerBound = 497
 const teamLowerBound = 3300 // Total 3468 as of 2024 season
@@ -161,6 +176,6 @@ const swrConstant = 300
 const ttlConstant = 200
 
 const multiplerBaseAnalysis = 4
-export {Metric, metricsCategory, picklistSliders, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber};
+export {Metric, metricsCategory, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber};
 
 
