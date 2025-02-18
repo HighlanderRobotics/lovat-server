@@ -1,8 +1,6 @@
 import axios from "axios";
 
-import { User } from "@prisma/client";
-
-export const rankFlag = async (user: User, teamKey: string, eventKey: string) => {
+export const rankFlag = async (teamKey: string, eventKey: string) => {
     const url = 'https://www.thebluealliance.com/api/v3';
 
     if (eventKey === undefined) {

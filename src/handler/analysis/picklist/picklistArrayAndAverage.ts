@@ -6,8 +6,7 @@ import ss from 'simple-statistics';
 /**
  * Return AATF of metric for all given teams, with a population average and standard deviation.
  *
- * Average defaults to 0
- * STD defaults to 0.1
+ * Average defaults to 0 if data is lacking.
  */
 export const picklistArrayAndAverage = async (user: User, metric: Metric, teams : number[]) : Promise<{ average: number, teamAverages: Record<number, number>, std: number }>=> {
     try {
@@ -21,7 +20,7 @@ export const picklistArrayAndAverage = async (user: User, metric: Metric, teams 
 
         await Promise.all(timeLineArray).then((values) => {
             average = (values.reduce((acc, cur) => acc + cur.average, 0) / values.length) || 0;
-            std = ss.standardDeviation(values.map(item => item.average)) || 0.1;
+            std = ss.standardDeviation(values.map(item => item.average));
 
             teams.forEach((teamNumber, i) => {
                 teamAveragesMap[teamNumber] = values[i].average || 0;

@@ -9,6 +9,7 @@ import { Metric, picklistToMetric } from "../analysisConstants";
 import { picklistArrayAndAverage } from "./picklistArrayAndAverage";
 import flatted from 'flatted';
 import os from 'os'
+import { WorkerResponseData } from "./zScoreTeam";
 
 
 
@@ -83,30 +84,30 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         }
 
-        // Split workload across cpus
+        // Split workload across cpu's
         const teamBreakdowns = []
         const teamChunks = splitArray(includedTeamNumbers, os.cpus().length - 1);
         for (const teams of teamChunks) {
             if (teams.length > 0) {
-                teamBreakdowns.push(createWorker(teams, allTeamData, params.data.flags, params.data.metrics, req));
+                teamBreakdowns.push(createWorker(teams, allTeamData, params.data.flags, params.data.metrics, params.data.tournamentKey));
             }
         }
 
+        // Resolve all the work
         const dataArr = []
-        await Promise.all(teamBreakdowns).then((data) => {
+        await Promise.all(teamBreakdowns).then((data: WorkerResponseData) => {
+            // Format data
             for (const currTeamData of data){
-                for (const currZscores of currTeamData) {
-                    if (!isNaN(currZscores.zScore)) {
-                        const temp = { "team": currZscores.team, "result": currZscores.zScore, "breakdown": currZscores.adjusted, "unweighted": currZscores.unadjusted, "flags": currZscores.flags }
-                        dataArr.push(temp)
-                    }
+                if (!isNaN(currTeamData.zScore)) {
+                    const temp = { "team": currTeamData.team, "result": currTeamData.zScore, "breakdown": currTeamData.adjusted, "unweighted": currTeamData.unadjusted, "flags": currTeamData.flags }
+                    dataArr.push(temp)
                 }
             }
+
+            // Sort and send
             const resultArr = dataArr.sort((a, b) => b.result - a.result)
             res.status(200).send({ teams: resultArr })
         })
-
-
     }
     catch (error) {
         console.log(error)
@@ -128,26 +129,26 @@ function splitArray(teams: number[], n: number): number[][] {
     return result;
 }
 
-function createWorker(teams: number[], allTeamData, flags: string[], queries, req) {
+function createWorker(teams: number[], allTeamData: Partial<Record<Metric, { average: number, teamAverages: Record<number, number>, std: number }>>, flags: string[], queries: Record<string, number>, tournamentKey: string) {
     return new Promise((resolve, reject) => {
         const data = {
             teams: teams,
             allTeamData: flatted.stringify(allTeamData),
             flags: flags,
             queries: flatted.stringify(queries),
-            req: flatted.stringify(req)
+            tournamentKey: tournamentKey
         }
         const worker = new Worker('././dist/handler/analysis/picklist/zScoreTeam.js')
         worker.postMessage(data);
 
         worker.on('message', (event) => {
+            worker.terminate();
             resolve(event);
-            worker.terminate()
         });
 
         worker.on('error', (error) => {
+            worker.terminate();
             reject(error);
-            worker.terminate()
         });
     })
 }
