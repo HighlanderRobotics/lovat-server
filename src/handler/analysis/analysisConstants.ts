@@ -149,6 +149,7 @@ const metricToName: Record<Metric, string> = {
     [Metric.bargePoints]: "bargePoints"
 }
 
+// Translates between picklist parameters and metric enum
 const picklistToMetric: Record<string, Metric> = {
     totalPoints: Metric.totalPoints,
     defense: Metric.defends,
