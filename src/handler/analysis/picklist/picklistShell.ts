@@ -7,7 +7,7 @@ import z from 'zod'
 const { Worker } = require('worker_threads');
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
 import { Metric, picklistToMetric } from "../analysisConstants";
-import { picklistArrayAndAverageAllTeamTournament } from "./picklistArrayAndAverageAllTeamTournament";
+import { picklistArrayAndAverage } from "./picklistArrayAndAverage";
 import flatted from 'flatted';
 import os from 'os'
 import { SharedPicklist } from "@prisma/client";
@@ -81,9 +81,9 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         const allTeamData: { average: number, teamAverages: Map<number, number>, timeLine: number[] }[] = []
         for (const [k, v] of Object.entries(picklistToMetric)) {
             if (params.data[k] || params.data.flags.includes(k)) {
-                const currData = await picklistArrayAndAverageAllTeamTournament(req.user, v, includedTeamNumbers);
                 allTeamData.push(currData);
                 usedMetrics.push(v);
+                const currData = await picklistArrayAndAverage(req.user, metric, includedTeamNumbers);
             }
         }
     
