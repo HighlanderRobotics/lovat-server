@@ -1,106 +1,64 @@
-import { picklistSliders } from "../analysisConstants";
+import { Metric, picklistToMetric } from "../analysisConstants";
 import { parentPort } from 'worker_threads';
 import { rankFlag } from '../rankFlag';
 import flatted from 'flatted';
 import prismaClient from "../../../prismaClient";
 
+export type WorkerResponseData = {
+    team: number,
+    zScore: number,
+    adjusted: { type: string, result: number }[],
+    unadjusted: { type: string, result: number }[],
+    flags: { type: string, result: number }[]
+}[]
 
 //worker for picklists
 try {
     parentPort.on('message', async (data) => {
         return new Promise(async function (resolve) {
-            const metricTeamAverages = flatted.parse(data.metricTeamAverages)
-            const allTeamAvgSTD = data.allTeamAvgSTD
-            const params = data.params
-            const flags = data.flags
-            const req = flatted.parse(data.req)
-            const finalData = []
-            for (const team of data.teams) {
-                const adj = [];
-                const unAdj = [];
-                const flagData = [];
-                let hasData = true
-                let isFirst = true
-                for (const metric of picklistSliders) {
-                    if (params.data[metric]) {
 
-                        let currData = metricTeamAverages[metric][team]
-                        if (isFirst && !currData && currData !== 0) {
-                            hasData = false
-                        }
-                        isFirst = false
-                        let zScore = 0
-                        if (hasData) {
-                            zScore = (currData - allTeamAvgSTD[metric].allAvg) / allTeamAvgSTD[metric].arraySTD
+            // Set up and typecast incoming data
+            const teams = data.teams as number[];
+            const allTeamData = flatted.parse(data.allTeamData) as Partial<Record<Metric, { average: number, teamAverages: Record<number, number>, std: number }>>;
+            const flags = data.flags as string[];
+            const queries = flatted.parse(data.queries) as Record<string, number>;
+            const tournamentKey = data.tournamentKey as string;
 
+            const finalData: WorkerResponseData = [];
+
+            for (const team of teams) {
+                const adj: { type: string, result: number }[] = [];
+                const unAdj: typeof adj = [];
+                const flagData: typeof adj = [];
+
+                for (const [picklistParam, metric] of Object.entries(picklistToMetric)) {
+                    if (queries[picklistParam]) {
+                        let currAvg = allTeamData[metric].teamAverages[team];
+                        let zScore = 0;
+
+                        // If there is a meaningful datapoint, calculate zScore
+                        if (currAvg !== 0) {
+                            // Default standard deviation to 0.1
+                            zScore = (currAvg - allTeamData[metric].average) / (allTeamData[metric].std || 0.1);
                         }
-                        else {
-                            currData = 0
-                            zScore = 0
-                        }
-                        if (isNaN(zScore)) {
-                            zScore = 0
-                        }
-                        adj.push({ "result": zScore * params.data[metric], "type": metric })
-                        unAdj.push({ "result": zScore, "type": metric })
-                        if (flags.includes(metric)) {
-                            if (!hasData) {
-                                flagData.push({ type: metric, result: 0 })
-                            }
-                            else {
-                                flagData.push({ type: metric, result: currData })
-                            }
-                        }
-                    }
-                    else if(flags.includes(metric))
-                    {
-                        let currData = metricTeamAverages[metric][team]
-                        if(!currData)
-                        {
-                            currData = 0
-                        }
-                        else
-                        {
-                            currData = currData
-                        }
-                        if (!hasData) {
-                            flagData.push({ type: metric, result: 0 })
-                        }
-                        else {
-                            flagData.push({ type: metric, result: currData })
-                        }
+
+                        adj.push({ type: picklistParam, result: zScore * queries[metric] });
+                        unAdj.push({ type: picklistParam, result: zScore });
                     }
 
-
+                    if (flags.includes(picklistParam)) {
+                        // Push flagged metrics
+                        let currAvg = allTeamData[metric].teamAverages[team];
+                        flagData.push({ type: picklistParam, result: currAvg });
+                    }
                 }
-                if (flags.includes("rank") && req.query.tournamentKey) {
-                    if (req.query.tournamentKey) {
-                        flagData.push({ type: "rank", result: await rankFlag(req, "frc" + team, req.query.tournamentKey as string) })
-                    }
-                    else {
-                        const tourament = await prismaClient.tournament.findFirst({
-                            where:
-                            {
-                                teamMatchData:
-                                {
-                                    some:
-                                    {
-                                        teamNumber: params.data.team
-                                    }
-                                }
-                            },
-                            orderBy:
-                            {
-                                date: "desc"
-                            }
-                        })
-                        flagData.push({ type: "rank", result: await rankFlag(req, "frc" + team, tourament.key) })
 
-                    }
-
-
+                if (flags.includes("rank")) {
+                    flagData.push({ type: "rank", result: await rankFlag("frc" + team, tournamentKey) })
                 }
-                const zScoreTotal = adj.reduce((partialSum, a) => partialSum + a.result, 0);
+
+
+                const zScoreTotal = adj.reduce((acc, curr) => acc + curr.result, 0);
                 finalData.push({
                     "team": team,
                     "zScore": zScoreTotal,
@@ -109,10 +67,10 @@ try {
                     "flags": flagData
                 })
             }
+
+            // Send data back to shell
             parentPort.postMessage(finalData);
-
         })
-
     })
 }
 
