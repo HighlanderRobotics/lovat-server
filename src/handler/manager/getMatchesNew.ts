@@ -258,7 +258,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
                 matchNumber: match[0].matchNumber,
                 matchType: ReverseMatchTypeMap[match[0].matchType],
                 scouted: match.some(team => team._count.scoutReports >= 1),
-                finished: match[0].matchType === MatchType.QUALIFICATION || match[0].matchNumber <= lastFinishedMatch,
+                finished: match[0].matchType === MatchType.QUALIFICATION && match[0].matchNumber <= lastFinishedMatch,
                 team1: { number: match[0].teamNumber, scouters: matchScouters[0],
                     externalReports: match[0]._count.scoutReports - (match[0].scoutReports.length) },
                 team2: { number: match[1].teamNumber, scouters: matchScouters[1],
