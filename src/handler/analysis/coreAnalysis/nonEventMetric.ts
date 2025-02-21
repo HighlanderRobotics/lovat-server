@@ -13,26 +13,26 @@ export const nonEventMetric = async (
 ): Promise<Record<string, number>> => {
   try {
     const columnName =
-    metric === MetricsBreakdown.knocksAlgae
-      ? 'knocksAlgae'
-      : metric === MetricsBreakdown.robotRole
-        ? 'robotRole'
-         : metric === MetricsBreakdown.underShallowCage
-        ? 'underShallowCage'
-         : metric === MetricsBreakdown.bargeResult
-        ? 'bargeResult'
-         : metric === MetricsBreakdown.coralPickup
-        ? 'coralPickup'
-         : metric === MetricsBreakdown.algaePickup
-        ? 'algaePickup'
-       : null
-  
+      metric === MetricsBreakdown.knocksAlgae
+        ? 'knocksAlgae'
+        : metric === MetricsBreakdown.robotRole
+          ? 'robotRole'
+          : metric === MetricsBreakdown.underShallowCage
+            ? 'underShallowCage'
+            : metric === MetricsBreakdown.bargeResult
+              ? 'bargeResult'
+              : metric === MetricsBreakdown.coralPickup
+                ? 'coralPickup'
+                : metric === MetricsBreakdown.algaePickup
+                  ? 'algaePickup'
+                  : null
+
     // const allowedColumns = ['knocksAlgae', /* 'anotherMetric', etc. */];
     // if (!allowedColumns.includes(columnName)) {
     //   throw new Error(`Invalid metric column: ${columnName}`);
     // }
 
-  
+
     const query = `
       SELECT "${columnName}" AS value,
              COUNT(s."scouterUuid") AS count,
@@ -48,8 +48,8 @@ export const nonEventMetric = async (
 
     interface QueryRow {
       value: string;
-      count: string;       
-      percentage: string;  
+      count: string;
+      percentage: string;
     }
 
     const rows: QueryRow[] = await prismaClient.$queryRawUnsafe(
@@ -58,12 +58,11 @@ export const nonEventMetric = async (
       user.tournamentSource,
       user.teamSource
     );
-
+    console.log(rows)
     const result: Record<string, number> = {};
-    console.log(result)
     for (const row of rows) {
-        console.log(row)
-      result[row.value] = parseFloat(row.percentage);
+      result[row.value.toUpperCase()] = parseFloat(row.percentage);
+      console.log(result)
     }
 
     return result;
@@ -71,4 +70,4 @@ export const nonEventMetric = async (
     console.error('Error in nonEventMetric:', error);
     throw error;
   }
-};
+}
