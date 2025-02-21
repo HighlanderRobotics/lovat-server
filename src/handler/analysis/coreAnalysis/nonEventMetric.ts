@@ -45,7 +45,6 @@ export const nonEventMetric = async (
         AND sc."sourceTeamNumber" = ANY($3)
       GROUP BY s."${columnName}"
     `;
-    console.log(query)
 
     interface QueryRow {
       value: string;
@@ -61,7 +60,9 @@ export const nonEventMetric = async (
     );
 
     const result: Record<string, number> = {};
+    console.log(result)
     for (const row of rows) {
+        console.log(row)
       result[row.value] = parseFloat(row.percentage);
     }
 
