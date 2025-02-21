@@ -222,12 +222,13 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
             `);
             
             if (groupedMatches.length === 0) {
-              return 0;
-            }
-            
-            const totalCount = groupedMatches.reduce((acc, curr) => acc + curr.count, 0);
-            const avg = totalCount / groupedMatches.length;
-            return avg;
+                return 0;
+              }
+              
+              const totalCount = groupedMatches.reduce((acc, curr) => acc + Number(curr.count), 0);
+              const avg = totalCount / groupedMatches.length;
+              return avg;
+              
             
         }
     }
