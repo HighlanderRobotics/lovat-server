@@ -1,6 +1,6 @@
-import prismaClient from '../../../prismaClient';
-import { User } from '@prisma/client';
-import { MetricsBreakdown } from '../analysisConstants';
+import prismaClient from '../../../prismaClient'
+import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, RobotRole, UnderShallowCage, User } from "@prisma/client";
+import { MetricsBreakdown } from "../analysisConstants";
 
 /**
  * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,
@@ -13,28 +13,44 @@ export const nonEventMetric = async (
 ): Promise<Record<string, number>> => {
   try {
     const columnName =
-    metric === MetricsBreakdown.knocksAlgae
-      ? 'knocksAlgae'
-      : metric === MetricsBreakdown.robotRole
-        ? 'robotRole'
-         : metric === MetricsBreakdown.underShallowCage
-        ? 'underShallowCage'
-         : metric === MetricsBreakdown.bargeResult
-        ? 'bargeResult'
-         : metric === MetricsBreakdown.coralPickup
-        ? 'coralPickup'
-         : metric === MetricsBreakdown.algaePickup
-        ? 'algaePickup'
-       : null
-  
+      metric === MetricsBreakdown.knocksAlgae
+        ? 'knocksAlgae'
+        : metric === MetricsBreakdown.robotRole
+          ? 'robotRole'
+          : metric === MetricsBreakdown.underShallowCage
+            ? 'underShallowCage'
+            : metric === MetricsBreakdown.bargeResult
+              ? 'bargeResult'
+              : metric === MetricsBreakdown.coralPickup
+                ? 'coralPickup'
+                : metric === MetricsBreakdown.algaePickup
+                  ? 'algaePickup'
+                  : null
+
     // const allowedColumns = ['knocksAlgae', /* 'anotherMetric', etc. */];
     // if (!allowedColumns.includes(columnName)) {
     //   throw new Error(`Invalid metric column: ${columnName}`);
     // }
 
-  
+    const allowedMapping: Record<string, Record<string, string>> = {
+      robotRole: RobotRole,
+      coralPickup: CoralPickup, 
+      bargeResult : BargeResult,
+     algaePickup : AlgaePickup,
+     underShallowCage : UnderShallowCage,
+     knocksAlgae : KnocksAlgae
+    };
+
+    const allowedOptionsObj = allowedMapping[columnName];
+
+    
+    const result: Record<string, number> = {};
+    Object.keys(allowedOptionsObj).forEach(option => {
+      result[option] = 0;
+    });
+
     const query = `
-      SELECT s."${columnName}" AS value,
+      SELECT "${columnName}" AS value,
              COUNT(s."scouterUuid") AS count,
              COUNT(s."scouterUuid")::numeric / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
       FROM "ScoutReport" s
@@ -48,8 +64,8 @@ export const nonEventMetric = async (
 
     interface QueryRow {
       value: string;
-      count: string;       
-      percentage: string;  
+      count: string;
+      percentage: string;
     }
 
     const rows: QueryRow[] = await prismaClient.$queryRawUnsafe(
@@ -58,15 +74,15 @@ export const nonEventMetric = async (
       user.tournamentSource,
       user.teamSource
     );
-
-    const result: Record<string, number> = {};
     for (const row of rows) {
-      result[row.value] = parseFloat(row.percentage);
+      const option = row.value.toUpperCase();
+      result[option] = parseFloat(row.percentage);
     }
+    console.log(result)
 
     return result;
   } catch (error) {
     console.error('Error in nonEventMetric:', error);
     throw error;
   }
-};
+}
