@@ -1,50 +1,72 @@
 import prismaClient from '../../../prismaClient'
-import { User, ScoutReport } from "@prisma/client";
+import { User } from "@prisma/client";
 import { MetricsBreakdown } from "../analysisConstants";
 
-/** Counts percentage reports of given metric */
-export const nonEventMetric = async (user: User, team: number, metric: MetricsBreakdown): Promise<object> => {
-    try {
-        // Group reports by metric and count responses
-        const countArray = await prismaClient.scoutReport.groupBy({
-            _count:
-            {
-                scouterUuid: true
-            },
-            where:
-            {
-                teamMatchData:
-                {
-                    teamNumber: team,
-                    tournamentKey:
-                    {
-                        in: user.tournamentSource
-                    }
-                },
-                scouter:
-                {
-                    sourceTeamNumber:
-                    {
-                        in: user.teamSource
-                    }
-                }
-            },
-            by: [metric.toString() as keyof ScoutReport]
-        })
+/**
+ * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,
+ * calculated directly in the database with a single query.
+ */
+export const nonEventMetric = async (
+  user: User,
+  team: number,
+  metric: MetricsBreakdown
+): Promise<Record<string, number>> => {
+  try {
+    const columnName =
+    metric === MetricsBreakdown.knocksAlgae
+      ? 'knocksAlgae'
+      : metric === MetricsBreakdown.robotRole
+        ? 'robotRole'
+         : metric === MetricsBreakdown.underShallowCage
+        ? 'underShallowCage'
+         : metric === MetricsBreakdown.bargeResult
+        ? 'bargeResult'
+         : metric === MetricsBreakdown.coralPickup
+        ? 'coralPickup'
+         : metric === MetricsBreakdown.algaePickup
+        ? 'algaePickup'
+       : null
+  
+    // const allowedColumns = ['knocksAlgae', /* 'anotherMetric', etc. */];
+    // if (!allowedColumns.includes(columnName)) {
+    //   throw new Error(`Invalid metric column: ${columnName}`);
+    // }
 
-        // Change into map of metric value -> percentage of reports
-        const totalCount = countArray.reduce((acc, group) => acc + group._count.scouterUuid, 0);
-        const transformedData = countArray.reduce((acc, group) => {
-            const columnValue = group[metric.toString()].toLowerCase();
-            const percentage = group._count.scouterUuid / totalCount;
-            acc[columnValue] = percentage;
-            return acc;
-        }, {});
+  
+    const query = `
+      SELECT "${columnName}" AS value,
+             COUNT(s."scouterUuid") AS count,
+             COUNT(s."scouterUuid")::numeric / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
+      FROM "ScoutReport" s
+      JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
+      JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
+      WHERE tmd."teamNumber" = $1
+        AND tmd."tournamentKey" = ANY($2)
+        AND sc."sourceTeamNumber" = ANY($3)
+      GROUP BY s."${columnName}"
+    `;
 
-        return transformedData;
+    interface QueryRow {
+      value: string;
+      count: string;       
+      percentage: string;  
     }
-    catch (error) {
-        console.error(error)
-        throw (error)
+
+    const rows: QueryRow[] = await prismaClient.$queryRawUnsafe(
+      query,
+      team,
+      user.tournamentSource,
+      user.teamSource
+    );
+
+    const result: Record<string, number> = {};
+    for (const row of rows) {
+      result[row.value] = parseFloat(row.percentage);
     }
+
+    return result;
+  } catch (error) {
+    console.error('Error in nonEventMetric:', error);
+    throw error;
+  }
 };
