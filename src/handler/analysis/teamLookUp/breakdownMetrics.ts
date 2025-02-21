@@ -20,6 +20,7 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
         for (const element in MetricsBreakdown) {
             result[element] = await nonEventMetric(req.user, params.data.team, MetricsBreakdown[element as keyof typeof MetricsBreakdown])
         };
+        console.log(result)
         res.status(200).send(result)
     }
     catch (error) {

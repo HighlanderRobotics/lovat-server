@@ -67,7 +67,12 @@ export const nonEventMetric = async (
       count: string;
       percentage: string;
     }
-
+    const transformOption = (option: string): string => {
+      const upper = option.toUpperCase();
+      if (upper === "YES") return "true";
+      if (upper === "NO") return "false";
+      return upper;
+    };
     const rows: QueryRow[] = await prismaClient.$queryRawUnsafe(
       query,
       team,
@@ -75,10 +80,9 @@ export const nonEventMetric = async (
       user.teamSource
     );
     for (const row of rows) {
-      const option = row.value.toUpperCase();
+      const option = transformOption(row.value);
       result[option] = parseFloat(row.percentage);
     }
-    console.log(result)
 
     return result;
   } catch (error) {
