@@ -12,8 +12,21 @@ export const nonEventMetric = async (
   metric: MetricsBreakdown
 ): Promise<Record<string, number>> => {
   try {
-    const columnName = metric === MetricsBreakdown.KnocksAlgae ? 'knocksAlgae' : metric.toString();
-
+    const columnName =
+    metric === MetricsBreakdown.knocksAlgae
+      ? 'knocksAlgae'
+      : metric === MetricsBreakdown.robotRole
+        ? 'robotRole'
+         : metric === MetricsBreakdown.underShallowCage
+        ? 'underShallowCage'
+         : metric === MetricsBreakdown.bargeResult
+        ? 'bargeResult'
+         : metric === MetricsBreakdown.coralPickup
+        ? 'coralPickup'
+         : metric === MetricsBreakdown.algaePickup
+        ? 'algaePickup'
+       : null
+  
     // const allowedColumns = ['knocksAlgae', /* 'anotherMetric', etc. */];
     // if (!allowedColumns.includes(columnName)) {
     //   throw new Error(`Invalid metric column: ${columnName}`);
