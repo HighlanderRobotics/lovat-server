@@ -16,7 +16,7 @@ enum MetricsBreakdown {
     algaePickup = "algaePickup",
     coralPickup = "coralPickup",
     bargeResult = "bargeResult",
-    KnocksAlgae = "KnocksAlgae",
+    KnocksAlgae = "knocksAlgae",
     UnderShallowCage = "UnderShallowCage"
 }
 
