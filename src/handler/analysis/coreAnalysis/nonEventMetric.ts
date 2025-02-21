@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { User } from "@prisma/client";
+import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, RobotRole, UnderShallowCage, User } from "@prisma/client";
 import { MetricsBreakdown } from "../analysisConstants";
 
 /**
@@ -32,6 +32,22 @@ export const nonEventMetric = async (
     //   throw new Error(`Invalid metric column: ${columnName}`);
     // }
 
+    const allowedMapping: Record<string, Record<string, string>> = {
+      robotRole: RobotRole,
+      coralPickup: CoralPickup, 
+      bargeResult : BargeResult,
+     algaePickup : AlgaePickup,
+     underShallowCage : UnderShallowCage,
+     knocksAlgae : KnocksAlgae
+    };
+
+    const allowedOptionsObj = allowedMapping[columnName];
+
+    
+    const result: Record<string, number> = {};
+    Object.keys(allowedOptionsObj).forEach(option => {
+      result[option] = 0;
+    });
 
     const query = `
       SELECT "${columnName}" AS value,
@@ -58,12 +74,11 @@ export const nonEventMetric = async (
       user.tournamentSource,
       user.teamSource
     );
-    console.log(rows)
-    const result: Record<string, number> = {};
     for (const row of rows) {
-      result[row.value.toUpperCase()] = parseFloat(row.percentage);
-      console.log(result)
+      const option = row.value.toUpperCase();
+      result[option] = parseFloat(row.percentage);
     }
+    console.log(result)
 
     return result;
   } catch (error) {
