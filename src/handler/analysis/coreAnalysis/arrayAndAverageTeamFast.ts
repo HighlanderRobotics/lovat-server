@@ -125,7 +125,6 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
         // Group into tournaments, calculate all averages individually so they can all be properly weighted after the nested loops
         // IMO needs a refactor to take scout reports in with initial query
         for (const tournamentMatchRows of tournamentGroups) {
-            const currAvg = null
             if (metric === Metric.teleopPoints) {
                 const currData = await teamAverageFastTournament(user, team, true, Metric.teleopPoints, tournamentMatchRows[0].tournamentKey, teleopStart, matchTimeEnd)
                 tournamentAverages.push(currData)
