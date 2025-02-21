@@ -1,6 +1,7 @@
 import prismaClient from '../../../prismaClient'
 import { endgameToPoints, matchTimeEnd, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
-import {EventAction, Position, User } from "@prisma/client";
+import { EventAction, Position, User, Prisma} from "@prisma/client";
+
 
 
 export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: Metric, tournamentKey: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
@@ -90,33 +91,7 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
 
             return counts.reduce((acc, cur) => acc + cur._count._all, 0) / counts.length;
         }
-        else if (metric1 === Metric.coralPickups) {
-            // Returns average pickups per scout report
-            const counts = await prismaClient.event.groupBy({
-                cacheStrategy:
-                {
-                    swr: swrConstant,
-                    ttl: ttlConstant,
-                },
-                by: ["scoutReportUuid"],
-                _count:
-                {
-                    _all: true
-                },
-                where:
-                {
-                    scoutReport: scoutReportFilter,
-                    action: EventAction.PICKUP_CORAL,
-                    time:
-                    {
-                        lte: timeMax,
-                        gte: timeMin
-                    },
-                }
-            })
 
-            return counts.reduce((acc, cur) => acc + cur._count._all, 0) / counts.length;
-        }
         else if (metric1 === Metric.driverAbility) {
             // Returns average driverAbility per scout report
             const driverAbilityAvg = await prismaClient.scoutReport.aggregate({
@@ -225,53 +200,35 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                     position = undefined
                     break;
             }
-            // Attempt to convert metric to an EventAction
             if (!(action || position)) {
                 throw "Metric failed conversion to event action";
             };
-            // Returns average scores per scout report
-
-            const groupedMatches = await prismaClient.event.groupBy({
-                cacheStrategy:
-                {
-                    swr: swrConstant,
-                    ttl: ttlConstant,
-                },
-                by: ["scoutReportUuid"],
-                _count:
-                {
-                    _all: true
-                },
-                where:
-                {
-
-                    action: action,
-                    position: position,
-                    time:
-                    {
-                        lte: timeMax,
-                        gte: timeMin
-                    },
-                }
-            })
 
 
+            const groupedMatches = await prismaClient.$queryRaw<{ scoutReportUuid: string; count: number }[]>(Prisma.sql`
+              SELECT e."scoutReportUuid", COUNT(*) AS count
+              FROM "Event" e
+              JOIN "ScoutReport" sr ON sr."uuid" = e."scoutReportUuid"
+              WHERE e."action" = ${action}
+                AND e."position" = ${position}
+                AND e."time" BETWEEN ${timeMin} AND ${timeMax}
+                AND sr."tournamentKey" = ${tournamentKey}
+                AND sr."teamNumber" = ${team}
+              GROUP BY e."scoutReportUuid"
+            `);
 
-
-
-            let avg = groupedMatches.reduce((acc, cur) => {
-                return acc + cur._count._all;
-            }, 0) / groupedMatches.length;
-            if (!avg) {
-                avg = 0
+            if (groupedMatches.length === 0) {
+                return 0;
             }
 
-            return avg
+            const totalCount = groupedMatches.reduce((acc, curr) => acc + curr.count, 0);
+            const avg = totalCount / groupedMatches.length;
+            return avg;
+
+
+
+
         }
-
-
-
-
     }
     catch (error) {
         console.error(error.error)
