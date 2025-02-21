@@ -34,7 +34,7 @@ export const nonEventMetric = async (
 
   
     const query = `
-      SELECT lower(s."${columnName}") AS value,
+      SELECT s."${columnName}" AS value,
              COUNT(s."scouterUuid") AS count,
              COUNT(s."scouterUuid")::numeric / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
       FROM "ScoutReport" s
