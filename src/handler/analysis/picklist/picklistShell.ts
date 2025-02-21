@@ -79,7 +79,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         // Retrieve raw data from worker function
         const allTeamData: Partial<Record<Metric, { average: number, teamAverages: Record<number, number>, std: number }>> = {};
         for (const [picklistParam, metric] of Object.entries(picklistToMetric)) {
-            if (params.data[picklistParam] || params.data.flags.includes(picklistParam)) {
+            if (params.data.metrics[picklistParam] || params.data.flags.includes(picklistParam)) {
                 allTeamData[metric] = await picklistArrayAndAverage(req.user, metric, includedTeamNumbers);
             }
         }
@@ -95,12 +95,14 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
         // Resolve all the work
         const dataArr = []
-        await Promise.all(teamBreakdowns).then((data: WorkerResponseData) => {
+        await Promise.all(teamBreakdowns).then((data: WorkerResponseData[]) => {
             // Format data
-            for (const currTeamData of data){
-                if (!isNaN(currTeamData.zScore)) {
-                    const temp = { "team": currTeamData.team, "result": currTeamData.zScore, "breakdown": currTeamData.adjusted, "unweighted": currTeamData.unadjusted, "flags": currTeamData.flags }
-                    dataArr.push(temp)
+            for (const chunk of data) {
+                for (const currTeamData of chunk) {
+                    if (!isNaN(currTeamData.zScore)) {
+                        const temp = { "team": currTeamData.team, "result": currTeamData.zScore, "breakdown": currTeamData.adjusted, "unweighted": currTeamData.unadjusted, "flags": currTeamData.flags }
+                        dataArr.push(temp)
+                    }
                 }
             }
 
@@ -115,7 +117,35 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
     }
 }
 
-// Separate array ~evenly into n new arrays
+// Multithreading picklists
+function createWorker(teams: number[], allTeamData: Partial<Record<Metric, { average: number, teamAverages: Record<number, number>, std: number }>>, flags: string[], queries: Record<string, number>, tournamentKey: string) {
+    return new Promise((resolve, reject) => {
+        const data = {
+            teams: teams,
+            allTeamData: flatted.stringify(allTeamData),
+            flags: flags,
+            queries: flatted.stringify(queries),
+            tournamentKey: tournamentKey
+        }
+
+        // Create worker and send data
+        const worker = new Worker('./dist/handler/analysis/picklist/zScoreTeam.js')
+        worker.postMessage(data);
+
+        // Receive data and send to aggregation in main function
+        worker.on('message', (event) => {
+            worker.terminate();
+            resolve(event);
+        });
+
+        worker.on('error', (error) => {
+            worker.terminate();
+            reject(error);
+        });
+    })
+}
+
+// Separate array into n new arrays
 function splitArray(teams: number[], n: number): number[][] {
     const splitSize = Math.ceil(teams.length / n);
     const result: number[][] = [];
@@ -127,28 +157,4 @@ function splitArray(teams: number[], n: number): number[][] {
     }
 
     return result;
-}
-
-function createWorker(teams: number[], allTeamData: Partial<Record<Metric, { average: number, teamAverages: Record<number, number>, std: number }>>, flags: string[], queries: Record<string, number>, tournamentKey: string) {
-    return new Promise((resolve, reject) => {
-        const data = {
-            teams: teams,
-            allTeamData: flatted.stringify(allTeamData),
-            flags: flags,
-            queries: flatted.stringify(queries),
-            tournamentKey: tournamentKey
-        }
-        const worker = new Worker('././dist/handler/analysis/picklist/zScoreTeam.js')
-        worker.postMessage(data);
-
-        worker.on('message', (event) => {
-            worker.terminate();
-            resolve(event);
-        });
-
-        worker.on('error', (error) => {
-            worker.terminate();
-            reject(error);
-        });
-    })
 }
