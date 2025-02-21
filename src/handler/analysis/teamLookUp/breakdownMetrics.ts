@@ -18,8 +18,16 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
         };
         const result = {}
         for (const element in MetricsBreakdown) {
-            result[element] = await nonEventMetric(req.user, params.data.team, MetricsBreakdown[element as keyof typeof MetricsBreakdown])
+            if(element === MetricsBreakdown.underShallowCage)
+            {
+                result["Undershallowcage"] = await nonEventMetric(req.user, params.data.team, MetricsBreakdown[element as keyof typeof MetricsBreakdown])
+            }
+            else
+            {
+                result[element.toLowerCase()] = await nonEventMetric(req.user, params.data.team, MetricsBreakdown[element as keyof typeof MetricsBreakdown])
+            }
         };
+        console.log(result)
         res.status(200).send(result)
     }
     catch (error) {
