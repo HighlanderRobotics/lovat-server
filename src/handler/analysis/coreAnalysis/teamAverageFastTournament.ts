@@ -205,29 +205,31 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
             };
 
 
-            const groupedMatches = await prismaClient.$queryRaw<{ scoutReportUuid: string; count: number }[]>(Prisma.sql`
+
+            const groupedMatches = await prismaClient.$queryRaw<
+              { scoutReportUuid: string; count: number }[]
+            >(Prisma.sql`
               SELECT e."scoutReportUuid", COUNT(*) AS count
               FROM "Event" e
               JOIN "ScoutReport" sr ON sr."uuid" = e."scoutReportUuid"
-              WHERE e."action" = ${action}
-                AND e."position" = ${position}
+              JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+              WHERE e."action"::text = ${action}
+                AND e."position"::text = ${position}
                 AND e."time" BETWEEN ${timeMin} AND ${timeMax}
-                AND sr."tournamentKey" = ${tournamentKey}
-                AND sr."teamNumber" = ${team}
+                AND tmd."tournamentKey" = ${tournamentKey}
+                AND tmd."teamNumber" = ${team}
               GROUP BY e."scoutReportUuid"
             `);
-
+            
             if (groupedMatches.length === 0) {
                 return 0;
-            }
-
-            const totalCount = groupedMatches.reduce((acc, curr) => acc + curr.count, 0);
-            const avg = totalCount / groupedMatches.length;
-            return avg;
-
-
-
-
+              }
+              
+              const totalCount = groupedMatches.reduce((acc, curr) => acc + Number(curr.count), 0);
+              const avg = totalCount / groupedMatches.length;
+              return avg;
+              
+            
         }
     }
     catch (error) {
