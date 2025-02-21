@@ -45,6 +45,7 @@ export const nonEventMetric = async (
         AND sc."sourceTeamNumber" = ANY($3)
       GROUP BY s."${columnName}"
     `;
+    console.log(query)
 
     interface QueryRow {
       value: string;
