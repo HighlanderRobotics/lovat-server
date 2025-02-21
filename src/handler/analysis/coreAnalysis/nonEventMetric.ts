@@ -25,8 +25,8 @@ export const nonEventMetric = async (
              COUNT(s."scouterUuid") AS count,
              COUNT(s."scouterUuid")::numeric / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
       FROM "ScoutReport" s
-      JOIN "TeamMatchData" tmd ON tmd."id" = s."teamMatchDataId"
-      JOIN "Scouter" sc ON sc."id" = s."scouterId"
+      JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
+      JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
       WHERE tmd."teamNumber" = $1
         AND tmd."tournamentKey" = ANY($2)
         AND sc."sourceTeamNumber" = ANY($3)
