@@ -68,10 +68,10 @@ export const nonEventMetric = async (
       percentage: string;
     }
     const transformOption = (option: string): string => {
-      const upper = option.toUpperCase();
-      if (upper === "YES") return "true";
-      if (upper === "NO") return "false";
-      return upper;
+      const lower = option.toLowerCase();
+      if (lower === "yes" || lower === "true") return "True";
+      if (lower === "no" || lower === "false") return "False";
+      return option.toUpperCase();
     };
     const rows: QueryRow[] = await prismaClient.$queryRawUnsafe(
       query,
