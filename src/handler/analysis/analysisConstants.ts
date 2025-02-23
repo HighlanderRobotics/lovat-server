@@ -1,4 +1,5 @@
 import { EventAction, BargeResult, Position, RobotRole} from "@prisma/client"
+import prismaClient from '../../prismaClient'
 //add cooperation
 
 // General numeric metrics
@@ -176,7 +177,12 @@ const teamLowerBound = 3300 // Total 3468 as of 2024 season
 const swrConstant = 300
 const ttlConstant = 200
 
+// Caching this for later
+const allTeamNumbers = (async () => {
+    return (await prismaClient.team.findMany()).map(team => team.number);
+})()
+
 const multiplerBaseAnalysis = 4
-export {Metric, metricsCategory, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber};
+export {Metric, metricsCategory, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers};
 
 

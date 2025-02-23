@@ -2,19 +2,19 @@ import { Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { allTeamNumbers } from "../analysis/analysisConstants";
 
 
 export const addTeamSource = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const user = req.user
         if (req.body.mode === "ALL_TEAMS") {
-            const allTeams = await prismaClient.team.findMany({})
             await prismaClient.user.update({
                 where: {
                     id: user.id
                 },
                 data: {
-                    teamSource: allTeams.map(obj => obj.number)
+                    teamSource: (await allTeamNumbers)
                 }
             })
             res.status(200).send("team sources added")
