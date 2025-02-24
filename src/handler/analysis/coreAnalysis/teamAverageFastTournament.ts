@@ -175,35 +175,25 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
         else {
             // Returns average of given EventAction per scout report
 
-            let position = undefined
-            let action = undefined
+            const action: EventAction = metricToEvent[metric1];
+            let position: Position = Position.NONE;
             switch (metric1) {
                 case Metric.coralL1:
-                    action = EventAction.SCORE_CORAL
                     position = Position.LEVEL_ONE
                     break;
                 case Metric.coralL2:
-                    action = EventAction.SCORE_CORAL
                     position = Position.LEVEL_TWO
                     break;
                 case Metric.coralL3:
-                    action = EventAction.SCORE_CORAL
                     position = Position.LEVEL_THREE
                     break;
                 case Metric.coralL4:
-                    action = EventAction.SCORE_CORAL
                     position = Position.LEVEL_FOUR
                     break;
-                default:
-                    action = metricToEvent[metric1] || undefined
-                    position = undefined
-                    break;
             }
-            if (!(action || position)) {
+            if (!action) {
                 throw "Metric failed conversion to event action";
             };
-
-
 
             const groupedMatches = await prismaClient.$queryRaw<
               { scoutReportUuid: string; count: number }[]
