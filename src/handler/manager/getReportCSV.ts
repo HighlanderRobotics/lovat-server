@@ -3,7 +3,7 @@ import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from "csv-stringify/sync";
 import { UserRole, EventAction, Position, UnderShallowCage, KnocksAlgae, BargeResult, RobotRole, AlgaePickup, CoralPickup, Scouter, TeamMatchData, Event } from "@prisma/client";
-import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
+import { autoEnd, endgameToPoints, teleopStart } from "../analysis/analysisConstants";
 import { z } from "zod";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
@@ -53,7 +53,7 @@ interface PointsReport {
 }
 
 /**
- * Sends csv file of rows of CondensedReport instances, organized by scout report.
+ * Sends csv file of rows of CondensedReport instances, representing a single scout report.
  * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
  */
 export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -73,6 +73,28 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
         if (!params.success) {
             res.status(400).send({ "error": params, "displayError": "Invalid tournament selected." });
             return;
+        }
+
+        // Note: passing neither value should act the same as passing both
+        const auto = req.query.auto !== undefined;
+        const teleop = req.query.teleop !== undefined;
+        const includeAuto = auto || !(auto || teleop);
+        const includeTeleop = teleop || !(auto || teleop);
+        
+        // Time filter for event counting
+        let eventTimeFilter: { time: { lte?: number, gte?: number }} = undefined;
+        if (includeAuto && !includeTeleop) {
+            eventTimeFilter = {
+                time: {
+                    lte: autoEnd
+                }
+            }
+        } else if (includeTeleop && !includeAuto) {
+            eventTimeFilter = {
+                time: {
+                    gte: teleopStart
+                }
+            }
         }
 
         // Select scout reports from the given tournament and team sources
@@ -98,6 +120,7 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
                 underShallowCage: true,
                 driverAbility: true,
                 events: {
+                    where: eventTimeFilter,
                     select: {
                         time: true,
                         action: true,
@@ -132,7 +155,7 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
             return;
         }
 
-        const condensed = datapoints.map(r => condenseReport(r, req.user.teamNumber));
+        const condensed = datapoints.map(r => condenseReport(r, req.user.teamNumber, includeAuto, includeTeleop));
 
         // Create and send the csv string through express
         const csvString = stringify(condensed, {
@@ -165,7 +188,7 @@ const posL1: Position[] = [Position.LEVEL_ONE_A, Position.LEVEL_ONE_B, Position.
 const posL2: Position[] = [Position.LEVEL_TWO_A, Position.LEVEL_TWO_B, Position.LEVEL_TWO_C];
 const posL3: Position[] = [Position.LEVEL_THREE_A, Position.LEVEL_THREE_B, Position.LEVEL_THREE_C];
 
-function condenseReport(report: PointsReport, userTeam: number): CondensedReport {
+function condenseReport(report: PointsReport, userTeam: number, includeAuto: boolean, includeTeleop: boolean): CondensedReport {
     const data: CondensedReport = {
         match: report.teamMatchData.matchType.at(0) + report.teamMatchData.matchNumber,
         teamNumber: report.teamMatchData.teamNumber,
@@ -198,7 +221,7 @@ function condenseReport(report: PointsReport, userTeam: number): CondensedReport
 
     // Sum match points and actions
     report.events.forEach(event => {
-        if (event.time < autoEnd) {
+        if (event.time <= autoEnd) {
             data.autoPoints += event.points;
         } else {
             data.teleopPoints += event.points
@@ -267,7 +290,9 @@ function condenseReport(report: PointsReport, userTeam: number): CondensedReport
     });
 
     // Add stage points to teleop
-    data.teleopPoints += endgameToPoints[data.endgame as BargeResult];
+    if (includeTeleop) {
+        data.teleopPoints += endgameToPoints[data.endgame as BargeResult];
+    }
 
     if (report.scouter.sourceTeamNumber === userTeam) {
         data.scouter = report.scouter.name.replace(/,/g, ";"); // Avoid commas in a csv...
