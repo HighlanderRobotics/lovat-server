@@ -3,7 +3,7 @@ import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
 import { UserRole, RobotRole, EventAction, Position, AlgaePickup, CoralPickup, BargeResult, KnocksAlgae, UnderShallowCage, Event } from "@prisma/client";
-import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
+import { autoEnd, endgameToPoints, teleopStart } from "../analysis/analysisConstants";
 import { z } from "zod";
 
 interface AggregatedTeamData {
@@ -57,7 +57,7 @@ interface PointsReport {
 }
 
 /**
- * Sends csv file of rows of AggregatedTeamData instances, organized by team.
+ * Sends csv file of rows of AggregatedTeamData instances, representing a single team over all reports.
  * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
  * Non-averaged results default to highest report, except in the case of robot roles.
  */
@@ -78,6 +78,28 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
         if (!params.success) {
             res.status(400).send({ "error": params, "displayError": "Invalid tournament selected." });
             return;
+        }
+
+        // Note: passing neither value should act the same as passing both
+        const auto = req.query.auto !== undefined;
+        const teleop = req.query.teleop !== undefined;
+        const includeAuto = auto || !(auto || teleop);
+        const includeTeleop = teleop || !(auto || teleop);
+        
+        // Time filter for event counting
+        let eventTimeFilter: { time: { lte?: number, gte?: number }} = undefined;
+        if (includeAuto && !includeTeleop) {
+            eventTimeFilter = {
+                time: {
+                    lte: autoEnd
+                }
+            }
+        } else if (includeTeleop && !includeAuto) {
+            eventTimeFilter = {
+                time: {
+                    gte: teleopStart
+                }
+            }
         }
 
         // TMD instances will be sorted by team number and then looped through and aggregated
@@ -104,6 +126,7 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
                         underShallowCage: true,
                         driverAbility: true,
                         events: {
+                            where: eventTimeFilter,
                             select: {
                                 time: true,
                                 action: true,
@@ -144,7 +167,7 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
         // Aggregate point values
         const aggregatedData: AggregatedTeamData[] = [];
         groupedByTeam.forEach((group, teamNum) => {
-            aggregatedData.push(aggregateTeamReports(teamNum, group.numMatches, group.reports));
+            aggregatedData.push(aggregateTeamReports(teamNum, group.numMatches, group.reports, includeAuto, includeTeleop));
         });
 
         // Create and send the csv string through express
@@ -178,7 +201,7 @@ const posL1: Position[] = [Position.LEVEL_ONE_A, Position.LEVEL_ONE_B, Position.
 const posL2: Position[] = [Position.LEVEL_TWO_A, Position.LEVEL_TWO_B, Position.LEVEL_TWO_C];
 const posL3: Position[] = [Position.LEVEL_THREE_A, Position.LEVEL_THREE_B, Position.LEVEL_THREE_C];
 
-function aggregateTeamReports(teamNum: number, numMatches: number, reports: PointsReport[]): AggregatedTeamData {
+function aggregateTeamReports(teamNum: number, numMatches: number, reports: PointsReport[], includeAuto: boolean, includeTeleop: boolean): AggregatedTeamData {
     const data: AggregatedTeamData = {
         teamNumber: teamNum,
         mainRole: null,
@@ -266,7 +289,7 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
 
         // Sum match points and actions
         report.events.forEach(event => {
-            if (event.time < autoEnd) {
+            if (event.time <= autoEnd) {
                 data.avgAutoPoints += event.points * report.weight;
             } else {
                 data.avgTeleopPoints += event.points * report.weight;
@@ -407,10 +430,13 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
     data.percBargeFail = Math.round(data.percBargeFail / numMatches * 1000) / 10;
 
     // Add endgame points to teleop
-    data.avgTeleopPoints +=
-        data.percBargePark * endgameToPoints[BargeResult.PARKED]
-        + data.percBargeShallow * endgameToPoints[BargeResult.SHALLOW]
-        + data.percBargeDeep * endgameToPoints[BargeResult.DEEP]
+    if (includeTeleop) {
+        data.avgTeleopPoints +=
+            (data.percBargePark * endgameToPoints[BargeResult.PARKED]
+            + data.percBargeShallow * endgameToPoints[BargeResult.SHALLOW]
+            + data.percBargeDeep * endgameToPoints[BargeResult.DEEP])
+            / 100
+    }
 
     // Trim remaining datapoints
     data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints);
