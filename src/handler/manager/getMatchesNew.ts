@@ -22,17 +22,17 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         }
         const params = z.object({
             tournamentKey: z.string(),
-            teamNumbers: z.array(z.number()).nullable(),
+            teamFilter: z.array(z.number()).nullable(),
         }).safeParse({
             tournamentKey: req.params.tournament,
-            teamNumbers: teams
+            teamFilter: teams
         });
         if (!params.success) {
             res.status(400).send(params);
             return;
         };
 
-        if (params.data.teamNumbers && params.data.teamNumbers.length > 6) {
+        if (params.data.teamFilter && params.data.teamFilter.length > 6) {
             res.status(400).send("Too many team filters");
             return;
         }
@@ -144,14 +144,14 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         const lastQualMatch = groupedData.length - 1;
 
         // If team filters are set, limit matches to those including all selected teams
-        if (params.data.teamNumbers && params.data.teamNumbers.length > 0) {
-            let tempArray: typeof groupedData;
+        if (params.data.teamFilter && params.data.teamFilter.length > 0) {
+            let tempArray: typeof groupedData = [];
 
             // For..in to iterate over positive and negative properties
             for (const k in groupedData) {
                 const i = parseInt(k);
                 const match = groupedData[i];
-                if (params.data.teamNumbers.every(requiredTeam => match.find(team => team.teamNumber === requiredTeam))) {
+                if (params.data.teamFilter.every(requiredTeam => match.find(team => team.teamNumber === requiredTeam))) {
                     // Check that all required teams are included in a match
                     tempArray[i] = match;
                 }
@@ -278,7 +278,22 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             finalFormattedMatches[ordinalMatchNumber - 1] = currData;
         }
 
-        res.status(200).send(finalFormattedMatches);
+        if (!params.data.teamFilter) {
+            res.status(200).send(finalFormattedMatches);
+            return;
+        }
+
+        // If teams are filtered, the array will be sparse and has to be condensed
+        const denseFormattedMatches: typeof finalFormattedMatches = [];
+        if (params.data.teamFilter) {
+            for (let i = 0; i < finalFormattedMatches.length; i++) {
+                if (finalFormattedMatches[i]) {
+                    denseFormattedMatches.push(finalFormattedMatches[i]);
+                }
+            }
+        }
+
+        res.status(200).send(denseFormattedMatches);
     }
     catch (error) {
         console.log(error)
