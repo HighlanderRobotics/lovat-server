@@ -151,7 +151,8 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
             for (const k in groupedData) {
                 const i = parseInt(k);
                 const match = groupedData[i];
-                if (match.every(team => params.data.teamNumbers.includes(team.teamNumber))) {
+                if (params.data.teamNumbers.every(requiredTeam => match.find(team => team.teamNumber === requiredTeam))) {
+                    // Check that all required teams are included in a match
                     tempArray[i] = match;
                 }
             }
