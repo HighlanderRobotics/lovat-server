@@ -9,6 +9,7 @@ import { teamAverageFastTournament } from './teamAverageFastTournament';
 
 /**
  * Performance optimized heuristic for finding the average value of a metric for a team
+ * More recent tournaments weighted more heavily
  * 
  * @param user user requesting
  * @param metric metric to average

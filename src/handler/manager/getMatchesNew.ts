@@ -145,7 +145,7 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
 
         // If team filters are set, limit matches to those including all selected teams
         if (params.data.teamFilter && params.data.teamFilter.length > 0) {
-            let tempArray: typeof groupedData = [];
+            const tempArray: typeof groupedData = [];
 
             // For..in to iterate over positive and negative properties
             for (const k in groupedData) {

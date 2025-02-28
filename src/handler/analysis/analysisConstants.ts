@@ -18,11 +18,12 @@ enum MetricsBreakdown {
     coralPickup = "coralPickup",
     bargeResult = "bargeResult",
     knocksAlgae = "knocksAlgae",
-    underShallowCage = "underShallowCage"
+    underShallowCage = "underShallowCage",
+    leavesAuto = "leavesAuto"
 }
 
 // Ranking metrics
-const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails, Metric.autonLeaves]
+const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails]
 
 const autoEnd = 18
 const teleopStart = 19
