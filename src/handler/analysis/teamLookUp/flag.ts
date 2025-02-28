@@ -41,12 +41,15 @@ export const flag = async (req: AuthenticatedRequest, metric: string) => {
                 }
             });
 
+            if (!tournament) {
+                return { flag: params.data.flag, data: 0}
+            }
+
             const data = await rankFlag("frc" + params.data.team, tournament.key);
-            return { flag: params.data.flag, "data": data };
+            return { flag: params.data.flag, data: data };
         }
         else {
             const data = await arrayAndAverageTeam(req.user, params.data.flag, params.data.team)
-            // console.log(data)
             return { flag: params.data.flag, data: data.average }
         }
 
