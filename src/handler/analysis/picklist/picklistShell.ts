@@ -17,7 +17,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
     try {
 
         if (req.query.totalPoints) {
-            res.status(404).send("Picklist is too old, please recreate");
+            res.status(400).send({"error" : req.query, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
         }
 
