@@ -6,20 +6,18 @@ import { rankFlag } from "../rankFlag";
 import { Metric } from '../analysisConstants';
 
 
-export const flag = async (req: AuthenticatedRequest, metric: string) => {
+export const flag = async (req: AuthenticatedRequest, flag: string) => {
     try {
         const params = z.object({
             team: z.number(),
-            flag: z.nativeEnum(Metric).or(z.enum(["rank"]))
         }).safeParse({
             team: Number(req.params.team),
-            flag: metric
         })
         if (!params.success) {
             throw (params);
         };
 
-        if (params.data.flag === "rank") {
+        if (flag === "rank") {
             const tournament = await prismaClient.tournament.findFirst({
                 where:
                 {
@@ -42,15 +40,20 @@ export const flag = async (req: AuthenticatedRequest, metric: string) => {
             });
 
             if (!tournament) {
-                return { flag: params.data.flag, data: 0}
+                return { flag: flag, data: 0}
             }
 
             const data = await rankFlag(tournament.key, params.data.team)[params.data.team];
-            return { flag: params.data.flag, data: data };
+            return { flag: flag, data: data };
         }
         else {
-            const data = await arrayAndAverageTeam(req.user, params.data.flag, params.data.team)
-            return { flag: params.data.flag, data: data.average }
+            const metric = Metric[flag as keyof typeof Metric];
+            if (!metric) {
+                throw "bad flag string";
+            }
+
+            const data = await arrayAndAverageTeam(req.user, metric, params.data.team)
+            return { flag: flag, data: data.average }
         }
 
     }

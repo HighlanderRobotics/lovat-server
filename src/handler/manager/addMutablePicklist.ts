@@ -16,7 +16,7 @@ export const addMutablePicklist = async (req: AuthenticatedRequest, res: Respons
             name: req.body.name,
             teams: req.body.teams,
             authorId: user.id,
-            tournamentKey :  req.body.tournamnetKey
+            tournamentKey :  req.body.tournamentKey
         })
 
         if (!params.success) {
