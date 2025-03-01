@@ -84,7 +84,9 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                     // Generic average for driverAbilities
                     resultsByTournament[team] = [];
                     for (const tournament of rawDataGrouped[team]) {
-                        resultsByTournament[team].push(avgOrZero(tournament.driverAbility))
+                        if (tournament) {
+                            resultsByTournament[team].push(avgOrZero(tournament.driverAbility))
+                        }
                     }
                 }
             } else if (metric === Metric.totalPoints || metric === Metric.teleopPoints || metric === Metric.autoPoints) {
@@ -153,7 +155,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                 for (const team of teams) {
                     resultsByTournament[team] = [];
                     for (const tournament of rawDataGrouped[team]) {
-                        // if (tournament) {
+                        if (tournament) {
                             // Count and push metrics by action/position
                             resultsByTournament[team].push(tournament.events.reduce((totalCount, report) => {
                                 return totalCount + report.reduce((count, cur) => {
@@ -162,7 +164,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                                     }
                                 }, 0);
                             }, 0));
-                        // }
+                        }
                     }
                 }
             }
