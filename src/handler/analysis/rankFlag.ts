@@ -19,6 +19,8 @@ export const rankFlag = async (eventKey: string, ...teams: number[]): Promise<Re
                 out[team] = rankings[i].rank;
             }
         }
+
+        return out;
     } catch (err) {
         // Failsafe in case of bad event key, TBA issue, etc
         const out: Record<number, number> = {}

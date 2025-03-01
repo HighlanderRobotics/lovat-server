@@ -66,9 +66,9 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
     }
 
     // Sum total z score
-    teams.forEach((team, i) => {
+    for (let i = 0; i < results.length; i++) {
         results[i].result = results[i].breakdown.reduce((acc, cur) => acc + cur.result, 0);
-    });
+    }
 
     return results;
 }
