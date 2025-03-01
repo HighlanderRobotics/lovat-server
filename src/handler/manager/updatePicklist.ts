@@ -42,8 +42,10 @@ export const updatePicklist = async (req: AuthenticatedRequest, res: Response): 
             feeds: req.query.feeds || 0,
             defense: req.query.defends || 0,
             authorId: user.id
-
         })
+
+        console.log({ addPicklistQuery: req.query, addPicklistBody: req.body });
+
         if (!params.success) {
             res.status(400).send(params);
             return;

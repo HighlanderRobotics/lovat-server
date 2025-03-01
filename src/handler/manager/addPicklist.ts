@@ -43,6 +43,9 @@ export const addPicklist = async (req: AuthenticatedRequest, res: Response): Pro
             defense: req.query.defends || 0,
             authorId: req.user.id
         })
+
+        console.log({ addPicklistQuery: req.query, addPicklistBody: req.body });
+
         if (!params.success) {
             res.status(400).send(params);
             return;
