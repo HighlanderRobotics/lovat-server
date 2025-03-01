@@ -5,19 +5,19 @@ import ss from "simple-statistics";
 export const zScoreMany = async (data: Partial<Record<Metric, { average: number }[]>>, teams: number[], eventKey: string, queries: Record<string, number>, flags: string[]): Promise<typeof results> => {
     const results: {
         team: number,
-        zScore: number,
-        adjusted: { type: string, result: number }[],
-        unadjusted: { type: string, result: number }[],
+        result: number,
+        breakdown: { type: string, result: number }[],
+        unweighted: { type: string, result: number }[],
         flags: { type: string, result: number }[]
     }[] = [];
 
     // Flags (held as category metrics) and object initialization first
-    for (const [i, team] of teams.entries()) {
+    teams.forEach((team, i) => {
         results[i] ||= {
             team: team,
-            zScore: 0,
-            adjusted: [],
-            unadjusted: [],
+            result: 0,
+            breakdown: [],
+            unweighted: [],
             flags: []
         };
 
@@ -27,7 +27,7 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
                 results[i].flags.push({ type: metricToName[metric], result: data[metric][team].average });
             }
         }
-    }
+    });
 
     // Picklist rankings and zScore
     for (const picklistParam of Object.keys(picklistToMetric)) {
@@ -39,17 +39,17 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
             }, 0) / teams.length;
             const std = ss.standardDeviation(currAvgs.map(e => e.average));
 
-            for (const [i, team] of teams.entries()) {
+            teams.forEach((team, i) => {
                 // If there is a meaningful datapoint, calculate zScore
                 if (currAvgs[team].average !== 0) {
                     // Default standard deviation to 0.1
-                    results[i].zScore = (currAvgs[team].average - avg) / (std || 0.1);
+                    results[i].result = (currAvgs[team].average - avg) / (std || 0.1);
                 }
     
                 // Push adjusted/unadjusted scores
-                results[i].adjusted.push({ type: picklistParam, result: results[i].zScore * queries[picklistParam] });
-                results[i].unadjusted.push({ type: picklistParam, result: results[i].zScore });
-            }
+                results[i].breakdown.push({ type: picklistParam, result: results[i].result * queries[picklistParam] });
+                results[i].unweighted.push({ type: picklistParam, result: results[i].result });
+            });
         }
     }
 
@@ -60,10 +60,10 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
             headers: { 'X-TBA-Auth-Key': process.env.TBA_KEY }
         });
 
-        for (const [i, team] of teams.entries()) {
+        teams.forEach((team, i) => {
             const ri = response.data.rankings.findIndex(currRanking => currRanking.team_key === `frc${team}`);
             results[i].flags.push({ type: "rank", result: response.data.rankings[ri].rank });
-        }
+        });
     }
 
     return results;

@@ -85,11 +85,14 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                 if (teleopPoints.length === 0 && (metric === Metric.totalPoints || metric === Metric.teleopPoints)) {
                     for (const team of teams) {
                         // Generic average if no reusable data is available
+                        teleopPoints[team] = [];
                         for (const tournament of rawDataGrouped[team]) {
-                            const timedEvents = tournament.events.map(val => val.filter(e => e.time > autoEnd));
-                            const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
-
-                            teleopPoints[team].push(avgOrZero(pointSumsByReport));
+                            if (tournament) {
+                                const timedEvents = tournament.events.map(val => val.filter(e => e.time > autoEnd)) || [];
+                                const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
+    
+                                teleopPoints[team].push(avgOrZero(pointSumsByReport));
+                            }
                         }
                     }
                 }
@@ -97,11 +100,14 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                     if (autoPoints.length === 0) {
                         for (const team of teams) {
                             // Generic average if no reusable data is available
+                            autoPoints[team] = [];
                             for (const tournament of rawDataGrouped[team]) {
-                                const timedEvents = tournament.events.map(val => val.filter(e => e.time <= autoEnd));
-                                const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
-    
-                                autoPoints[team].push(avgOrZero(pointSumsByReport));
+                                if (tournament) {
+                                    const timedEvents = tournament.events.map(val => val.filter(e => e.time <= autoEnd));
+                                    const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
+        
+                                    autoPoints[team].push(avgOrZero(pointSumsByReport));
+                                }
                             }
                         }
                     }
@@ -137,21 +143,24 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                 for (const team of teams) {
                     resultsByTournament[team] = [];
                     for (const tournament of rawDataGrouped[team]) {
-                        // Count and push metrics by action/position
-                        resultsByTournament[team].push(tournament.events.reduce((totalCount, report) => {
-                            return totalCount + report.reduce((count, cur) => {
-                                if (cur.action === action && cur.position === position) {
-                                    return ++count;
-                                }
-                            }, 0);
-                        }, 0));
+                        // if (tournament) {
+                            // Count and push metrics by action/position
+                            resultsByTournament[team].push(tournament.events.reduce((totalCount, report) => {
+                                return totalCount + report.reduce((count, cur) => {
+                                    if (cur.action === action && cur.position === position) {
+                                        return ++count;
+                                    }
+                                }, 0);
+                            }, 0));
+                        // }
                     }
                 }
             }
 
             // Weight by tournament, most recent tournaments get more
+            finalResults[metric] = [];
             for (const team of teams) {
-                finalResults[metric][team].average = weightedTorAvg(resultsByTournament[team]);
+                finalResults[metric][team] = { average: weightedTorAvg(resultsByTournament[team]) };
             }
         }
 
