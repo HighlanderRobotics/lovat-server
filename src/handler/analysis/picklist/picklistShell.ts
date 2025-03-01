@@ -134,13 +134,13 @@ function createWorker(teams: number[], allTeamData: Partial<Record<Metric, { ave
 
         // Receive data and send to aggregation in main function
         worker.on('message', (event) => {
-            worker.terminate();
             resolve(event);
+            worker.terminate();
         });
 
         worker.on('error', (error) => {
-            worker.terminate();
             reject(error);
+            worker.terminate();
         });
     })
 }
