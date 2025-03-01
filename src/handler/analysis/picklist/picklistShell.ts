@@ -28,21 +28,21 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             tournamentKey: req.query.tournamentKey || undefined,
             flags: flags,
             metrics: {
-                "totalPoints": Number(req.query.totalPoints) || 0,
-                "defense": Number(req.query.defense) || 0,
-                "driverAbility": Number(req.query.driverAbility) || 0,
-                "autoPoints": Number(req.query.autoPoints) || 0,
-                "algaePickups": Number(req.query.algaePickups) || 0,
-                "coralPickups": Number(req.query.coralPickups) || 0,
-                "barge": Number(req.query.barge) || 0,
-                "coralLevel1Scores": Number(req.query.coralLevel1Scores) || 0,
-                "coralLevel2Scores": Number(req.query.coralLevel2Scores) || 0,
-                "coralLevel3Scores": Number(req.query.coralLevel3Scores) || 0,
-                "coralLevel4Scores": Number(req.query.coralLevel4Scores) || 0,
+                "totalpoints": Number(req.query.totalpoints) || 0,
+                "autopoints": Number(req.query.autopoints) || 0,
+                "teleoppoints": Number(req.query.teleoppoints) || 0,
+                "driverability": Number(req.query.driverability) || 0,
+                "bargeresult": Number(req.query.bargeresult) || 0,
+                "level1": Number(req.query.level1) || 0,
+                "level2": Number(req.query.level2) || 0,
+                "level3": Number(req.query.level3) || 0,
+                "level4": Number(req.query.level4) || 0,
+                "coralpickup": Number(req.query.coralpickup) || 0,
                 "algaeProcessor": Number(req.query.algaeProcessor) || 0,
                 "algaeNet": Number(req.query.algaeNet) || 0,
-                "teleopPoints": Number(req.query.teleopPoints) || 0,
-                "feeds": Number(req.query.feeds) || 0
+                "algaePickups": Number(req.query.algaePickups) || 0,
+                "feeds": Number(req.query.feeds) || 0,
+                "defends": Number(req.query.defense) || 0
             }
         })
         if (!params.success) {

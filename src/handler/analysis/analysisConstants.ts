@@ -157,21 +157,21 @@ const metricToName: Record<Metric, string> = {
 
 // Translates between picklist parameters and metric enum
 const picklistToMetric: Record<string, Metric> = {
-    totalPoints: Metric.totalPoints,
-    defense: Metric.defends,
-    driverAbility: Metric.driverAbility,
-    autoPoints: Metric.autoPoints,
-    algaePickups: Metric.algaePickups,
-    coralPickups: Metric.coralPickups,
-    barge: Metric.bargePoints,
-    coralLevel1Scores: Metric.coralL1,
-    coralLevel2Scores: Metric.coralL2,
-    coralLevel3Scores: Metric.coralL3,
-    coralLevel4Scores: Metric.coralL4,
+    totalpoints: Metric.totalPoints,
+    autopoints: Metric.autoPoints,
+    teleoppoints: Metric.teleopPoints,
+    driverability: Metric.driverAbility,
+    bargeresult: Metric.bargePoints,
+    level1: Metric.coralL1,
+    level2: Metric.coralL2,
+    level3: Metric.coralL3,
+    level4: Metric.coralL4,
+    coralpickup: Metric.coralPickups,
     algaeProcessor: Metric.processorScores,
     algaeNet: Metric.netScores,
-    teleopPoints: Metric.teleopPoints,
-    feeds: Metric.feeds
+    algaePickups: Metric.algaePickups,
+    feeds: Metric.feeds,
+    defends: Metric.defends
 }
 
 // For occasional query optimizations
