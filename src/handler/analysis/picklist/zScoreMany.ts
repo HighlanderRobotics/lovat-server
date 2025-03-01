@@ -32,12 +32,13 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
     // Picklist rankings and zScore
     for (const picklistParam of Object.keys(picklistToMetric)) {
         if (queries[picklistParam]) {
-            // Initialize average and standard deviation for parameter
+            // Initialize variables for parameter
             const currAvgs = data[picklistToMetric[picklistParam]];
-            const avg = currAvgs.reduce((acc, cur) => {
-                return acc + cur.average;
-            }, 0) / teams.length;
-            const std = ss.standardDeviation(currAvgs.map(e => e.average));
+            const condensedAvgs: number[] = [];
+            currAvgs.forEach(e => condensedAvgs.push(e.average));
+            
+            const avg = condensedAvgs.reduce((acc, cur) => acc + cur, 0) / teams.length;
+            const std = ss.standardDeviation(condensedAvgs);
 
             teams.forEach((team, i) => {
                 // If there is a meaningful datapoint, calculate zScore
