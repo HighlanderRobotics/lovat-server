@@ -48,7 +48,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 "algaeNet": Number(req.query.algaeNet) || 0,
                 "algaePickups": Number(req.query.algaePickups) || 0,
                 "feeds": Number(req.query.feeds) || 0,
-                "defends": Number(req.query.defense) || 0
+                "defends": Number(req.query.defends) || 0
             }
         })
         if (!params.success) {
