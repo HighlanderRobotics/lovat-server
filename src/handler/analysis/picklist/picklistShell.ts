@@ -5,11 +5,15 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import z from 'zod'
 import { Worker } from 'worker_threads';
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
-import { Metric, metricsCategory, metricToEvent, metricToName, picklistToMetric } from "../analysisConstants";
+import { allTeamNumbers, allTournaments, Metric, metricsCategory, metricToEvent, metricToName, picklistToMetric } from "../analysisConstants";
 import { picklistArrayAndAverage } from "./picklistArrayAndAverage";
 import flatted from 'flatted';
 import os from 'os'
 import { WorkerResponseData } from "./zScoreTeam";
+import { arrayAndAverageManyFast, getSourceFilter } from "../coreAnalysis/arrayAndAverageManyFast";
+import { zScoreMany } from "./zScoreMany";
+import { teamAverageFastTournament } from "../coreAnalysis/teamAverageFastTournament";
+import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
 
 
 // OK so normal metrics are sent and received in the lettering suggested by the query inputs, but FLAGS are sent and received as shown in metricToName
@@ -80,47 +84,31 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 tournamentKey: params.data.tournamentKey
             }
         });
-        const includedTeamNumbers = teamsAtTournament.map(team => team.teamNumber);
+        // const includedTeams = teamsAtTournament.map(team => team.teamNumber);
+        const includedTeams = [8033, 8];
+        if (includedTeams.length === 0) {
+            throw "Bad event, not enough teams"
+        }
 
-        // Retrieve raw data from worker function
-        const allTeamData: Partial<Record<Metric, { average: number, teamAverages: Record<number, number>, std: number }>> = {};
-        for (const [picklistParam, metric] of Object.entries(picklistToMetric)) {
+        // Metrics to aggregate
+        const includedMetrics: Metric[] = [];
+        for (const picklistParam in picklistToMetric) {
             if (params.data.metrics[picklistParam]) {
-                allTeamData[metric] = await picklistArrayAndAverage(req.user, metric, includedTeamNumbers);
+                includedMetrics.push(picklistToMetric[picklistParam]);
             }
         }
         for (const metric of metricsCategory) {
             if (params.data.flags.includes(metricToName[metric])) {
-                allTeamData[metric] ||= await picklistArrayAndAverage(req.user, metric, includedTeamNumbers);
+                includedMetrics.push(metric);
             }
         }
 
-        // Split workload across cpu's
-        const teamBreakdowns = []
-        const teamChunks = splitArray(includedTeamNumbers, os.cpus().length - 1);
-        for (const teams of teamChunks) {
-            if (teams.length > 0) {
-                teamBreakdowns.push(createWorker(teams, allTeamData, params.data.flags, params.data.metrics, params.data.tournamentKey));
-            }
-        }
+        const allTeamData = await arrayAndAverageManyFast(req.user, includedMetrics, includedTeams, getSourceFilter<number>(req.user.teamSource, await allTeamNumbers), getSourceFilter<string>(req.user.tournamentSource, await allTournaments));
 
-        // Resolve all the work
-        const dataArr = []
-        await Promise.all(teamBreakdowns).then((data: WorkerResponseData[]) => {
-            // Format data
-            for (const chunk of data) {
-                for (const currTeamData of chunk) {
-                    if (!isNaN(currTeamData.zScore)) {
-                        const temp = { "team": currTeamData.team, "result": currTeamData.zScore, "breakdown": currTeamData.adjusted, "unweighted": currTeamData.unadjusted, "flags": currTeamData.flags }
-                        dataArr.push(temp)
-                    }
-                }
-            }
+        const dataArr = await zScoreMany(allTeamData, includedTeams, params.data.tournamentKey, params.data.metrics, params.data.flags);
 
-            // Sort and send
-            const resultArr = dataArr.sort((a, b) => b.result - a.result)
-            res.status(200).send({ teams: resultArr })
-        })
+        const resultArr = dataArr.sort((a, b) => b.result - a.result);
+        res.status(200).send({ teams: resultArr });
     }
     catch (error) {
         console.log(error)
