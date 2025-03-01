@@ -38,21 +38,21 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             tournamentKey: req.query.tournamentKey || undefined,
             flags: flags,
             metrics: {
-                "totalpoints": Number(req.query.totalpoints) || 0,
-                "autopoints": Number(req.query.autopoints) || 0,
-                "teleoppoints": Number(req.query.teleoppoints) || 0,
-                "driverability": Number(req.query.driverability) || 0,
-                "bargeresult": Number(req.query.bargeresult) || 0,
-                "level1": Number(req.query.level1) || 0,
-                "level2": Number(req.query.level2) || 0,
-                "level3": Number(req.query.level3) || 0,
-                "level4": Number(req.query.level4) || 0,
-                "coralpickup": Number(req.query.coralpickup) || 0,
-                "algaeProcessor": Number(req.query.algaeProcessor) || 0,
-                "algaeNet": Number(req.query.algaeNet) || 0,
-                "algaePickups": Number(req.query.algaePickups) || 0,
-                "feeds": Number(req.query.feeds) || 0,
-                "defends": Number(req.query.defends) || 0
+                "totalpoints": Number(req.query.totalpoints) || Number(req.body.totalpoints) || 0,
+                "autopoints": Number(req.query.autopoints) || Number(req.body.autopoints) || 0,
+                "teleoppoints": Number(req.query.teleoppoints) || Number(req.body.teleoppoints) || 0,
+                "driverability": Number(req.query.driverability) || Number(req.body.driverability) || 0,
+                "bargeresult": Number(req.query.bargeresult) || Number(req.body.bargeresult) || 0,
+                "level1": Number(req.query.level1) || Number(req.body.level1) || 0,
+                "level2": Number(req.query.level2) || Number(req.body.level2) || 0,
+                "level3": Number(req.query.level3) || Number(req.body.level3) || 0,
+                "level4": Number(req.query.level4) || Number(req.body.level4) || 0,
+                "coralpickup": Number(req.query.coralpickup) || Number(req.body.coralpickup) || 0,
+                "algaeProcessor": Number(req.query.algaeProcessor) || Number(req.body.algaeProcessor) || 0,
+                "algaeNet": Number(req.query.algaeNet) || Number(req.body.algaeNet) || 0,
+                "algaePickups": Number(req.query.algaePickups) || Number(req.body.algaePickups) || 0,
+                "feeds": Number(req.query.feeds) || Number(req.body.feeds) || 0,
+                "defends": Number(req.query.defends) || Number(req.body.defends) || 0
             }
         })
         if (!params.success) {
