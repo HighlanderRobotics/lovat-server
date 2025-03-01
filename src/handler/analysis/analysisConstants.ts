@@ -26,7 +26,6 @@ enum MetricsBreakdown {
 const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails]
 
 const autoEnd = 18
-const teleopStart = 19
 //much longer than needed in case they go over time/start match early
 const matchTimeEnd = 3000
 
@@ -186,8 +185,15 @@ const ttlConstant = 200
 const allTeamNumbers = (async () => {
     return (await prismaClient.team.findMany()).map(team => team.number);
 })()
+const allTournaments = (async () => {
+    return (await prismaClient.tournament.findMany({
+        orderBy: [
+            { date: 'desc' } // Newest first
+        ]
+    })).map(tnmt => tnmt.key);
+})()
 
 const multiplerBaseAnalysis = 4
-export {Metric, metricsCategory, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers};
+export {Metric, metricsCategory, autoEnd, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments};
 
 

@@ -3,7 +3,7 @@ import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from "csv-stringify/sync";
 import { UserRole, EventAction, Position, UnderShallowCage, KnocksAlgae, BargeResult, RobotRole, AlgaePickup, CoralPickup, Scouter, TeamMatchData, Event } from "@prisma/client";
-import { autoEnd, endgameToPoints, teleopStart } from "../analysis/analysisConstants";
+import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
@@ -82,7 +82,7 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
         const includeTeleop = teleop || !(auto || teleop);
         
         // Time filter for event counting
-        let eventTimeFilter: { time: { lte?: number, gte?: number }} = undefined;
+        let eventTimeFilter: { time: { lte?: number, gt?: number }} = undefined;
         if (includeAuto && !includeTeleop) {
             eventTimeFilter = {
                 time: {
@@ -92,7 +92,7 @@ export const getReportCSV = async (req: AuthenticatedRequest, res: Response): Pr
         } else if (includeTeleop && !includeAuto) {
             eventTimeFilter = {
                 time: {
-                    gte: teleopStart
+                    gt: autoEnd
                 }
             }
         }

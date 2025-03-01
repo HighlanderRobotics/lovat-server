@@ -1,6 +1,6 @@
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { autoEnd, matchTimeEnd, multiplerBaseAnalysis, teleopStart } from "../analysisConstants";
+import { autoEnd, matchTimeEnd, multiplerBaseAnalysis } from "../analysisConstants";
 import { bargePicklistTeam } from "../picklist/bargePicklistTeam";
 import { parentPort } from "worker_threads";
 import { teamAverageFastTournament } from "./teamAverageFastTournament";
@@ -80,7 +80,7 @@ import flatted from 'flatted'
                     const currDatas = []
 
                     if (metric.includes("teleop") || metric.includes("Teleop")) {
-                        const currData = await teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, teleopStart, matchTimeEnd)
+                        const currData = await teamAverageFastTournament(req, team, metric.includes("point") || metric.includes("Point"), metric, tournament[0].tournamentKey, autoEnd, matchTimeEnd)
                         currDatas.push(currData)
                     }
                     else if (metric.includes("auto") || metric.includes("Auto")) {

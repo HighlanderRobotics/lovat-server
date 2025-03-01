@@ -1,6 +1,6 @@
 import prismaClient from '../../../prismaClient'
 import { singleMatchEventsAverage } from "./singleMatchEventsAverage";
-import { autoEnd, matchTimeEnd, Metric, multiplerBaseAnalysis, swrConstant, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
+import { autoEnd, matchTimeEnd, Metric, multiplerBaseAnalysis, swrConstant, tournamentLowerBound, ttlConstant } from "../analysisConstants";
 import { bargePicklistTeam } from "../picklist/bargePicklistTeam";
 import { User } from "@prisma/client";
 
@@ -81,7 +81,7 @@ export const arrayAndAverageTeam = async (user: User, metric: Metric, team: numb
             for (const match of tournament) {
                 // Add time constraints if necessary
                 if (metric === Metric.teleopPoints) {
-                    const currData = singleMatchEventsAverage(user, true, match.key, team, metric, teleopStart, matchTimeEnd)
+                    const currData = singleMatchEventsAverage(user, true, match.key, team, metric, autoEnd, matchTimeEnd)
                     currDatas.push(currData)
                 }
                 else if (metric === Metric.autoPoints) {

@@ -3,7 +3,7 @@ import prismaClient from "../../prismaClient"
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { stringify } from 'csv-stringify/sync';
 import { UserRole, RobotRole, EventAction, Position, AlgaePickup, CoralPickup, BargeResult, KnocksAlgae, UnderShallowCage, Event } from "@prisma/client";
-import { autoEnd, endgameToPoints, teleopStart } from "../analysis/analysisConstants";
+import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
 
 interface AggregatedTeamData {
@@ -87,7 +87,7 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
         const includeTeleop = teleop || !(auto || teleop);
         
         // Time filter for event counting
-        let eventTimeFilter: { time: { lte?: number, gte?: number }} = undefined;
+        let eventTimeFilter: { time: { lte?: number, gt?: number }} = undefined;
         if (includeAuto && !includeTeleop) {
             eventTimeFilter = {
                 time: {
@@ -97,7 +97,7 @@ export const getTeamCSV = async (req: AuthenticatedRequest, res: Response): Prom
         } else if (includeTeleop && !includeAuto) {
             eventTimeFilter = {
                 time: {
-                    gte: teleopStart
+                    gt: autoEnd
                 }
             }
         }
