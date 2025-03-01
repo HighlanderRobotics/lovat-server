@@ -5,14 +5,14 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import z from 'zod'
 import { Worker } from 'worker_threads';
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
-import { Metric, picklistToMetric } from "../analysisConstants";
+import { Metric, metricsCategory, metricToEvent, metricToName, picklistToMetric } from "../analysisConstants";
 import { picklistArrayAndAverage } from "./picklistArrayAndAverage";
 import flatted from 'flatted';
 import os from 'os'
 import { WorkerResponseData } from "./zScoreTeam";
 
 
-
+// OK so normal metrics are sent and received in the lettering suggested by the query inputs, but FLAGS are sent and received as shown in metricToName
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
 
@@ -85,8 +85,13 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         // Retrieve raw data from worker function
         const allTeamData: Partial<Record<Metric, { average: number, teamAverages: Record<number, number>, std: number }>> = {};
         for (const [picklistParam, metric] of Object.entries(picklistToMetric)) {
-            if (params.data.metrics[picklistParam] || params.data.flags.includes(picklistParam)) {
+            if (params.data.metrics[picklistParam]) {
                 allTeamData[metric] = await picklistArrayAndAverage(req.user, metric, includedTeamNumbers);
+            }
+        }
+        for (const metric of metricsCategory) {
+            if (params.data.flags.includes(metricToName[metric])) {
+                allTeamData[metric] ||= await picklistArrayAndAverage(req.user, metric, includedTeamNumbers);
             }
         }
 

@@ -1,4 +1,4 @@
-import { Metric, picklistToMetric } from "../analysisConstants";
+import { Metric, metricsCategory, metricToName, picklistToMetric } from "../analysisConstants";
 import { parentPort } from 'worker_threads';
 import { rankFlag } from '../rankFlag';
 import flatted from 'flatted';
@@ -44,16 +44,17 @@ try {
                     adj.push({ type: picklistParam, result: zScore * queries[picklistParam] });
                     unAdj.push({ type: picklistParam, result: zScore });
                 }
-
-                if (flags.includes(picklistParam)) {
-                    // Push flagged metrics
-                    const currAvg = allTeamData[metric].teamAverages[team];
-                    flagData.push({ type: picklistParam, result: currAvg });
-                }
             }
 
+            // Push flagged metrics
+            for (const metric of metricsCategory) {
+                if (flags.includes(metricToName[metric])) {
+                    const currAvg = allTeamData[metric].teamAverages[team];
+                    flagData.push({ type: metricToName[metric], result: currAvg });
+                }
+            }
             if (flags.includes("rank")) {
-                flagData.push({ type: "rank", result: await rankFlag("frc" + team, tournamentKey) })
+                flagData.push({ type: "rank", result: await rankFlag("frc" + team, tournamentKey) });
             }
 
             // Append final data
