@@ -75,10 +75,12 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
             let resultsByTournament: number[][] = [];
 
             if (metric === Metric.bargePoints) {
+                finalResults[metric] = [];
                 for (const team of teams) {
                     // Using bargePicklistTeam for barge averages
                     finalResults[metric][team].average = await bargePicklistTeam(user, team);
                 }
+                continue;
             } else if (metric === Metric.driverAbility) {
                 for (const team of teams) {
                     // Generic average for driverAbilities
