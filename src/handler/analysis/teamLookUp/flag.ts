@@ -43,7 +43,7 @@ export const flag = async (req: AuthenticatedRequest, flag: string) => {
                 return { flag: flag, data: 0}
             }
 
-            const data = await rankFlag(tournament.key, params.data.team)[params.data.team];
+            const data = (await rankFlag(tournament.key, params.data.team))[params.data.team];
             return { flag: flag, data: data };
         }
         else {
