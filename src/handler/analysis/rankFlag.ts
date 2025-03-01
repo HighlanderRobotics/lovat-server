@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const rankFlag = async (teamKey: string, eventKey: string) => {
-    return null;
+    return "fixing";
 
     const url = 'https://www.thebluealliance.com/api/v3';
 
