@@ -54,7 +54,7 @@ try {
                 }
             }
             if (flags.includes("rank")) {
-                flagData.push({ type: "rank", result: await rankFlag("frc" + team, tournamentKey) });
+                flagData.push({ type: "rank", result: (await rankFlag(tournamentKey, team))[team] });
             }
 
             // Append final data

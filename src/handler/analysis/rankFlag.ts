@@ -1,28 +1,30 @@
 import axios from "axios";
 
-export const rankFlag = async (teamKey: string, eventKey: string) => {
-    return "fixing";
-
-    const url = 'https://www.thebluealliance.com/api/v3';
-
-    if (!eventKey) {
-        return 0;
-    }
-
+/** Returns list of ranks by team. Invalid ranks are returned as 0 */
+export const rankFlag = async (eventKey: string, ...teams: number[]): Promise<Record<number, number>> => {
     try {
-        const response = await axios.get(`${url}/event/${eventKey}/rankings`, {
+        // TBA request
+        const response = await axios.get(`https://www.thebluealliance.com/api/v3/event/${eventKey}/rankings`, {
             headers: { 'X-TBA-Auth-Key': process.env.TBA_KEY }
         });
+        const rankings: { team_key: string, rank: number }[] = response.data.rankings;
 
-        const rankings = response.data.rankings;
-        for (const currRanking of rankings){
-            if (currRanking.team_key === teamKey) {
-                return currRanking.rank;
+        // Find rank of all teams and push data
+        const out: Record<number, number> = {};
+        for (const team of teams) {
+            const i = rankings.findIndex(val => val.team_key === 'frc'+team);
+            if (i === -1) {
+                out[team] = 0;
+            } else {
+                out[team] = rankings[i].rank;
             }
         }
-        return 0;
     } catch (err) {
-        // console.error("Error fetching rankings:", err);
-        return 0; 
+        // Failsafe in case of bad event key, TBA issue, etc
+        const out: Record<number, number> = {}
+        for (const team of teams) {
+            out[team] = 0;
+        }
+        return out;
     }
 };

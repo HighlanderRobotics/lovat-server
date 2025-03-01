@@ -1,6 +1,6 @@
-import axios from "axios";
 import { Metric, metricsCategory, metricToName, picklistToMetric } from "../analysisConstants"
 import ss from "simple-statistics";
+import { rankFlag } from "../rankFlag";
 
 export const zScoreMany = async (data: Partial<Record<Metric, { average: number }[]>>, teams: number[], eventKey: string, queries: Record<string, number>, flags: string[]): Promise<typeof results> => {
     const results: {
@@ -58,14 +58,10 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
 
     // Deal with rankings
     if (flags.includes("rank")) {
-        // TBA request
-        const response = await axios.get(`https://www.thebluealliance.com/api/v3/event/${eventKey}/rankings`, {
-            headers: { 'X-TBA-Auth-Key': process.env.TBA_KEY }
-        });
+        const rankings = await rankFlag(eventKey, ...teams);
 
         teams.forEach((team, i) => {
-            const ri = response.data.rankings.findIndex(currRanking => currRanking.team_key === `frc${team}`);
-            results[i].flags.push({ type: "rank", result: response.data.rankings[ri].rank });
+            results[i].flags.push({ type: "rank", result: rankings[team] });
         });
     }
 
