@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { allTournaments, autoEnd, Metric, metricToEvent } from "../analysisConstants";
+import { allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
 import { Position, Prisma, User } from '@prisma/client';
 import { bargePicklistTeam } from '../picklist/bargePicklistTeam';
 import { Event } from '@prisma/client';
@@ -22,6 +22,10 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
 
         // Main query
         const tmd = await prismaClient.teamMatchData.findMany({
+            cacheStrategy: {
+                swr: swrConstant,
+                ttl: ttlConstant,
+            },
             where: tmdFilter,
             select: {
                 tournamentKey: true,
@@ -38,6 +42,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                             }
                         },
                         driverAbility: metrics.includes(Metric.driverAbility),
+                        bargeResult: metrics.includes(Metric.totalPoints) || metrics.includes(Metric.teleopPoints)
                     }
                 },
             }
@@ -45,19 +50,20 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
 
         // Group into team => tournament (newest first) => events by scout report // driver ability
         const tournamentIndexMap = await allTournaments;
-        const rawDataGrouped: { events: Partial<Event>[][], driverAbility: number[] }[][] = tmd.reduce((acc, cur) => {
+        const rawDataGrouped: { events: Partial<Event>[][], driverAbility: number[], bargePoints: number[] }[][] = tmd.reduce((acc, cur) => {
             const ti = tournamentIndexMap.indexOf(cur.tournamentKey);
             acc[cur.teamNumber] ||= [];
-            acc[cur.teamNumber][ti] ||= { events: [], driverAbility: [] };
+            acc[cur.teamNumber][ti] ||= { events: [], driverAbility: [], bargePoints: [] };
 
             // Push data in
             for (const sr of cur.scoutReports) {
-                acc[cur.teamNumber][ti].events.push(sr.events)
-                acc[cur.teamNumber][ti].driverAbility.push(sr.driverAbility)
+                acc[cur.teamNumber][ti].events.push(sr.events);
+                acc[cur.teamNumber][ti].driverAbility.push(sr.driverAbility);
+                acc[cur.teamNumber][ti].bargePoints.push(endgameToPoints[sr.bargeResult]);
             }
 
             return acc;
-        }, [] as { events: Partial<Event>[][], driverAbility: number[] }[][]);
+        }, [] as typeof rawDataGrouped);
 
         // In case multiple point counts are considered
         let teleopPoints: number[][] = [];
@@ -67,7 +73,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
         for (const metric of metrics) {
             // Team => tournament => average value of metric
             let resultsByTournament: number[][] = [];
-            
+
             if (metric === Metric.bargePoints) {
                 for (const team of teams) {
                     // Using bargePicklistTeam for barge averages
@@ -89,8 +95,12 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                         for (const tournament of rawDataGrouped[team]) {
                             if (tournament) {
                                 const timedEvents = tournament.events.map(val => val.filter(e => e.time > autoEnd)) || [];
-                                const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
-    
+                                const pointSumsByReport = []
+                                timedEvents.forEach((events, i) => {
+                                    // Push sum of event points and endgame
+                                    pointSumsByReport.push(events.reduce((acc, cur) => acc + cur.points, 0) + tournament.bargePoints[i]);
+                                });
+
                                 teleopPoints[team].push(avgOrZero(pointSumsByReport));
                             }
                         }
@@ -105,7 +115,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                                 if (tournament) {
                                     const timedEvents = tournament.events.map(val => val.filter(e => e.time <= autoEnd));
                                     const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
-        
+
                                     autoPoints[team].push(avgOrZero(pointSumsByReport));
                                 }
                             }
@@ -160,7 +170,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
             // Weight by tournament, most recent tournaments get more
             finalResults[metric] = [];
             for (const team of teams) {
-                finalResults[metric][team] = { average: weightedTorAvg(resultsByTournament[team]) };
+                finalResults[metric][team] = { average: weightedTorAvgRight(resultsByTournament[team]) };
             }
         }
 
@@ -180,7 +190,7 @@ export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): null | {
     if (sources.length === possibleSources.length) {
         return null;
     }
-    
+
     // Many users will only filter a few out, invert takes advantage of this
     if (sources.length >= possibleSources.length * 0.7) {
         const unsourcedTeams = possibleSources.filter(val => !sources.includes(val));
@@ -195,10 +205,11 @@ function avgOrZero(values: number[]): number {
     return (values.reduce((acc, cur) => acc + cur, 0) / values.length) || 0;
 }
 
-function weightedTorAvg(values: number[]): number {
-    let result = values[0];
+// Most recent is first
+function weightedTorAvgRight(values: number[]): number {
+    let result = values.at(-1);
 
-    for (let i = 1; i < values.length; i++) {
+    for (let i = values.length - 2; i >= 0; i--) {
         result = result * 0.2 + values[i] * 0.8;
     }
 
