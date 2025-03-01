@@ -36,20 +36,22 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
             const currAvgs = data[picklistToMetric[picklistParam]];
             const condensedAvgs: number[] = [];
             currAvgs.forEach(e => condensedAvgs.push(e.average));
-            
+
             const avg = condensedAvgs.reduce((acc, cur) => acc + cur, 0) / teams.length;
             const std = ss.standardDeviation(condensedAvgs);
 
             teams.forEach((team, i) => {
+                let zScore = 0
+
                 // If there is a meaningful datapoint, calculate zScore
                 if (currAvgs[team].average !== 0) {
                     // Default standard deviation to 0.1
-                    results[i].result = (currAvgs[team].average - avg) / (std || 0.1);
+                    zScore = (currAvgs[team].average - avg) / (std || 0.1);
                 }
-    
-                // Push adjusted/unadjusted scores
-                results[i].breakdown.push({ type: picklistParam, result: results[i].result * queries[picklistParam] });
-                results[i].unweighted.push({ type: picklistParam, result: results[i].result });
+
+                // Push scores
+                results[i].breakdown.push({ type: picklistParam, result: zScore * queries[picklistParam] });
+                results[i].unweighted.push({ type: picklistParam, result: zScore });
             });
         }
     }
@@ -66,6 +68,11 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
             results[i].flags.push({ type: "rank", result: response.data.rankings[ri].rank });
         });
     }
+
+    // Sum total z score
+    teams.forEach((team, i) => {
+        results[i].result = results[i].breakdown.reduce((acc, cur) => acc + cur.result, 0);
+    });
 
     return results;
 }
