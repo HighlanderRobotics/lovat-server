@@ -26,20 +26,22 @@ export const updatePicklist = async (req: AuthenticatedRequest, res: Response): 
             authorId: z.string()
         }).safeParse({
             name: req.body.name,
-            totalPoints: req.body.totalPoints || 0,
-            defense: req.body.defense || 0,
-            algaePickups : req.body.pickUps || 0,
-            barge : req.body.stage || 0,
-            coralLevel1Scores : req.body.coralLevel1Scores || 0,
-            coralLevel2Scores : req.body.coralLevel2Scores || 0,
-            coralLevel3Scores : req.body.coralLevel3Scores || 0,
-            coralLevel4Scores : req.body.coralLevel4Scores || 0,
-            autoPoints : req.body.autoPoints || 0,
-            driverAbility : req.body.driverAbility || 0,
-            algaeProcessor : req.body.algaeProcessor || 0,
-            algaeNet : req.body.algaeNet || 0,
-            coralPickups : req.body.coralPickups || 0,
-            authorId : user.id
+            totalPoints: req.query.totalpoints || 0,
+            autoPoints: req.query.autopoints || 0,
+            teleopPoints: req.query.teleoppoints || 0,
+            driverAbility: req.query.driverability || 0,
+            barge: req.query.bargeresult || 0,
+            coralLevel1Scores: req.query.level1 || 0,
+            coralLevel2Scores: req.query.level2 || 0,
+            coralLevel3Scores: req.query.level3 || 0,
+            coralLevel4Scores: req.query.level4 || 0,
+            coralPickups: req.query.coralpickup || 0,
+            algaeProcessor: req.query.algaeProcessor || 0,
+            algaeNet: req.query.algaeNet || 0,
+            algaePickups: req.query.algaePickups || 0,
+            feeds: req.query.feeds || 0,
+            defense: req.query.defends || 0,
+            authorId: user.id
 
         })
         if (!params.success) {
