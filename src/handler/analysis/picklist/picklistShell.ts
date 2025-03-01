@@ -84,8 +84,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 tournamentKey: params.data.tournamentKey
             }
         });
-        // const includedTeams = teamsAtTournament.map(team => team.teamNumber);
-        const includedTeams = [8033, 8];
+        const includedTeams = teamsAtTournament.map(team => team.teamNumber);
         if (includedTeams.length === 0) {
             throw "Bad event, not enough teams"
         }
