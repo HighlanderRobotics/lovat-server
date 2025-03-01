@@ -41,8 +41,8 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                                 time: true
                             }
                         },
-                        driverAbility: metrics.includes(Metric.driverAbility),
-                        bargeResult: metrics.includes(Metric.totalPoints) || metrics.includes(Metric.teleopPoints)
+                        driverAbility: true,
+                        bargeResult: true
                     }
                 },
             }
