@@ -15,6 +15,12 @@ import { WorkerResponseData } from "./zScoreTeam";
 
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
+
+        if (req.query.totalPoints) {
+            res.status(404).send("Picklist is too old, please recreate");
+            return;
+        }
+
         let flags = []
         if (req.query.flags) {
             flags = JSON.parse(req.query.flags as string)
