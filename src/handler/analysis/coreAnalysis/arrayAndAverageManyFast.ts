@@ -1,7 +1,7 @@
 import prismaClient from '../../../prismaClient'
 import { allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
 import { Position, Prisma, User } from '@prisma/client';
-import { bargePicklistTeam } from '../picklist/bargePicklistTeam';
+import { endgamePicklistTeamFast } from '../picklist/endgamePicklistTeamFast';
 import { Event } from '@prisma/client';
 
 export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
@@ -80,7 +80,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                 finalResults[metric] = [];
                 for (const team of teams) {
                     // Using bargePicklistTeam for barge averages
-                    finalResults[metric][team] = { average: await bargePicklistTeam(user, team) };
+                    finalResults[metric][team] = { average: await endgamePicklistTeamFast(user, team) };
                 }
                 continue;
             } else if (metric === Metric.driverAbility) {

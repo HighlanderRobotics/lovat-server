@@ -16,7 +16,7 @@ const numPointResults: number = Object.keys(BargeResult).reduce((acc, cur) => {
 console.log("endgame success options: " + numPointResults)
 
 /** Uses rule of succession to predict endgame points for a given team */
-export const bargePicklistTeam = async (user: User, team: number) => {
+export const endgamePicklistTeamFast = async (user: User, team: number) => {
     try {
         const teamFilter = getSourceFilter<number>(user.teamSource, await allTeamNumbers);
         const tnmtFilter = getSourceFilter<string>(user.tournamentSource, await allTournaments);
