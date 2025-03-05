@@ -4,9 +4,11 @@ import { Position, Prisma, User } from '@prisma/client';
 import { bargePicklistTeam } from '../picklist/bargePicklistTeam';
 import { Event } from '@prisma/client';
 
+export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
+
 // Compute AATF on multiple teams at once, returning results in multiple sparse arrays by team number
 // Hopefully better performance for picklists
-export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], teams: number[], sourceTeamFilter: { notIn: number[] } | { in: number[] }, sourceTournamentFilter: { notIn: string[] } | { in: string[] }): Promise<Partial<Record<Metric, { average: number }[]>>> => {
+export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], teams: number[], sourceTeamFilter: ArrayFilter<number>, sourceTournamentFilter: ArrayFilter<string>): Promise<Partial<Record<Metric, { average: number }[]>>> => {
     try {
         // Set up filters to decrease server load
         const tmdFilter: Prisma.TeamMatchDataWhereInput = { teamNumber: { in: teams } };
@@ -78,7 +80,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
                 finalResults[metric] = [];
                 for (const team of teams) {
                     // Using bargePicklistTeam for barge averages
-                    finalResults[metric][team].average = await bargePicklistTeam(user, team);
+                    finalResults[metric][team] = { average: await bargePicklistTeam(user, team) };
                 }
                 continue;
             } else if (metric === Metric.driverAbility) {
@@ -174,7 +176,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
             // Weight by tournament, most recent tournaments get more
             finalResults[metric] = [];
             for (const team of teams) {
-                finalResults[metric][team] = { average: weightedTorAvgRight(resultsByTournament[team]) };
+                finalResults[metric][team] = { average: weightedTourAvgRight(resultsByTournament[team]) };
             }
         }
 
@@ -189,7 +191,7 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
 
 // Attempts to make filters more efficient
 // Could still cause problems at tournaments, would have to be tested - failure should be treated by changing first condition to a tolderance
-export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): null | { notIn: T[] } | { in: T[] } => {
+export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): null | ArrayFilter<T> => {
     // If nothing is filtered, don't check
     if (sources.length === possibleSources.length) {
         return null;
@@ -210,7 +212,7 @@ function avgOrZero(values: number[]): number {
 }
 
 // Most recent is first
-function weightedTorAvgRight(values: number[]): number {
+function weightedTourAvgRight(values: number[]): number {
     let result = values.at(-1);
 
     for (let i = values.length - 2; i >= 0; i--) {
