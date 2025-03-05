@@ -5,16 +5,26 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import z from 'zod'
 import { Worker } from 'worker_threads';
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
-import { Metric, picklistToMetric } from "../analysisConstants";
+import { allTeamNumbers, allTournaments, Metric, metricsCategory, metricToEvent, metricToName, picklistToMetric } from "../analysisConstants";
 import { picklistArrayAndAverage } from "./picklistArrayAndAverage";
 import flatted from 'flatted';
 import os from 'os'
 import { WorkerResponseData } from "./zScoreTeam";
+import { arrayAndAverageManyFast, getSourceFilter } from "../coreAnalysis/arrayAndAverageManyFast";
+import { zScoreMany } from "./zScoreMany";
+import { teamAverageFastTournament } from "../coreAnalysis/teamAverageFastTournament";
+import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
 
 
-
+// OK so normal metrics are sent and received in the lettering suggested by the query inputs, but FLAGS are sent and received as shown in metricToName
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
+
+        if (req.query.totalPoints) {
+            res.status(400).send({"error" : req.query, "displayError" : "Invalid input. Make sure you are using the correct input."});
+            return;
+        }
+
         let flags = []
         if (req.query.flags) {
             flags = JSON.parse(req.query.flags as string)
@@ -28,21 +38,21 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             tournamentKey: req.query.tournamentKey || undefined,
             flags: flags,
             metrics: {
-                "totalPoints": Number(req.query.totalPoints) || 0,
-                "defense": Number(req.query.defense) || 0,
-                "driverAbility": Number(req.query.driverAbility) || 0,
-                "autoPoints": Number(req.query.autoPoints) || 0,
-                "algaePickups": Number(req.query.algaePickups) || 0,
-                "coralPickups": Number(req.query.coralPickups) || 0,
-                "barge": Number(req.query.barge) || 0,
-                "coralLevel1Scores": Number(req.query.coralLevel1Scores) || 0,
-                "coralLevel2Scores": Number(req.query.coralLevel2Scores) || 0,
-                "coralLevel3Scores": Number(req.query.coralLevel3Scores) || 0,
-                "coralLevel4Scores": Number(req.query.coralLevel4Scores) || 0,
-                "algaeProcessor": Number(req.query.algaeProcessor) || 0,
-                "algaeNet": Number(req.query.algaeNet) || 0,
-                "teleopPoints": Number(req.query.teleopPoints) || 0,
-                "feeds": Number(req.query.feeds) || 0
+                "totalpoints": Number(req.query.totalpoints) || Number(req.body.totalpoints) || 0,
+                "autopoints": Number(req.query.autopoints) || Number(req.body.autopoints) || 0,
+                "teleoppoints": Number(req.query.teleoppoints) || Number(req.body.teleoppoints) || 0,
+                "driverability": Number(req.query.driverability) || Number(req.body.driverability) || 0,
+                "bargeresult": Number(req.query.bargeresult) || Number(req.body.bargeresult) || 0,
+                "level1": Number(req.query.level1) || Number(req.body.level1) || 0,
+                "level2": Number(req.query.level2) || Number(req.body.level2) || 0,
+                "level3": Number(req.query.level3) || Number(req.body.level3) || 0,
+                "level4": Number(req.query.level4) || Number(req.body.level4) || 0,
+                "coralpickup": Number(req.query.coralpickup) || Number(req.body.coralpickup) || 0,
+                "algaeProcessor": Number(req.query.algaeProcessor) || Number(req.body.algaeProcessor) || 0,
+                "algaeNet": Number(req.query.algaeNet) || Number(req.body.algaeNet) || 0,
+                "algaePickups": Number(req.query.algaePickups) || Number(req.body.algaePickups) || 0,
+                "feeds": Number(req.query.feeds) || Number(req.body.feeds) || 0,
+                "defends": Number(req.query.defends) || Number(req.body.defends) || 0
             }
         })
         if (!params.success) {
@@ -74,42 +84,30 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 tournamentKey: params.data.tournamentKey
             }
         });
-        const includedTeamNumbers = teamsAtTournament.map(team => team.teamNumber);
+        const includedTeams = teamsAtTournament.map(team => team.teamNumber);
+        if (includedTeams.length === 0) {
+            throw "Bad event, not enough teams"
+        }
 
-        // Retrieve raw data from worker function
-        const allTeamData: Partial<Record<Metric, { average: number, teamAverages: Record<number, number>, std: number }>> = {};
-        for (const [picklistParam, metric] of Object.entries(picklistToMetric)) {
-            if (params.data.metrics[picklistParam] || params.data.flags.includes(picklistParam)) {
-                allTeamData[metric] = await picklistArrayAndAverage(req.user, metric, includedTeamNumbers);
+        // Metrics to aggregate
+        const includedMetrics: Metric[] = [];
+        for (const picklistParam in picklistToMetric) {
+            if (params.data.metrics[picklistParam]) {
+                includedMetrics.push(picklistToMetric[picklistParam]);
+            }
+        }
+        for (const metric of metricsCategory) {
+            if (params.data.flags.includes(metricToName[metric])) {
+                includedMetrics.push(metric);
             }
         }
 
-        // Split workload across cpu's
-        const teamBreakdowns = []
-        const teamChunks = splitArray(includedTeamNumbers, os.cpus().length - 1);
-        for (const teams of teamChunks) {
-            if (teams.length > 0) {
-                teamBreakdowns.push(createWorker(teams, allTeamData, params.data.flags, params.data.metrics, params.data.tournamentKey));
-            }
-        }
+        const allTeamData = await arrayAndAverageManyFast(req.user, includedMetrics, includedTeams, getSourceFilter<number>(req.user.teamSource, await allTeamNumbers), getSourceFilter<string>(req.user.tournamentSource, await allTournaments));
 
-        // Resolve all the work
-        const dataArr = []
-        await Promise.all(teamBreakdowns).then((data: WorkerResponseData[]) => {
-            // Format data
-            for (const chunk of data) {
-                for (const currTeamData of chunk) {
-                    if (!isNaN(currTeamData.zScore)) {
-                        const temp = { "team": currTeamData.team, "result": currTeamData.zScore, "breakdown": currTeamData.adjusted, "unweighted": currTeamData.unadjusted, "flags": currTeamData.flags }
-                        dataArr.push(temp)
-                    }
-                }
-            }
+        const dataArr = await zScoreMany(allTeamData, includedTeams, params.data.tournamentKey, params.data.metrics, params.data.flags);
 
-            // Sort and send
-            const resultArr = dataArr.sort((a, b) => b.result - a.result)
-            res.status(200).send({ teams: resultArr })
-        })
+        const resultArr = dataArr.sort((a, b) => b.result - a.result);
+        res.status(200).send({ teams: resultArr });
     }
     catch (error) {
         console.log(error)
@@ -134,13 +132,13 @@ function createWorker(teams: number[], allTeamData: Partial<Record<Metric, { ave
 
         // Receive data and send to aggregation in main function
         worker.on('message', (event) => {
-            worker.terminate();
             resolve(event);
+            worker.terminate();
         });
 
         worker.on('error', (error) => {
-            worker.terminate();
             reject(error);
+            worker.terminate();
         });
     })
 }

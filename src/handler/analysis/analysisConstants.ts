@@ -1,4 +1,5 @@
 import { EventAction, BargeResult, Position, RobotRole} from "@prisma/client"
+import prismaClient from '../../prismaClient'
 //add cooperation
 
 // General numeric metrics
@@ -17,14 +18,14 @@ enum MetricsBreakdown {
     coralPickup = "coralPickup",
     bargeResult = "bargeResult",
     knocksAlgae = "knocksAlgae",
-    underShallowCage = "underShallowCage"
+    underShallowCage = "underShallowCage",
+    leavesAuto = "leavesAuto"
 }
 
 // Ranking metrics
-const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails, Metric.autonLeaves]
+const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails]
 
 const autoEnd = 18
-const teleopStart = 19
 //much longer than needed in case they go over time/start match early
 const matchTimeEnd = 3000
 
@@ -48,6 +49,10 @@ const metricToEvent: Partial<Record<Metric, EventAction>> = {
     [Metric.algaePickups]: EventAction.PICKUP_ALGAE,
     [Metric.coralDrops]: EventAction.DROP_CORAL,
     [Metric.algaeDrops]: EventAction.DROP_ALGAE,
+    [Metric.coralL1]: EventAction.SCORE_CORAL,
+    [Metric.coralL2]: EventAction.SCORE_CORAL,
+    [Metric.coralL3]: EventAction.SCORE_CORAL,
+    [Metric.coralL4]: EventAction.SCORE_CORAL,
     [Metric.processorScores]: EventAction.SCORE_PROCESSOR,
     [Metric.netScores]: EventAction.SCORE_NET,
     [Metric.netFails]: EventAction.FAIL_NET,
@@ -151,21 +156,21 @@ const metricToName: Record<Metric, string> = {
 
 // Translates between picklist parameters and metric enum
 const picklistToMetric: Record<string, Metric> = {
-    totalPoints: Metric.totalPoints,
-    defense: Metric.defends,
-    driverAbility: Metric.driverAbility,
-    autoPoints: Metric.autoPoints,
-    algaePickups: Metric.algaePickups,
-    coralPickups: Metric.coralPickups,
-    barge: Metric.bargePoints,
-    coralLevel1Scores: Metric.coralL1,
-    coralLevel2Scores: Metric.coralL2,
-    coralLevel3Scores: Metric.coralL3,
-    coralLevel4Scores: Metric.coralL4,
+    totalpoints: Metric.totalPoints,
+    autopoints: Metric.autoPoints,
+    teleoppoints: Metric.teleopPoints,
+    driverability: Metric.driverAbility,
+    bargeresult: Metric.bargePoints,
+    level1: Metric.coralL1,
+    level2: Metric.coralL2,
+    level3: Metric.coralL3,
+    level4: Metric.coralL4,
+    coralpickup: Metric.coralPickups,
     algaeProcessor: Metric.processorScores,
     algaeNet: Metric.netScores,
-    teleopPoints: Metric.teleopPoints,
-    feeds: Metric.feeds
+    algaePickups: Metric.algaePickups,
+    feeds: Metric.feeds,
+    defends: Metric.defends
 }
 
 // For occasional query optimizations
@@ -176,7 +181,19 @@ const teamLowerBound = 3300 // Total 3468 as of 2024 season
 const swrConstant = 300
 const ttlConstant = 200
 
+// Caching this for later
+const allTeamNumbers = (async () => {
+    return (await prismaClient.team.findMany()).map(team => team.number);
+})()
+const allTournaments = (async () => {
+    return (await prismaClient.tournament.findMany({
+        orderBy: [
+            { date: 'desc' } // Newest first
+        ]
+    })).map(tnmt => tnmt.key);
+})()
+
 const multiplerBaseAnalysis = 4
-export {Metric, metricsCategory, autoEnd, teleopStart, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber};
+export {Metric, metricsCategory, autoEnd, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments};
 
 

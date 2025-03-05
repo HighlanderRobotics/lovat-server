@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { autoEnd, endgameToPoints, matchTimeEnd, Metric, metricToEvent, teleopStart } from "../analysisConstants";
+import { autoEnd, endgameToPoints, matchTimeEnd, Metric, metricToEvent } from "../analysisConstants";
 import { EventAction, Position, User } from "@prisma/client";
 
 /** Average all teams based on  */
@@ -38,7 +38,7 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
             let timeMax = matchTimeEnd
             if (metric === Metric.teleopPoints)
             {
-                timeMin = teleopStart
+                timeMin = autoEnd
             }
             else if (metric === Metric.autoPoints)
             {

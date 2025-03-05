@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, RobotRole, UnderShallowCage, User } from "@prisma/client";
+import { AlgaePickup, BargeResult, CoralPickup, EventAction, KnocksAlgae, RobotRole, UnderShallowCage, User } from "@prisma/client";
 import { MetricsBreakdown } from "../analysisConstants";
 
 /**
@@ -12,6 +12,48 @@ export const nonEventMetric = async (
   metric: MetricsBreakdown
 ): Promise<Record<string, number>> => {
   try {
+
+    // NEEDS TO BE MOVED
+    if (metric === MetricsBreakdown.leavesAuto) {
+      const numLeaves = await prismaClient.teamMatchData.count({
+        where: {
+          teamNumber: team,
+          tournamentKey: { in: user.tournamentSource },
+          scoutReports: {
+            some: {
+              AND: {
+                events: {
+                  some: {
+                    action: EventAction.AUTO_LEAVE,
+                  }
+                },
+                scouter: {
+                  sourceTeamNumber: { in: user.teamSource }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const totalMatches = await prismaClient.teamMatchData.count({
+        where: {
+          teamNumber: team,
+          tournamentKey: { in: user.tournamentSource },
+          scoutReports: {
+            some: {}
+          }
+        }
+      });
+
+      const perc = numLeaves/totalMatches
+
+      return {
+        "True": perc,
+        "False": 1 - perc
+      }
+    }
+
     const columnName =
       metric === MetricsBreakdown.knocksAlgae
         ? 'knocksAlgae'

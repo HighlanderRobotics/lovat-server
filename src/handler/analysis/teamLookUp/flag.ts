@@ -3,23 +3,21 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { rankFlag } from "../rankFlag";
-import { Metric } from '../analysisConstants';
+import { Metric, metricToName } from '../analysisConstants';
 
 
-export const flag = async (req: AuthenticatedRequest, metric: string) => {
+export const flag = async (req: AuthenticatedRequest, flag: string) => {
     try {
         const params = z.object({
             team: z.number(),
-            flag: z.nativeEnum(Metric).or(z.enum(["rank"]))
         }).safeParse({
             team: Number(req.params.team),
-            flag: metric
         })
         if (!params.success) {
             throw (params);
         };
 
-        if (params.data.flag === "rank") {
+        if (flag === "rank") {
             const tournament = await prismaClient.tournament.findFirst({
                 where:
                 {
@@ -41,13 +39,23 @@ export const flag = async (req: AuthenticatedRequest, metric: string) => {
                 }
             });
 
-            const data = await rankFlag("frc" + params.data.team, tournament.key);
-            return { flag: params.data.flag, "data": data };
+            if (!tournament) {
+                return { flag: flag, data: 0}
+            }
+
+            const data = (await rankFlag(tournament.key, params.data.team))[params.data.team];
+            return { flag: flag, data: data };
         }
         else {
-            const data = await arrayAndAverageTeam(req.user, params.data.flag, params.data.team)
-            // console.log(data)
-            return { flag: params.data.flag, data: data.average }
+
+            const metric = Object.entries(metricToName).find(e => e[1] === flag)[0]
+
+            if (!metric) {
+                throw "bad flag string";
+            }
+
+            const data = await arrayAndAverageTeam(req.user, Metric[metric as keyof typeof Metric], params.data.team)
+            return { flag: flag, data: data.average }
         }
 
     }

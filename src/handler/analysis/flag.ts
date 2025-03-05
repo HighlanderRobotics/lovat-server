@@ -3,7 +3,7 @@ import axios from "axios";
 import { arrayAndAverageTeam } from "./coreAnalysis/arrayAndAverageTeam";
 import { Metric } from './analysisConstants';
 
-
+// Never used?
 export const flag = async (req: AuthenticatedRequest, flagName: Metric | "rank", tournamentKey: string = null, teamNumber: number) => {
     try {
         if (flagName === "rank") {

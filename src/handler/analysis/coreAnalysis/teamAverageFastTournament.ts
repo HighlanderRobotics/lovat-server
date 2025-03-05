@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { endgameToPoints, matchTimeEnd, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
+import { endgameToPoints, matchTimeEnd, Metric, metricToEvent, swrConstant, ttlConstant, allTeamNumbers } from "../analysisConstants";
 import { EventAction, Position, User, Prisma} from "@prisma/client";
 
 
@@ -7,7 +7,6 @@ import { EventAction, Position, User, Prisma} from "@prisma/client";
 export const teamAverageFastTournament = async (user: User, team: number, isPointAverage: boolean, metric1: Metric, tournamentKey: string, timeMin = 0, timeMax: number = matchTimeEnd): Promise<number> => {
     try {
         // Could still cause problems at tournaments, would have to be tested - failure should be treated by changing first condition to a tolerance
-        const allTeamNumbers = (await prismaClient.team.findMany()).map(team => team.number);
         let scoutReportFilter: {
             teamMatchData: {
                 tournamentKey: string;
@@ -20,7 +19,7 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
         };
 
         // Variable stores scout report filter
-        if (user.teamSource.length === allTeamNumbers.length) {
+        if (user.teamSource.length === (await allTeamNumbers).length) {
             // If no teams are filtered, don't check teams in prisma request
             scoutReportFilter = {
                 teamMatchData:
@@ -29,9 +28,9 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
                     teamNumber: team
                 }
             }
-        } else if (user.teamSource.length >= allTeamNumbers.length / 2) {
+        } else if (user.teamSource.length >= (await allTeamNumbers).length / 2) {
             // Many users will only filter a few teams, invert checks if this is the case for faster performance
-            const unsourcedTeams = allTeamNumbers.filter(val => !user.teamSource.includes(val));
+            const unsourcedTeams = (await allTeamNumbers).filter(val => !user.teamSource.includes(val));
             scoutReportFilter = {
                 teamMatchData:
                 {
@@ -176,35 +175,25 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
         else {
             // Returns average of given EventAction per scout report
 
-            let position = undefined
-            let action = undefined
+            const action: EventAction = metricToEvent[metric1];
+            let position: Position = Position.NONE;
             switch (metric1) {
                 case Metric.coralL1:
-                    action = EventAction.SCORE_CORAL
                     position = Position.LEVEL_ONE
                     break;
                 case Metric.coralL2:
-                    action = EventAction.SCORE_CORAL
                     position = Position.LEVEL_TWO
                     break;
                 case Metric.coralL3:
-                    action = EventAction.SCORE_CORAL
                     position = Position.LEVEL_THREE
                     break;
                 case Metric.coralL4:
-                    action = EventAction.SCORE_CORAL
                     position = Position.LEVEL_FOUR
                     break;
-                default:
-                    action = metricToEvent[metric1] || undefined
-                    position = undefined
-                    break;
             }
-            if (!(action || position)) {
+            if (!action) {
                 throw "Metric failed conversion to event action";
             };
-
-
 
             const groupedMatches = await prismaClient.$queryRaw<
               { scoutReportUuid: string; count: number }[]

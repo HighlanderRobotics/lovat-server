@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { autoEnd, matchTimeEnd, swrConstant, teleopStart, tournamentLowerBound, ttlConstant } from "../analysisConstants";
+import { autoEnd, matchTimeEnd, swrConstant, tournamentLowerBound, ttlConstant } from "../analysisConstants";
 import { bargePicklistTeam } from "../picklist/bargePicklistTeam";
 // import { teamAverageFastTournament } from "./teamAverageFastTournament";
 import { Metric } from "../analysisConstants";
@@ -9,6 +9,7 @@ import { teamAverageFastTournament } from './teamAverageFastTournament';
 
 /**
  * Performance optimized heuristic for finding the average value of a metric for a team
+ * More recent tournaments weighted more heavily
  * 
  * @param user user requesting
  * @param metric metric to average
@@ -126,7 +127,7 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
         // IMO needs a refactor to take scout reports in with initial query
         for (const tournamentMatchRows of tournamentGroups) {
             if (metric === Metric.teleopPoints) {
-                const currData = await teamAverageFastTournament(user, team, true, Metric.teleopPoints, tournamentMatchRows[0].tournamentKey, teleopStart, matchTimeEnd)
+                const currData = await teamAverageFastTournament(user, team, true, Metric.teleopPoints, tournamentMatchRows[0].tournamentKey, autoEnd, matchTimeEnd)
                 tournamentAverages.push(currData)
             }
             else if (metric === Metric.autoPoints) {

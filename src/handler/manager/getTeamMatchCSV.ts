@@ -21,7 +21,7 @@ interface PointsReport {
 }
 
 /**
- * Sends csv file of rows of AggregatedTeamMatchData instances, organized by team AND match.
+ * Sends csv file of rows of AggregatedTeamMatchData instances, representing a single match for a single team.
  * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
  * Non-averaged results default to highest report, except in the case of robot roles (to coincide with getTeamCSV).
  */
@@ -42,6 +42,28 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
         if (!params.success) {
             res.status(400).send({ "error": params, "displayError": "Invalid tournament selected." });
             return;
+        }
+
+        // Note: passing neither value should act the same as passing both
+        const auto = req.query.auto !== undefined;
+        const teleop = req.query.teleop !== undefined;
+        const includeAuto = auto || !(auto || teleop);
+        const includeTeleop = teleop || !(auto || teleop);
+        
+        // Time filter for event counting
+        let eventTimeFilter: { time: { lte?: number, gt?: number }} = undefined;
+        if (includeAuto && !includeTeleop) {
+            eventTimeFilter = {
+                time: {
+                    lte: autoEnd
+                }
+            }
+        } else if (includeTeleop && !includeAuto) {
+            eventTimeFilter = {
+                time: {
+                    gt: autoEnd
+                }
+            }
         }
 
         // Select instances of TeamMatchData with unique combinations of team and match
@@ -71,6 +93,7 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
                         underShallowCage: true,
                         driverAbility: true,
                         events: {
+                            where: eventTimeFilter,
                             select: {
                                 time: true,
                                 action: true,
@@ -122,7 +145,7 @@ export const getTeamMatchCSV = async (req: AuthenticatedRequest, res: Response):
                 } else {
                     // Append names of scouters from the same team as the user
                     const scouterNames = reports.filter(e => e.scouter.sourceTeamNumber === req.user.teamNumber).map(e => e.scouter.name.replace(/,/g, ";")); // Avoid commas in a csv...
-                    aggregatedData.push(aggregateTeamMatchReports(match, teamNumber, reports, scouterNames));
+                    aggregatedData.push(aggregateTeamMatchReports(match, teamNumber, reports, scouterNames, includeAuto, includeTeleop));
                 }
             });
         }
@@ -158,7 +181,7 @@ const posL1: Position[] = [Position.LEVEL_ONE_A, Position.LEVEL_ONE_B, Position.
 const posL2: Position[] = [Position.LEVEL_TWO_A, Position.LEVEL_TWO_B, Position.LEVEL_TWO_C];
 const posL3: Position[] = [Position.LEVEL_THREE_A, Position.LEVEL_THREE_B, Position.LEVEL_THREE_C];
 
-function aggregateTeamMatchReports(match: string, teamNumber: number, reports: Omit<PointsReport, "scouter">[], scouters: string[]): Omit<CondensedReport, "notes"> {
+function aggregateTeamMatchReports(match: string, teamNumber: number, reports: Omit<PointsReport, "scouter">[], scouters: string[], includeAuto: boolean, includeTeleop: boolean): Omit<CondensedReport, "notes"> {
     const data: Omit<CondensedReport, "notes"> = {
         match: match,
         teamNumber: teamNumber,
@@ -227,7 +250,7 @@ function aggregateTeamMatchReports(match: string, teamNumber: number, reports: O
 
         // Sum match points and actions
         report.events.forEach(event => {
-            if (event.time < autoEnd) {
+            if (event.time <= autoEnd) {
                 data.autoPoints += event.points;
             } else {
                 data.teleopPoints += event.points
@@ -338,7 +361,9 @@ function aggregateTeamMatchReports(match: string, teamNumber: number, reports: O
     }
 
     // Add endgame points to teleop
-    data.teleopPoints += endgameToPoints[data.endgame];
+    if (includeTeleop) {
+        data.teleopPoints += endgameToPoints[data.endgame];
+    }
 
     return data;
 }
