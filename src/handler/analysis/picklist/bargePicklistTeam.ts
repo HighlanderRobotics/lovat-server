@@ -2,154 +2,75 @@
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { error } from "console";
-import { User } from "@prisma/client";
-import { teamLowerBound, tournamentLowerBound } from "../analysisConstants";
+import { BargeResult, User } from "@prisma/client";
+import { allTeamNumbers, allTournaments, endgameToPoints, teamLowerBound, tournamentLowerBound } from "../analysisConstants";
+import { getSourceFilter } from '../coreAnalysis/arrayAndAverageManyFast';
 
+// Number of endgame possibilities that result in points earned (essentially, successes)
+const numPointResults: number = Object.keys(BargeResult).reduce((acc, cur) => {
+    if (endgameToPoints[BargeResult[cur as keyof typeof BargeResult]] !== 0) {
+        acc++;
+    }
+    return acc;
+}, 0);
+console.log("endgame success options: " + numPointResults)
 
-
-/**
- * Averages stage points for a given team
- */
+/** Uses rule of succession to predict endgame points for a given team */
 export const bargePicklistTeam = async (user: User, team: number) => {
     try {
-        const params = z.object({
-            team: z.number()
-        }).safeParse({
-            team: team
+        const teamFilter = getSourceFilter<number>(user.teamSource, await allTeamNumbers);
+        const tnmtFilter = getSourceFilter<string>(user.tournamentSource, await allTournaments);
+
+        // Get data
+        const endgameRows = await prismaClient.scoutReport.groupBy({
+            by: ['bargeResult'],
+            _count: {
+                _all: true
+            },
+            where: {
+                teamMatchData: {
+                    teamNumber: team,
+                    tournamentKey: tnmtFilter
+                },
+                scouter: {
+                    sourceTeamNumber: teamFilter
+                }
+            }
         })
-        if (!params.success) {
-            throw (error)
-        };
-        // let stageRows = []
-        let bargeRows;
-        if (user.tournamentSource.length >= tournamentLowerBound) {
-            if (user.teamSource.length >= teamLowerBound) {
-                bargeRows = await prismaClient.scoutReport.groupBy({
-                    by: ['bargeResult'],
-                    _count: {
-                        bargeResult: true,
-                    },
-                    where: {
-                        teamMatchData: {
-                            teamNumber: team,
-                        }
-                    }
-                });
 
+        // Map endgame result to number of occurences and count total attempts
+        let totalAttempts = 0;
+        const endgameMap: Partial<Record<BargeResult, number>> = endgameRows.reduce((map, curr) => {
+            if (curr.bargeResult !== BargeResult.NOT_ATTEMPTED) {
+                totalAttempts++;
+
+                map[curr.bargeResult] ||= 0;
+                map[curr.bargeResult]++;
             }
-            else {
-                bargeRows = await prismaClient.scoutReport.groupBy({
-                    by: ['bargeResult'],
-                    _count: {
-                        bargeResult: true,
-                    },
-                    where: {
-                        teamMatchData: {
-                            teamNumber: team,
-                        },
-                        scouter:
-                        {
-                            sourceTeamNumber: {
-                                in: user.teamSource
-                            }
-                        }
-                    }
-                });
-
-            }
-        }
-        else {
-            if (user.teamSource.length > teamLowerBound) {
-                bargeRows = await prismaClient.scoutReport.groupBy({
-                    by: ['bargeResult'],
-                    _count: {
-                        bargeResult: true,
-                    },
-                    where: {
-                        teamMatchData: {
-                            teamNumber: team,
-                            tournamentKey:
-                            {
-                                in: user.tournamentSource
-                            }
-                        },
-
-                    }
-                });
-
-
-            }
-            else {
-                bargeRows = await prismaClient.scoutReport.groupBy({
-                    by: ['bargeResult'],
-                    _count: {
-                        bargeResult: true,
-                    },
-                    where: {
-                        teamMatchData: {
-                            teamNumber: team,
-                            tournamentKey:
-                            {
-                                in: user.tournamentSource
-                            }
-                        },
-                        scouter:
-                        {
-                            sourceTeamNumber:
-                            {
-                                in: user.teamSource
-                            }
-                        }
-
-                    }
-                });
-
-            }
-        }
-
-        const totalAttemptsStage = bargeRows.reduce((total, item) => {
-            if (item.stage !== "NOTHING") {
-                return total + item._count.stage;
-            }
-            return total;
-        }, 0);
-       
-        if (totalAttemptsStage === 0) {
-            //can be tuned, baseline value
-            return 1.5
-        }
-   
-        const bargeMap = bargeRows.reduce((map, item) => {
-            map[item.stage] = item._count.stage;
             return map;
         }, {});
-        let deep = ((bargeMap["DEEP"] + 1) / (totalAttemptsStage + 3)) * 12
-        if (isNaN(deep)) {
-            deep = 1
-        }
-        let shallow = ((bargeMap["SHALLOW"] || 0 + 1) / (totalAttemptsStage + 3)) * 6
-        if (isNaN(shallow)) {
-            shallow = 1
-        }
-        let park = ((bargeMap["PARKED"] + 1) / (totalAttemptsStage + 2)) * 2
-        if (isNaN(park)) {
-            park = 1
-        }
-        const averageRuleOfSucsession = deep + shallow + park
-     
-        return averageRuleOfSucsession
 
+        // Return base value (can be tuned)
+        if (totalAttempts === 0) {
+            return 1.5;
+        }
 
+        let avgRuleOfSuccession = 0;
+        for (const element in BargeResult) {
+            const result: BargeResult = BargeResult[element as keyof typeof BargeResult];
 
+            // Increment rule of succession based on: [{times observed} + 1] / [{total count} + {success possibilities} + {1 failure possibility}]
+            if (endgameMap[result] && result !== BargeResult.NOT_ATTEMPTED) {
+                avgRuleOfSuccession += (endgameMap[result] + 1) / (totalAttempts + numPointResults + 1);
+            }
+        }
+
+        return avgRuleOfSuccession;
     }
     catch (error) {
         console.log(error)
         throw (error)
     }
-
-
-
-
 }
 
 

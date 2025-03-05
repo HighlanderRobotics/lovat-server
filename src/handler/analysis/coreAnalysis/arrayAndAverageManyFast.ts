@@ -191,10 +191,10 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
 
 // Attempts to make filters more efficient
 // Could still cause problems at tournaments, would have to be tested - failure should be treated by changing first condition to a tolderance
-export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): null | ArrayFilter<T> => {
+export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): undefined | ArrayFilter<T> => {
     // If nothing is filtered, don't check
     if (sources.length === possibleSources.length) {
-        return null;
+        return undefined;
     }
 
     // Many users will only filter a few out, invert takes advantage of this
