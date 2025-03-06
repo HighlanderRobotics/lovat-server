@@ -1,7 +1,7 @@
 import prismaClient from '../../../prismaClient'
 import { allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
 import { BargeResult, Position, Prisma, User } from '@prisma/client';
-import { endgamePicklistTeamFast, endgameRuleOfSuccession } from '../picklist/endgamePicklistTeamFast';
+import { endgameRuleOfSuccession } from '../picklist/endgamePicklistTeamFast';
 import { Event } from '@prisma/client';
 
 export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
@@ -90,8 +90,8 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
         }, [] as typeof rawDataGrouped);
 
         // In case multiple point counts are considered
-        let teleopPoints: number[][] = [];
-        let autoPoints: number[][] = [];
+        const teleopPoints: number[][] = [];
+        const autoPoints: number[][] = [];
 
         const finalResults: Partial<Record<Metric, { average: number }[]>> = {};
         for (const metric of metrics) {

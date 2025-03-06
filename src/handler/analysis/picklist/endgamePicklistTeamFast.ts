@@ -1,7 +1,7 @@
 
 import prismaClient from '../../../prismaClient'
 import { BargeResult, User } from "@prisma/client";
-import { allTeamNumbers, allTournaments, endgameToPoints, teamLowerBound, tournamentLowerBound } from "../analysisConstants";
+import { allTeamNumbers, allTournaments, endgameToPoints } from "../analysisConstants";
 import { getSourceFilter } from '../coreAnalysis/arrayAndAverageManyFast';
 
 // Number of endgame possibilities that result in points earned (essentially, successes)
