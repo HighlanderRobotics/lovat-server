@@ -48,13 +48,16 @@ export const flag = async (req: AuthenticatedRequest, flag: string) => {
         }
         else {
 
-            const metric = Object.entries(metricToName).find(e => e[1] === flag)[0]
+            const metric = Object.entries(metricToName).find(([met, name]) => name === flag)[0]
 
             if (!metric) {
                 throw "bad flag string";
             }
 
             const data = await arrayAndAverageTeam(req.user, Metric[metric as keyof typeof Metric], params.data.team)
+
+            console.log(`FLAG: ${flag}; team: ${params.data.team}; metric: ${metricToName[Metric[metric as keyof typeof Metric]]}; data: ${data.average}`)
+
             return { flag: flag, data: data.average }
         }
 
