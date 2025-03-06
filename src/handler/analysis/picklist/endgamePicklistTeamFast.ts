@@ -1,7 +1,5 @@
 
 import prismaClient from '../../../prismaClient'
-import z from 'zod'
-import { error } from "console";
 import { BargeResult, User } from "@prisma/client";
 import { allTeamNumbers, allTournaments, endgameToPoints, teamLowerBound, tournamentLowerBound } from "../analysisConstants";
 import { getSourceFilter } from '../coreAnalysis/arrayAndAverageManyFast';
@@ -42,30 +40,13 @@ export const endgamePicklistTeamFast = async (user: User, team: number) => {
         let totalAttempts = 0;
         const endgameMap: Partial<Record<BargeResult, number>> = endgameRows.reduce((map, curr) => {
             if (curr.bargeResult !== BargeResult.NOT_ATTEMPTED) {
-                totalAttempts++;
-
-                map[curr.bargeResult] ||= 0;
-                map[curr.bargeResult]++;
+                totalAttempts += curr._count._all;
+                map[curr.bargeResult] = curr._count._all;
             }
             return map;
-        }, {});
+        }, {} as typeof endgameMap);
 
-        // Return base value (can be tuned)
-        if (totalAttempts === 0) {
-            return 1.5;
-        }
-
-        let avgRuleOfSuccession = 0;
-        for (const element in BargeResult) {
-            const result: BargeResult = BargeResult[element as keyof typeof BargeResult];
-
-            // Increment rule of succession based on: [{times observed} + 1] / [{total count} + {success possibilities} + {1 failure possibility}]
-            if (endgameMap[result] && result !== BargeResult.NOT_ATTEMPTED) {
-                avgRuleOfSuccession += (endgameMap[result] + 1) / (totalAttempts + numPointResults + 1);
-            }
-        }
-
-        return avgRuleOfSuccession;
+        return endgameRuleOfSuccession(endgameMap, totalAttempts);
     }
     catch (error) {
         console.log(error)
@@ -74,7 +55,24 @@ export const endgamePicklistTeamFast = async (user: User, team: number) => {
 }
 
 
+export const endgameRuleOfSuccession = (data: Partial<Record<BargeResult, number>>, totalAttempts: number): number => {
+    // Return base value (can be tuned)
+    if (totalAttempts === 0) {
+        return 1.5;
+    }
 
+    let avgRuleOfSuccession = 0;
+    for (const element in BargeResult) {
+        const result: BargeResult = BargeResult[element as keyof typeof BargeResult];
+
+        // Increment rule of succession based on: [{times observed} + 1] / [{total count} + {success possibilities} + {1 failure possibility}]
+        if (data[result] && result !== BargeResult.NOT_ATTEMPTED) {
+            avgRuleOfSuccession += (data[result] + 1) / (totalAttempts + numPointResults + 1);
+        }
+    }
+
+    return avgRuleOfSuccession;
+}
 
 
 
