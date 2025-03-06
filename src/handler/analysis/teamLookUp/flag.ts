@@ -51,11 +51,12 @@ export const flag = async (req: AuthenticatedRequest, flag: string) => {
             let metric: Metric;
             for (const curMetric of metricsCategory) {
                 if (metricToName[curMetric] === flag) {
-                    metric === curMetric;
+                    metric = curMetric;
+                    break;
                 }
             }
 
-            if (!metric) {
+            if (typeof metric !== "number") {
                 throw `bad flag string: ${flag} for team ${params.data.team}`;
             }
 
