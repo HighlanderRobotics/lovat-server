@@ -56,7 +56,7 @@ export const flag = async (req: AuthenticatedRequest, flag: string) => {
             }
 
             if (!metric) {
-                throw "bad flag string";
+                throw `bad flag string: ${flag} for team ${params.data.team}`;
             }
 
             const data = await arrayAndAverageTeam(req.user, metric, params.data.team)
