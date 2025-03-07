@@ -5,15 +5,10 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import z from 'zod'
 import { Worker } from 'worker_threads';
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
-import { allTeamNumbers, allTournaments, Metric, metricsCategory, metricToEvent, metricToName, picklistToMetric } from "../analysisConstants";
-import { picklistArrayAndAverage } from "./picklistArrayAndAverage";
+import { allTeamNumbers, allTournaments, Metric, metricsCategory, metricToName, picklistToMetric } from "../analysisConstants";
 import flatted from 'flatted';
-import os from 'os'
-import { WorkerResponseData } from "./zScoreTeam";
 import { arrayAndAverageManyFast, getSourceFilter } from "../coreAnalysis/arrayAndAverageManyFast";
 import { zScoreMany } from "./zScoreMany";
-import { teamAverageFastTournament } from "../coreAnalysis/teamAverageFastTournament";
-import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
 
 
 // OK so normal metrics are sent and received in the lettering suggested by the query inputs, but FLAGS are sent and received as shown in metricToName

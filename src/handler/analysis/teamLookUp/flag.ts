@@ -3,7 +3,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { rankFlag } from "../rankFlag";
-import { Metric, metricToName } from '../analysisConstants';
+import { Metric, metricsCategory, metricToName } from '../analysisConstants';
 
 
 export const flag = async (req: AuthenticatedRequest, flag: string) => {
@@ -47,14 +47,21 @@ export const flag = async (req: AuthenticatedRequest, flag: string) => {
             return { flag: flag, data: data };
         }
         else {
-
-            const metric = Object.entries(metricToName).find(e => e[1] === flag)[0]
-
-            if (!metric) {
-                throw "bad flag string";
+            // Search for relevant metric (should use a reverse map)
+            let metric: Metric;
+            for (const curMetric of metricsCategory) {
+                if (metricToName[curMetric] === flag) {
+                    metric = curMetric;
+                    break;
+                }
             }
 
-            const data = await arrayAndAverageTeam(req.user, Metric[metric as keyof typeof Metric], params.data.team)
+            if (typeof metric !== "number") {
+                throw `bad flag string: ${flag} for team ${params.data.team}`;
+            }
+
+            const data = await arrayAndAverageTeam(req.user, metric, params.data.team)
+
             return { flag: flag, data: data.average }
         }
 
