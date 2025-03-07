@@ -82,6 +82,7 @@ import { pitDisplay } from "./handler/manager/pitDisplay";
 import { getTeamCSV } from "./handler/manager/getTeamCSV";
 import { getTeamMatchCSV } from "./handler/manager/getTeamMatchCSV";
 import { getReportCSV } from "./handler/manager/getReportCSV";
+import { emailTeamCode } from "./handler/manager/emailTeamCode";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -176,6 +177,7 @@ app.put('/v1/manager/settings/teamemail', updateTeamEmails, requireAuth, updateT
 
 
 //scouting lead information/QR codes
+app.get('/v1/manager/emailTeamCode', requireAuth, emailTeamCode)
 app.get('/v1/manager/code', requireAuth, getTeamCode )
 app.get('/v1/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested 
 
