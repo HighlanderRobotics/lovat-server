@@ -18,7 +18,6 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
 
         })
         if (!params.success) {
-            console.log("details page")
             console.log(params)
             res.status(400).send(params);
             return;
