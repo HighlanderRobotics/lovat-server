@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, metricToName, swrConstant, ttlConstant } from "../analysisConstants";
+import { allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, metricToName, multiplerBaseAnalysis, swrConstant, ttlConstant } from "../analysisConstants";
 import { BargeResult, Position, Prisma, User } from '@prisma/client';
 import { endgameRuleOfSuccession } from '../picklist/endgamePicklistTeamFast';
 import { Event } from '@prisma/client';
@@ -231,10 +231,20 @@ function avgOrZero(values: number[]): number {
 
 // Most recent is first
 function weightedTourAvgRight(values: number[]): number {
-    let result = values.at(-1);
+    let result = 0
 
-    for (let i = values.length - 2; i >= 0; i--) {
-        result = result * 0.2 + values[i] * 0.8;
+    for (let i = values.length - 1; i >= 0; i--) {
+        if (i === values.length - 1) {
+            // Initialize with furthest tournament
+            result = values[i]
+        } else if (i === 0) {
+            // Dynamic weighting for most recent tournament
+            const weightOnRecent = 0.95 * (1 - (1 / (multiplerBaseAnalysis + 1)));
+            result = result * (1 - weightOnRecent) + values[i] * weightOnRecent;
+        } else {
+            // Use default weights
+            result = result * 0.2 + values[i] * 0.8;
+        }
     }
 
     return result;

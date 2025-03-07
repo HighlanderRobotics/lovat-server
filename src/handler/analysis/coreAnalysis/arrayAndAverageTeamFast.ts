@@ -120,8 +120,11 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
                 // For the most recent tournament, calculate a dynamic weight
                 const recentTournamentKey = matchKeys[matchKeys.length - 1].tournamentKey;
                 const recentTournamentMatches = matchKeys.filter(match => match.tournamentKey === recentTournamentKey);
+                
+                // Intended? Following two variables are the same because the query filters by TMD containing scout reports
                 const scoutedMatchesAtMostRecentTournament = recentTournamentMatches.length;
                 const totalMatchesAtMostRecentTournament = tournamentGroups[i].length;
+
                 const weightOnRecent = 0.95 * (1 - (1 / ((multiplerBaseAnalysis * (scoutedMatchesAtMostRecentTournament / totalMatchesAtMostRecentTournament)) + 1)));
                 runningAverage = runningAverage * (1 - weightOnRecent) + tournamentAverages[i] * weightOnRecent;
             } else {
