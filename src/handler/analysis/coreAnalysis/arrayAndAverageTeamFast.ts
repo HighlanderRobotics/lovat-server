@@ -6,7 +6,7 @@ import {
   tournamentLowerBound,
   ttlConstant,
 } from "../analysisConstants";
-import { bargePicklistTeam } from "../picklist/bargePicklistTeam";
+import { endgamePicklistTeamFast } from '../picklist/endgamePicklistTeamFast';
 import { Metric } from "../analysisConstants";
 import { User } from "@prisma/client";
 import z from 'zod'
@@ -31,7 +31,7 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
         };
 
         if (metric === Metric.bargePoints) {
-            return { average: await bargePicklistTeam(user, team) }
+            return { average: await endgamePicklistTeamFast(user, team) }
         }
 
         let matchKeys = [];
