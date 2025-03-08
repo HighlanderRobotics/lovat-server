@@ -112,18 +112,16 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
         }
 
         let runningAverage = 0;
-        // Combine tournament averages with weighting
         for (let i = 0; i < tournamentAverages.length; i++) {
             if (i === 0) {
                 runningAverage = tournamentAverages[i];
-            } else if (i === tournamentAverages.length - 1) {
-                // For the most recent tournament, calculate a dynamic weight
-                const recentTournamentKey = matchKeys[matchKeys.length - 1].tournamentKey;
-                const recentTournamentMatches = matchKeys.filter(match => match.tournamentKey === recentTournamentKey);
-                const scoutedMatchesAtMostRecentTournament = recentTournamentMatches.length;
-                const totalMatchesAtMostRecentTournament = tournamentGroups[i].length;
-                const weightOnRecent = 0.95 * (1 - (1 / ((multiplerBaseAnalysis * (scoutedMatchesAtMostRecentTournament / totalMatchesAtMostRecentTournament)) + 1)));
-                runningAverage = runningAverage * (1 - weightOnRecent) + tournamentAverages[i] * weightOnRecent;
+            // } else if (i === tournamentAverages.length - 1) {
+            //     const recentTournamentKey = matchKeys[matchKeys.length - 1].tournamentKey;
+            //     const recentTournamentMatches = matchKeys.filter(match => match.tournamentKey === recentTournamentKey);
+            //     const scoutedMatchesAtMostRecentTournament = recentTournamentMatches.length;
+            //     const totalMatchesAtMostRecentTournament = tournamentGroups[i].length;
+            //     const weightOnRecent = 0.95 * (1 - (1 / ((multiplerBaseAnalysis * (scoutedMatchesAtMostRecentTournament / totalMatchesAtMostRecentTournament)) + 1)));
+            //     runningAverage = runningAverage * (1 - weightOnRecent) + tournamentAverages[i] * weightOnRecent;
             } else {
                 runningAverage = runningAverage * 0.2 + tournamentAverages[i] * 0.8;
             }
