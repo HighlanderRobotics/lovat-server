@@ -5,7 +5,6 @@ import {
   swrConstant,
   tournamentLowerBound,
   ttlConstant,
-  multiplerBaseAnalysis
 } from "../analysisConstants";
 import { bargePicklistTeam } from "../picklist/bargePicklistTeam";
 import { Metric } from "../analysisConstants";
