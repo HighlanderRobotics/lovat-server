@@ -237,10 +237,10 @@ function weightedTourAvgRight(values: number[]): number {
         if (i === values.length - 1) {
             // Initialize with furthest tournament
             result = values[i]
-        } else if (i === 0) {
-            // Dynamic weighting for most recent tournament
-            const weightOnRecent = 0.95 * (1 - (1 / (multiplerBaseAnalysis + 1)));
-            result = result * (1 - weightOnRecent) + values[i] * weightOnRecent;
+        // } else if (i === 0) {
+        //     // Dynamic weighting for most recent tournament
+        //     const weightOnRecent = 0.95 * (1 - (1 / (multiplerBaseAnalysis + 1)));
+        //     result = result * (1 - weightOnRecent) + values[i] * weightOnRecent;
         } else {
             // Use default weights
             result = result * 0.2 + values[i] * 0.8;
