@@ -82,6 +82,7 @@ import { pitDisplay } from "./handler/manager/pitDisplay";
 import { getTeamCSV } from "./handler/manager/getTeamCSV";
 import { getTeamMatchCSV } from "./handler/manager/getTeamMatchCSV";
 import { getReportCSV } from "./handler/manager/getReportCSV";
+import { emailTeamCode } from "./handler/manager/emailTeamCode";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -185,6 +186,7 @@ app.post('/v1/manager/dashboard/scoutreport', requireAuth, addScoutReportDashboa
 
 
 //scouter onboarding
+app.post('/v1/manager/emailTeamCode', emailTeamCode)
 app.get('/v1/manager/scouter/checkcode', checkCodeScouter) //tested change name/where request data is coming from/response format as needed 
 app.post('/v1/manager/name/uuid/:uuid', changeNameScouter) // tested, change name/where request data is coming from/response format as needed 
 app.get('/v1/manager/scouters', getScoutersOnTeam) //tested
