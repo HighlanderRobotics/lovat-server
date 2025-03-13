@@ -55,6 +55,11 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             return;
         };
 
+        if (isFinite(Number(req.query.stage))) {
+            res.status(400).send({ error: "OUTDATED_PICKLIST" });
+            return;
+        }
+
         // No data without a tournament key (should make this an impossible request from the frontend)
         if (!params.data.tournamentKey) {
             res.status(200).send([]);
