@@ -11,6 +11,14 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
         flags: { type: string, result: number }[]
     }[] = [];
 
+    // Include flagged metrics
+    const includedMetrics = new Array<Metric>;
+    for (const metric of metricsCategory) {
+        if (flags.includes(metricToName[metric])) {
+            includedMetrics.push(metric);
+        }
+    }
+
     // Flags (held as category metrics) and object initialization first
     teams.forEach((team, i) => {
         results[i] ||= {
@@ -21,11 +29,8 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
             flags: []
         };
 
-        for (const metric of metricsCategory) {
-            if (flags.includes(metricToName[metric])) {
-                // Push flagged metrics
-                results[i].flags.push({ type: metricToName[metric], result: data[metric][team].average });
-            }
+        for (const metric in includedMetrics) {
+            results[i].flags.push({ type: metricToName[metric], result: data[metric][team].average });
         }
     });
 
