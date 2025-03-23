@@ -1,7 +1,9 @@
 import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { flag } from "./flag";
+import { rankFlag } from "../rankFlag";
+import { metricsCategory, metricToName } from "../analysisConstants";
+import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 
 
 export const multipleFlags = async (req: AuthenticatedRequest, res: Response) => {
@@ -19,21 +21,32 @@ export const multipleFlags = async (req: AuthenticatedRequest, res: Response) =>
             res.status(400).send(params);
             return;
         };
-        const arr = []
-        for(const metric of params.data.flags)
-        {
-            if(metric === "rank" && !params.data.tournamentKey)
-            {
-                arr.push(0)
-            }
-            else
-            {
-                arr.push((await flag(req, metric)).data)
+
+        const arr: number[] = []
+        for (const flag of params.data.flags) {
+            if (flag === "rank") {
+                // Find team rank if a tournament is provided
+                if (params.data.tournamentKey) {
+                    arr.push((await rankFlag(params.data.tournamentKey, params.data.team))[params.data.team]);
+                } else {
+                    arr.push(0);
+                }
+            } else {
+                // Map flag to a metric and use AAT (should probably use a map but wtv)
+                for (let i = metricsCategory.length - 1; i >= 0; i--) {
+                    if (flag === metricToName[metricsCategory[i]]) {
+                        arr.push((await arrayAndAverageTeam(req.user, metricsCategory[i], params.data.team)).average);
+                    } else if (i === 0) {
+                        // No flag found probably shouldnt throw a full error, just push a falsy
+                        console.error(`Bad flag string: ${flag} for team ${params.data.team}`);
+                        arr.push(NaN);
+                    }
+                }
             }
         }
+
+        console.log(arr);
         res.status(200).send(arr)
-       
-       
     }
     catch (error) {
         console.error(error)
