@@ -51,7 +51,7 @@ export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[]
         });
 
         // Sparse array by team number
-        interface GroupedData { 
+        interface GroupedData {
             // Sparse array by tournament date
             tournamentData: {
                 // By scout report
@@ -74,20 +74,22 @@ export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[]
         // Group into team => tournament (newest first) => data by scout report
         const tournamentIndexMap = await allTournaments;
         tmd.forEach(val => {
+            const currRow = rawDataGrouped[val.teamNumber]
             const ti = tournamentIndexMap.indexOf(val.tournamentKey);
-            rawDataGrouped[val.teamNumber].tournamentData[ti] ||= { srEvents: [], driverAbility: [], bargePoints: [] };
+            currRow.tournamentData[ti] ||= { srEvents: [], driverAbility: [], bargePoints: [] };
 
             // Push data in
             for (const sr of val.scoutReports) {
-                rawDataGrouped[val.teamNumber].tournamentData[ti].srEvents.push(sr.events);
-                rawDataGrouped[val.teamNumber].tournamentData[ti].driverAbility.push(sr.driverAbility);
-                rawDataGrouped[val.teamNumber].tournamentData[ti].bargePoints.push(endgameToPoints[sr.bargeResult]);
+                const currRowTournament = currRow.tournamentData[ti];
+                currRowTournament.srEvents.push(sr.events);
+                currRowTournament.driverAbility.push(sr.driverAbility);
+                currRowTournament.bargePoints.push(endgameToPoints[sr.bargeResult]);
 
                 // Add endgame data
                 if (metrics.includes(Metric.bargePoints) && sr.bargeResult !== BargeResult.NOT_ATTEMPTED) {
-                    rawDataGrouped[val.teamNumber].endgame.totalAttempts++;
-                    rawDataGrouped[val.teamNumber].endgame.resultCount[sr.bargeResult] ||= 0;
-                    rawDataGrouped[val.teamNumber].endgame.resultCount[sr.bargeResult]++;
+                    currRow.endgame.totalAttempts++;
+                    currRow.endgame.resultCount[sr.bargeResult] ||= 0;
+                    currRow.endgame.resultCount[sr.bargeResult]++;
                 }
             }
         });
