@@ -8,7 +8,7 @@ export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
 
 // Compute AATF on multiple teams at once, returning results in multiple sparse arrays by team number
 // Hopefully better performance for picklists
-export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], teams: number[], sourceTeamFilter: ArrayFilter<number>, sourceTournamentFilter: ArrayFilter<string>): Promise<Partial<Record<Metric, { average: number }[]>>> => {
+export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[], sourceTeamFilter: ArrayFilter<number>, sourceTournamentFilter: ArrayFilter<string>): Promise<Partial<Record<Metric, { average: number }[]>>> => {
     try {
         // Set up filters to decrease server load
         const tmdFilter: Prisma.TeamMatchDataWhereInput = { teamNumber: { in: teams } };
@@ -65,29 +65,32 @@ export const arrayAndAverageManyFast = async (user: User, metrics: Metric[], tea
             }
         };
 
+        const rawDataGrouped = new Array<GroupedData>;
+        // Initialize array beforehand to avoid errors if user settings result in no sourced scout reports for a team
+        for (const team of teams) {
+            rawDataGrouped[team] ||= { tournamentData: [], endgame: { resultCount: {}, totalAttempts: 0 } };
+        }
+
         // Group into team => tournament (newest first) => data by scout report
         const tournamentIndexMap = await allTournaments;
-        const rawDataGrouped: GroupedData[] = tmd.reduce((acc, cur) => {
-            const ti = tournamentIndexMap.indexOf(cur.tournamentKey);
-            acc[cur.teamNumber] ||= { tournamentData: [], endgame: { resultCount: {}, totalAttempts: 0 } };
-            acc[cur.teamNumber].tournamentData[ti] ||= { srEvents: [], driverAbility: [], bargePoints: [] };
+        tmd.forEach(val => {
+            const ti = tournamentIndexMap.indexOf(val.tournamentKey);
+            rawDataGrouped[val.teamNumber].tournamentData[ti] ||= { srEvents: [], driverAbility: [], bargePoints: [] };
 
             // Push data in
-            for (const sr of cur.scoutReports) {
-                acc[cur.teamNumber].tournamentData[ti].srEvents.push(sr.events);
-                acc[cur.teamNumber].tournamentData[ti].driverAbility.push(sr.driverAbility);
-                acc[cur.teamNumber].tournamentData[ti].bargePoints.push(endgameToPoints[sr.bargeResult]);
+            for (const sr of val.scoutReports) {
+                rawDataGrouped[val.teamNumber].tournamentData[ti].srEvents.push(sr.events);
+                rawDataGrouped[val.teamNumber].tournamentData[ti].driverAbility.push(sr.driverAbility);
+                rawDataGrouped[val.teamNumber].tournamentData[ti].bargePoints.push(endgameToPoints[sr.bargeResult]);
 
                 // Add endgame data
                 if (metrics.includes(Metric.bargePoints) && sr.bargeResult !== BargeResult.NOT_ATTEMPTED) {
-                    acc[cur.teamNumber].endgame.totalAttempts++;
-                    acc[cur.teamNumber].endgame.resultCount[sr.bargeResult] ||= 0;
-                    acc[cur.teamNumber].endgame.resultCount[sr.bargeResult]++;
+                    rawDataGrouped[val.teamNumber].endgame.totalAttempts++;
+                    rawDataGrouped[val.teamNumber].endgame.resultCount[sr.bargeResult] ||= 0;
+                    rawDataGrouped[val.teamNumber].endgame.resultCount[sr.bargeResult]++;
                 }
             }
-
-            return acc;
-        }, [] as typeof rawDataGrouped);
+        });
 
         // In case multiple point counts are considered
         const teleopPoints: number[][] = [];

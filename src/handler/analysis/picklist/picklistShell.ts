@@ -102,7 +102,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         }
 
-        const allTeamData = await arrayAndAverageManyFast(req.user, includedMetrics, includedTeams, getSourceFilter<number>(req.user.teamSource, await allTeamNumbers), getSourceFilter<string>(req.user.tournamentSource, await allTournaments));
+        const allTeamData = await arrayAndAverageManyFast(includedMetrics, includedTeams, getSourceFilter<number>(req.user.teamSource, await allTeamNumbers), getSourceFilter<string>(req.user.tournamentSource, await allTournaments));
 
         const dataArr = await zScoreMany(allTeamData, includedTeams, params.data.tournamentKey, params.data.metrics, params.data.flags);
 
