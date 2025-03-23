@@ -32,7 +32,7 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
                 flags: []
             };
 
-            for (const metric in includedMetrics) {
+            for (const metric of includedMetrics) {
                 results[i].flags.push({ type: metricToName[metric], result: data[metric][team].average });
             }
         });
