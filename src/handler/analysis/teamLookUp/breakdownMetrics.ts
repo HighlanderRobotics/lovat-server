@@ -17,17 +17,23 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
             return;
         };
         const result = {}
-        for (const element in MetricsBreakdown) {
-            if(element === MetricsBreakdown.underShallowCage)
-            {
-                result["Undershallowcage"] = await nonEventMetric(req.user, params.data.team, MetricsBreakdown[element as keyof typeof MetricsBreakdown])
-            }
-            else
-            {
-                result[element.toLowerCase()] = await nonEventMetric(req.user, params.data.team, MetricsBreakdown[element as keyof typeof MetricsBreakdown])
+        for (const metric in MetricsBreakdown) {
+            const data = await nonEventMetric(req.user, params.data.team, MetricsBreakdown[metric as keyof typeof MetricsBreakdown]);
+
+            const valid = Object.values(data).some(val => Boolean(val));
+
+            if (valid) {
+                if(metric === MetricsBreakdown.underShallowCage)
+                {
+                    result["Undershallowcage"] = data;
+                }
+                else
+                {
+                    result[metric.toLowerCase()] = data;
+                }
             }
         };
-        console.log(result)
+
         res.status(200).send(result)
     }
     catch (error) {
