@@ -36,6 +36,7 @@ export const multipleFlags = async (req: AuthenticatedRequest, res: Response) =>
                 for (let i = metricsCategory.length - 1; i >= 0; i--) {
                     if (flag === metricToName[metricsCategory[i]]) {
                         arr.push((await arrayAndAverageTeam(req.user, metricsCategory[i], params.data.team)).average);
+                        break;
                     } else if (i === 0) {
                         // No flag found probably shouldnt throw a full error, just push a falsy
                         console.error(`Bad flag string: ${flag} for team ${params.data.team}`);
@@ -45,7 +46,6 @@ export const multipleFlags = async (req: AuthenticatedRequest, res: Response) =>
             }
         }
 
-        console.log(arr);
         res.status(200).send(arr)
     }
     catch (error) {

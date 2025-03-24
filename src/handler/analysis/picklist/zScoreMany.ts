@@ -12,8 +12,6 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
             flags: { type: string, result: number }[]
         }[] = [];
 
-        console.log(flags);
-
         // Include flagged metrics
         const includedMetrics = new Array<Metric>;
         for (const metric of metricsCategory) {
