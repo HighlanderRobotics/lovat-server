@@ -181,17 +181,18 @@ export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[]
                     resultsByTournament[team] = [];
                     rawDataGrouped[team].tournamentData.forEach(tournament => {
                         // Count and push metrics by action/position
-                        let totalCount = 0;
+                        let countAtTournament = 0;
 
                         tournament.srEvents.forEach(sr => {
                             sr.forEach(event => {
                                 if (event.action === action && event.position === position) {
-                                    totalCount++;
+                                    countAtTournament++;
                                 }
                             });
                         });
 
-                        resultsByTournament[team].push(totalCount);
+                        // Push average metric count by tournament
+                        resultsByTournament[team].push(countAtTournament / tournament.srEvents.length);
                     });
                 }
             }
