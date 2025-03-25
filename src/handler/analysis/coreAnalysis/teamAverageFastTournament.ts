@@ -196,29 +196,27 @@ export const teamAverageFastTournament = async (user: User, team: number, isPoin
             };
 
             const groupedMatches = await prismaClient.$queryRaw<
-              { scoutReportUuid: string; count: number }[]
+                { uuid: string, count: bigint }[]
             >(Prisma.sql`
-              SELECT e."scoutReportUuid", COUNT(*) AS count
-              FROM "Event" e
-              JOIN "ScoutReport" sr ON sr."uuid" = e."scoutReportUuid"
-              JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
-              WHERE e."action"::text = ${action}
-                AND e."position"::text = ${position}
-                AND e."time" BETWEEN ${timeMin} AND ${timeMax}
-                AND tmd."tournamentKey" = ${tournamentKey}
-                AND tmd."teamNumber" = ${team}
-              GROUP BY e."scoutReportUuid"
+                SELECT sr."uuid", COUNT(e."eventUuid") AS count
+                FROM "ScoutReport" sr
+                JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+                    AND tmd."tournamentKey" = ${tournamentKey}
+                    AND tmd."teamNumber" = ${team}
+                LEFT JOIN "Event" e ON e."scoutReportUuid" = sr."uuid"
+                    AND e."action"::text = ${action}
+                    AND e."position"::text = ${position}
+                    AND e."time" BETWEEN ${timeMin} AND ${timeMax}
+                GROUP BY sr."uuid"
             `);
-            
+
             if (groupedMatches.length === 0) {
                 return 0;
-              }
-              
-              const totalCount = groupedMatches.reduce((acc, curr) => acc + Number(curr.count), 0);
-              const avg = totalCount / groupedMatches.length;
-              return avg;
-              
-            
+            }
+
+            const totalCount = groupedMatches.reduce((acc, curr) => acc + Number(curr.count), 0);
+            const avg = totalCount / groupedMatches.length;
+            return avg;
         }
     }
     catch (error) {
