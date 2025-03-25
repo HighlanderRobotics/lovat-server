@@ -1,6 +1,6 @@
 import prismaClient from '../../../prismaClient'
 import { allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
-import { BargeResult, Position, Prisma, User } from '@prisma/client';
+import { BargeResult, Position, Prisma } from '@prisma/client';
 import { endgameRuleOfSuccession } from '../picklist/endgamePicklistTeamFast';
 import { Event } from '@prisma/client';
 
