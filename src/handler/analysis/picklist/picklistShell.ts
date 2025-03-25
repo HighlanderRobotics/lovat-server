@@ -14,7 +14,7 @@ import { zScoreMany } from "./zScoreMany";
 // OK so normal metrics are sent and received in the lettering suggested by the query inputs, but FLAGS are sent and received as shown in metricToName
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
-
+        // Stopgap to error out 2024 picklists
         if (req.query.totalPoints) {
             res.status(400).send({"error" : req.query, "displayError" : "Invalid input. Make sure you are using the correct input."});
             return;
@@ -68,8 +68,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
         //if tournament matches not in yet, attempt to add them
         const matches = await prismaClient.teamMatchData.findFirst({
-            where:
-            {
+            where: {
                 tournamentKey: params.data.tournamentKey
             }
         })
@@ -102,7 +101,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         }
 
-        const allTeamData = await arrayAndAverageManyFast(req.user, includedMetrics, includedTeams, getSourceFilter<number>(req.user.teamSource, await allTeamNumbers), getSourceFilter<string>(req.user.tournamentSource, await allTournaments));
+        const allTeamData = await arrayAndAverageManyFast(includedMetrics, includedTeams, getSourceFilter<number>(req.user.teamSource, await allTeamNumbers), getSourceFilter<string>(req.user.tournamentSource, await allTournaments));
 
         const dataArr = await zScoreMany(allTeamData, includedTeams, params.data.tournamentKey, params.data.metrics, params.data.flags);
 
