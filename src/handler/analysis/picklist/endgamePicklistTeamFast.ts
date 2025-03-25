@@ -11,7 +11,6 @@ const numPointResults: number = Object.keys(BargeResult).reduce((acc, cur) => {
     }
     return acc;
 }, 0);
-console.log("endgame success options: " + numPointResults)
 
 /** Uses rule of succession to predict endgame points for a given team */
 export const endgamePicklistTeamFast = async (user: User, team: number) => {

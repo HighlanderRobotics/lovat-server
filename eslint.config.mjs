@@ -1,8 +1,7 @@
 import unusedImports from "eslint-plugin-unused-imports";
 import typescriptEslintPlugin from "@typescript-eslint/eslint-plugin";
 import typescriptEslintParser from "@typescript-eslint/parser";
-import js from "@eslint/js";
-import tseslint from 'typescript-eslint';
+import tseslint from "typescript-eslint";
 
 
 
@@ -11,9 +10,11 @@ export default [
     // js.configs.recommended,
     ...tseslint.configs.stylistic,
 
-
     {
-        files: ["**/*.js", "**/*.ts"],
+        ignores: ["dist/**/*.js"]
+    },
+    {
+        files: ["**/*.ts"],
         languageOptions: {
             ecmaVersion: 2024,
             sourceType: "module",

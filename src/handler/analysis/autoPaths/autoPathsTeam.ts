@@ -2,7 +2,7 @@ import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { autoPathSingleMatchSingleScoutReport } from "./autoPathSingleMatchSingleScoutReport";
 import { User } from "@prisma/client";
-
+import { Position, AutoData } from './autoPathSingleMatchSingleScoutReport';
 
 export const autoPathsTeam = async (user: User, teamNumber : number) => {
     try {
@@ -15,20 +15,6 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
             throw(params)
         };
 
-        interface Position {
-            location: number;
-            event: number;
-            time?: number;
-        }
-        
-        interface AutoData {
-            autoPoints: number;
-            positions: Position[];
-            match: string;
-            score : number[],
-            tournamentName : string,
-        }
-        
         const isSubsetPositions = (listOne: Position[], listTwo: Position[]): boolean => {
             const isSubset = (a: Position[], b: Position[]): boolean => 
                 a.every(posA => 
@@ -52,8 +38,8 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
                         }
                         group.matches.add(item.match);
                         group.matchDetails.set(item.match, item.tournamentName);
-                        group.score.push(item.autoPoints); 
-                        group.maxScore = Math.max(group.maxScore, item.autoPoints);
+                        group.score.push(item.score); 
+                        group.maxScore = Math.max(group.maxScore, item.score);
                         isGrouped = true;
                         break;
                     }
@@ -65,8 +51,8 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
                     groups.push({
                         positions: item.positions,
                         matches: new Set([item.match]),
-                        score: [item.autoPoints], 
-                        maxScore: item.autoPoints,
+                        score: [item.score], 
+                        maxScore: item.score,
                         matchDetails: matchDetails
                     });
                 }
@@ -99,9 +85,18 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
                         in : user.teamSource
                     }
                 }
+            },
+            orderBy: {
+                teamMatchData: {
+                    tournament: {
+                        date: 'desc'
+                    },
+                    matchType: "desc",
+                    matchNumber: 'desc'
+                }
             }
         })
-        const autoPaths  = []
+        const autoPaths: AutoData[] = []
         for(const element of matches)
         {
             const currAutoPath = await autoPathSingleMatchSingleScoutReport(user, element.teamMatchKey, element.uuid)
