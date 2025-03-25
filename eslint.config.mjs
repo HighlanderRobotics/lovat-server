@@ -11,7 +11,7 @@ export default [
     ...tseslint.configs.stylistic,
 
     {
-        ignores: ["**/*.js"]
+        ignores: ["dist/**/*.js"]
     },
     {
         files: ["**/*.ts"],
