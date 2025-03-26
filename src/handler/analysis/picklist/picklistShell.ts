@@ -51,7 +51,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         };
 
         // Stopgap to error out 2024 picklists
-        if (isFinite(Number(req.query.stage))) {
+        if (req.query.stage) {
             res.status(400).send({ error: "OUTDATED_PICKLIST" });
             return;
         }
