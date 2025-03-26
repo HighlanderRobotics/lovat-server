@@ -1,8 +1,7 @@
-import { Metric, metricsCategory, metricToName, picklistToMetric } from "../analysisConstants"
-import ss from "simple-statistics";
+import { defaultSTD, Metric, metricsCategory, metricToName, picklistToMetric } from "../analysisConstants"
 import { rankFlag } from "../rankFlag";
 
-export const zScoreMany = async (data: Partial<Record<Metric, { average: number }[]>>, teams: number[], eventKey: string, queries: Record<string, number>, flags: string[]) => {
+export const zScoreMany = async (data: Partial<Record<Metric, Record<number, number>>>, teams: number[], tournamentKey: string, queries: Record<string, number>, flags: string[]) => {
     try {
         const results: {
             team: number,
@@ -31,28 +30,33 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
             };
 
             for (const metric of includedMetrics) {
-                results[i].flags.push({ type: metricToName[metric], result: data[metric][team].average });
+                results[i].flags.push({ type: metricToName[metric], result: data[metric][team] });
             }
         });
 
         // Picklist rankings and zScore
         for (const picklistParam of Object.keys(picklistToMetric)) {
             if (queries[picklistParam]) {
-                // Initialize variables for parameter
                 const currAvgs = data[picklistToMetric[picklistParam]];
-                const condensedAvgs: number[] = [];
-                currAvgs.forEach(e => condensedAvgs.push(e.average));
 
-                const avg = condensedAvgs.reduce((acc, cur) => acc + cur, 0) / teams.length;
-                const std = ss.standardDeviation(condensedAvgs);
+                // Shouldn't matter if the following variables are NaN because of an empty teams list
+                let avg = 0;
+                teams.forEach(team => avg += currAvgs[team]);
+                avg /= teams.length;
+
+                // Population standard deviation
+                let variance = 0;
+                teams.forEach(team => variance += (currAvgs[team] - avg)*(currAvgs[team] - avg));
+                variance /= teams.length;
+                const std = Math.sqrt(variance);
 
                 teams.forEach((team, i) => {
                     let zScore = 0
 
                     // If there is a meaningful datapoint, calculate zScore
-                    if (currAvgs[team].average !== 0) {
-                        // Default standard deviation to 0.1
-                        zScore = (currAvgs[team].average - avg) / (std || 0.1);
+                    if (currAvgs[team] !== 0) {
+                        // Put in terms of standard deviation, use default if necessary
+                        zScore = (currAvgs[team] - avg) / (std || defaultSTD);
                     }
 
                     // Push scores
@@ -64,7 +68,7 @@ export const zScoreMany = async (data: Partial<Record<Metric, { average: number 
 
         // Deal with rankings
         if (flags.includes("rank")) {
-            const rankings = await rankFlag(eventKey, ...teams);
+            const rankings = await rankFlag(tournamentKey, ...teams);
 
             teams.forEach((team, i) => {
                 results[i].flags.push({ type: "rank", result: rankings[team] });

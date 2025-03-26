@@ -2,6 +2,10 @@ import { EventAction, BargeResult, Position, RobotRole} from "@prisma/client"
 import prismaClient from '../../prismaClient'
 //add cooperation
 
+// Tunable constants
+const defaultSTD = 0.1;
+const defaultEndgamePoints = 1.5;
+
 // General numeric metrics
 enum Metric {
     totalPoints, driverAbility, teleopPoints, autoPoints, feeds, defends, // General game metrics
@@ -194,6 +198,6 @@ const allTournaments = (async () => {
 })()
 
 const multiplerBaseAnalysis = 4
-export {Metric, metricsCategory, autoEnd, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments};
+export {defaultEndgamePoints, defaultSTD, Metric, metricsCategory, autoEnd, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments};
 
 
