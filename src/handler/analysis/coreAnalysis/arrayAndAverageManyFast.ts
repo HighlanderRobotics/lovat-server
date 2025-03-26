@@ -1,6 +1,6 @@
 import prismaClient from '../../../prismaClient'
-import { allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
-import { BargeResult, Position, Prisma } from '@prisma/client';
+import { allTeamNumbers, allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
+import { BargeResult, Position, Prisma, User } from '@prisma/client';
 import { endgameRuleOfSuccession } from '../picklist/endgamePicklistTeamFast';
 import { Event } from '@prisma/client';
 
@@ -9,16 +9,19 @@ export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
 /**
  * Compute AATF on multiple teams at once, returning results in multiple sparse arrays by team number.
  * Optimized for use with various types of continuous metrics (driver ability; endgame points; event counts; scores).
- * 
+ *
  * @param teams teams to look at
  * @param metrics metrics to aggregate by
  * @param sourceTeamFilter team filter to use
  * @param sourceTnmtFilter tournament filter to use
  * @returns object of predicted points organized by metric => team number => predicted points. All provided metrics and teams are expected to be in this object
  */
-export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[], sourceTeamFilter: ArrayFilter<number>, sourceTnmtFilter: ArrayFilter<string>): Promise<Partial<Record<Metric, Record<number, number>>>> => {
+export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[], user: User): Promise<Partial<Record<Metric, Record<number, number>>>> => {
     try {
         // Set up filters to decrease server load
+        const sourceTnmtFilter = getSourceFilter(user.tournamentSource, await allTournaments);
+        const sourceTeamFilter = getSourceFilter(user.teamSource, await allTeamNumbers);
+
         const tmdFilter: Prisma.TeamMatchDataWhereInput = { teamNumber: { in: teams } };
         if (sourceTnmtFilter) {
             tmdFilter.tournamentKey = sourceTnmtFilter;
@@ -225,7 +228,7 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
  * Attempts to make filters more efficient.
  * Could still cause problems at tournaments; should be stress tested.
  * Failure should be treated by changing first condition to a tolerance.
- * 
+ *
  * @param sources list of sources to use
  * @param possibleSources list of all possible sources
  * @returns prisma filter for a list
