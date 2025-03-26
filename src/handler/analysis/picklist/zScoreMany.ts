@@ -1,6 +1,16 @@
 import { defaultSTD, Metric, metricsCategory, metricToName, picklistToMetric } from "../analysisConstants"
 import { rankFlag } from "../rankFlag";
 
+/**
+ * Take in data for many teams and return z-score values and breakdowns for queried metrics.
+ *
+ * @param data meant to take in an object from AAMF, organized metric => team number => predicted points
+ * @param teams list of team numbers, should match those in the data column
+ * @param tournamentKey tournament to use for team ranks
+ * @param queries map of parameters and weights to apply, given in strings matching picklist operators
+ * @param flags flags to send along with data, given in strings matching category metrics
+ * @returns object with total Z-score, breakdowns by metric, and flags; organized by team number
+ */
 export const zScoreMany = async (data: Partial<Record<Metric, Record<number, number>>>, teams: number[], tournamentKey: string, queries: Record<string, number>, flags: string[]) => {
     try {
         const results: {

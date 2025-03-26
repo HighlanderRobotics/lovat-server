@@ -6,14 +6,22 @@ import { Event } from '@prisma/client';
 
 export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
 
-// Compute AATF on multiple teams at once, returning results in multiple sparse arrays by team number
-// Hopefully better performance for picklists
-export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[], sourceTeamFilter: ArrayFilter<number>, sourceTournamentFilter: ArrayFilter<string>): Promise<Partial<Record<Metric, { average: number }[]>>> => {
+/**
+ * Compute AATF on multiple teams at once, returning results in multiple sparse arrays by team number.
+ * Optimized for use with various types of continuous metrics (driver ability; endgame points; event counts; scores).
+ * 
+ * @param teams teams to look at
+ * @param metrics metrics to aggregate by
+ * @param sourceTeamFilter team filter to use
+ * @param sourceTnmtFilter tournament filter to use
+ * @returns object of predicted points organized by metric => team number => predicted points. All provided metrics and teams are expected to be in this object
+ */
+export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[], sourceTeamFilter: ArrayFilter<number>, sourceTnmtFilter: ArrayFilter<string>): Promise<Partial<Record<Metric, Record<number, number>>>> => {
     try {
         // Set up filters to decrease server load
         const tmdFilter: Prisma.TeamMatchDataWhereInput = { teamNumber: { in: teams } };
-        if (sourceTournamentFilter) {
-            tmdFilter.tournamentKey = sourceTournamentFilter;
+        if (sourceTnmtFilter) {
+            tmdFilter.tournamentKey = sourceTnmtFilter;
         }
         const srFilter: Prisma.ScoutReportWhereInput = {};
         if (sourceTeamFilter) {
@@ -57,7 +65,7 @@ export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[]
                 // By scout report
                 srEvents: Partial<Event>[][],
                 driverAbility: number[],
-                bargePoints: number[]
+                endgamePoints: number[]
             }[],
             endgame: {
                 resultCount: Partial<Record<BargeResult, number>>,
@@ -76,14 +84,14 @@ export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[]
         tmd.forEach(val => {
             const currRow = rawDataGrouped[val.teamNumber]
             const ti = tournamentIndexMap.indexOf(val.tournamentKey);
-            currRow.tournamentData[ti] ||= { srEvents: [], driverAbility: [], bargePoints: [] };
+            currRow.tournamentData[ti] ||= { srEvents: [], driverAbility: [], endgamePoints: [] };
 
             // Push data in
             for (const sr of val.scoutReports) {
                 const currRowTournament = currRow.tournamentData[ti];
                 currRowTournament.srEvents.push(sr.events);
                 currRowTournament.driverAbility.push(sr.driverAbility);
-                currRowTournament.bargePoints.push(endgameToPoints[sr.bargeResult]);
+                currRowTournament.endgamePoints.push(endgameToPoints[sr.bargeResult]);
 
                 // Add endgame data
                 if (metrics.includes(Metric.bargePoints) && sr.bargeResult !== BargeResult.NOT_ATTEMPTED) {
@@ -98,16 +106,16 @@ export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[]
         const teleopPoints: number[][] = [];
         const autoPoints: number[][] = [];
 
-        const finalResults: Partial<Record<Metric, { average: number }[]>> = {};
+        const finalResults: Partial<Record<Metric, Record<number, number>>> = {};
         for (const metric of metrics) {
             // Team => tournament => average value of metric
             let resultsByTournament: number[][] = [];
 
             if (metric === Metric.bargePoints) {
-                finalResults[metric] = [];
+                finalResults[metric] = {};
                 for (const team of teams) {
                     // Using rule of succession for endgame
-                    finalResults[metric][team] = { average: endgameRuleOfSuccession(rawDataGrouped[team].endgame.resultCount, rawDataGrouped[team].endgame.totalAttempts) };
+                    finalResults[metric][team] = endgameRuleOfSuccession(rawDataGrouped[team].endgame.resultCount, rawDataGrouped[team].endgame.totalAttempts);
                 }
                 continue;
             } else if (metric === Metric.driverAbility) {
@@ -128,7 +136,7 @@ export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[]
                             const pointSumsByReport = []
                             timedEvents.forEach((events, i) => {
                                 // Push sum of event points and endgame
-                                pointSumsByReport.push(events.reduce((acc, cur) => acc + cur.points, 0) + tournament.bargePoints[i]);
+                                pointSumsByReport.push(events.reduce((acc, cur) => acc + cur.points, 0) + tournament.endgamePoints[i]);
                             });
 
                             teleopPoints[team].push(avgOrZero(pointSumsByReport));
@@ -198,9 +206,9 @@ export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[]
             }
 
             // Weight by tournament, most recent tournaments get more
-            finalResults[metric] = [];
+            finalResults[metric] = {};
             for (const team of teams) {
-                finalResults[metric][team] = { average: weightedTourAvgRight(resultsByTournament[team]) };
+                finalResults[metric][team] = weightedTourAvgRight(resultsByTournament[team]);
             }
         }
 
@@ -213,9 +221,16 @@ export const arrayAndAverageManyFast = async (metrics: Metric[], teams: number[]
 
 };
 
-// Attempts to make filters more efficient
-// Could still cause problems at tournaments, would have to be tested - failure should be treated by changing first condition to a tolderance
-export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): undefined | ArrayFilter<T> => {
+/**
+ * Attempts to make filters more efficient.
+ * Could still cause problems at tournaments; should be stress tested.
+ * Failure should be treated by changing first condition to a tolerance.
+ * 
+ * @param sources list of sources to use
+ * @param possibleSources list of all possible sources
+ * @returns prisma filter for a list
+ */
+export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): ArrayFilter<T> | undefined => {
     // If nothing is filtered, don't check
     if (sources.length === possibleSources.length) {
         return undefined;

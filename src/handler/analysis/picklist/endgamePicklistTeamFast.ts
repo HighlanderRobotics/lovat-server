@@ -1,8 +1,7 @@
-
 import prismaClient from '../../../prismaClient'
-import { BargeResult, User } from "@prisma/client";
-import { allTeamNumbers, allTournaments, endgameToPoints } from "../analysisConstants";
-import { getSourceFilter } from '../coreAnalysis/arrayAndAverageManyFast';
+import { BargeResult } from "@prisma/client";
+import { defaultEndgamePoints, endgameToPoints } from "../analysisConstants";
+import { ArrayFilter } from '../coreAnalysis/arrayAndAverageManyFast';
 
 // Number of endgame possibilities that result in points earned (essentially, successes)
 const numPointResults: number = Object.keys(BargeResult).reduce((acc, cur) => {
@@ -12,12 +11,17 @@ const numPointResults: number = Object.keys(BargeResult).reduce((acc, cur) => {
     return acc;
 }, 0);
 
-/** Uses rule of succession to predict endgame points for a given team */
-export const endgamePicklistTeamFast = async (user: User, team: number) => {
+/**
+ * Queries data and uses rule of succession to predict endgame points.
+ * Used in place of a straight average.
+ *
+ * @param team team number
+ * @param sourceTeamFilter team filter to use
+ * @param sourceTnmtFilter tournament filter to use
+ * @returns predicted points for future endgame actions
+ */
+export const endgamePicklistTeamFast = async (team: number, sourceTeamFilter: ArrayFilter<number>, sourceTnmtFilter: ArrayFilter<string>): Promise<number> => {
     try {
-        const teamFilter = getSourceFilter<number>(user.teamSource, await allTeamNumbers);
-        const tnmtFilter = getSourceFilter<string>(user.tournamentSource, await allTournaments);
-
         // Get data
         const endgameRows = await prismaClient.scoutReport.groupBy({
             by: ['bargeResult'],
@@ -27,10 +31,10 @@ export const endgamePicklistTeamFast = async (user: User, team: number) => {
             where: {
                 teamMatchData: {
                     teamNumber: team,
-                    tournamentKey: tnmtFilter
+                    tournamentKey: sourceTnmtFilter
                 },
                 scouter: {
-                    sourceTeamNumber: teamFilter
+                    sourceTeamNumber: sourceTeamFilter
                 }
             }
         })
@@ -53,18 +57,26 @@ export const endgamePicklistTeamFast = async (user: User, team: number) => {
     }
 }
 
-
+/**
+ * Uses rule of succession to predict endgame points.
+ * Used in place of a straight average.
+ *
+ * @param data object mapping endgame results to count of occurences
+ * @param totalAttempts total number of occurences
+ * @returns predicted endgame points
+ */
 export const endgameRuleOfSuccession = (data: Partial<Record<BargeResult, number>>, totalAttempts: number): number => {
     // Return base value (can be tuned)
     if (totalAttempts === 0) {
-        return 1.5;
+        return defaultEndgamePoints;
     }
 
     let avgRuleOfSuccession = 0;
     for (const element in BargeResult) {
         const result: BargeResult = BargeResult[element as keyof typeof BargeResult];
 
-        // Increment rule of succession based on: [{times observed} + 1] / [{total count} + {success possibilities} + {1 failure possibility}]
+        // Increment rule of succession based on:
+        // [{times observed} + 1] / [{total count} + {success possibilities} + {1 failure possibility}]
         if (data[result] && result !== BargeResult.NOT_ATTEMPTED) {
             avgRuleOfSuccession += (data[result] + 1) / (totalAttempts + numPointResults + 1);
         }
@@ -72,6 +84,3 @@ export const endgameRuleOfSuccession = (data: Partial<Record<BargeResult, number
 
     return avgRuleOfSuccession;
 }
-
-
-
