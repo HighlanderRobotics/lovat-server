@@ -31,7 +31,7 @@ export const arrayAndAverageTeamFast = async (user: User, metric: Metric, team: 
         };
 
         if (metric === Metric.bargePoints) {
-            return { average: await endgamePicklistTeamFast(user, team) }
+            return { average: await endgamePicklistTeamFast(team, user) }
         }
 
         let matchKeys = [];
