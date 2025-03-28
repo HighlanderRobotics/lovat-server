@@ -2,7 +2,7 @@ import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { metricsCategory, metricToName } from "../analysisConstants";
-import { arrayAndAverageTeamFast } from "../coreAnalysis/arrayAndAverageTeamFast";
+import { arrayAndAverageManyFast } from "../coreAnalysis/arrayAndAverageManyFast";
 
 
 export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) => {
@@ -17,11 +17,14 @@ export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) 
             return;
         };
         const result = {}
+
         //update if statments in arrayAndAverage if the metric needs to look at scoutReport instead of events table
+        const data = await arrayAndAverageManyFast([params.data.team], metricsCategory, req.user);
+
         for (const metric of metricsCategory) {
-            result[metricToName[metric]] = (await arrayAndAverageTeamFast(req.user, metric, params.data.team)).average;
+            result[metricToName[metric]] = data[metric][params.data.team];
         }
-       
+
         res.status(200).send(result)
     }
     catch (error) {

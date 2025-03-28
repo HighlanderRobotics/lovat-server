@@ -1,6 +1,5 @@
 import z from 'zod'
 import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-import ss from 'simple-statistics';
 import { User } from "@prisma/client";
 import { Metric } from '../analysisConstants';
 
@@ -35,9 +34,9 @@ export const matchPredictionLogic = async (user: User, red1, red2, red3, blue1, 
             //not enough data
             throw( "not enough data")
         }
-        const red1SDV = ss.standardDeviation(redArr1)
-        const red2SDV = ss.standardDeviation(redArr2)
-        const red3SDV = ss.standardDeviation(redArr3)
+        const red1SDV = getSDV(redArr1)
+        const red2SDV = getSDV(redArr2)
+        const red3SDV = getSDV(redArr3)
 
         const redAllianceSDV = Math.sqrt(Math.pow(red1SDV, 2) + Math.pow(red2SDV, 2) + Math.pow(red3SDV, 2))
         const redAllianceMean = await getMean(redArr1) + await getMean(redArr2) + await getMean(redArr3)
@@ -50,9 +49,9 @@ export const matchPredictionLogic = async (user: User, red1, red2, red3, blue1, 
             //not enough data
             throw( "not enough data")
         }
-        const blue1SDV = ss.standardDeviation(blueArr1)
-        const blue2SDV = ss.standardDeviation(blueArr2)
-        const blue3SDV = ss.standardDeviation(blueArr3)
+        const blue1SDV = getSDV(blueArr1)
+        const blue2SDV = getSDV(blueArr2)
+        const blue3SDV = getSDV(blueArr3)
 
 
 
@@ -101,7 +100,7 @@ export const matchPredictionLogic = async (user: User, red1, red2, red3, blue1, 
     }
 
 };
-async function getZPercent(z: number) {
+function getZPercent(z: number) {
     if (z < -6.5)
         return 0.0;
     if (z > 6.5)
@@ -123,7 +122,7 @@ async function getZPercent(z: number) {
 
     return sum;
 }
-async function getMean(teamArray: number[]) {
+function getMean(teamArray: number[]) {
     let total = 0;
     for (const currTeamArray of teamArray) {
         total += currTeamArray;
@@ -131,4 +130,16 @@ async function getMean(teamArray: number[]) {
     return total / teamArray.length;
 
 
+}
+
+function getSDV(arr: number[]) {
+    const mean = getMean(arr);
+    
+    let variance = 0;
+    for (const num of arr) {
+        variance += (num - mean) * (num - mean);
+    }
+    variance /= arr.length;
+
+    return Math.sqrt(variance);
 }

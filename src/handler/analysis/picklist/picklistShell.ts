@@ -1,25 +1,20 @@
-
 import { Response } from "express";
 import prismaClient from '../../../prismaClient'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import z from 'zod'
-import { Worker } from 'worker_threads';
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
-import { allTeamNumbers, allTournaments, Metric, metricsCategory, metricToName, picklistToMetric } from "../analysisConstants";
-import flatted from 'flatted';
-import { arrayAndAverageManyFast, getSourceFilter } from "../coreAnalysis/arrayAndAverageManyFast";
+import { Metric, metricsCategory, metricToName, picklistToMetric } from "../analysisConstants";
+import { arrayAndAverageManyFast } from "../coreAnalysis/arrayAndAverageManyFast";
 import { zScoreMany } from "./zScoreMany";
 
-
-// OK so normal metrics are sent and received in the lettering suggested by the query inputs, but FLAGS are sent and received as shown in metricToName
+/**
+ * Main picklist endpoint. Note inconsistent strings make it confusing for this season.
+ * Normal metrics are send and received in the lettering suggested by the query inputs, but FLAGS are send and received as shown in metricToName.
+ * 
+ * @returns picklist data as given by zScoreMany
+ */
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
     try {
-
-        if (req.query.totalPoints) {
-            res.status(400).send({"error" : req.query, "displayError" : "Invalid input. Make sure you are using the correct input."});
-            return;
-        }
-
         let flags = []
         if (req.query.flags) {
             flags = JSON.parse(req.query.flags as string)
@@ -55,7 +50,8 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             return;
         };
 
-        if (isFinite(Number(req.query.stage))) {
+        // Stopgap to error out 2024 picklists
+        if (req.query.stage) {
             res.status(400).send({ error: "OUTDATED_PICKLIST" });
             return;
         }
@@ -68,8 +64,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
 
         //if tournament matches not in yet, attempt to add them
         const matches = await prismaClient.teamMatchData.findFirst({
-            where:
-            {
+            where: {
                 tournamentKey: params.data.tournamentKey
             }
         })
@@ -102,7 +97,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         }
 
-        const allTeamData = await arrayAndAverageManyFast(req.user, includedMetrics, includedTeams, getSourceFilter<number>(req.user.teamSource, await allTeamNumbers), getSourceFilter<string>(req.user.tournamentSource, await allTournaments));
+        const allTeamData = await arrayAndAverageManyFast(includedMetrics, includedTeams, req.user);
 
         const dataArr = await zScoreMany(allTeamData, includedTeams, params.data.tournamentKey, params.data.metrics, params.data.flags);
 
@@ -113,46 +108,4 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         console.log(error)
         res.status(400).send(error)
     }
-}
-
-// Multithreading picklists
-function createWorker(teams: number[], allTeamData: Partial<Record<Metric, { average: number, teamAverages: Record<number, number>, std: number }>>, flags: string[], queries: Record<string, number>, tournamentKey: string) {
-    return new Promise((resolve, reject) => {
-        const data = {
-            teams: teams,
-            allTeamData: flatted.stringify(allTeamData),
-            flags: flags,
-            queries: flatted.stringify(queries),
-            tournamentKey: tournamentKey
-        }
-
-        // Create worker and send data
-        const worker = new Worker('./dist/handler/analysis/picklist/zScoreTeam.js')
-        worker.postMessage(data);
-
-        // Receive data and send to aggregation in main function
-        worker.on('message', (event) => {
-            resolve(event);
-            worker.terminate();
-        });
-
-        worker.on('error', (error) => {
-            reject(error);
-            worker.terminate();
-        });
-    })
-}
-
-// Separate array into n new arrays
-function splitArray(teams: number[], n: number): number[][] {
-    const splitSize = Math.ceil(teams.length / n);
-    const result: number[][] = [];
-
-    for (let i = 0; i < n; i++) {
-        const start = i * splitSize;
-        const end = start + splitSize;
-        result.push(teams.slice(start, end));
-    }
-
-    return result;
 }

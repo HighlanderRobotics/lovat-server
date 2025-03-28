@@ -8,7 +8,7 @@ import { User } from "@prisma/client";
 export const arrayAndAverageTeam = async (user: User, metric: Metric, team: number): Promise<{ average: number, timeLine: { match: string, dataPoint: number }[] }> => {
     try {
         if (metric === Metric.bargePoints) {
-            return { average: await endgamePicklistTeamFast(user, team), timeLine: null }
+            return { average: await endgamePicklistTeamFast(team, user), timeLine: null }
         }
 
         let tournamentFilter: {in?: string[]} = {}
