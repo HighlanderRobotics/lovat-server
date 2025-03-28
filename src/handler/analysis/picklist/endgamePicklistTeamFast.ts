@@ -1,7 +1,7 @@
 import prismaClient from '../../../prismaClient'
 import { BargeResult, User } from "@prisma/client";
 import { allTeamNumbers, allTournaments, defaultEndgamePoints, endgameToPoints } from "../analysisConstants";
-import { getSourceFilter } from '../coreAnalysis/arrayAndAverageManyFast';
+import { ArrayFilter, getSourceFilter } from '../coreAnalysis/arrayAndAverageManyFast';
 
 // Number of endgame possibilities that result in points earned (essentially, successes)
 const numPointResults: number = Object.keys(BargeResult).reduce((acc, cur) => {
@@ -20,11 +20,8 @@ const numPointResults: number = Object.keys(BargeResult).reduce((acc, cur) => {
  * @param sourceTnmtFilter tournament filter to use
  * @returns predicted points for future endgame actions
  */
-export const endgamePicklistTeamFast = async (team: number, user: User): Promise<number> => {
+export const endgamePicklistTeamFast = async (team: number, sourceTeamFilter: ArrayFilter<number>, sourceTnmtFilter: ArrayFilter<string>): Promise<number> => {
     try {
-        const sourceTeamFilter = getSourceFilter(user.teamSource, await allTeamNumbers);
-        const sourceTnmtFilter = getSourceFilter(user.tournamentSource, await allTournaments)
-
         // Get data
         const endgameRows = await prismaClient.scoutReport.groupBy({
             by: ['bargeResult'],

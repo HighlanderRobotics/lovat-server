@@ -7,13 +7,12 @@ import { Event } from '@prisma/client';
 export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
 
 /**
- * Compute AATF on multiple teams at once, returning results in multiple sparse arrays by team number.
- * Optimized for use with various types of continuous metrics (driver ability; endgame points; event counts; scores).
+ * Heuristically aggregate analog metrics on multiple teams at once (weights scout reports equally regardless of duplicate matches).
+ * Optimized for use with various types of continuous metrics (driver ability; endgame points; event counts; scores) over a large number of teams.
  *
  * @param teams teams to look at
  * @param metrics metrics to aggregate by
- * @param sourceTeamFilter team filter to use
- * @param sourceTnmtFilter tournament filter to use
+ * @param user source teams/tournaments to use
  * @returns object of predicted points organized by metric => team number => predicted points. All provided metrics and teams are expected to be in this object
  */
 export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[], user: User): Promise<Partial<Record<Metric, Record<number, number>>>> => {
@@ -208,7 +207,7 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
                 }
             }
 
-            // Weight by tournament, most recent tournaments get more
+            // Weight by tournament, most recent tournaments heavier
             finalResults[metric] = {};
             for (const team of teams) {
                 finalResults[metric][team] = weightedTourAvgRight(resultsByTournament[team]);
