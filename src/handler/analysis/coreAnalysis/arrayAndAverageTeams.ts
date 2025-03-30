@@ -10,7 +10,7 @@ import { getSourceFilter } from './arrayAndAverageManyFast';
  * Optimized for use over a few teams.
  *
  * @param teams teams to look at
- * @param metrics metrics to aggregate by
+ * @param metric metrics to aggregate by
  * @param user source teams/tournaments to use
  * @returns object of predicted points and match timeline organized by team number. All teams are expected to be in this object
  */

@@ -1,10 +1,10 @@
 import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 import { averageAllTeamOneQuery } from "../coreAnalysis/averageAllTeamOneQuery";
 import { Metric, metricsToNumber} from "../analysisConstants";
+import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
 
 
 export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
@@ -43,7 +43,7 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
         //     res.status(200).send(result)
         // }
         else {
-            const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
+            const teamAverageAndTimeLine = await arrayAndAverageTeams([params.data.team], params.data.metric, req.user)[params.data.team]
             const allTeamAverage = await averageAllTeamOneQuery(req.user, params.data.metric)
             const result = {
                 array: teamAverageAndTimeLine.timeLine,
