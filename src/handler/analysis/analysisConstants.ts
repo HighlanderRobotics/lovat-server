@@ -192,7 +192,7 @@ const allTeamNumbers = (async () => {
 const allTournaments = (async () => {
     return (await prismaClient.tournament.findMany({
         orderBy: [
-            { date: 'desc' } // Newest first
+            { date: 'asc' } // Most recent last
         ]
     })).map(tnmt => tnmt.key);
 })()

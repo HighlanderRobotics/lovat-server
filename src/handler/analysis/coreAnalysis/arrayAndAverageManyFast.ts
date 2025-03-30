@@ -3,6 +3,7 @@ import { allTeamNumbers, allTournaments, autoEnd, endgameToPoints, Metric, metri
 import { BargeResult, Position, Prisma, User } from '@prisma/client';
 import { endgameRuleOfSuccession } from '../picklist/endgamePicklistTeamFast';
 import { Event } from '@prisma/client';
+import { avgOrZero, weightedTourAvgLeft } from './arrayAndAverageTeams';
 
 export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
 
@@ -82,6 +83,7 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
         }
 
         // Group into team => tournament (newest first) => data by scout report
+        // This map dictates order of tournaments
         const tournamentIndexMap = await allTournaments;
         tmd.forEach(val => {
             const currRow = rawDataGrouped[val.teamNumber]
@@ -210,7 +212,7 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
             // Weight by tournament, most recent tournaments heavier
             finalResults[metric] = {};
             for (const team of teams) {
-                finalResults[metric][team] = weightedTourAvgRight(resultsByTournament[team]);
+                finalResults[metric][team] = weightedTourAvgLeft(resultsByTournament[team]);
             }
         }
 
@@ -246,29 +248,4 @@ export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): ArrayFil
 
     // Case where user only accepts data from some
     return { in: sources };
-}
-
-function avgOrZero(values: number[]): number {
-    return (values.reduce((acc, cur) => acc + cur, 0) / values.length) || 0;
-}
-
-// Most recent is first
-function weightedTourAvgRight(values: number[]): number {
-    let result = 0
-
-    for (let i = values.length - 1; i >= 0; i--) {
-        if (i === values.length - 1) {
-            // Initialize with furthest tournament
-            result = values[i]
-        // } else if (i === 0) {
-        //     // Dynamic weighting for most recent tournament
-        //     const weightOnRecent = 0.95 * (1 - (1 / (multiplerBaseAnalysis + 1)));
-        //     result = result * (1 - weightOnRecent) + values[i] * weightOnRecent;
-        } else {
-            // Use default weights
-            result = result * 0.2 + values[i] * 0.8;
-        }
-    }
-
-    return result;
 }
