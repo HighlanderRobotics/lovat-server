@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { allTeamNumbers, allTournaments, autoEnd, endgameToPoints, matchTimeEnd, Metric, metricToEvent, multiplerBaseAnalysis, swrConstant, tournamentLowerBound, ttlConstant } from "../analysisConstants";
+import { allTeamNumbers, allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
 import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast";
 import { Event, Position, Prisma, ScoutReport, User } from "@prisma/client";
 import { getSourceFilter } from './arrayAndAverageManyFast';
@@ -185,7 +185,7 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
         });
 
         // Organized as team number => tournament => list of avg driver ability per match
-        const matchGroups: Record<number, Array<{ match: string, dataPoint: number }[]>> = {};
+        const matchGroups: Record<number, { match: string, dataPoint: number }[][]> = {};
         for (const team of teams) {
             matchGroups[team] = [];
         }
@@ -195,6 +195,7 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
         let tournamentIndex = -1;
         for (const curMatch of tmd) {
             if (curMatch.tournamentKey !== currTournament) {
+                currTournament = curMatch.tournamentKey;
                 tournamentIndex++;
                 matchGroups[curMatch.teamNumber][tournamentIndex] = [];
             }
