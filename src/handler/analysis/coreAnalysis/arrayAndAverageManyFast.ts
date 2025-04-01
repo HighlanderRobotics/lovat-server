@@ -163,6 +163,7 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
                 } else if (metric === Metric.totalPoints) {
                     // Include endgame points for total
                     for (const team of teams) {
+                        resultsByTournament[team] = [];
                         let tournamentIndex = 0;
                         rawDataGrouped[team].tournamentData.forEach(tournament => {
                             resultsByTournament[team][tournamentIndex] = teleopPoints[team][tournamentIndex] + autoPoints[team][tournamentIndex] + avgOrZero(tournament.endgamePoints);
