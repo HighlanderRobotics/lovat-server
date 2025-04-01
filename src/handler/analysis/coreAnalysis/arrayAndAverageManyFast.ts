@@ -136,7 +136,7 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
                     for (const team of teams) {
                         teleopPoints[team] = [];
                         rawDataGrouped[team].tournamentData.forEach(tournament => {
-                            const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time <= autoEnd));
+                            const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time > autoEnd));
                             const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
 
                             teleopPoints[team].push(avgOrZero(pointSumsByReport));
@@ -144,18 +144,15 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
                     }
                 }
                 if (autoPoints.length === 0 && (metric === Metric.totalPoints || metric === Metric.autoPoints)) {
-                    if (autoPoints.length === 0) {
-                        for (const team of teams) {
-                            autoPoints[team] = [];
-                            rawDataGrouped[team].tournamentData.forEach(tournament => {
-                                const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time <= autoEnd));
-                                const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
+                    for (const team of teams) {
+                        autoPoints[team] = [];
+                        rawDataGrouped[team].tournamentData.forEach(tournament => {
+                            const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time <= autoEnd));
+                            const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
 
-                                autoPoints[team].push(avgOrZero(pointSumsByReport));
-                            });
-                        }
+                            autoPoints[team].push(avgOrZero(pointSumsByReport));
+                        });
                     }
-                    resultsByTournament = autoPoints;
                 }
 
                 // Set up data for final push into result

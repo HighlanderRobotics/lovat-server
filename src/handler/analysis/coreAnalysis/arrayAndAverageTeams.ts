@@ -22,15 +22,13 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
         // Endgame point prediction
         if (metric === Metric.bargePoints) {
             const result = {};
-
             for (const team of teams) {
                 result[team] = { average: await endgamePicklistTeamFast(team, sourceTeamFilter, sourceTnmtFilter), timeLine: null };
             }
-
             return result;
         }
 
-        // Data and aggregation based on metric
+        // Data and aggregation based on metric. Variables determine data requested and aggregation method
         let srSelect: Prisma.ScoutReportSelect = null;
         let matchAggregationFunction: (reports: Partial<ScoutReport & { events: Event[] }>[]) => number = null;
 
@@ -97,6 +95,7 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
                 break;
 
             default:
+                // Generic event count
                 const action = metricToEvent[metric];
                 let position: Position = null;
                 switch (metric) {
@@ -183,7 +182,7 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
             ]
         });
 
-        // Organized as team number => tournament => list of avg driver ability per match
+        // Organized as team number => tournament => list of avg /driver ability/event counts/points/ per match
         const matchGroups: Record<number, { match: string, dataPoint: number }[][]> = {};
         for (const team of teams) {
             matchGroups[team] = [];
@@ -243,7 +242,7 @@ export function weightedTourAvgLeft(values: number[]): number {
             result = values[0];
         // } else if (i === 0) {
         //     // Dynamic weighting for most recent tournament
-        //     const weightOnRecent = 0.95 * (1 - (1 / (multiplerBaseAnalysis + 1)));
+        //     const weightOnRecent = 0.95 * (1 - (1 / (multiplerBaseAnalysis * (scoutedAtMostRecent/totalAtMostRecent) + 1)));
         //     result = result * (1 - weightOnRecent) + values[i] * weightOnRecent;
         } else {
             // Use default weights
