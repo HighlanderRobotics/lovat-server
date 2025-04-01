@@ -131,17 +131,13 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
                     });
                 }
             } else if (metric === Metric.totalPoints || metric === Metric.teleopPoints || metric === Metric.autoPoints) {
+                // Generic averages if no reusable data is available
                 if (teleopPoints.length === 0 && (metric === Metric.totalPoints || metric === Metric.teleopPoints)) {
                     for (const team of teams) {
-                        // Generic average if no reusable data is available
                         teleopPoints[team] = [];
                         rawDataGrouped[team].tournamentData.forEach(tournament => {
-                            const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time > autoEnd)) || [];
-                            const pointSumsByReport = []
-                            timedEvents.forEach((events, i) => {
-                                // Push sum of event points and endgame
-                                pointSumsByReport.push(events.reduce((acc, cur) => acc + cur.points, 0) + tournament.endgamePoints[i]);
-                            });
+                            const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time <= autoEnd));
+                            const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
 
                             teleopPoints[team].push(avgOrZero(pointSumsByReport));
                         });
@@ -150,7 +146,6 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
                 if (autoPoints.length === 0 && (metric === Metric.totalPoints || metric === Metric.autoPoints)) {
                     if (autoPoints.length === 0) {
                         for (const team of teams) {
-                            // Generic average if no reusable data is available
                             autoPoints[team] = [];
                             rawDataGrouped[team].tournamentData.forEach(tournament => {
                                 const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time <= autoEnd));
@@ -163,12 +158,20 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
                     resultsByTournament = autoPoints;
                 }
 
+                // Set up data for final push into result
                 if (metric === Metric.teleopPoints) {
                     resultsByTournament = teleopPoints;
                 } else if (metric === Metric.autoPoints) {
                     resultsByTournament = autoPoints;
-                } else {
-                    resultsByTournament = teleopPoints.map((row, i) => row.map((cell, j) => cell + autoPoints[i][j]));
+                } else if (metric === Metric.totalPoints) {
+                    // Include endgame points for total
+                    for (const team of teams) {
+                        let tournamentIndex = 0;
+                        rawDataGrouped[team].tournamentData.forEach(tournament => {
+                            resultsByTournament[team][tournamentIndex] = teleopPoints[team][tournamentIndex] + autoPoints[team][tournamentIndex] + avgOrZero(tournament.endgamePoints);
+                            tournamentIndex++;
+                        });
+                    }
                 }
             } else {
                 // Average by count of metrics

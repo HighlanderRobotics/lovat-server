@@ -73,7 +73,6 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
                         sr.events.forEach(e => {
                             total += e.points;
                         });
-                        total += endgameToPoints[sr.bargeResult];
                     });
                     return total / reports.length;
                 };

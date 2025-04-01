@@ -86,7 +86,7 @@ export const averageAllTeamOneQuery = async (user: User, metric: Metric): Promis
             }, 0) / allTeamData.length;
 
             let endgamePoints = 0
-            if (metric === Metric.totalPoints || metric === Metric.teleopPoints) {
+            if (metric === Metric.totalPoints) {
                 const bargeResults = await prismaClient.scoutReport.findMany({
                     where: {
                         teamMatchData: {

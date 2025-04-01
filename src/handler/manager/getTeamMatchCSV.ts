@@ -360,8 +360,8 @@ function aggregateTeamMatchReports(match: string, teamNumber: number, reports: O
         data.netFails = roundToHundredth(data.netFails / reports.length);
     }
 
-    // Add endgame points to teleop
-    if (includeTeleop) {
+    // Add endgame points to total points
+    if (includeTeleop && includeAuto) {
         data.teleopPoints += endgameToPoints[data.endgame];
     }
 
