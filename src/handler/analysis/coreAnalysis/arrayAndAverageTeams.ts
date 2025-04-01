@@ -6,8 +6,8 @@ import { getSourceFilter } from './arrayAndAverageManyFast';
 
 /**
  * Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
- * Provides a timeline of metric counts per match.
- * Optimized for use over a few teams.
+ * Provides a timeline of metric value per match.
+ * Optimized to compare one metric over a few teams.
  *
  * @param teams teams to look at
  * @param metric metrics to aggregate by
