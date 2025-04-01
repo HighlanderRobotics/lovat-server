@@ -2,7 +2,7 @@ import { robotRole } from "../coreAnalysis/robotRole";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 import { User } from "@prisma/client";
 import { Metric } from "../analysisConstants";
-import { arrayAndAverageManyFast } from "../coreAnalysis/arrayAndAverageManyFast";
+import { averageManyFast } from "../coreAnalysis/averageManyFast";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
 
 
@@ -18,7 +18,7 @@ export const alliancePage = async (user : User, team1 : number, team2 : number, 
         const teamTwoAutoPaths = await autoPathsTeam(user, team2)
         const teamThreeAutoPaths = await autoPathsTeam(user, team3)
 
-        const teamData = await arrayAndAverageManyFast([team1, team2, team3], [Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores], user);
+        const teamData = await averageManyFast([team1, team2, team3], [Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores], user);
 
         //constants: total points, teams {team, role, autoPaths, averagePoints}
         return {

@@ -2,7 +2,7 @@ import prismaClient from '../../../prismaClient'
 import { allTeamNumbers, allTournaments, autoEnd, endgameToPoints, Metric, metricToEvent, swrConstant, ttlConstant } from "../analysisConstants";
 import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast";
 import { Event, Position, Prisma, ScoutReport, User } from "@prisma/client";
-import { getSourceFilter } from './arrayAndAverageManyFast';
+import { getSourceFilter } from './averageManyFast';
 
 /**
  * Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).

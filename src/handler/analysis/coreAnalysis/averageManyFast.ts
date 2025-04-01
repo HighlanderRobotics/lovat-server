@@ -16,7 +16,7 @@ export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
  * @param user source teams/tournaments to use
  * @returns object of predicted points organized by metric => team number => predicted points. All provided metrics and teams are expected to be in this object
  */
-export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[], user: User): Promise<Partial<Record<Metric, Record<number, number>>>> => {
+export const averageManyFast = async (teams: number[], metrics: Metric[], user: User): Promise<Partial<Record<Metric, Record<number, number>>>> => {
     try {
         // Set up filters to decrease server load
         const sourceTnmtFilter = getSourceFilter(user.tournamentSource, await allTournaments);
