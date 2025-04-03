@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { allTeamNumbers, allTournaments, autoEnd, defaultEndgamePoints, endgameToPoints, matchTimeEnd, Metric, metricToEvent } from "../analysisConstants";
+import { allTeamNumbers, allTournaments, autoEnd, defaultEndgamePoints, endgameToPoints, Metric, metricToEvent } from "../analysisConstants";
 import { Position, Prisma, User } from "@prisma/client";
 import { getSourceFilter } from './averageManyFast';
 
@@ -94,7 +94,7 @@ export const averageAllTeamFast = async (metric: Metric, user: User): Promise<nu
                     avgEndgamePoints += endgameToPoints[endgame.bargeResult] * endgame._count._all;
                 });
 
-                avgEndgamePoints /= bargeResults.length;
+                avgEndgamePoints /= bargeResults.reduce((acc, cur) => acc + cur._count._all, 0);
             }
 
             return avgMatchPoints + avgEndgamePoints;
