@@ -44,7 +44,7 @@ export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
         // }
         else {
             const teamAverageAndTimeLine = (await arrayAndAverageTeams([params.data.team], params.data.metric, req.user))[params.data.team]
-            const allTeamAverage = await averageAllTeamOneQuery(req.user, params.data.metric)
+            const allTeamAverage = await averageAllTeamOneQuery(params.data.metric, req.user)
             const result = {
                 array: teamAverageAndTimeLine.timeLine,
                 result: teamAverageAndTimeLine.average,

@@ -4,6 +4,8 @@ import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast";
 import { Event, Position, Prisma, ScoutReport, User } from "@prisma/client";
 import { getSourceFilter } from './averageManyFast';
 
+// Could be changed to be SQL dependent. Might be slightly better for readability and performance, but would probably be harder to update each season, especially for newer members.
+
 /**
  * Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
  * Provides a timeline of metric value per match.
@@ -97,7 +99,7 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
             default:
                 // Generic event count
                 const action = metricToEvent[metric];
-                let position: Position = null;
+                let position: Position = undefined;
                 switch (metric) {
                     case Metric.coralL1:
                         position = Position.LEVEL_ONE;
@@ -113,24 +115,15 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
                         break;
                 }
 
-                if (position === null) {
-                    srSelect = {
-                        events: {
-                            where: { action: action },
-                            select: { eventUuid: true }
-                        }
-                    };
-                } else {
-                    srSelect = {
-                        events: {
-                            where: {
-                                action: action,
-                                position: position
-                            },
-                            select: { eventUuid: true }
-                        }
-                    };
-                }
+                srSelect = {
+                    events: {
+                        where: {
+                            action: action,
+                            position: position
+                        },
+                        select: { eventUuid: true }
+                    }
+                };
 
                 matchAggregationFunction = (reports) => {
                     let total = 0;
