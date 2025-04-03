@@ -289,8 +289,8 @@ function condenseReport(report: PointsReport, userTeam: number, includeAuto: boo
         }
     });
 
-    // Add stage points to teleop
-    if (includeTeleop) {
+    // Add stage points to total points
+    if (includeTeleop && includeAuto) {
         data.teleopPoints += endgameToPoints[data.endgame as BargeResult];
     }
 

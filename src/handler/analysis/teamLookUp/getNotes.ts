@@ -15,7 +15,7 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             res.status(400).send(params);
             return;
         };
-        if (req.user.teamNumber !== null) {
+        if (req.user.teamNumber) {
             const notesOnTeam = await prismaClient.scoutReport.findMany({
                 where:
                 {

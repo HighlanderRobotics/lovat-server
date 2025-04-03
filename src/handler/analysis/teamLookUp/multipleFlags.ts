@@ -3,7 +3,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { rankFlag } from "../rankFlag";
 import { metricsCategory, metricToName } from "../analysisConstants";
-import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
+import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
 
 
 export const multipleFlags = async (req: AuthenticatedRequest, res: Response) => {
@@ -35,7 +35,7 @@ export const multipleFlags = async (req: AuthenticatedRequest, res: Response) =>
                 // Map flag to a metric and use AAT (should probably use a map but wtv)
                 for (let i = metricsCategory.length - 1; i >= 0; i--) {
                     if (flag === metricToName[metricsCategory[i]]) {
-                        arr.push((await arrayAndAverageTeam(req.user, metricsCategory[i], params.data.team)).average);
+                        arr.push((await arrayAndAverageTeams([params.data.team], metricsCategory[i], req.user))[params.data.team].average);
                         break;
                     } else if (i === 0) {
                         // No flag found probably shouldnt throw a full error, just push a falsy
