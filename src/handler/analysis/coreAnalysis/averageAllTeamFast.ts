@@ -10,7 +10,7 @@ import { getSourceFilter } from './averageManyFast';
  * @param user source teams/tournaments to use
  * @returns predicted points
  */
-export const averageAllTeamOneQuery = async (metric: Metric, user: User): Promise<number> => {
+export const averageAllTeamFast = async (metric: Metric, user: User): Promise<number> => {
     try {
         // Right off the bat, this is moot
         if (metric === Metric.bargePoints) {
