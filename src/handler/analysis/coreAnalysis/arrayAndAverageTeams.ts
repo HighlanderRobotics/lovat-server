@@ -16,7 +16,7 @@ import { getSourceFilter } from './averageManyFast';
  * @param user source teams/tournaments to use
  * @returns object of predicted points and match timeline organized by team number. All teams are expected to be in this object
  */
-export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user: User): Promise<Record<number, { average: number, timeLine: { match: string, dataPoint: number }[] }>> => {
+export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user: User): Promise<Record<number, { average: number, timeLine: { match: string, dataPoint: number, tournamentName: string }[] }>> => {
     try {
         const sourceTnmtFilter = getSourceFilter(user.tournamentSource, await allTournaments);
         const sourceTeamFilter = getSourceFilter(user.teamSource, await allTeamNumbers);
@@ -156,6 +156,12 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
             where: tmdFilter,
             select: {
                 tournamentKey: true,
+                // There's gotta be some way to not have to send the tournamnet name through every time
+                tournament: {
+                    select: {
+                        name: true
+                    }
+                },
                 key: true,
                 teamNumber: true,
                 scoutReports: {
@@ -176,7 +182,7 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
         });
 
         // Organized as team number => tournament => list of avg /driver ability/event counts/points/ per match
-        const matchGroups: Record<number, { match: string, dataPoint: number }[][]> = {};
+        const matchGroups: Record<number, { match: string, dataPoint: number, tournamentName: string }[][]> = {};
         for (const team of teams) {
             matchGroups[team] = [];
         }
@@ -193,11 +199,11 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
 
             // Aggregate according to metric
             const matchAvg = matchAggregationFunction(curMatch.scoutReports);
-            matchGroups[curMatch.teamNumber][tournamentIndex].push({ match: curMatch.key, dataPoint: matchAvg });
+            matchGroups[curMatch.teamNumber][tournamentIndex].push({ match: curMatch.key, dataPoint: matchAvg, tournamentName: curMatch.tournament.name });
         }
 
         // Push timelines and aggregate final result
-        const result: Record<number, { average: number, timeLine: { match: string, dataPoint: number }[] }> = {};
+        const result: Record<number, { average: number, timeLine: { match: string, dataPoint: number, tournamentName: string }[] }> = {};
         for (const team of teams) {
             result[team] = { average: null, timeLine: [] };
             const tournamentGroups = [];
