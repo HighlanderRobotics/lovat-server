@@ -198,8 +198,8 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
             }
 
             // Aggregate according to metric
-            const matchAvg = matchAggregationFunction(curMatch.scoutReports);
-            if (isFinite(matchAvg)) {
+            if (curMatch.scoutReports.length > 0) {
+                const matchAvg = matchAggregationFunction(curMatch.scoutReports);
                 matchGroups[curMatch.teamNumber][tournamentIndex].push({ match: curMatch.key, dataPoint: matchAvg, tournamentName: curMatch.tournament.name });
             }
         }
@@ -230,10 +230,6 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
     }
 
 };
-
-export function avgOrZero(values: number[]): number {
-    return (values.reduce((acc, cur) => acc + cur, 0) / values.length) || 0;
-}
 
 // Most recent is last
 export function weightedTourAvgLeft(values: number[]): number {
