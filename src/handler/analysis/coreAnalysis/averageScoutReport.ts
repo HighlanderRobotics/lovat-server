@@ -51,13 +51,15 @@ export const averageScoutReport = async (scoutReportUuid: string, metrics: Metri
                 case Metric.teleopPoints:
                     // Point sum after auto
                     result[metric] = report.events.filter(e => e.time > autoEnd).reduce((acc, cur) => acc + cur.points, 0);
+                    break;
                 case Metric.autoPoints:
                     // Point sum during auto
                     result[metric] = report.events.filter(e => e.time <= autoEnd).reduce((acc, cur) => acc + cur.points, 0);
+                    break;
                 default:
                     // Generic event count
                     const action = metricToEvent[metric];
-                    let position: Position = Position.NONE;
+                    let position: Position = null;
                     switch (metric) {
                         case Metric.coralL1:
                             position = Position.LEVEL_ONE;
@@ -72,7 +74,11 @@ export const averageScoutReport = async (scoutReportUuid: string, metrics: Metri
                             position = Position.LEVEL_FOUR;
                             break;
                     }
-                    result[metric] = report.events.filter(e => e.action === action && e.position === position).length;
+                    if (position) {
+                        result[metric] = report.events.filter(e => e.action === action && e.position === position).length;
+                    } else {
+                        result[metric] = report.events.filter(e => e.action === action).length;
+                    }
                     break;
             }
         }
