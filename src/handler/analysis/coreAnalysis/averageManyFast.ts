@@ -205,7 +205,7 @@ export const averageManyFast = async (teams: number[], metrics: Metric[], user: 
                         });
 
                         // Push average metric count by tournament
-                        resultsByTournament[team].push(countAtTournament / tournament.srEvents.length);
+                        resultsByTournament[team].push(countAtTournament / tournament.srEvents.length || 0);
                     });
                 }
             }

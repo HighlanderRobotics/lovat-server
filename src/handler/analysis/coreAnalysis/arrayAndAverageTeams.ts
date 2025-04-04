@@ -199,7 +199,9 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
 
             // Aggregate according to metric
             const matchAvg = matchAggregationFunction(curMatch.scoutReports);
-            matchGroups[curMatch.teamNumber][tournamentIndex].push({ match: curMatch.key, dataPoint: matchAvg, tournamentName: curMatch.tournament.name });
+            if (isFinite(matchAvg)) {
+                matchGroups[curMatch.teamNumber][tournamentIndex].push({ match: curMatch.key, dataPoint: matchAvg, tournamentName: curMatch.tournament.name });
+            }
         }
 
         // Push timelines and aggregate final result
@@ -209,9 +211,11 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
             const tournamentGroups = [];
 
             // Push timelines and aggregate by tournament
-            matchGroups[team].forEach(tournament =>{
-                result[team].timeLine.push(...tournament);
-                tournamentGroups.push(tournament.reduce((acc, cur) => acc + cur.dataPoint, 0) / tournament.length);
+            matchGroups[team].forEach(tournament => {
+                if (tournament.length > 0) {
+                    result[team].timeLine.push(...tournament);
+                    tournamentGroups.push(tournament.reduce((acc, cur) => acc + cur.dataPoint, 0) / tournament.length);
+                }
             });
 
             // Weighted average for final result
