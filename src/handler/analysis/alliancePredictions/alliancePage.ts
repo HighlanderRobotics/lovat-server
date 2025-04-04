@@ -1,7 +1,7 @@
 import { robotRole } from "../coreAnalysis/robotRole";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 import { User } from "@prisma/client";
-import { Metric } from "../analysisConstants";
+import { FlippedRoleMap, Metric } from "../analysisConstants";
 import { averageManyFast } from "../coreAnalysis/averageManyFast";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
 
@@ -10,9 +10,9 @@ export const alliancePage = async (user : User, team1 : number, team2 : number, 
     try {
         const teamPoints  = await arrayAndAverageTeams([team1, team2, team3], Metric.totalPoints, user)
 
-        const teamOneMainRole = (await robotRole(user, team1)).mainRole
-        const teamTwoMainRole = (await robotRole(user, team2)).mainRole
-        const teamThreeMainRole = (await robotRole(user, team3)).mainRole
+        const teamOneMainRole = FlippedRoleMap[(await robotRole(user, team1)).mainRole]
+        const teamTwoMainRole = FlippedRoleMap[(await robotRole(user, team2)).mainRole]
+        const teamThreeMainRole = FlippedRoleMap[(await robotRole(user, team3)).mainRole]
 
         const teamOneAutoPaths = await autoPathsTeam(user, team1)
         const teamTwoAutoPaths = await autoPathsTeam(user, team2)
