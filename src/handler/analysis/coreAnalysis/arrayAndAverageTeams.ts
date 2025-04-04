@@ -173,9 +173,10 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
                 // Ordered by oldest first
                 {
                     tournament: {
-                        date: 'asc'
+                        date: "asc"
                     }
                 },
+                { teamNumber: "asc" },
                 { matchType: "asc" },
                 { matchNumber: "asc" },
             ]
@@ -188,19 +189,22 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
         }
 
         // Group TMD by matches
-        let currTournament = "";
-        let tournamentIndex = -1;
+        let tournamentIndex: Record<number, number> = {};
+        let currTournament: string = null;
+        let currTeam: number = null;
         for (const curMatch of tmd) {
-            if (curMatch.tournamentKey !== currTournament) {
+            if (curMatch.tournamentKey !== currTournament || curMatch.teamNumber !== currTeam) {
                 currTournament = curMatch.tournamentKey;
-                tournamentIndex++;
-                matchGroups[curMatch.teamNumber][tournamentIndex] = [];
+                currTeam = curMatch.teamNumber;
+                // Increment or initialize team-specific array index
+                tournamentIndex[currTeam] = tournamentIndex[currTeam] ? tournamentIndex[currTeam] + 1 : 0;
+                matchGroups[currTeam][tournamentIndex[currTeam]] = [];
             }
 
             // Aggregate according to metric
             if (curMatch.scoutReports.length > 0) {
                 const matchAvg = matchAggregationFunction(curMatch.scoutReports);
-                matchGroups[curMatch.teamNumber][tournamentIndex].push({ match: curMatch.key, dataPoint: matchAvg, tournamentName: curMatch.tournament.name });
+                matchGroups[currTeam][tournamentIndex[currTeam]].push({ match: curMatch.key, dataPoint: matchAvg, tournamentName: curMatch.tournament.name });
             }
         }
 
