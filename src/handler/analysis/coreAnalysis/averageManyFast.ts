@@ -174,7 +174,7 @@ export const averageManyFast = async (teams: number[], metrics: Metric[], user: 
             } else {
                 // Average by count of metrics
                 const action = metricToEvent[metric];
-                let position: Position = Position.NONE;
+                let position: Position = null;
                 switch (metric) {
                     case Metric.coralL1:
                         position = Position.LEVEL_ONE;
@@ -198,7 +198,7 @@ export const averageManyFast = async (teams: number[], metrics: Metric[], user: 
 
                         tournament.srEvents.forEach(sr => {
                             sr.forEach(event => {
-                                if (event.action === action && event.position === position) {
+                                if (event.action === action && (position === null || event.position === position)) {
                                     countAtTournament++;
                                 }
                             });
