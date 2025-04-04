@@ -3,7 +3,7 @@ import { allTeamNumbers, allTournaments, autoEnd, endgameToPoints, Metric, metri
 import { BargeResult, Position, Prisma, User } from '@prisma/client';
 import { endgameRuleOfSuccession } from '../picklist/endgamePicklistTeamFast';
 import { Event } from '@prisma/client';
-import { avgOrZero, weightedTourAvgLeft } from './arrayAndAverageTeams';
+import { weightedTourAvgLeft } from './arrayAndAverageTeams';
 
 export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
 
@@ -88,6 +88,12 @@ export const averageManyFast = async (teams: number[], metrics: Metric[], user: 
         tmd.forEach(val => {
             const currRow = rawDataGrouped[val.teamNumber]
             const ti = tournamentIndexMap.indexOf(val.tournamentKey);
+
+            if (val.scoutReports.length === 0) {
+                // Move on, no valid data for this tournament
+                return;
+            }
+
             currRow.tournamentData[ti] ||= { srEvents: [], driverAbility: [], endgamePoints: [] };
 
             // Push data in
@@ -174,7 +180,7 @@ export const averageManyFast = async (teams: number[], metrics: Metric[], user: 
             } else {
                 // Average by count of metrics
                 const action = metricToEvent[metric];
-                let position: Position = Position.NONE;
+                let position: Position = null;
                 switch (metric) {
                     case Metric.coralL1:
                         position = Position.LEVEL_ONE;
@@ -198,7 +204,7 @@ export const averageManyFast = async (teams: number[], metrics: Metric[], user: 
 
                         tournament.srEvents.forEach(sr => {
                             sr.forEach(event => {
-                                if (event.action === action && event.position === position) {
+                                if (event.action === action && (position === null || event.position === position)) {
                                     countAtTournament++;
                                 }
                             });
@@ -249,4 +255,8 @@ export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): ArrayFil
 
     // Case where user only accepts data from some
     return { in: sources };
+}
+
+function avgOrZero(values: number[]): number {
+    return (values.reduce((acc, cur) => acc + cur, 0) / values.length) || 0;
 }

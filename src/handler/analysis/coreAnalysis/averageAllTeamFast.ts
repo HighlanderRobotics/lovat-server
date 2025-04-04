@@ -94,6 +94,7 @@ export const averageAllTeamFast = async (metric: Metric, user: User): Promise<nu
                     avgEndgamePoints += endgameToPoints[endgame.bargeResult] * endgame._count._all;
                 });
 
+                // Don't have to worry about dividing by zero here because we check above whether there are valid reports
                 avgEndgamePoints /= bargeResults.reduce((acc, cur) => acc + cur._count._all, 0);
             }
 
