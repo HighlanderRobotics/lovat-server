@@ -66,7 +66,7 @@ import { picklistShell } from "./handler/analysis/picklist/picklistShell";
 import { getScouterTournaments } from "./handler/manager/getScouterTournaments";
 import { getScouters } from "./handler/manager/getScouters";
 import { addScoutReportDashboard } from "./handler/manager/addScoutReportDashboard";
-import { matchPageSpecificScouter } from "./handler/analysis/specificMatchPage/matchPageSpecficScouter";
+import { matchPageSpecificScouter } from "./handler/analysis/specificMatchPage/matchPageSpecificScouter";
 import { scoutReportForMatch } from "./handler/analysis/specificMatchPage/scoutReportForMatch";
 import { timelineForScoutReport } from "./handler/analysis/specificMatchPage/timelineForScoutReport";
 import { getTournamentForScouterWithSchedule } from "./handler/manager/getTournamentForScouterWithSchedule";
