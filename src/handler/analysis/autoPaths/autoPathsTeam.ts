@@ -86,15 +86,11 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
                     }
                 }
             },
-            orderBy: {
-                teamMatchData: {
-                    tournament: {
-                        date: 'desc'
-                    },
-                    matchType: "desc",
-                    matchNumber: 'desc'
-                }
-            }
+            orderBy: [
+                { teamMatchData: { tournament: { date: 'desc' } } },
+                { teamMatchData: { matchType: 'desc' } },
+                { teamMatchData: { matchNumber: 'desc' } }
+            ]
         })
         const autoPaths: AutoData[] = []
         for(const element of matches)
