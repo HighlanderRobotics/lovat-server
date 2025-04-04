@@ -2,11 +2,11 @@ import { Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
 import { Metric, FlippedRoleMap, specificMatchPageMetrics, metricToName } from "../analysisConstants";
 import { BargeResultReverseMap} from "../../manager/managerConstants"
 
 import { autoPathScouter } from "./autoPathScouter";
+import { averageScoutReport } from "../coreAnalysis/averageScoutReport";
 
 
 export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: Response) => {
@@ -26,8 +26,8 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
                 uuid : params.data.scoutReportUuid
             }
         })
-        const data = {
-            totalPoints: await singleMatchSingleScoutReport(req.user, true, scoutReport.uuid, Metric.totalPoints),
+        const output = {
+            totalPoints: (await averageScoutReport(scoutReport.uuid, [Metric.totalPoints]))[Metric.totalPoints],
             driverAbility: scoutReport.driverAbility,
             role : FlippedRoleMap[scoutReport.robotRole],
             // stage : stageMap[scoutReport.stage],
@@ -37,11 +37,14 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             note : scoutReport.notes,
             timeStamp : scoutReport.startTime
         }
-        for (const element of specificMatchPageMetrics) {
-            data[metricToName[element]] = await singleMatchSingleScoutReport(req.user, false, scoutReport.uuid, element)
+
+        const aggregateData = await averageScoutReport(scoutReport.uuid, specificMatchPageMetrics);
+
+        for (const metric of specificMatchPageMetrics) {
+            output[metricToName[metric]] = aggregateData[metric];
         };
 
-        res.status(200).send(data)
+        res.status(200).send(output)
 
 
     }
