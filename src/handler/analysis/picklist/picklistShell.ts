@@ -97,7 +97,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         }
 
-        const allTeamData = await averageManyFast(includedMetrics, includedTeams, req.user);
+        const allTeamData = await averageManyFast(includedTeams, includedMetrics, req.user);
 
         const dataArr = await zScoreMany(allTeamData, includedTeams, params.data.tournamentKey, params.data.metrics, params.data.flags);
 
