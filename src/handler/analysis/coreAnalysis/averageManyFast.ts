@@ -3,20 +3,20 @@ import { allTeamNumbers, allTournaments, autoEnd, endgameToPoints, Metric, metri
 import { BargeResult, Position, Prisma, User } from '@prisma/client';
 import { endgameRuleOfSuccession } from '../picklist/endgamePicklistTeamFast';
 import { Event } from '@prisma/client';
+import { avgOrZero, weightedTourAvgLeft } from './arrayAndAverageTeams';
 
 export interface ArrayFilter<T> { notIn?: T[], in?: T[] };
 
 /**
- * Compute AATF on multiple teams at once, returning results in multiple sparse arrays by team number.
- * Optimized for use with various types of continuous metrics (driver ability; endgame points; event counts; scores).
+ * Heuristically aggregate analog metrics on multiple teams at once (weights scout reports equally regardless of duplicate matches).
+ * Optimized for use with various types of continuous metrics (driver ability; endgame points; event counts; scores) over a large number of teams.
  *
  * @param teams teams to look at
  * @param metrics metrics to aggregate by
- * @param sourceTeamFilter team filter to use
- * @param sourceTnmtFilter tournament filter to use
+ * @param user source teams/tournaments to use
  * @returns object of predicted points organized by metric => team number => predicted points. All provided metrics and teams are expected to be in this object
  */
-export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[], user: User): Promise<Partial<Record<Metric, Record<number, number>>>> => {
+export const averageManyFast = async (teams: number[], metrics: Metric[], user: User): Promise<Partial<Record<Metric, Record<number, number>>>> => {
     try {
         // Set up filters to decrease server load
         const sourceTnmtFilter = getSourceFilter(user.tournamentSource, await allTournaments);
@@ -83,6 +83,7 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
         }
 
         // Group into team => tournament (newest first) => data by scout report
+        // This map dictates order of tournaments
         const tournamentIndexMap = await allTournaments;
         tmd.forEach(val => {
             const currRow = rawDataGrouped[val.teamNumber]
@@ -130,44 +131,45 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
                     });
                 }
             } else if (metric === Metric.totalPoints || metric === Metric.teleopPoints || metric === Metric.autoPoints) {
+                // Generic averages if no reusable data is available
                 if (teleopPoints.length === 0 && (metric === Metric.totalPoints || metric === Metric.teleopPoints)) {
                     for (const team of teams) {
-                        // Generic average if no reusable data is available
                         teleopPoints[team] = [];
                         rawDataGrouped[team].tournamentData.forEach(tournament => {
-                            const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time > autoEnd)) || [];
-                            const pointSumsByReport = []
-                            timedEvents.forEach((events, i) => {
-                                // Push sum of event points and endgame
-                                pointSumsByReport.push(events.reduce((acc, cur) => acc + cur.points, 0) + tournament.endgamePoints[i]);
-                            });
+                            const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time > autoEnd));
+                            const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
 
                             teleopPoints[team].push(avgOrZero(pointSumsByReport));
                         });
                     }
                 }
                 if (autoPoints.length === 0 && (metric === Metric.totalPoints || metric === Metric.autoPoints)) {
-                    if (autoPoints.length === 0) {
-                        for (const team of teams) {
-                            // Generic average if no reusable data is available
-                            autoPoints[team] = [];
-                            rawDataGrouped[team].tournamentData.forEach(tournament => {
-                                const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time <= autoEnd));
-                                const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
+                    for (const team of teams) {
+                        autoPoints[team] = [];
+                        rawDataGrouped[team].tournamentData.forEach(tournament => {
+                            const timedEvents = tournament.srEvents.map(val => val.filter(e => e.time <= autoEnd));
+                            const pointSumsByReport = timedEvents.map(e => e.reduce((acc, cur) => acc + cur.points, 0));
 
-                                autoPoints[team].push(avgOrZero(pointSumsByReport));
-                            });
-                        }
+                            autoPoints[team].push(avgOrZero(pointSumsByReport));
+                        });
                     }
-                    resultsByTournament = autoPoints;
                 }
 
+                // Set up data for final push into result
                 if (metric === Metric.teleopPoints) {
                     resultsByTournament = teleopPoints;
                 } else if (metric === Metric.autoPoints) {
                     resultsByTournament = autoPoints;
-                } else {
-                    resultsByTournament = teleopPoints.map((row, i) => row.map((cell, j) => cell + autoPoints[i][j]));
+                } else if (metric === Metric.totalPoints) {
+                    // Include endgame points for total
+                    for (const team of teams) {
+                        resultsByTournament[team] = [];
+                        let tournamentIndex = 0;
+                        rawDataGrouped[team].tournamentData.forEach(tournament => {
+                            resultsByTournament[team][tournamentIndex] = teleopPoints[team][tournamentIndex] + autoPoints[team][tournamentIndex] + avgOrZero(tournament.endgamePoints);
+                            tournamentIndex++;
+                        });
+                    }
                 }
             } else {
                 // Average by count of metrics
@@ -208,10 +210,10 @@ export const arrayAndAverageManyFast = async (teams: number[], metrics: Metric[]
                 }
             }
 
-            // Weight by tournament, most recent tournaments get more
+            // Weight by tournament, most recent tournaments heavier
             finalResults[metric] = {};
             for (const team of teams) {
-                finalResults[metric][team] = weightedTourAvgRight(resultsByTournament[team]);
+                finalResults[metric][team] = weightedTourAvgLeft(resultsByTournament[team]);
             }
         }
 
@@ -247,29 +249,4 @@ export const getSourceFilter = <T>(sources: T[], possibleSources: T[]): ArrayFil
 
     // Case where user only accepts data from some
     return { in: sources };
-}
-
-function avgOrZero(values: number[]): number {
-    return (values.reduce((acc, cur) => acc + cur, 0) / values.length) || 0;
-}
-
-// Most recent is first
-function weightedTourAvgRight(values: number[]): number {
-    let result = 0
-
-    for (let i = values.length - 1; i >= 0; i--) {
-        if (i === values.length - 1) {
-            // Initialize with furthest tournament
-            result = values[i]
-        // } else if (i === 0) {
-        //     // Dynamic weighting for most recent tournament
-        //     const weightOnRecent = 0.95 * (1 - (1 / (multiplerBaseAnalysis + 1)));
-        //     result = result * (1 - weightOnRecent) + values[i] * weightOnRecent;
-        } else {
-            // Use default weights
-            result = result * 0.2 + values[i] * 0.8;
-        }
-    }
-
-    return result;
 }

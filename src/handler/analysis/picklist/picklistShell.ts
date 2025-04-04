@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import z from 'zod'
 import { addTournamentMatches } from "../../manager/addTournamentMatches";
 import { Metric, metricsCategory, metricToName, picklistToMetric } from "../analysisConstants";
-import { arrayAndAverageManyFast } from "../coreAnalysis/arrayAndAverageManyFast";
+import { averageManyFast } from "../coreAnalysis/averageManyFast";
 import { zScoreMany } from "./zScoreMany";
 
 /**
@@ -97,7 +97,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             }
         }
 
-        const allTeamData = await arrayAndAverageManyFast(includedMetrics, includedTeams, req.user);
+        const allTeamData = await averageManyFast(includedMetrics, includedTeams, req.user);
 
         const dataArr = await zScoreMany(allTeamData, includedTeams, params.data.tournamentKey, params.data.metrics, params.data.flags);
 

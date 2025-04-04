@@ -6,7 +6,7 @@ import { rankFlag } from "../rankFlag";
  *
  * @param data meant to take in an object from AAMF, organized metric => team number => predicted points
  * @param teams list of team numbers, should match those in the data column
- * @param tournamentKey tournament to use for team ranks
+ * @param tournamentKey tournament to use for team qualification rankings
  * @param queries map of parameters and weights to apply, given in strings matching picklist operators
  * @param flags flags to send along with data, given in strings matching category metrics
  * @returns object with total Z-score, breakdowns by metric, and flags; organized by team number

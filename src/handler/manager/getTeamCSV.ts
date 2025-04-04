@@ -429,8 +429,8 @@ function aggregateTeamReports(teamNum: number, numMatches: number, reports: Poin
     data.percBargeDeep = Math.round(data.percBargeDeep / numMatches * 1000) / 10;
     data.percBargeFail = Math.round(data.percBargeFail / numMatches * 1000) / 10;
 
-    // Add endgame points to teleop
-    if (includeTeleop) {
+    // Add endgame points to total points
+    if (includeTeleop && includeAuto) {
         data.avgTeleopPoints +=
             (data.percBargePark * endgameToPoints[BargeResult.PARKED]
             + data.percBargeShallow * endgameToPoints[BargeResult.SHALLOW]

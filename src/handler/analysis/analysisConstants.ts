@@ -29,9 +29,8 @@ enum MetricsBreakdown {
 // Ranking metrics
 const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails]
 
+// To differentiate auton and teleop events, benefit of the doubt given to auto
 const autoEnd = 18
-//much longer than needed in case they go over time/start match early
-const matchTimeEnd = 3000
 
 const specificMatchPageMetrics = [Metric.defends, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails]
 
@@ -73,13 +72,13 @@ const FlippedRoleMap: Record<RobotRole, number> = {
 const FlippedActionMap: Record<EventAction, number> = {
     [EventAction.PICKUP_CORAL]: 0,
     [EventAction.PICKUP_ALGAE]: 1,
-    [EventAction.FEED]: 2, 
-    [EventAction.AUTO_LEAVE]: 3, 
-    [EventAction.DEFEND]: 4, 
-    [EventAction.SCORE_NET]: 5, 
-    [EventAction.FAIL_NET]: 6, 
+    [EventAction.FEED]: 2,
+    [EventAction.AUTO_LEAVE]: 3,
+    [EventAction.DEFEND]: 4,
+    [EventAction.SCORE_NET]: 5,
+    [EventAction.FAIL_NET]: 6,
     [EventAction.SCORE_PROCESSOR]: 7,
-    [EventAction.SCORE_CORAL]: 8, 
+    [EventAction.SCORE_CORAL]: 8,
     [EventAction.DROP_ALGAE]: 9,
     [EventAction.DROP_CORAL]: 10,
     [EventAction.START_POSITION]: 11
@@ -115,23 +114,23 @@ const FlippedPositionMap: Record<Position, number> = {
 }
 
 const metricsToNumber: Record<string, number> = {
-    totalPoints : 0, 
-    driverAbility : 1, 
+    totalPoints : 0,
+    driverAbility : 1,
     teleopPoints : 2,
-    autoPoints : 3, 
-    feeds : 4, 
+    autoPoints : 3,
+    feeds : 4,
     defends : 5,
-    coralPickups : 6, 
-    algaePickups : 7, 
-    coralDrops : 8, 
-    algaeDrops : 9, 
-    coralL1 : 10, 
-    coralL2 : 11, 
-    coralL3 : 12, 
-    coralL4 : 13, 
-    processorScores : 14, 
-    netScores : 15, 
-    netFails : 16, 
+    coralPickups : 6,
+    algaePickups : 7,
+    coralDrops : 8,
+    algaeDrops : 9,
+    coralL1 : 10,
+    coralL2 : 11,
+    coralL3 : 12,
+    coralL4 : 13,
+    processorScores : 14,
+    netScores : 15,
+    netFails : 16,
     autonLeaves : 17,
     bargePoints : 18
 }
@@ -192,12 +191,12 @@ const allTeamNumbers = (async () => {
 const allTournaments = (async () => {
     return (await prismaClient.tournament.findMany({
         orderBy: [
-            { date: 'desc' } // Newest first
+            { date: 'asc' } // Most recent last
         ]
     })).map(tnmt => tnmt.key);
 })()
 
 const multiplerBaseAnalysis = 4
-export {defaultEndgamePoints, defaultSTD, Metric, metricsCategory, autoEnd, matchTimeEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments};
+export {defaultEndgamePoints, defaultSTD, Metric, metricsCategory, autoEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments};
 
 
