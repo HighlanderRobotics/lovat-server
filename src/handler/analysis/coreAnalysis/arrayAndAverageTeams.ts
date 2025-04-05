@@ -197,7 +197,8 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
                 currTournament = curMatch.tournamentKey;
                 currTeam = curMatch.teamNumber;
                 // Increment or initialize team-specific array index
-                tournamentIndex[currTeam] = tournamentIndex[currTeam] ? tournamentIndex[currTeam] + 1 : 0;
+                tournamentIndex[currTeam] ||= 0;
+                tournamentIndex[currTeam]++;
                 matchGroups[currTeam][tournamentIndex[currTeam]] = [];
             }
 
