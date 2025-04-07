@@ -1,8 +1,21 @@
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
-import { autoPathSingleMatchSingleScoutReport } from "./autoPathSingleMatchSingleScoutReport";
 import { User } from "@prisma/client";
-import { Position, AutoData } from './autoPathSingleMatchSingleScoutReport';
+import { getSourceFilter } from '../coreAnalysis/averageManyFast';
+import { allTeamNumbers, allTournaments, autoEnd, FlippedActionMap, FlippedPositionMap } from '../analysisConstants';
+
+interface AutoPosition {
+    location: number;
+    event: number;
+    time?: number;
+}
+
+interface AutoData {
+    score: number;
+    positions: AutoPosition[];
+    matchKey: string;
+    tournamentName : string,
+}
 
 export const autoPathsTeam = async (user: User, teamNumber : number) => {
     try {
@@ -15,74 +28,37 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
             throw(params)
         };
 
-        const isSubsetPositions = (listOne: Position[], listTwo: Position[]): boolean => {
-            const isSubset = (a: Position[], b: Position[]): boolean => 
-                a.every(posA => 
-                    b.some(posB => 
-                        posA.location === posB.location && posA.event === posB.event
-                    )
-                );
-        
-            return isSubset(listOne, listTwo) || isSubset(listTwo, listOne);
-        };
-        const groupAutoData = (data: AutoData[]): { positions: Position[], matches: { matchKey: string, tournamentName: string }[], score: number[], frequency: number, maxScore: number }[] => {
-            const groups: { positions: Position[], matches: Set<string>, score: number[], maxScore: number, matchDetails: Map<string, string> }[] = [];
-        
-            data.forEach(item => {
-                let isGrouped = false;
-        
-                for (const group of groups) {
-                    if (isSubsetPositions(item.positions, group.positions)) {
-                        if (item.positions.length > group.positions.length) {
-                            group.positions = item.positions;
-                        }
-                        group.matches.add(item.match);
-                        group.matchDetails.set(item.match, item.tournamentName);
-                        group.score.push(item.score); 
-                        group.maxScore = Math.max(group.maxScore, item.score);
-                        isGrouped = true;
-                        break;
-                    }
-                }
-        
-                if (!isGrouped) {
-                    const matchDetails = new Map<string, string>();
-                    matchDetails.set(item.match, item.tournamentName);
-                    groups.push({
-                        positions: item.positions,
-                        matches: new Set([item.match]),
-                        score: [item.score], 
-                        maxScore: item.score,
-                        matchDetails: matchDetails
-                    });
-                }
-            });
-        
-            return groups.map(group => ({
-                positions: group.positions,
-                matches: Array.from(group.matches).map(matchKey => ({ matchKey: matchKey, tournamentName: group.matchDetails.get(matchKey) || '' })),
-                score: group.score,
-                frequency: group.matches.size,
-                maxScore: group.maxScore
-            }));
-        };
-        
-        const matches = await prismaClient.scoutReport.findMany({
-            where : {
-                teamMatchData : 
-                {
-                    teamNumber : params.data.team,
-                    tournamentKey :
-                    {
-                        in : user.tournamentSource
-                    },
-                    
+        const sourceTnmtFilter = getSourceFilter(user.tournamentSource, await allTournaments);
+        const sourceTeamFilter = getSourceFilter(user.teamSource, await allTeamNumbers);
+
+        // Select relevant data in match order
+        const autoData = await prismaClient.scoutReport.findMany({
+            where: {
+                teamMatchData: {
+                    teamNumber: params.data.team,
+                    tournamentKey: "2025cabe"
+                    // tournamentKey: sourceTnmtFilter
                 },
-                scouter :
-                {
-                    sourceTeamNumber :
-                    {
-                        in : user.teamSource
+                scouter: {
+                    sourceTeamNumber: sourceTeamFilter
+                }
+            },
+            select: {
+                events: {
+                    where: {
+                        time: {
+                            lte: autoEnd
+                        }
+                    }
+                },
+                teamMatchKey: true,
+                teamMatchData: {
+                    select: {
+                        tournament: {
+                            select: {
+                                name: true
+                            }
+                        }
                     }
                 }
             },
@@ -91,19 +67,68 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
                 { teamMatchData: { matchType: 'desc' } },
                 { teamMatchData: { matchNumber: 'desc' } }
             ]
-        })
+        });
+
+        // Transform data into position list and score
         const autoPaths: AutoData[] = []
-        for(const element of matches)
-        {
-            const currAutoPath = await autoPathSingleMatchSingleScoutReport(user, element.teamMatchKey, element.uuid)
-            if(currAutoPath.positions.length > 0)
-            {
-                autoPaths.push(currAutoPath)
+        for (const report of autoData) {
+            const score = report.events.reduce((acc, cur) => acc + cur.points, 0);
+            const positions = report.events.map(e => ({
+                location: FlippedPositionMap[e.position],
+                event: FlippedActionMap[e.action],
+                time: e.time
+            }));
+
+            if (positions.length > 0) {
+                autoPaths.push({
+                    score: score,
+                    positions: positions,
+                    matchKey: report.teamMatchKey,
+                    tournamentName: report.teamMatchData.tournament.name
+                });
             }
         }
-        const groupedAutoPaths = groupAutoData(autoPaths)
-        
-        return groupedAutoPaths
+
+        const result: {
+            positions: AutoPosition[]
+            matches: { matchKey: string, tournamentName: string }[]
+            score: number[]
+            frequency: number
+            maxScore: number
+        }[] = [];
+
+        // Group autos with frequency and scoring potential
+        autoPaths.forEach(auto => {
+            for (const group of result) {
+                // If the auto is found within a different group, add to that one instead
+                if (isSubsetPositions(auto.positions, group.positions)) {
+                    if (auto.positions.length > group.positions.length) {
+                        group.positions = auto.positions;
+                    }
+
+                    if (group.matches.every(match => match.matchKey !== auto.matchKey)) {
+                        // Add the match and tournament if it isn't already included
+                        group.matches.push({ matchKey: auto.matchKey, tournamentName: auto.tournamentName });
+                    }
+                    group.score.push(auto.score);
+                    group.frequency++;
+                    group.maxScore = Math.max(group.maxScore, auto.score);
+
+                    return;
+                }
+            }
+
+            // Create a new group
+            result.push({
+                positions: auto.positions,
+                matches: [{ matchKey: auto.matchKey, tournamentName: auto.tournamentName }],
+                score: [auto.score],
+                frequency: 1,
+                maxScore: auto.score
+            });
+        });
+
+        return result;
     }
     catch (error) {
         console.error(error)
@@ -111,4 +136,15 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
     }
 };
 
+// Check if one auto path includes another
+const isSubsetPositions = (listOne: AutoPosition[], listTwo: AutoPosition[]): boolean => {
 
+    const shorter = (listOne.length > listTwo.length) ? listTwo : listOne;
+    const longer = (listOne.length > listTwo.length) ? listOne : listTwo;
+
+    const result = shorter.every((posA, i) =>
+        longer[i].event === posA.event && longer[i].location === posA.location
+    );
+
+    return result;
+};
