@@ -33,6 +33,7 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
                 "teleoppoints": Number(req.query.teleoppoints) || Number(req.body.teleoppoints) || 0,
                 "driverability": Number(req.query.driverability) || Number(req.body.driverability) || 0,
                 "bargeresult": Number(req.query.bargeresult) || Number(req.body.bargeresult) || 0,
+                "totalCoral": Number(req.query.totalcoral) || Number(req.body.totalcoral) || 0,
                 "level1": Number(req.query.level1) || Number(req.body.level1) || 0,
                 "level2": Number(req.query.level2) || Number(req.body.level2) || 0,
                 "level3": Number(req.query.level3) || Number(req.body.level3) || 0,

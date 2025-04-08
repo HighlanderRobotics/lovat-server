@@ -11,7 +11,8 @@ enum Metric {
     totalPoints, driverAbility, teleopPoints, autoPoints, feeds, defends, // General game metrics
     coralPickups, algaePickups, coralDrops, algaeDrops, // Game piece interactions
     coralL1, coralL2, coralL3, coralL4, processorScores, netScores, netFails, // Game piece scoring
-    autonLeaves, bargePoints // Auto/Endgame
+    autonLeaves, bargePoints, // Auto/Endgame
+    totalCoral // Late addition
 }
 
 // !!!IMPORTANT!!! toString() must return a property of ScoutReport
@@ -27,7 +28,7 @@ enum MetricsBreakdown {
 }
 
 // Ranking metrics
-const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails]
+const metricsCategory: Metric[] = [Metric.totalPoints, Metric.driverAbility, Metric.teleopPoints, Metric.autoPoints, Metric.feeds, Metric.defends, Metric.coralPickups, Metric.algaePickups, Metric.coralDrops, Metric.algaeDrops, Metric.totalCoral, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores, Metric.netFails]
 
 // To differentiate auton and teleop events, benefit of the doubt given to auto
 const autoEnd = 18
@@ -52,6 +53,7 @@ const metricToEvent: Partial<Record<Metric, EventAction>> = {
     [Metric.algaePickups]: EventAction.PICKUP_ALGAE,
     [Metric.coralDrops]: EventAction.DROP_CORAL,
     [Metric.algaeDrops]: EventAction.DROP_ALGAE,
+    [Metric.totalCoral]: EventAction.SCORE_CORAL,
     [Metric.coralL1]: EventAction.SCORE_CORAL,
     [Metric.coralL2]: EventAction.SCORE_CORAL,
     [Metric.coralL3]: EventAction.SCORE_CORAL,
@@ -132,7 +134,8 @@ const metricsToNumber: Record<string, number> = {
     netScores : 15,
     netFails : 16,
     autonLeaves : 17,
-    bargePoints : 18
+    bargePoints : 18,
+    totalCoral: 19
 }
 
 const metricToName: Record<Metric, string> = {
@@ -146,6 +149,7 @@ const metricToName: Record<Metric, string> = {
     [Metric.algaePickups]: "algaePickups",
     [Metric.coralDrops]: "coralDrops",
     [Metric.algaeDrops]: "algaeDrops",
+    [Metric.totalCoral]: "totalCoral",
     [Metric.coralL1]: "coralL1",
     [Metric.coralL2]: "coralL2",
     [Metric.coralL3]: "coralL3",
@@ -164,6 +168,7 @@ const picklistToMetric: Record<string, Metric> = {
     teleoppoints: Metric.teleopPoints,
     driverability: Metric.driverAbility,
     bargeresult: Metric.bargePoints,
+    totalCoral: Metric.totalCoral,
     level1: Metric.coralL1,
     level2: Metric.coralL2,
     level3: Metric.coralL3,
