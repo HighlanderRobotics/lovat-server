@@ -10,7 +10,7 @@ import { zScoreMany } from "./zScoreMany";
 /**
  * Main picklist endpoint. Note inconsistent strings make it confusing for this season.
  * Normal metrics are send and received in the lettering suggested by the query inputs, but FLAGS are send and received as shown in metricToName.
- * 
+ *
  * @returns picklist data as given by zScoreMany
  */
 export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
@@ -85,19 +85,19 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
         }
 
         // Metrics to aggregate
-        const includedMetrics: Metric[] = [];
+        const includedMetrics = new Set<Metric>;
         for (const picklistParam in picklistToMetric) {
             if (params.data.metrics[picklistParam]) {
-                includedMetrics.push(picklistToMetric[picklistParam]);
+                includedMetrics.add(picklistToMetric[picklistParam]);
             }
         }
         for (const metric of metricsCategory) {
             if (params.data.flags.includes(metricToName[metric])) {
-                includedMetrics.push(metric);
+                includedMetrics.add(metric);
             }
         }
 
-        const allTeamData = await averageManyFast(includedTeams, includedMetrics, req.user);
+        const allTeamData = await averageManyFast(includedTeams, [...includedMetrics], req.user);
 
         const dataArr = await zScoreMany(allTeamData, includedTeams, params.data.tournamentKey, params.data.metrics, params.data.flags);
 
