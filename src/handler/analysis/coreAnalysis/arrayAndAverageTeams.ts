@@ -189,7 +189,7 @@ export const arrayAndAverageTeams = async (teams: number[], metric: Metric, user
         }
 
         // Group TMD by matches
-        let tournamentIndex: Record<number, number> = {};
+        const tournamentIndex: Record<number, number> = {};
         let currTournament: string = null;
         let currTeam: number = null;
         for (const curMatch of tmd) {
