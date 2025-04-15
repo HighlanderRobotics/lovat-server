@@ -54,14 +54,24 @@ export const breakdownDetails = async (req: AuthenticatedRequest, res: Response)
             req.user.tournamentSource
         );
 
-        console.log(data.slice(0, 3))
+        // Edit to work with true/false breakdowns
+        const transformBreakdown = (input: string): string => {
+            switch (input) {
+                case "YES":
+                    return "True";
+                case "NO":
+                    return "False";
+                default:
+                    return input;
+            }
+        };
 
         const result: { key: string, tournamentName: string, breakdown: string, sourceTeam: string, scouter?: string }[] = [];
         for (const match of data) {
             result.push({
                 key: match.key,
                 tournamentName: match.tournament,
-                breakdown: match.breakdown,
+                breakdown: transformBreakdown(match.breakdown),
                 sourceTeam: match.sourceteam,
                 scouter: match.scouter ?? undefined
             });
