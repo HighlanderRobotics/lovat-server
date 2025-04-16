@@ -115,6 +115,16 @@ const FlippedPositionMap: Record<Position, number> = {
     [Position.CORAL_STATION_TWO]: 25
 }
 
+const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
+    robotrole: MetricsBreakdown.robotRole,
+    algaepickup: MetricsBreakdown.algaePickup,
+    coralpickup: MetricsBreakdown.coralPickup,
+    bargeresult: MetricsBreakdown.bargeResult,
+    knocksalgae: MetricsBreakdown.knocksAlgae,
+    Undershallowcage: MetricsBreakdown.underShallowCage,
+    leavesauto: MetricsBreakdown.leavesAuto
+}
+
 const metricsToNumber: Record<string, number> = {
     totalPoints : 0,
     driverAbility : 1,
@@ -202,6 +212,6 @@ const allTournaments = (async () => {
 })()
 
 const multiplerBaseAnalysis = 4
-export {defaultEndgamePoints, defaultSTD, Metric, metricsCategory, autoEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments};
+export {defaultEndgamePoints, defaultSTD, Metric, metricsCategory, autoEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments, lowercaseToBreakdown};
 
 

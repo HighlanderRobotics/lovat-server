@@ -83,6 +83,7 @@ import { getTeamCSV } from "./handler/manager/getTeamCSV";
 import { getTeamMatchCSV } from "./handler/manager/getTeamMatchCSV";
 import { getReportCSV } from "./handler/manager/getReportCSV";
 import { emailTeamCode } from "./handler/manager/emailTeamCode";
+import { breakdownDetails } from "./handler/analysis/teamLookUp/breakdownDetails";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -208,6 +209,7 @@ app.post('/v1/manager/scoutreports', addScoutReport) //tested
 app.get('/v1/analysis/metric/:metric/team/:team', requireAuth, detailsPage) //tested, same format
 app.get('/v1/analysis/category/team/:team', requireAuth, categoryMetrics) //tested, same format
 app.get('/v1/analysis/breakdown/team/:team', requireAuth, breakdownMetrics) //tested, same format
+app.get('/v1/analysis/breakdown/team/:team/:breakdown', requireAuth, breakdownDetails)
 app.get('/v1/analysis/notes/team/:team', requireAuth, getNotes) //tested
 app.get('/v1/analysis/flag/team/:team', requireAuth, multipleFlags) //tested
 
