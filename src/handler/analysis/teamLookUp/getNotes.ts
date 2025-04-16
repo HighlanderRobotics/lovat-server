@@ -2,6 +2,8 @@ import { Response } from "express";
 import prismaClient from '../../../prismaClient'
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { getSourceFilter } from "../coreAnalysis/averageManyFast";
+import { allTeamNumbers, allTournaments } from "../analysisConstants";
 
 
 export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
@@ -15,286 +17,80 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             res.status(400).send(params);
             return;
         };
-        if (req.user.teamNumber) {
-            const notesOnTeam = await prismaClient.scoutReport.findMany({
-                where:
-                {
-                    teamMatchData:
-                    {
-                        teamNumber: params.data.team,
-                        tournamentKey:
-                        {
-                            in: req.user.tournamentSource
-                        }
-                    },
-                    scouter:
-                    {
-                        sourceTeamNumber: req.user.teamNumber
-                    },
-                    notes:
-                    {
-                        not: ""
-                    }
+
+        let notesAndMatches: {
+            notes: string,
+            match: string,
+            tournamentName: string,
+            sourceTeam: number,
+            scouterName?: string
+        }[];
+
+        // Set up filters to decrease server load
+        const sourceTnmtFilter = getSourceFilter(req.user.tournamentSource, await allTournaments);
+        const sourceTeamFilter = getSourceFilter(req.user.teamSource, await allTeamNumbers);
+
+        const noteData = await prismaClient.scoutReport.findMany({
+            where: {
+                teamMatchData: {
+                    teamNumber: params.data.team,
+                    tournamentKey: sourceTnmtFilter
                 },
-                orderBy: [
-                    {
-                        teamMatchData:
-                        {
-                            tournament:
-                            {
-                                date: "desc"
-                            },
-                        }
-                    },
-                    {
-                        teamMatchData:
-                        {
-                           
-                            matchType: "asc"
-                        }
-
-                    },
-                    {
-                        teamMatchData:
-                        {
-                            matchNumber: "asc"
-                        }
-                    }
-
-
-                ],
-                include:
-                {
-                    scouter: true,
-                    teamMatchData: {
-                        include:
-                        {
-                            tournament: true
-                        }
-                    }
+                scouter: {
+                    sourceTeamNumber: sourceTeamFilter
+                },
+                notes: {
+                    not: ""
                 }
-            })
-            const notesOffTeam = await prismaClient.scoutReport.findMany({
-                where:
-                {
-                    teamMatchData:
-                    {
-                        teamNumber: params.data.team,
-                        tournamentKey: {
-                            in: req.user.tournamentSource
-                        }
-                    },
-                    scouter:
-                    {
-                        sourceTeamNumber:
-                        {
-                            in: req.user.teamSource,
-                            not: req.user.teamNumber
-                        }
-
-                    },
-
-                    notes:
-                    {
-                        not: ""
-                    }
-
-                },
-                orderBy: 
-                [
-                    {
-                        teamMatchData:
-                        {
-                            tournament:
-                            {
-                                date: "desc"
-                            },
-                        }
-                    },
-                    {
-                        teamMatchData:
-                        {
-                           
-                            matchType: "asc"
-                        }
-
-                    },
-                    {
-                        teamMatchData:
-                        {
-                            matchNumber: "asc"
-                        }
-                    }
-
-
-                ],
-                include:
-                {
-                    teamMatchData: {
-                        include:
-                        {
-                            tournament: true
+            },
+            select: {
+                notes: true,
+                teamMatchKey: true,
+                teamMatchData: {
+                    select: {
+                        tournament: {
+                            select: {
+                                name: true
+                            }
                         }
                     }
                 },
-
-            })
-            if (req.user.role === "SCOUTING_LEAD") {
-
-
-                const notesAndMatches = notesOffTeam.map(item => ({
-                    notes: item.notes,
-                    match: item.teamMatchKey,
-                    matchNumber: item.teamMatchData.matchNumber,
-                    matchType: item.teamMatchData.matchType,
-                    tournamentKey: item.teamMatchData.tournamentKey,
-                    matchKey: item.teamMatchKey,
-                    tounramentName: item.teamMatchData.tournament.name,
-                }));
-                const notesAndMatchesAndNames = notesOnTeam.map(item => ({
-                    notes: item.notes,
-                    match: item.teamMatchKey,
-                    scouterName: item.scouter.name,
-                    matchNumber: item.teamMatchData.matchNumber,
-                    matchType: item.teamMatchData.matchType,
-                    tournamentKey: item.teamMatchData.tournamentKey,
-                    matchKey: item.teamMatchKey,
-                    tounramentName: item.teamMatchData.tournament.name,
-                    uuid: item.uuid
-
-
-                }));
-                const combinedNotes = notesAndMatches.concat(notesAndMatchesAndNames)
-                combinedNotes.sort((a, b) => {
-                    if (a.tournamentKey < b.tournamentKey) return -1;
-                    if (a.tournamentKey > b.tournamentKey) return 1;
-                    
-                    if (a.matchType < b.matchType) return -1;
-                    if (a.matchType > b.matchType) return 1;
-                    
-                    return a.matchNumber - b.matchNumber;
-                });
-                res.status(200).send(combinedNotes)
-            }
-            else {
-
-                const notesAndMatches = notesOffTeam.map(item => ({
-                    notes: item.notes,
-                    match: item.teamMatchKey,
-                    matchNumber: item.teamMatchData.matchNumber,
-                    matchType: item.teamMatchData.matchType,
-                    tournamentKey: item.teamMatchData.tournamentKey,
-                    matchKey: item.teamMatchKey,
-                    tounramentName: item.teamMatchData.tournament.name,
-                }));
-                const notesAndMatchesAndNames = notesOnTeam.map(item => ({
-                    notes: item.notes,
-                    match: item.teamMatchKey,
-                    scouterName: item.scouter.name,
-                    matchNumber: item.teamMatchData.matchNumber,
-                    matchType: item.teamMatchData.matchType,
-                    tournamentKey: item.teamMatchData.tournamentKey,
-                    matchKey: item.teamMatchKey,
-                    tounramentName: item.teamMatchData.tournament.name,
-
-
-                }));
-                const combinedNotes = notesAndMatches.concat(notesAndMatchesAndNames)
-                combinedNotes.sort((a, b) => {
-                    if (a.tournamentKey < b.tournamentKey) return -1;
-                    if (a.tournamentKey > b.tournamentKey) return 1;
-                    
-                    if (a.matchType < b.matchType) return -1;
-                    if (a.matchType > b.matchType) return 1;
-                    
-                    return a.matchNumber - b.matchNumber;
-                });                
-                res.status(200).send(combinedNotes)
-            }
-
-        }
-        else {
-            const notesOffTeam = await prismaClient.scoutReport.findMany({
-                where:
-                {
-                    teamMatchData:
-                    {
-                        teamNumber: params.data.team,
-                        tournamentKey: {
-                            in: req.user.tournamentSource
-                        }
-                    },
-                    scouter:
-                    {
-                        sourceTeamNumber:
-                        {
-                            in: req.user.teamSource,
-                        }
-
-                    },
-                    notes:
-                    {
-                        not: ""
+                scouter: {
+                    select: {
+                        sourceTeamNumber: true,
+                        name: Boolean(req.user.teamNumber)
                     }
                 }
-                ,
-                orderBy:
-                    [
-                        {
-                            teamMatchData:
-                            {
-                                tournament:
-                                {
-                                    date: "desc"
-                                },
-                            }
-                        },
-                        {
-                            teamMatchData:
-                            {
-                               
-                                matchType: "asc"
-                            }
+            },
+            orderBy: [
+                // Ordered by most recent first
+                { teamMatchData: { tournament: { date: "desc" } } },
+                { teamMatchData: { matchType: "desc" } },
+                { teamMatchData: { matchNumber: "desc" } }
+            ]
+        });
 
-                        },
-                        {
-                            teamMatchData:
-                            {
-                                matchNumber: "asc"
-                            }
-                        }
-
-
-                    ],
-                include:
-                {
-                    scouter: true,
-                    teamMatchData: {
-                        include:
-                        {
-                            tournament: true
-                        }
-                    }
-                }
-
-            })
-            const notesAndMatches = notesOffTeam.map(item => ({
-                notes: item.notes,
-                uuid: item.uuid,
-                matchNumber: item.teamMatchData.matchNumber,
-                matchType: item.teamMatchData.matchType,
-                tournamentKey: item.teamMatchData.tournamentKey,
-                tournamentName: item.teamMatchData.tournament.name,
-                matchKey: item.teamMatchKey
+        if (Boolean(req.user.teamNumber)) {
+            notesAndMatches = noteData.map(report => ({
+                notes: report.notes,
+                match: report.teamMatchKey,
+                tournamentName: report.teamMatchData.tournament.name,
+                sourceTeam: report.scouter.sourceTeamNumber,
+                scouterName: (report.scouter.sourceTeamNumber === req.user.teamNumber) ? report.scouter.name : undefined
             }));
-            res.status(200).send(notesAndMatches)
-            return
-
+        } else {
+            notesAndMatches = noteData.map(report => ({
+                notes: report.notes,
+                match: report.teamMatchKey,
+                tournamentName: report.teamMatchData.tournament.name,
+                sourceTeam: report.scouter.sourceTeamNumber
+            }));
         }
+
+        res.status(200).send(notesAndMatches);
     }
     catch (error) {
         console.error(error)
         res.status(400).send(error)
     }
-
 };
