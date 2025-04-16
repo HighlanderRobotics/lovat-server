@@ -21,7 +21,7 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
         let notesAndMatches: {
             notes: string,
             match: string,
-            tournamentName: string,
+            tounramentName: string, // Typo for backwards compatibility
             sourceTeam: number,
             scouterName?: string
         }[];
@@ -74,7 +74,7 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             notesAndMatches = noteData.map(report => ({
                 notes: report.notes,
                 match: report.teamMatchKey,
-                tournamentName: report.teamMatchData.tournament.name,
+                tounramentName: report.teamMatchData.tournament.name,
                 sourceTeam: report.scouter.sourceTeamNumber,
                 scouterName: (report.scouter.sourceTeamNumber === req.user.teamNumber) ? report.scouter.name : undefined
             }));
@@ -82,7 +82,7 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             notesAndMatches = noteData.map(report => ({
                 notes: report.notes,
                 match: report.teamMatchKey,
-                tournamentName: report.teamMatchData.tournament.name,
+                tounramentName: report.teamMatchData.tournament.name,
                 sourceTeam: report.scouter.sourceTeamNumber
             }));
         }
