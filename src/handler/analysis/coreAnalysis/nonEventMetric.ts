@@ -1,134 +1,106 @@
 import prismaClient from '../../../prismaClient'
 import { AlgaePickup, BargeResult, CoralPickup, EventAction, KnocksAlgae, RobotRole, UnderShallowCage, User } from "@prisma/client";
-import { MetricsBreakdown } from "../analysisConstants";
+import { allTeamNumbers, allTournaments, breakdownNeg, breakdownPos, MetricsBreakdown } from "../analysisConstants";
+import { getSourceFilter } from './averageManyFast';
 
 /**
  * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,
  * calculated directly in the database with a single query.
  */
-export const nonEventMetric = async (
-  user: User,
-  team: number,
-  metric: MetricsBreakdown
-): Promise<Record<string, number>> => {
-  try {
+export const nonEventMetric = async (user: User, team: number, metric: MetricsBreakdown): Promise<Record<string, number>> => {
+    try {
 
-    // NEEDS TO BE MOVED
-    if (metric === MetricsBreakdown.leavesAuto) {
-      const numLeaves = await prismaClient.teamMatchData.count({
-        where: {
-          teamNumber: team,
-          tournamentKey: { in: user.tournamentSource },
-          scoutReports: {
-            some: {
-              AND: {
-                events: {
-                  some: {
-                    action: EventAction.AUTO_LEAVE,
-                  }
-                },
-                scouter: {
-                  sourceTeamNumber: { in: user.teamSource }
+        // Special condition for auto leaves
+        if (metric === MetricsBreakdown.leavesAuto) {
+            const sourceTnmtFilter = getSourceFilter(user.tournamentSource, await allTournaments);
+            const sourceTeamFilter = getSourceFilter(user.teamSource, await allTeamNumbers);
+
+            const numLeaves = await prismaClient.teamMatchData.count({
+                where: {
+                    teamNumber: team,
+                    tournamentKey: sourceTnmtFilter,
+                    scoutReports: {
+                        some: {
+                            AND: {
+                                events: {
+                                    some: {
+                                        action: EventAction.AUTO_LEAVE,
+                                    }
+                                },
+                                scouter: {
+                                    sourceTeamNumber: sourceTeamFilter
+                                }
+                            }
+                        }
+                    }
                 }
-              }
+            });
+
+            const totalMatches = await prismaClient.teamMatchData.count({
+                where: {
+                    teamNumber: team,
+                    tournamentKey: sourceTnmtFilter,
+                    scoutReports: {
+                        some: {
+                            scouter: {
+                                sourceTeamNumber: sourceTeamFilter
+                            }
+                        }
+                    }
+                }
+            });
+
+            const perc = numLeaves/totalMatches
+
+            return {
+                "True": perc,
+                "False": 1 - perc
             }
-          }
         }
-      });
 
-      const totalMatches = await prismaClient.teamMatchData.count({
-        where: {
-          teamNumber: team,
-          tournamentKey: { in: user.tournamentSource },
-          scoutReports: {
-            some: {}
-          }
+        const query = `
+        SELECT "${metric}" AS breakdown,
+            COUNT(s."scouterUuid") / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
+        FROM "ScoutReport" s
+        JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
+        JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
+        WHERE tmd."teamNumber" = ${team}
+            AND tmd."tournamentKey" = ANY($1)
+            AND sc."sourceTeamNumber" = ANY($2)
+        GROUP BY s."${metric}"
+        `;
+
+        interface QueryRow {
+            breakdown: string;
+            percentage: string;
         }
-      });
 
-      const perc = numLeaves/totalMatches
+        const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
+            query,
+            user.tournamentSource,
+            user.teamSource
+        );
 
-      return {
-        "True": perc,
-        "False": 1 - perc
-      }
+        const result = {}
+        for (const row of data) {
+            const option = transformBreakdown(row.breakdown);
+            result[option] = parseFloat(row.percentage);
+        }
+        return result;
+    } catch (error) {
+        console.error('Error in nonEventMetric:', error);
+        throw error;
     }
-
-    const columnName =
-      metric === MetricsBreakdown.knocksAlgae
-        ? 'knocksAlgae'
-        : metric === MetricsBreakdown.robotRole
-          ? 'robotRole'
-          : metric === MetricsBreakdown.underShallowCage
-            ? 'underShallowCage'
-            : metric === MetricsBreakdown.bargeResult
-              ? 'bargeResult'
-              : metric === MetricsBreakdown.coralPickup
-                ? 'coralPickup'
-                : metric === MetricsBreakdown.algaePickup
-                  ? 'algaePickup'
-                  : null
-
-    // const allowedColumns = ['knocksAlgae', /* 'anotherMetric', etc. */];
-    // if (!allowedColumns.includes(columnName)) {
-    //   throw new Error(`Invalid metric column: ${columnName}`);
-    // }
-
-    const allowedMapping: Record<string, Record<string, string>> = {
-      robotRole: RobotRole,
-      coralPickup: CoralPickup, 
-      bargeResult : BargeResult,
-     algaePickup : AlgaePickup,
-     underShallowCage : UnderShallowCage,
-     knocksAlgae : KnocksAlgae
-    };
-
-    const allowedOptionsObj = allowedMapping[columnName];
-
-    
-    const result: Record<string, number> = {};
-    Object.keys(allowedOptionsObj).forEach(option => {
-      result[option] = 0;
-    });
-
-    const query = `
-      SELECT "${columnName}" AS value,
-             COUNT(s."scouterUuid") AS count,
-             COUNT(s."scouterUuid")::numeric / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
-      FROM "ScoutReport" s
-      JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
-      JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
-      WHERE tmd."teamNumber" = $1
-        AND tmd."tournamentKey" = ANY($2)
-        AND sc."sourceTeamNumber" = ANY($3)
-      GROUP BY s."${columnName}"
-    `;
-
-    interface QueryRow {
-      value: string;
-      count: string;
-      percentage: string;
-    }
-    const transformOption = (option: string): string => {
-      const lower = option.toLowerCase();
-      if (lower === "yes" || lower === "true") return "True";
-      if (lower === "no" || lower === "false") return "False";
-      return option.toUpperCase();
-    };
-    const rows: QueryRow[] = await prismaClient.$queryRawUnsafe(
-      query,
-      team,
-      user.tournamentSource,
-      user.teamSource
-    );
-    for (const row of rows) {
-      const option = transformOption(row.value);
-      result[option] = parseFloat(row.percentage);
-    }
-
-    return result;
-  } catch (error) {
-    console.error('Error in nonEventMetric:', error);
-    throw error;
-  }
 }
+
+// Edit to work with true/false breakdowns
+export const transformBreakdown = (input: string): string => {
+    switch (input) {
+        case "YES":
+            return breakdownPos;
+        case "NO":
+            return breakdownNeg;
+        default:
+            return input;
+    }
+};

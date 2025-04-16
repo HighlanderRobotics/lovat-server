@@ -211,7 +211,10 @@ const allTournaments = (async () => {
     })).map(tnmt => tnmt.key);
 })()
 
+const breakdownPos = "True";
+const breakdownNeg = "False";
+
 const multiplerBaseAnalysis = 4
-export {defaultEndgamePoints, defaultSTD, Metric, metricsCategory, autoEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments, lowercaseToBreakdown};
+export {defaultEndgamePoints, defaultSTD, Metric, metricsCategory, autoEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments, lowercaseToBreakdown, breakdownPos, breakdownNeg};
 
 
