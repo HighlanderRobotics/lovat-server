@@ -2,7 +2,7 @@ import { Response } from "express";
 import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
-import { MetricsBreakdown } from "../analysisConstants";
+import { lowercaseToBreakdown, MetricsBreakdown } from "../analysisConstants";
 
 
 export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response) => {
@@ -17,20 +17,13 @@ export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response
             return;
         };
         const result = {}
-        for (const metric in MetricsBreakdown) {
+        for (const [key, metric] of Object.entries(lowercaseToBreakdown)) {
             const data = await nonEventMetric(req.user, params.data.team, MetricsBreakdown[metric as keyof typeof MetricsBreakdown]);
 
             const valid = Object.values(data).some(val => Boolean(val));
 
             if (valid) {
-                if(metric === MetricsBreakdown.underShallowCage)
-                {
-                    result["Undershallowcage"] = data;
-                }
-                else
-                {
-                    result[metric.toLowerCase()] = data;
-                }
+                result[key] = data;
             }
         };
 
