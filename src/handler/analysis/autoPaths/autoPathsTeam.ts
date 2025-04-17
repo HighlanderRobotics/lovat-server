@@ -36,8 +36,7 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
             where: {
                 teamMatchData: {
                     teamNumber: params.data.team,
-                    tournamentKey: "2025cabe"
-                    // tournamentKey: sourceTnmtFilter
+                    tournamentKey: sourceTnmtFilter
                 },
                 scouter: {
                     sourceTeamNumber: sourceTeamFilter
