@@ -1,4 +1,4 @@
-import { EventAction, BargeResult, Position, RobotRole} from "@prisma/client"
+import { EventAction, BargeResult, Position, RobotRole, CoralPickup, AlgaePickup} from "@prisma/client"
 import prismaClient from '../../prismaClient'
 //add cooperation
 
@@ -115,6 +115,9 @@ const FlippedPositionMap: Record<Position, number> = {
     [Position.CORAL_STATION_TWO]: 25
 }
 
+const breakdownPos = "True";
+const breakdownNeg = "False";
+
 const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
     robotrole: MetricsBreakdown.robotRole,
     algaepickup: MetricsBreakdown.algaePickup,
@@ -123,6 +126,16 @@ const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
     knocksalgae: MetricsBreakdown.knocksAlgae,
     Undershallowcage: MetricsBreakdown.underShallowCage,
     leavesauto: MetricsBreakdown.leavesAuto
+}
+
+const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
+    [MetricsBreakdown.robotRole]: [...Object.values(RobotRole)],
+    [MetricsBreakdown.algaePickup]: [...Object.values(AlgaePickup)],
+    [MetricsBreakdown.coralPickup]: [...Object.values(CoralPickup)],
+    [MetricsBreakdown.bargeResult]: [...Object.values(BargeResult)],
+    [MetricsBreakdown.knocksAlgae]: [breakdownNeg, breakdownPos],
+    [MetricsBreakdown.underShallowCage]: [breakdownNeg, breakdownPos],
+    [MetricsBreakdown.leavesAuto]: [breakdownNeg, breakdownPos]
 }
 
 const metricsToNumber: Record<string, number> = {
@@ -212,6 +225,6 @@ const allTournaments = (async () => {
 })()
 
 const multiplerBaseAnalysis = 4
-export {defaultEndgamePoints, defaultSTD, Metric, metricsCategory, autoEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments, lowercaseToBreakdown};
+export {defaultEndgamePoints, defaultSTD, Metric, metricsCategory, autoEnd, specificMatchPageMetrics, MetricsBreakdown, multiplerBaseAnalysis, endgameToPoints, metricToEvent, FlippedPositionMap, FlippedActionMap, FlippedRoleMap, metricToName, picklistToMetric, tournamentLowerBound, teamLowerBound, swrConstant, ttlConstant, metricsToNumber, allTeamNumbers, allTournaments, lowercaseToBreakdown, breakdownPos, breakdownNeg, breakdownToEnum};
 
 

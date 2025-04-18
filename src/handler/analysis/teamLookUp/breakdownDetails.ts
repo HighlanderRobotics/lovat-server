@@ -2,11 +2,9 @@ import { Response } from "express";
 import z from 'zod'
 import prismaClient from '../../../prismaClient'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { lowercaseToBreakdown, MetricsBreakdown } from "../analysisConstants";
+import { breakdownNeg, breakdownPos, lowercaseToBreakdown, MetricsBreakdown } from "../analysisConstants";
 import { EventAction } from "@prisma/client";
-
-const breakdownPos = "True";
-const breakdownNeg = "False";
+import { transformBreakdown } from "../coreAnalysis/nonEventMetric";
 
 export const breakdownDetails = async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -82,18 +80,6 @@ export const breakdownDetails = async (req: AuthenticatedRequest, res: Response)
             req.user.teamSource,
             req.user.tournamentSource
         );
-
-        // Edit to work with true/false breakdowns
-        const transformBreakdown = (input: string): string => {
-            switch (input) {
-                case "YES":
-                    return breakdownPos;
-                case "NO":
-                    return breakdownNeg;
-                default:
-                    return input;
-            }
-        };
 
         const result: { key: string, tournamentName: string, breakdown: string, sourceTeam: string, scouter?: string }[] = [];
         for (const match of data) {
