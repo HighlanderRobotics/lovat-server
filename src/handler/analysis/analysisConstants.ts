@@ -1,4 +1,4 @@
-import { EventAction, BargeResult, Position, RobotRole, KnocksAlgae, CoralPickup, AlgaePickup, UnderShallowCage} from "@prisma/client"
+import { EventAction, BargeResult, Position, RobotRole, CoralPickup, AlgaePickup} from "@prisma/client"
 import prismaClient from '../../prismaClient'
 //add cooperation
 

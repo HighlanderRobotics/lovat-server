@@ -1,5 +1,5 @@
 import prismaClient from '../../../prismaClient'
-import { AlgaePickup, BargeResult, CoralPickup, EventAction, KnocksAlgae, RobotRole, UnderShallowCage, User } from "@prisma/client";
+import { EventAction, User } from "@prisma/client";
 import { allTeamNumbers, allTournaments, breakdownNeg, breakdownPos, breakdownToEnum, MetricsBreakdown } from "../analysisConstants";
 import { getSourceFilter } from './averageManyFast';
 
