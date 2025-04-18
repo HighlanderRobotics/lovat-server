@@ -4,6 +4,7 @@ import z from 'zod'
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { getSourceFilter } from "../coreAnalysis/averageManyFast";
 import { allTeamNumbers, allTournaments } from "../analysisConstants";
+import { UserRole } from "@prisma/client";
 
 
 export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
@@ -34,6 +35,8 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             },
             select: {
                 notes: true,
+                // Only scouting leads can edit notes
+                uuid: (req.user.role === UserRole.SCOUTING_LEAD),
                 scouter: {
                     select: {
                         name: true,
@@ -65,7 +68,8 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             // Typo is intentional to meet frontend
             tounramentName: row.teamMatchData.tournament.name,
             sourceTeam: row.scouter.sourceTeamNumber,
-            scouterName: (row.scouter.sourceTeamNumber === req.user.teamNumber) ? row.scouter.name : undefined
+            scouterName: (row.scouter.sourceTeamNumber === req.user.teamNumber) ? row.scouter.name : undefined,
+            uuid: row.uuid
         }));
 
         res.status(200).send(notesAndMatches);
