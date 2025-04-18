@@ -82,12 +82,12 @@ export const nonEventMetric = async (user: User, team: number, metric: MetricsBr
         );
 
         const result = {}
+        for (const possibleRow of breakdownToEnum[metric]) {
+            result[possibleRow] = 0;
+        }
         for (const row of data) {
             const option = transformBreakdown(row.breakdown);
             result[option] = parseFloat(row.percentage);
-        }
-        for (const possibleRow of breakdownToEnum[metric]) {
-            result[possibleRow] ??= 0;
         }
 
         return result;
