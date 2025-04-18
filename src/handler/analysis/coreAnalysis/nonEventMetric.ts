@@ -1,6 +1,6 @@
 import prismaClient from '../../../prismaClient'
 import { AlgaePickup, BargeResult, CoralPickup, EventAction, KnocksAlgae, RobotRole, UnderShallowCage, User } from "@prisma/client";
-import { allTeamNumbers, allTournaments, breakdownNeg, breakdownPos, MetricsBreakdown } from "../analysisConstants";
+import { allTeamNumbers, allTournaments, breakdownNeg, breakdownPos, breakdownToEnum, MetricsBreakdown } from "../analysisConstants";
 import { getSourceFilter } from './averageManyFast';
 
 /**
@@ -86,6 +86,10 @@ export const nonEventMetric = async (user: User, team: number, metric: MetricsBr
             const option = transformBreakdown(row.breakdown);
             result[option] = parseFloat(row.percentage);
         }
+        for (const possibleRow of breakdownToEnum[metric]) {
+            result[possibleRow] ??= 0;
+        }
+
         return result;
     } catch (error) {
         console.error('Error in nonEventMetric:', error);
