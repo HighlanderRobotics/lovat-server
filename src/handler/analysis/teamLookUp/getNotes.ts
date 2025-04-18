@@ -69,7 +69,7 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
             tounramentName: row.teamMatchData.tournament.name,
             sourceTeam: row.scouter.sourceTeamNumber,
             scouterName: (row.scouter.sourceTeamNumber === req.user.teamNumber) ? row.scouter.name : undefined,
-            uuid: row.uuid
+            uuid: (row.scouter.sourceTeamNumber === req.user.teamNumber) ? row.uuid : undefined
         }));
 
         res.status(200).send(notesAndMatches);
