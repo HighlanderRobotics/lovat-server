@@ -69,7 +69,13 @@ export const scouterScoutReports = async (req : AuthenticatedRequest, res : Resp
                     
                     },
                     uuid : true
-                }
+                },
+                // Most recent first
+                orderBy: [
+                    { teamMatchData: { tournament: { date: 'desc' } } },
+                    { teamMatchData: { matchType: 'desc' } },
+                    { teamMatchData: { matchNumber: 'desc' } }
+                ]
             })
             res.status(200).send(allScoutReports)
         }
@@ -112,8 +118,13 @@ export const scouterScoutReports = async (req : AuthenticatedRequest, res : Resp
                     
                     },
                     uuid : true
-
-                }
+                },
+                // Most recent first
+                orderBy: [
+                    { teamMatchData: { tournament: { date: 'desc' } } },
+                    { teamMatchData: { matchType: 'desc' } },
+                    { teamMatchData: { matchNumber: 'desc' } }
+                ]
             })
             res.status(200).send(tournamentScoutReports)
         }
