@@ -61,6 +61,7 @@ export const autoPathsTeam = async (user: User, teamNumber : number) => {
                     }
                 }
             },
+            // Most recent first
             orderBy: [
                 { teamMatchData: { tournament: { date: 'desc' } } },
                 { teamMatchData: { matchType: 'desc' } },

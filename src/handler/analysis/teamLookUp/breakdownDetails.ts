@@ -1,29 +1,37 @@
 import { Response } from "express";
-import z from 'zod'
-import prismaClient from '../../../prismaClient'
+import z from "zod";
+import prismaClient from "../../../prismaClient";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { lowercaseToBreakdown, MetricsBreakdown } from "../analysisConstants";
+import {
+  breakdownNeg,
+  breakdownPos,
+  lowercaseToBreakdown,
+  MetricsBreakdown,
+} from "../analysisConstants";
 import { EventAction } from "@prisma/client";
+import { transformBreakdown } from "../coreAnalysis/nonEventMetric";
 
-const breakdownPos = "True";
-const breakdownNeg = "False";
+export const breakdownDetails = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  try {
+    const params = z
+      .object({
+        team: z.number(),
+        breakdown: z.nativeEnum(MetricsBreakdown),
+      })
+      .safeParse({
+        team: Number(req.params.team),
+        breakdown: lowercaseToBreakdown[req.params.breakdown],
+      });
+    if (!params.success) {
+      console.log(params);
+      res.status(400).send(params);
+      return;
+    }
 
-export const breakdownDetails = async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const params = z.object({
-            team: z.number(),
-            breakdown: z.nativeEnum(MetricsBreakdown)
-        }).safeParse({
-            team: Number(req.params.team),
-            breakdown: lowercaseToBreakdown[req.params.breakdown]
-        })
-        if (!params.success) {
-            console.log(params)
-            res.status(400).send(params);
-            return;
-        };
-
-        let query = `
+    let query = `
         SELECT "${params.data.breakdown}" AS breakdown,
             "teamMatchKey" AS key,
             tmnt."name" AS tournament,
@@ -43,8 +51,8 @@ export const breakdownDetails = async (req: AuthenticatedRequest, res: Response)
         ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
         `;
 
-        if (params.data.breakdown === MetricsBreakdown.leavesAuto) {
-            query = `
+    if (params.data.breakdown === MetricsBreakdown.leavesAuto) {
+      query = `
             SELECT
                 s."teamMatchKey" AS key,
                 tmnt."name" AS tournament,
@@ -67,49 +75,54 @@ export const breakdownDetails = async (req: AuthenticatedRequest, res: Response)
                 AND teamScouter."sourceTeamNumber" = ${req.user.teamNumber}
             ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
             `;
-        }
-
-        interface QueryRow {
-            breakdown: string;
-            key: string;
-            tournament: string;
-            sourceteam: string;
-            scouter: string;
-        }
-
-        const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
-            query,
-            req.user.teamSource,
-            req.user.tournamentSource
-        );
-
-        // Edit to work with true/false breakdowns
-        const transformBreakdown = (input: string): string => {
-            switch (input) {
-                case "YES":
-                    return breakdownPos;
-                case "NO":
-                    return breakdownNeg;
-                default:
-                    return input;
-            }
-        };
-
-        const result: { key: string, tournamentName: string, breakdown: string, sourceTeam: string, scouter?: string }[] = [];
-        for (const match of data) {
-            result.push({
-                key: match.key,
-                tournamentName: match.tournament,
-                breakdown: transformBreakdown(match.breakdown),
-                sourceTeam: match.sourceteam,
-                scouter: match.scouter ?? undefined
-            });
-        }
-
-        res.status(200).send(result);
     }
-    catch (error) {
-        console.error(error)
-        res.status(400).send(error)
+
+    interface QueryRow {
+      breakdown: string;
+      key: string;
+      tournament: string;
+      sourceteam: string;
+      scouter: string;
     }
+
+    const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
+      query,
+      req.user.teamSource,
+      req.user.tournamentSource
+    );
+
+    // Edit to work with true/false breakdowns
+    const transformBreakdown = (input: string): string => {
+      switch (input) {
+        case "YES":
+          return breakdownPos;
+        case "NO":
+          return breakdownNeg;
+        default:
+          return input;
+      }
+    };
+
+    const result: {
+      key: string;
+      tournamentName: string;
+      breakdown: string;
+      sourceTeam: string;
+      scouter?: string;
+    }[] = [];
+    for (const match of data) {
+      result.push({
+        key: match.key,
+        tournamentName: match.tournament,
+        breakdown: transformBreakdown(match.breakdown),
+        sourceTeam: match.sourceteam,
+        scouter: match.scouter ?? undefined,
+      });
+    }
+
+    res.status(200).send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(400).send(error);
+  }
 };
