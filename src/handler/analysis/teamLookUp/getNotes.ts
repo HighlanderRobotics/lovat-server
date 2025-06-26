@@ -4,7 +4,6 @@ import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { getSourceFilter } from "../coreAnalysis/averageManyFast";
 import { allTeamNumbers, allTournaments } from "../analysisConstants";
-import { UserRole } from "@prisma/client";
 
 export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
   try {
