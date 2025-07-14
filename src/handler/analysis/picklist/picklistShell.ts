@@ -63,6 +63,13 @@ export const picklistShell = async (req: AuthenticatedRequest, res: Response) =>
             return;
         }
 
+        //check for all metrics being 0, if so error
+        const allMetricsZero = Object.values(params.data.metrics).every(v => v === 0);
+        if (allMetricsZero) {
+            res.status(400).send("All weights are zero")
+            return;
+        }
+
         //if tournament matches not in yet, attempt to add them
         const matches = await prismaClient.teamMatchData.findFirst({
             where: {
