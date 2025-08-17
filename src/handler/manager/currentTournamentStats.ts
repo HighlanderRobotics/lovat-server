@@ -42,7 +42,7 @@ export const getTeamRankings = async (
       rank: number | null;
       rankingPoints: number | null;
       matchesPlayed: number | null;
-    }[] = (
+    } = (
       await prismaClient.team.findUnique({
         where: {
           number: params.data.teamNumber
@@ -65,14 +65,14 @@ export const getTeamRankings = async (
 
       const tbaTeams = await tbaResponse.json();
 
-    try {
-        const tbaTeam = tbaTeams[`frc${out.number}`];
+      try {
+          const tbaTeam = tbaTeams[`frc${out.number}`];
 
-        out.rank = tbaTeam.qual.ranking.rank;
-        out.matchesPlayed = tbaTeam.qual.ranking.matches_played;
-        out.rankingPoints = Math.round(tbaTeam.qual.ranking.sort_orders[0] * out.matchesPlayed);
+          out.rank = tbaTeam.qual.ranking.rank;
+          out.matchesPlayed = tbaTeam.qual.ranking.matches_played;
+          out.rankingPoints = Math.round(tbaTeam.qual.ranking.sort_orders[0] * out.matchesPlayed);
 
-    } catch (e) {
+      } catch (e) {
         res.status(404).send("Team data not found in TBA");
     } finally {
       res.status(200).send(team);
