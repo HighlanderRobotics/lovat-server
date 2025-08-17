@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 
-export const getTeamRankings = async (
+export const currentTournamentStats = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -10,28 +10,22 @@ export const getTeamRankings = async (
     const params = z
       .object({
         tournamentKey: z.string(),
-        teamNumber: z.number(),
+        teamNumber: z.string().transform((v) => Number(v)),
       })
-      .safeParse({
-        tournamentKey: req.params.tournament,
-        teamNumber: req.params.teamNumber,
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+      .parse(req.query);
 
-    const rows = await prismaClient.teamMatchData.findMany({
+    const matches = await prismaClient.teamMatchData.findMany({
         where: {
-          tournamentKey: params.data.tournamentKey,
-          teamNumber: params.data.teamNumber,
+          tournamentKey: params.tournamentKey,
+          teamNumber: params.teamNumber,
+          matchType: "QUALIFICATION"
         },
         select: { 
             teamNumber: true 
         },
       });
 
-    if (!rows) {
+    if (!matches) {
       res.status(404).send("Team not in tournament!");
       return;
     }
@@ -39,13 +33,10 @@ export const getTeamRankings = async (
     const team: {
       number: number;
       name: string;
-      rank: number | null;
-      rankingPoints: number | null;
-      matchesPlayed: number | null;
     } = (
       await prismaClient.team.findUnique({
         where: {
-          number: params.data.teamNumber
+          number: params.teamNumber
         },
       })
     );
@@ -55,31 +46,40 @@ export const getTeamRankings = async (
       rank: null,
       rankingPoints: null,
       matchesPlayed: null,
+      matchesTotal: null,
     };
 
-    try {
       const tbaResponse = await fetch(
-        `https://www.thebluealliance.com/api/v3/event/${params.data.tournamentKey}/teams/statuses`
+        `https://www.thebluealliance.com/api/v3/event/${params.tournamentKey}/teams/statuses`,
+        {
+          headers: {
+            "X-TBA-Auth-Key": process.env.TBA_KEY
+          }
+        }
       );
       if (!tbaResponse.ok) throw Error("Failed to fetch from TBA");
 
-      const tbaTeams = await tbaResponse.json();
+      const tbaTeams = z.record(z.string(), z.object({
+        qual: z.object({
+          ranking: z.object({
+            rank: z.number(),
+            ranking_points: z.number().optional(),
+            matches_played: z.number(),
+            sort_orders: z.array(z.number())
+          })
+        })
+      })).parse(await tbaResponse.json());
 
-      try {
-          const tbaTeam = tbaTeams[`frc${out.number}`];
+      const tbaTeam = tbaTeams[`frc${out.number}`];
 
-          out.rank = tbaTeam.qual.ranking.rank;
-          out.matchesPlayed = tbaTeam.qual.ranking.matches_played;
-          out.rankingPoints = Math.round(tbaTeam.qual.ranking.sort_orders[0] * out.matchesPlayed);
+      out.rank = tbaTeam.qual.ranking.rank;
+      out.matchesPlayed = tbaTeam.qual.ranking.matches_played;
+      out.rankingPoints = Math.round(tbaTeam.qual.ranking.sort_orders[0] * out.matchesPlayed);
+      out.matchesTotal = matches.length;
 
-      } catch (e) {
-        res.status(404).send("Team data not found in TBA");
-    } finally {
-      res.status(200).send(team);
-    }
+      res.status(200).send(out);
   } catch (error) {
     console.error(error);
     res.status(500).send(error);
   }
 }
-};
