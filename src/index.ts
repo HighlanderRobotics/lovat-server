@@ -85,7 +85,7 @@ import { getReportCSV } from "./handler/manager/getReportCSV";
 import { emailTeamCode } from "./handler/manager/emailTeamCode";
 import { breakdownDetails } from "./handler/analysis/teamLookUp/breakdownDetails";
 import { getTeamRankings } from "./handler/manager/getTeamRankings";
-import { currentTournamentStats } from "./handler/manager/currentTournamentStats";
+import { getTeamTournamentStatus } from "./handler/manager/getTeamTournamentStatus";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -313,8 +313,11 @@ app.get("/v1/analysis/csvplain", requireAuth, getTeamCSV); // tested
 app.get("/v1/analysis/matchcsv", requireAuth, getTeamMatchCSV);
 app.get("/v1/analysis/reportcsv", requireAuth, getReportCSV);
 
-
-app.get("/v1/manager/currentTournamentStats", requireAuth, currentTournamentStats)
+app.get(
+  "/v1/manager/team-tournament-status",
+  requireAuth,
+  getTeamTournamentStatus
+);
 
 getTBAData();
 
