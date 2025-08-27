@@ -134,11 +134,11 @@ async function getTeamResults(matchData: TeamMatchData & { scoutReports: ScoutRe
 function getRobotRole(reports: ScoutReport[]) {
   const out: number[] = [0,0,0,0];
 
-  for (let i = 0; i < reports.length; i++) {
-    if (reports[i].robotRole == "OFFENSE") {out[0] += 1}
-    if (reports[i].robotRole == "DEFENSE") {out[1] += 1}
-    if (reports[i].robotRole == "FEEDER") {out[2] += 1}
-    if (reports[i].robotRole == "IMMOBILE") {out[3] += 1}
+  for (const report of reports) {
+    if (report.robotRole === "OFFENSE") out[0] += 1;
+    if (report.robotRole === "DEFENSE") out[1] += 1;
+    if (report.robotRole === "FEEDER") out[2] += 1;
+    if (report.robotRole === "IMMOBILE") out[3] += 1;
   }
   
   return out;
