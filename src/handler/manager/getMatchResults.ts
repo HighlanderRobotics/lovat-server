@@ -30,8 +30,8 @@ export const getMatchResults = async (
     }
 
     const out: MatchResultsOutput = {
-      red: await getAllianceResults(teams, 0),
-      blue: await getAllianceResults(teams, 1)
+      red: await getAllianceResults(teams.slice(0,3)),
+      blue: await getAllianceResults(teams.slice(3,6))
     }
 
     res.status(200).send(out);
@@ -40,6 +40,17 @@ export const getMatchResults = async (
     res.status(500).send(error);
   }
 };
+
+export const ALLIANCE_METRICS: Metric[] = [
+  Metric.totalPoints,
+  Metric.coralL1,
+  Metric.coralL2,
+  Metric.coralL3,
+  Metric.coralL4,
+  Metric.processorScores,
+  Metric.netScores,
+];
+
 
 interface MatchResultsOutput {
   red: AllianceResultsOutput,
@@ -64,61 +75,37 @@ interface TeamOutput {
   role: number[]
 };
 
-async function getAllianceResults(matchData: (TeamMatchData & { scoutReports: ScoutReport[] })[], alliance: number) {
-  const totals = {
-    totalPoints: 0,
-    coralL1: 0,
-    coralL2: 0,
-    coralL3: 0,
-    coralL4: 0,
-    processor: 0,
-    net: 0
-  };
+async function getAllianceResults(matchData: (TeamMatchData & { scoutReports: ScoutReport[] })[]) {
+  const totals = Object.fromEntries(ALLIANCE_METRICS.map(metric => [metric, 0]));;
 
-  for (let i = 0 + 3 * alliance; i < 3 + 3 * alliance; i++) {
-    const teamTotals = {
-      totalPoints: 0,
-      coralL1: 0,
-      coralL2: 0,
-      coralL3: 0,
-      coralL4: 0,
-      processor: 0,
-      net: 0
-    };
+  for (let i = 0; i < 3; i++) {
+    const teamTotals = Object.fromEntries(ALLIANCE_METRICS.map(metric => [metric, 0]));;
 
     for (const report of matchData[i].scoutReports) {
-      const result = await averageScoutReport(report.uuid, [Metric.totalPoints, Metric.coralL1, Metric.coralL2, Metric.coralL3, Metric.coralL4, Metric.processorScores, Metric.netScores]);
-      teamTotals.totalPoints += result[Metric.totalPoints];
-      teamTotals.coralL1 += result[Metric.coralL1];
-      teamTotals.coralL2 += result[Metric.coralL2];
-      teamTotals.coralL3 += result[Metric.coralL3];
-      teamTotals.coralL4 += result[Metric.coralL4];
-      teamTotals.processor += result[Metric.processorScores];
-      teamTotals.net += result[Metric.netScores];
+      const result = await averageScoutReport(report.uuid, ALLIANCE_METRICS);
+      for (const stat of ALLIANCE_METRICS) {
+        teamTotals[stat] += result[stat]
+      }
     }
 
-    totals.totalPoints += teamTotals.totalPoints / (matchData[i].scoutReports.length || 1)
-    totals.coralL1 += teamTotals.coralL1 / (matchData[i].scoutReports.length || 1)
-    totals.coralL2 += teamTotals.coralL2 / (matchData[i].scoutReports.length || 1)
-    totals.coralL3 += teamTotals.coralL3 / (matchData[i].scoutReports.length || 1)
-    totals.coralL4 += teamTotals.coralL4 / (matchData[i].scoutReports.length || 1)
-    totals.processor += teamTotals.processor / (matchData[i].scoutReports.length || 1)
-    totals.net += teamTotals.net / (matchData[i].scoutReports.length || 1)
+    for (const stat of ALLIANCE_METRICS) {
+      totals[stat] += teamTotals[stat] / (matchData[i].scoutReports.length || 1)
+    }
   }
 
   const out: AllianceResultsOutput = {
     teams: [
-      await getTeamResults(matchData[0 + 3 * alliance]),
-      await getTeamResults(matchData[1 + 3 * alliance]),
-      await getTeamResults(matchData[2 + 3 * alliance]),
+      await getTeamResults(matchData[0]),
+      await getTeamResults(matchData[1]),
+      await getTeamResults(matchData[2]),
     ],
-    totalPoints: totals.totalPoints,
-    coralL1: totals.coralL1,
-    coralL2: totals.coralL2,
-    coralL3: totals.coralL3,
-    coralL4: totals.coralL4,
-    processor: totals.processor,
-    net: totals.net
+    totalPoints: totals[Metric.totalPoints],
+    coralL1: totals[Metric.coralL1],
+    coralL2: totals[Metric.coralL2],
+    coralL3: totals[Metric.coralL3],
+    coralL4: totals[Metric.coralL4],
+    processor: totals[Metric.processorScores],
+    net: totals[Metric.netScores]
   };
 
   return out;

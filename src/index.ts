@@ -317,7 +317,7 @@ app.get("/v1/analysis/reportcsv", requireAuth, getReportCSV);
 // current tournament stats widget
 app.get("/v1/manager/team-tournament-status", requireAuth, getTeamTournamentStatus);
 
-// match page
+// match results from scouting reports
 app.get("/v1/manager/match-results-page", requireAuth, getMatchResults)
 
 getTBAData();
