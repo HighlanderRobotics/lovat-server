@@ -3,7 +3,7 @@ import prismaClient from "../../prismaClient";
 import z from "zod";
 import { TeamMatchData, ScoutReport } from "@prisma/client";
 import { averageScoutReport } from "../analysis/coreAnalysis/averageScoutReport";
-import { autoEnd, endgameToPoints, Metric, metricToEvent } from "../analysis/analysisConstants";
+import { Metric } from "../analysis/analysisConstants";
 
 export const getMatchResults = async (
   req: Request,
@@ -41,12 +41,12 @@ export const getMatchResults = async (
   }
 };
 
-type MatchResultsOutput = {
+interface MatchResultsOutput {
   red: AllianceResultsOutput,
   blue: AllianceResultsOutput
 };
 
-type AllianceResultsOutput = {
+interface AllianceResultsOutput {
   teams: TeamOutput[],
   totalPoints: number,
   coralL1: number,
@@ -57,7 +57,7 @@ type AllianceResultsOutput = {
   net: number
 };
 
-type TeamOutput = {
+interface TeamOutput {
   teamNumber: number,
   pointsScored: number,
   reports: ScoutReport[],
