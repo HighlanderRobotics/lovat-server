@@ -86,6 +86,7 @@ import { emailTeamCode } from "./handler/manager/emailTeamCode";
 import { breakdownDetails } from "./handler/analysis/teamLookUp/breakdownDetails";
 import { getTeamRankings } from "./handler/manager/getTeamRankings";
 import { getTeamTournamentStatus } from "./handler/manager/getTeamTournamentStatus";
+import { getMatchResults } from "./handler/manager/getMatchResults";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -313,11 +314,11 @@ app.get("/v1/analysis/csvplain", requireAuth, getTeamCSV); // tested
 app.get("/v1/analysis/matchcsv", requireAuth, getTeamMatchCSV);
 app.get("/v1/analysis/reportcsv", requireAuth, getReportCSV);
 
-app.get(
-  "/v1/manager/team-tournament-status",
-  requireAuth,
-  getTeamTournamentStatus
-);
+// current tournament stats widget
+app.get("/v1/manager/team-tournament-status", requireAuth, getTeamTournamentStatus);
+
+// match results from scouting reports
+app.get("/v1/manager/match-results-page", requireAuth, getMatchResults)
 
 getTBAData();
 
