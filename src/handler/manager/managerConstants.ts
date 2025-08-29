@@ -120,6 +120,8 @@ const EventActionMap: Record<number, EventAction> = {
     [MatchType.ELIMINATION] : "em"
   }
 
-export {EventActionMap, PositionMap, RobotRoleMap, BargeResultMap, AlgaePickupMap, CoralPickupMap, KnocksAlgaeMap, UnderShallowCageMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchEnumToAbrivation, BargeResultReverseMap}
+  const SLACK_WARNINGS = ["no-leave", "immobile"] as const;
+
+export {EventActionMap, PositionMap, RobotRoleMap, BargeResultMap, AlgaePickupMap, CoralPickupMap, KnocksAlgaeMap, UnderShallowCageMap, MatchTypeMap, ScouterScheduleMap, ReverseMatchTypeMap, ReverseScouterScheduleMap, MatchTypeToAbrivation, MatchEnumToAbrivation, BargeResultReverseMap, SLACK_WARNINGS}
 
   

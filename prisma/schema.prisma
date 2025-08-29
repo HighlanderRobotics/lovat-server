@@ -141,6 +141,11 @@ enum KnocksAlgae {
   YES
 }
 
+enum AutoLeave {
+  NO
+  YES
+}
+
 enum UnderShallowCage {
   NO
   YES
@@ -231,6 +236,8 @@ model RegisteredTeam {
   email                 String
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
+  slackChannel          String[]               @default([])
+  slackOAuthID          String                 @default("null")
   website               String?
   scouterScheduleShifts ScouterScheduleShift[]
   scouters              Scouter[]

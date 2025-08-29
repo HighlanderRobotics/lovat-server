@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap} from "./managerConstants";
+import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap, SLACK_WARNINGS} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import {EventAction, Position} from "@prisma/client";
 import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, MatchType, RobotRole, UnderShallowCage } from "@prisma/client";
+import { sendWarningToSlack } from "./sendWarningNotification";
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -129,6 +130,9 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
 
         const eventDataArray = []
         const events = req.body.events;
+
+        var doesLeave = false;
+
         for (const event of events) {
             let points = 0;
             const time = event[0];
@@ -151,6 +155,8 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 }
                 else if (action === EventAction.AUTO_LEAVE) {
                     points = 3
+
+                    doesLeave = true;
                 }
                 else if (action === EventAction.SCORE_PROCESSOR) {
                     points = 6
@@ -181,6 +187,11 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     points = 4
                 }
             }
+
+            if (!doesLeave) {
+                sendWarningToSlack(SLACK_WARNINGS[0], 1, 8033);
+            }
+
             const paramsEvents = z.object({
                 time: z.number(),
                 action: z.nativeEnum(EventAction),
