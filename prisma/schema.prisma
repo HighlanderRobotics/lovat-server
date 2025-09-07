@@ -113,7 +113,7 @@ model ScoutReport {
   algaePickup      AlgaePickup
   coralPickup      CoralPickup
   bargeResult      BargeResult
-  knocksAlgae      KnocksAlgae     
+  knocksAlgae      KnocksAlgae
   underShallowCage UnderShallowCage
   driverAbility    Int
   scouterUuid      String
@@ -236,12 +236,25 @@ model RegisteredTeam {
   email                 String
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
-  slackChannel          String[]               @default([])
-  slackOAuthID          String                 @default("null")
+  slackChannels         SlackSubscription[]
   website               String?
   scouterScheduleShifts ScouterScheduleShift[]
   scouters              Scouter[]
   users                 User[]
+}
+
+model SlackSubscription {
+  key             Int            @id
+  name            String
+  oAuthId         String
+  subscribedEvent WarningType
+  owner           Int
+  team            RegisteredTeam @relation(fields: [owner], references: [number], onDelete: Cascade)
+}
+
+enum WarningType {
+  AUTO_LEAVE
+  BREAK
 }
 
 model Tournament {

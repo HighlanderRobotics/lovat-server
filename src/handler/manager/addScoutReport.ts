@@ -189,7 +189,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             }
 
             if (!doesLeave) {
-                sendWarningToSlack(SLACK_WARNINGS[0], 1, 8033);
+                sendWarningToSlack("no-leave", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey);
             }
 
             const paramsEvents = z.object({
