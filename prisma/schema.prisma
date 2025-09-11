@@ -236,20 +236,28 @@ model RegisteredTeam {
   email                 String
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
-  slackChannels         SlackSubscription[]
+  slackChannels         SlackWorkspace[]
   website               String?
   scouterScheduleShifts ScouterScheduleShift[]
   scouters              Scouter[]
   users                 User[]
 }
 
+model SlackWorkspace {
+  key           Int                 @id
+  name          String
+  oAuthId       String
+  subscriptions SlackSubscription[]
+  owner         Int
+  team          RegisteredTeam      @relation(fields: [owner], references: [number], onDelete: Cascade)
+}
+
 model SlackSubscription {
   key             Int            @id
-  name            String
-  oAuthId         String
+  workspaceId     Int
+  workspace       SlackWorkspace @relation(fields: [workspaceId], references: [key], onDelete: Cascade)
+  channelName     String
   subscribedEvent WarningType
-  owner           Int
-  team            RegisteredTeam @relation(fields: [owner], references: [number], onDelete: Cascade)
 }
 
 enum WarningType {

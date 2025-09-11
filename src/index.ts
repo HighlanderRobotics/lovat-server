@@ -89,6 +89,7 @@ import { getTeamTournamentStatus } from "./handler/manager/getTeamTournamentStat
 import { getMatchResults } from "./handler/manager/getMatchResults";
 import { sendWarningToSlack } from "./handler/manager/sendWarningNotification";
 import { SLACK_WARNINGS } from "./handler/manager/managerConstants";
+import { PrismaClient } from "@prisma/client/scripts/default-index";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -325,5 +326,6 @@ app.get("/v1/manager/match-results-page", requireAuth, getMatchResults)
 getTBAData();
 
 sendWarningToSlack(SLACK_WARNINGS[0], 2, 6822, "2025casf");
+
 
 app.listen(port);
