@@ -9,38 +9,29 @@ import { SlackSubscription, TeamMatchData, WarningType } from '@prisma/client';
 
 // Post a message to a channel your app is in using ID and message text
 async function sendWarningToSlack(warning: typeof SLACK_WARNINGS[number], matchNumber: number, teamNumber: number, tournamentKey: string) {
-  let channel = await prismaClient.slackWorkspace.findFirst({
-    where: {
-      owner: 8033
+  let channels = await getSlackChannels(teamNumber,matchNumber,tournamentKey);
+
+  for (const channel of channels) {
+    const client = new WebClient(channel.workspace.authToken);
+
+    try {
+      // Call the chat.postMessage method using the built-in WebClient
+      const result = await client.chat.postMessage({
+        // The token you used to initialize your app
+        token: channel.workspace.authToken,
+        channel: channel.channelName,
+        text: `Team ${teamNumber} ${warning} in match ${matchNumber}`
+      });
+    } catch (error) {
+      console.error(error);
     }
-  });
-
-
-  const client = new WebClient(channel.oAuthId);
-
-  try {
-    const teamsToNotify: number[] = [];
-
-    // Call the chat.postMessage method using the built-in WebClient
-    const result = await client.chat.postMessage({
-      // The token you used to initialize your app
-      token: channel.oAuthId,
-      channel: "lovat-notifications",
-      text: `Team ${teamNumber} ${warning} in match ${matchNumber}`
-      // You could also use a blocks[] array to send richer content
-    });
-
-    console.log(await getSlackChannels(teamNumber,matchNumber,tournamentKey));
-  }
-  catch (error) {
-    console.error(error);
   }
 }
 
 export {sendWarningToSlack};
 
 
-// returns an number[] with all match numbers of upcoming matches with 
+// returns an number[] with all match numbers of upcoming matches with team
 async function getUpcomingAlliancePartners(team: number, match: number, tournamentKey: string) {
   const upcomingAlliances = (await prismaClient.teamMatchData.findMany({
       where: {
@@ -88,14 +79,15 @@ async function getUpcomingAlliancePartners(team: number, match: number, tourname
 }
 
 async function getSlackChannels(team: number, match: number, tournamentKey: string) {
-  return await prismaClient.slackWorkspace.findMany({
+  return prismaClient.slackSubscription.findMany({
     where: {
       owner: {
         in: await getUpcomingAlliancePartners(team, match, tournamentKey)
-      }
+      },
+      subscribedEvent: WarningType.AUTO_LEAVE
     },
     include: {
-      subscriptions: true
+      workspace: true
     }
   });
 }

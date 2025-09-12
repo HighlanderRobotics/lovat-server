@@ -325,7 +325,7 @@ app.get("/v1/manager/match-results-page", requireAuth, getMatchResults)
 
 getTBAData();
 
-sendWarningToSlack(SLACK_WARNINGS[0], 2, 6822, "2025casf");
+sendWarningToSlack(SLACK_WARNINGS[0], 3, 4159, "2025casf");
 
 
 app.listen(port);
