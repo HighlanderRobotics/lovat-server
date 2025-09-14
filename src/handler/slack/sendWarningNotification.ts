@@ -1,14 +1,13 @@
 // Require the Node Slack SDK package (github.com/slackapi/node-slack-sdk)
 import { WebClient } from '@slack/web-api'
-import { SLACK_WARNINGS } from '../manager/managerConstants';
 import prismaClient from "../../prismaClient";
 import { SlackSubscription, TeamMatchData, WarningType } from '@prisma/client';
 
 // WebClient instantiates a client that can call API methods
-// When using Bolt, you can use either `app.client` or the `client` passed to listeners.
+// When using Bolt, youxcan use either `app.client` or the `client` passed to listeners.
 
 // Post a message to a channel your app is in using ID and message text
-export async function sendWarningToSlack(warning: typeof SLACK_WARNINGS[number], matchNumber: number, teamNumber: number, tournamentKey: string) {
+export async function sendWarningToSlack(warning: WarningType, matchNumber: number, teamNumber: number, tournamentKey: string) {
   let channels = await getSlackChannels(teamNumber,matchNumber,tournamentKey);
 
   for (const channel of channels) {
@@ -19,7 +18,7 @@ export async function sendWarningToSlack(warning: typeof SLACK_WARNINGS[number],
       const result = await client.chat.postMessage({
         // The token you used to initialize your app
         token: channel.workspace.authToken,
-        channel: channel.channelName,
+        channel: channel.channelId,
         text: `Team ${teamNumber} ${warning} in match ${matchNumber}`
       });
     } catch (error) {
@@ -79,9 +78,7 @@ async function getUpcomingAlliancePartners(team: number, match: number, tourname
 async function getSlackChannels(team: number, match: number, tournamentKey: string) {
   return prismaClient.slackSubscription.findMany({
     where: {
-      owner: {
-        in: await getUpcomingAlliancePartners(team, match, tournamentKey)
-      },
+      workspace: {team: { number: {in: await getUpcomingAlliancePartners(team, match, tournamentKey)}}} ,
       subscribedEvent: WarningType.AUTO_LEAVE
     },
     include: {

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap, SLACK_WARNINGS} from "./managerConstants";
+import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultMap, KnocksAlgaeMap, UnderShallowCageMap, RobotRoleMap, EventActionMap} from "./managerConstants";
 import { addTournamentMatches } from "./addTournamentMatches";
 import {EventAction, Position} from "@prisma/client";
 import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, MatchType, RobotRole, UnderShallowCage } from "@prisma/client";
@@ -215,7 +215,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         }
 
         if (!doesLeave) {
-            sendWarningToSlack("no-leave", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey);
+            sendWarningToSlack("AUTO_LEAVE", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey);
         }
 
         // Push event rows to prisma database
