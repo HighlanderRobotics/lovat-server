@@ -5,7 +5,7 @@ import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultM
 import { addTournamentMatches } from "./addTournamentMatches";
 import {EventAction, Position} from "@prisma/client";
 import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, MatchType, RobotRole, UnderShallowCage } from "@prisma/client";
-import { sendWarningToSlack } from "./sendWarningNotification";
+import { sendWarningToSlack } from "../slack/sendWarningNotification";
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -188,10 +188,6 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 }
             }
 
-            if (!doesLeave) {
-                sendWarningToSlack("no-leave", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey);
-            }
-
             const paramsEvents = z.object({
                 time: z.number(),
                 action: z.nativeEnum(EventAction),
@@ -216,6 +212,10 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 points: paramsEvents.data.points,
                 scoutReportUuid: scoutReportUuid
             })
+        }
+
+        if (!doesLeave) {
+            sendWarningToSlack("no-leave", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey);
         }
 
         // Push event rows to prisma database

@@ -244,21 +244,21 @@ model RegisteredTeam {
 }
 
 model SlackWorkspace {
-  key           Int
-  owner         Int
+  workspaceId           String              @id
+  owner         Int?
   name          String
   authToken     String
   subscriptions SlackSubscription[]
-  team          RegisteredTeam      @relation(fields: [owner], references: [number], onDelete: Cascade)
-
-  @@id([key, owner])
+  team          RegisteredTeam?     @relation(fields: [owner], references: [number], onDelete: Cascade)
+  botUserId     String
+  authUserId    String
 }
 
 model SlackSubscription {
   key             Int            @id
-  workspaceId     Int
+  workspaceId     String
   owner           Int
-  workspace       SlackWorkspace @relation(fields: [workspaceId, owner], references: [key, owner], onDelete: Cascade)
+  workspace       SlackWorkspace @relation(fields: [workspaceId], references: [workspaceId], onDelete: Cascade)
   channelName     String
   subscribedEvent WarningType
 }

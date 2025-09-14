@@ -1,6 +1,6 @@
 // Require the Node Slack SDK package (github.com/slackapi/node-slack-sdk)
 import { WebClient } from '@slack/web-api'
-import { SLACK_WARNINGS } from './managerConstants';
+import { SLACK_WARNINGS } from '../manager/managerConstants';
 import prismaClient from "../../prismaClient";
 import { SlackSubscription, TeamMatchData, WarningType } from '@prisma/client';
 
@@ -8,7 +8,7 @@ import { SlackSubscription, TeamMatchData, WarningType } from '@prisma/client';
 // When using Bolt, you can use either `app.client` or the `client` passed to listeners.
 
 // Post a message to a channel your app is in using ID and message text
-async function sendWarningToSlack(warning: typeof SLACK_WARNINGS[number], matchNumber: number, teamNumber: number, tournamentKey: string) {
+export async function sendWarningToSlack(warning: typeof SLACK_WARNINGS[number], matchNumber: number, teamNumber: number, tournamentKey: string) {
   let channels = await getSlackChannels(teamNumber,matchNumber,tournamentKey);
 
   for (const channel of channels) {
@@ -27,8 +27,6 @@ async function sendWarningToSlack(warning: typeof SLACK_WARNINGS[number], matchN
     }
   }
 }
-
-export {sendWarningToSlack};
 
 
 // returns an number[] with all match numbers of upcoming matches with team
