@@ -330,7 +330,7 @@ app.get("/v1/slack/add-workspace", addSlackWorkspace)
 // process slash commands
 app.post(
   "/v1/slack/command",
-  express.urlencoded({ extended: true }), // 👈 only here
+  express.urlencoded({ extended: true }),
   processCommand
 );
 
