@@ -104,21 +104,22 @@ model MutablePicklist {
 }
 
 model ScoutReport {
-  uuid             String           @id @default(uuid())
-  teamMatchKey     String
-  teamMatchData    TeamMatchData    @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
-  startTime        DateTime
-  notes            String
-  robotRole        RobotRole
-  algaePickup      AlgaePickup
-  coralPickup      CoralPickup
-  bargeResult      BargeResult
-  knocksAlgae      KnocksAlgae
-  underShallowCage UnderShallowCage
-  driverAbility    Int
-  scouterUuid      String
-  scouter          Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
-  events           Event[]
+  uuid                  String           @id @default(uuid())
+  teamMatchKey          String
+  teamMatchData         TeamMatchData    @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+  startTime             DateTime
+  notes                 String
+  robotRole             RobotRole
+  algaePickup           AlgaePickup
+  coralPickup           CoralPickup
+  bargeResult           BargeResult
+  knocksAlgae           KnocksAlgae
+  underShallowCage      UnderShallowCage
+  robotBrokeDescription String           @default("null")
+  driverAbility         Int
+  scouterUuid           String
+  scouter               Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
+  events                Event[]
   // flaggedScoutReport FlaggedScoutReport?
 }
 

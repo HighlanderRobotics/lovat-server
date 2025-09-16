@@ -1,14 +1,16 @@
 // Require the Node Slack SDK package (github.com/slackapi/node-slack-sdk)
 import { WebClient } from '@slack/web-api'
 import prismaClient from "../../prismaClient";
-import { SlackSubscription, TeamMatchData, WarningType } from '@prisma/client';
+import { ScoutReport, SlackSubscription, TeamMatchData, WarningType } from '@prisma/client';
 
 // WebClient instantiates a client that can call API methods
 // When using Bolt, youxcan use either `app.client` or the `client` passed to listeners.
 
 // Post a message to a channel your app is in using ID and message text
-export async function sendWarningToSlack(warning: WarningType, matchNumber: number, teamNumber: number, tournamentKey: string) {
+export async function sendWarningToSlack(warning: WarningType, matchNumber: number, teamNumber: number, tournamentKey: string, reportUuid: string) {
   let channels = await getSlackChannels(teamNumber,matchNumber,tournamentKey);
+
+  let report = await prismaClient.scoutReport.findUnique({where: { uuid: reportUuid }, include: { scouter: true }});
 
   for (const channel of channels) {
     const client = new WebClient(channel.workspace.authToken);
@@ -19,7 +21,7 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
         // The token you used to initialize your app
         token: channel.workspace.authToken,
         channel: channel.channelId,
-        text: `Team ${teamNumber} ${warning} in match ${matchNumber}`
+        text: `${report.scouter.name} from team ${report.scouter.sourceTeamNumber} reported Team ${teamNumber} ${warning} in match ${matchNumber}`
       });
     } catch (error) {
       console.error(error);

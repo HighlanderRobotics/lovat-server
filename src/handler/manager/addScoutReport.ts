@@ -22,6 +22,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             algaePickUp: z.nativeEnum(AlgaePickup),
             knocksAlgae: z.nativeEnum(KnocksAlgae),
             traversesUnderCage: z.nativeEnum(UnderShallowCage),
+            robotBrokeDescription: z.string(),
             driverAbility: z.number(),
             scouterUuid: z.string(),
             teamNumber : z.number()
@@ -37,6 +38,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             coralPickUp:  CoralPickupMap[req.body.coralPickUp],
             knocksAlgae: KnocksAlgaeMap[req.body.knocksAlgae],
             traversesUnderCage: UnderShallowCageMap[req.body.traversesUnderCage],
+            robotBrokeDescription: req.body.robotBrokeDescription,
             matchType : MatchTypeMap[req.body.matchType],
             matchNumber : req.body.matchNumber,
             teamNumber : req.body.teamNumber,
@@ -116,6 +118,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     notes: paramsScoutReport.data.notes,
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
+                    robotBrokeDescription: paramsScoutReport.data.robotBrokeDescription,
                     //game specfific
                     coralPickup: paramsScoutReport.data.coralPickUp,
                     bargeResult: paramsScoutReport.data.barge,
@@ -215,7 +218,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         }
 
         if (!doesLeave) {
-            sendWarningToSlack("AUTO_LEAVE", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey);
+            sendWarningToSlack("AUTO_LEAVE", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey, paramsScoutReport.data.uuid);
         }
 
         // Push event rows to prisma database
