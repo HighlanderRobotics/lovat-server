@@ -88,7 +88,6 @@ import { getTeamRankings } from "./handler/manager/getTeamRankings";
 import { getTeamTournamentStatus } from "./handler/manager/getTeamTournamentStatus";
 import { getMatchResults } from "./handler/manager/getMatchResults";
 import { sendWarningToSlack } from "./handler/slack/sendWarningNotification";
-import { PrismaClient } from "@prisma/client/scripts/default-index";
 import { addSlackWorkspace } from "./handler/slack/addSlackWorkspace";
 import { processCommand } from "./handler/slack/processCommands";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
