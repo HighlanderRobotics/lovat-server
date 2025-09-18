@@ -38,7 +38,12 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
         
             if (no_leave) {
                 await prismaClient.slackSubscription.upsert({
-                    where: { channelId: params.channel_id },
+                    where: {
+                        channelId_subscribedEvent: {
+                           channelId: params.channel_id,
+                            subscribedEvent: "AUTO_LEAVE"
+                        }
+                    },
                     update: {
                         workspaceId: params.team_id,
                         subscribedEvent: "AUTO_LEAVE"
@@ -54,10 +59,15 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
         
             if (breakSub) {
                 await prismaClient.slackSubscription.upsert({
-                    where: { channelId: params.channel_id },
+                    where: {
+                        channelId_subscribedEvent: {
+                            channelId: params.channel_id,
+                            subscribedEvent: "BREAK"
+                        }
+                     },
                     update: {
                         workspaceId: params.team_id,
-                        subscribedEvent: "BREAK"
+                        
                     },
                     create: {
                         channelId: params.channel_id,
