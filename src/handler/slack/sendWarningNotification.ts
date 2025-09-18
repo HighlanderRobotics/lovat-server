@@ -29,7 +29,8 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
       } else if (warning == WarningType.BREAK) {
         await client.chat.postMessage({
           channel: channel.channelId,
-          text: `Heads up! ${scouterName} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in match Q${getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} was broken (${report.robotBrokeDescription}) in match Q${matchNumber}`
+          // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
+          text: `Heads up! ${scouterName} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in match Q${getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} was broken (${(report.robotBrokeDescription != null || undefined)?"no reason specified":report.robotBrokeDescription}) in match Q${matchNumber}`
         });
       }
 
