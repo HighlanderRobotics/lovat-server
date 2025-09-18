@@ -8,39 +8,65 @@ import { ScoutReport, SlackSubscription, TeamMatchData, WarningType } from '@pri
 
 // Post a message to a channel your app is in using ID and message text
 export async function sendWarningToSlack(warning: WarningType, matchNumber: number, teamNumber: number, tournamentKey: string, reportUuid: string) {
-  let channels = await getSlackChannels(teamNumber,matchNumber,tournamentKey);
+  try {
+    const upcomingAlliancePartners = await getUpcomingAlliancePartners(teamNumber, matchNumber, tournamentKey)
+    const upcomingAlliances = await getUpcomingAlliances(teamNumber, matchNumber, tournamentKey);
 
-  let report = await prismaClient.scoutReport.findUnique({where: { uuid: reportUuid }, include: { scouter: true }});
+    let channels = await getSlackChannels(upcomingAlliancePartners);
 
-  for (const channel of channels) {
-    const client = new WebClient(channel.workspace.authToken);
+    let report = await prismaClient.scoutReport.findUnique({where: { uuid: reportUuid }, include: { scouter: true }});
 
-    try {
+    for (const channel of channels) {
+      const client = new WebClient(channel.workspace.authToken);
+
       // Call the chat.postMessage method using the built-in WebClient
-      const result = await client.chat.postMessage({
-        // The token you used to initialize your app
-        token: channel.workspace.authToken,
-        channel: channel.channelId,
-        text: `${report.scouter.name} from team ${report.scouter.sourceTeamNumber} reported Team ${teamNumber} ${warning} in match ${matchNumber}`
-      });
-    } catch (error) {
-      console.error(error);
+      if (warning == WarningType.AUTO_LEAVE) {
+        await client.chat.postMessage({
+          channel: channel.channelId,
+          text: `Heads up! ${report.scouter.name} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in match ${getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} didn't leave during auto in match ${matchNumber}`
+        });
+      } else if (warning == WarningType.BREAK) {
+        await client.chat.postMessage({
+          channel: channel.channelId,
+          text: `Heads up! ${report.scouter.name} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in match ${getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} was broken (${report.robotBrokeDescription}) in match ${matchNumber}`
+        });
+      }
+
+
     }
+  } catch (error) {
+    console.error(error);
   }
 }
 
 
+async function getMatchWithTeam(team: number, tournamentKey: string, upcomingMatches: number[]) {
+  return (await prismaClient.teamMatchData.findFirst({
+    where: {
+      matchNumber: {
+        in: upcomingMatches
+      },
+      tournamentKey: tournamentKey,
+      teamNumber: team
+    }
+  })).matchNumber
+}
+
 // returns an number[] with all match numbers of upcoming matches with team
-async function getUpcomingAlliancePartners(team: number, match: number, tournamentKey: string) {
-  const upcomingAlliances = (await prismaClient.teamMatchData.findMany({
-      where: {
-        tournamentKey: tournamentKey,
-        teamNumber: team,
-        matchNumber: {
-          gt: match
-        } 
-      }
+async function getUpcomingAlliances(team: number, match: number, tournamentKey: string) {
+  return (await prismaClient.teamMatchData.findMany({
+    where: {
+      tournamentKey: tournamentKey,
+      teamNumber: team,
+      matchNumber: {
+        gt: match
+      } 
+    }
   })).map<[number, boolean]>((x) => [x.matchNumber,(parseInt(x.key.at(-1)) >= 3)]);
+}
+
+async function getUpcomingAlliancePartners(team: number, match: number, tournamentKey: string) {
+  const upcomingAlliances = await getUpcomingAlliances(team, match, tournamentKey)
 
   const upcomingTeams: TeamMatchData[] = await prismaClient.teamMatchData.findMany({
     where: {
@@ -77,10 +103,10 @@ async function getUpcomingAlliancePartners(team: number, match: number, tourname
   }, []);
 }
 
-async function getSlackChannels(team: number, match: number, tournamentKey: string) {
+async function getSlackChannels(upcomingAlliancePartners: number[]) {
   return prismaClient.slackSubscription.findMany({
     where: {
-      workspace: {team: { number: {in: await getUpcomingAlliancePartners(team, match, tournamentKey)}}} ,
+      workspace: {team: { number: {in: upcomingAlliancePartners}}} ,
       subscribedEvent: WarningType.AUTO_LEAVE
     },
     include: {
