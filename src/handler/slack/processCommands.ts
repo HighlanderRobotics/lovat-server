@@ -15,14 +15,30 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
 
         const body = params.text.split(" ");
 
-        console.log("recieved");
+        const action = body[0];
 
-        if (body[0] == "subscribe") {
-            if (body[1] == "no-leave") {
+        if (body.length == 0 || body[0] == "help") {
+            res.status(200).send("Visit lovat.app for a list of all commands and a setup guide"); return
+        } else if (action == "subscribe") {
+            let no_leave = false, breakSub = false;
+        
+            if (body.length == 1) {
+                no_leave = true;
+                breakSub = true;
+            } else if (body[1] == "no-leave") {
+                no_leave = true;
+            } else if (body[1] == "break") {
+                breakSub = true;
+            } else {
+                res.status(400).send(`${body[1]} is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`);
+                return;
+            }
+        
+            const messages: string[] = [];
+        
+            if (no_leave) {
                 await prismaClient.slackSubscription.upsert({
-                    where: {
-                        channelId: params.channel_id
-                    },
+                    where: { channelId: params.channel_id },
                     update: {
                         workspaceId: params.team_id,
                         subscribedEvent: "AUTO_LEAVE"
@@ -33,12 +49,12 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
                         subscribedEvent: "AUTO_LEAVE"
                     }
                 });
-                res.status(200).send("Successfully subscribed to 'no-leave' notifications");
-            } else if (body[1] == "break") {
+                messages.push("'no-leave'");
+            }
+        
+            if (breakSub) {
                 await prismaClient.slackSubscription.upsert({
-                    where: {
-                        channelId: params.channel_id
-                    },
+                    where: { channelId: params.channel_id },
                     update: {
                         workspaceId: params.team_id,
                         subscribedEvent: "BREAK"
@@ -49,39 +65,68 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
                         subscribedEvent: "BREAK"
                     }
                 });
-                res.status(200).send("Successfully subscribed to 'break' notifications");
-            } else {res.status(400).send(`${body[1]} is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`)}
-
-        } else if (body[0] == "unsubscribe") {
-            if (body[1] == "no-leave") {
-                await prismaClient.slackSubscription.delete({
+                messages.push("'break'");
+            }
+        
+            res.status(200).send(`Successfully subscribed to ${messages.join(" and ")} notifications`);
+            return
+        } else if (action == "unsubscribe") {
+            let no_leave = false, breakSub = false;
+        
+            if (body.length == 1) {
+                no_leave = true;
+                breakSub = true;
+            } else if (body[1] == "no-leave") {
+                no_leave = true;
+            } else if (body[1] == "break") {
+                breakSub = true;
+            } else {
+                res.status(400).send(`${body[1]} is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`);
+                return;
+            }
+        
+            const messages: string[] = [];
+        
+            if (no_leave) {
+                await prismaClient.slackSubscription.deleteMany({
                     where: {
                         channelId: params.channel_id,
                         workspaceId: params.team_id,
                         subscribedEvent: "AUTO_LEAVE"
                     }
                 });
-                res.status(200).send("Successfully unsubscribed to 'no-leave' notifications");
-            } else if (body[1] == "break") {
-                await prismaClient.slackSubscription.delete({
+                messages.push("'no-leave'");
+            }
+        
+            if (breakSub) {
+                await prismaClient.slackSubscription.deleteMany({
                     where: {
                         channelId: params.channel_id,
                         workspaceId: params.team_id,
                         subscribedEvent: "BREAK"
                     }
                 });
-                res.status(200).send("Successfully unsubscribed to 'break' notifications");
-            } else {res.status(400).send(`${body[1]} is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`)}
-        } else if (body[0] == "team" && body[1] == "set") {
-            await prismaClient.slackWorkspace.update({
-                where: {
-                    workspaceId: params.team_id
-                },
-                data: {
-                    owner: parseInt(body[2])
-                }
-            })
-            res.status(200).send(`Successfully linked workspace to team ${body[2]}`);
+                messages.push("'break'");
+            }
+        
+            res.status(200).send(`Successfully unsubscribed from ${messages.join(" and ")} notifications`);
+            return;
+        } else if (action == "team") {
+            if (body.length == 1) {
+                res.status(200).send(`Workspace linked to team ${(await prismaClient.slackWorkspace.findUnique({where: {workspaceId: params.team_id}})).owner}`); return;
+            } else if (body[1] == "set") {
+                await prismaClient.slackWorkspace.update({
+                    where: {
+                        workspaceId: params.team_id
+                    },
+                    data: {
+                        owner: parseInt(body[2])
+                    }
+                })
+                res.status(200).send(`Successfully linked workspace to team ${body[2]}`); return;
+            } else {
+                res.status(400).send(`${body[1]} is not a valid argument for '/lovat team'. Try /lovat team set`);
+            }
         }
     }
     catch (error) {

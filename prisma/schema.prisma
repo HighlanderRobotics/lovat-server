@@ -256,10 +256,12 @@ model SlackWorkspace {
 }
 
 model SlackSubscription {
-  channelId       String         @id
+  channelId       String         
   workspaceId     String
   workspace       SlackWorkspace @relation(fields: [workspaceId], references: [workspaceId], onDelete: Cascade)
   subscribedEvent WarningType
+
+  @@id([channelId, subscribedEvent])
 }
 
 enum WarningType {

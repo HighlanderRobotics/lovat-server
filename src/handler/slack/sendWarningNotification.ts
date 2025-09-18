@@ -18,17 +18,18 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
 
     for (const channel of channels) {
       const client = new WebClient(channel.workspace.authToken);
+      const scouterName = (report.scouter.sourceTeamNumber == channel.workspace.owner)? report.scouter.name: "A Scouter";
 
       // Call the chat.postMessage method using the built-in WebClient
       if (warning == WarningType.AUTO_LEAVE) {
         await client.chat.postMessage({
           channel: channel.channelId,
-          text: `Heads up! ${report.scouter.name} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in match ${getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} didn't leave during auto in match ${matchNumber}`
+          text: `Heads up! ${scouterName} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in match Q${getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} didn't leave during auto in match Q${matchNumber}`
         });
       } else if (warning == WarningType.BREAK) {
         await client.chat.postMessage({
           channel: channel.channelId,
-          text: `Heads up! ${report.scouter.name} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in match ${getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} was broken (${report.robotBrokeDescription}) in match ${matchNumber}`
+          text: `Heads up! ${scouterName} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in match Q${getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} was broken (${report.robotBrokeDescription}) in match Q${matchNumber}`
         });
       }
 
