@@ -221,6 +221,10 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             sendWarningToSlack("AUTO_LEAVE", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey, paramsScoutReport.data.uuid);
         }
 
+        if (paramsScoutReport.data.robotBrokeDescription != null || undefined) {
+            sendWarningToSlack("BREAK", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey, paramsScoutReport.data.uuid);
+        }
+
         // Push event rows to prisma database
         const rows = await prismaClient.event.createMany({
             data : eventDataArray
