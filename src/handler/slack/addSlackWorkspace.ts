@@ -55,7 +55,7 @@ export const addSlackWorkspace = async (req: Request, res: Response): Promise<vo
         const client = new WebClient(data.access_token);
 
         await client.chat.postMessage({
-            text: "Thanks for adding Lovat! Go to lovat.app for a quickstart guide",
+            text: "Thanks for adding Lovat! Click [here] (https://lovat-learn.highlanderrobotics.com/guides/slack-notifcations) for a quickstart guide",
             channel: `U${data.authed_user}`
     })
     }

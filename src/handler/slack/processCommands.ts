@@ -21,7 +21,7 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
         const client = new WebClient((await prismaClient.slackWorkspace.findFirst({where: {workspaceId: params.team_id}})).authToken);
 
         if (body.length == 0 || body[0] == "help") {
-            res.status(200).send("Visit lovat.app for a list of all commands and a setup guide"); return
+            res.status(200).send("Click [here](https://lovat-learn.highlanderrobotics.com/guides/slack-notifcations) for a list of all commands and a setup guide"); return
         } else if (action == "subscribe") {
             let no_leave = false, breakSub = false;
         
