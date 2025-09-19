@@ -87,7 +87,6 @@ import { breakdownDetails } from "./handler/analysis/teamLookUp/breakdownDetails
 import { getTeamRankings } from "./handler/manager/getTeamRankings";
 import { getTeamTournamentStatus } from "./handler/manager/getTeamTournamentStatus";
 import { getMatchResults } from "./handler/manager/getMatchResults";
-import { sendWarningToSlack } from "./handler/slack/sendWarningNotification";
 import { addSlackWorkspace } from "./handler/slack/addSlackWorkspace";
 import { processCommand } from "./handler/slack/processCommands";
 import { processEvent } from "./handler/slack/processEvents";

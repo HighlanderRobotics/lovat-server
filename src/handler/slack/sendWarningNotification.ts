@@ -1,7 +1,7 @@
 // Require the Node Slack SDK package (github.com/slackapi/node-slack-sdk)
 import { WebClient } from '@slack/web-api'
 import prismaClient from "../../prismaClient";
-import { ScoutReport, SlackSubscription, TeamMatchData, WarningType } from '@prisma/client';
+import { TeamMatchData, WarningType } from '@prisma/client';
 
 // WebClient instantiates a client that can call API methods
 // When using Bolt, youxcan use either `app.client` or the `client` passed to listeners.
@@ -12,9 +12,9 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
     const upcomingAlliancePartners = await getUpcomingAlliancePartners(teamNumber, matchNumber, tournamentKey)
     const upcomingAlliances = await getUpcomingAlliances(teamNumber, matchNumber, tournamentKey);
 
-    let channels = await getSlackChannels(upcomingAlliancePartners);
+    const channels = await getSlackChannels(upcomingAlliancePartners);
 
-    let report = await prismaClient.scoutReport.findUnique({where: { uuid: reportUuid }, include: { scouter: true }});
+    const report = await prismaClient.scoutReport.findUnique({where: { uuid: reportUuid }, include: { scouter: true }});
 
     for (const channel of channels) {
       const client = new WebClient(channel.workspace.authToken);

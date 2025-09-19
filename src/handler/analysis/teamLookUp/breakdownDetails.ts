@@ -9,7 +9,6 @@ import {
   MetricsBreakdown,
 } from "../analysisConstants";
 import { EventAction } from "@prisma/client";
-import { transformBreakdown } from "../coreAnalysis/nonEventMetric";
 
 export const breakdownDetails = async (
   req: AuthenticatedRequest,

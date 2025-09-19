@@ -134,7 +134,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
         const eventDataArray = []
         const events = req.body.events;
 
-        var doesLeave = false;
+        let doesLeave = false;
 
         for (const event of events) {
             let points = 0;

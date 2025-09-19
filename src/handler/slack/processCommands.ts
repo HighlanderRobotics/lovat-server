@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
 import { WebClient } from "@slack/web-api";
-import { WarningType } from "@prisma/client";
 
 export const processCommand = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -129,7 +128,7 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
                 res.status(200).send(`Workspace linked to team ${(await prismaClient.slackWorkspace.findUnique({where: {workspaceId: params.team_id}})).owner}`); return;
             } else if (body[1] == "set") {
 
-                let teamNumber = (await prismaClient.registeredTeam.findFirst({
+                const teamNumber = (await prismaClient.registeredTeam.findFirst({
                     where: {
                         code: body[2]
                     }
