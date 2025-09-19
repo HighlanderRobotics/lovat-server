@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
+import { WebClient } from "@slack/web-api";
 
 export const addSlackWorkspace = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -50,6 +51,13 @@ export const addSlackWorkspace = async (req: Request, res: Response): Promise<vo
         })
 
         res.status(200).send("workspace added to db")
+
+        const client = new WebClient(data.access_token);
+
+        await client.chat.postMessage({
+            text: "Thanks for adding Lovat! Go to lovat.app for a quickstart guide",
+            channel: `U${data.authed_user}`
+    })
     }
     catch (error) {
         console.error(error)

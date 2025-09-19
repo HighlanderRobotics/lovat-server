@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
+import { WebClient } from "@slack/web-api";
 import { WarningType } from "@prisma/client";
 
 export const processCommand = async (req: Request, res: Response): Promise<void> => {
@@ -16,6 +17,8 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
         const body = params.text.split(" ");
 
         const action = body[0];
+
+        const client = new WebClient((await prismaClient.slackWorkspace.findFirst({where: {workspaceId: params.team_id}})).authToken);
 
         if (body.length == 0 || body[0] == "help") {
             res.status(200).send("Visit lovat.app for a list of all commands and a setup guide"); return
@@ -145,8 +148,7 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
                 res.status(400).send(`${body[1]} is not a valid argument for '/lovat team'. Try /lovat team set (team code)`);
             }
         }
-    }
-    catch (error) {
+    } catch (error) {
         console.error(error)
         res.status(500).send(error)
     }

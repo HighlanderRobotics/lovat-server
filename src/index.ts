@@ -90,6 +90,7 @@ import { getMatchResults } from "./handler/manager/getMatchResults";
 import { sendWarningToSlack } from "./handler/slack/sendWarningNotification";
 import { addSlackWorkspace } from "./handler/slack/addSlackWorkspace";
 import { processCommand } from "./handler/slack/processCommands";
+import { processEvent } from "./handler/slack/processEvents";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -331,6 +332,11 @@ app.post(
   "/v1/slack/command",
   express.urlencoded({ extended: true }),
   processCommand
+);
+
+app.post(
+  "/v1/slack/event",
+  processEvent
 );
 
 getTBAData();

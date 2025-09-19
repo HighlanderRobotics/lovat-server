@@ -33,9 +33,24 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
         }
       });
 
+      console.log(thread)
+
       // Call the chat.postMessage method using the built-in WebClient
-      if (thread != null || undefined) {
+      if (thread == null || thread == undefined) {
+        console.log("yay")
         if (warning == WarningType.AUTO_LEAVE) {
+          result = await client.chat.postMessage({
+           channel: channel.channelId,
+           text: `Heads up! ${scouterName}from team ${report.scouter.sourceTeamNumber} reported your alliance partner in Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} didn't leave during auto in match Q${matchNumber}`
+         });
+       } else if (warning == WarningType.BREAK) {
+         result = await client.chat.postMessage({
+           channel: channel.channelId,
+           // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
+           text: `Heads up! ${scouterName}from team ${report.scouter.sourceTeamNumber} reported your alliance partner in Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} was broken (${(report.robotBrokeDescription != null || undefined)?"no reason specified":report.robotBrokeDescription}) in match Q${matchNumber}`
+         });
+      } else {
+         if (warning == WarningType.AUTO_LEAVE) {
           result = await client.chat.postMessage({
            channel: channel.channelId,
            thread_ts: thread.messageId,
@@ -47,18 +62,6 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
            thread_ts: thread.messageId,
            // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
            text: `Also reported by ${scouterName}from team ${report.scouter.sourceTeamNumber}${teamNumber} (${(report.robotBrokeDescription != null || undefined)?"no reason specified":report.robotBrokeDescription})`
-         });
-      } else {
-        if (warning == WarningType.AUTO_LEAVE) {
-          result = await client.chat.postMessage({
-           channel: channel.channelId,
-           text: `Heads up! ${scouterName}from team ${report.scouter.sourceTeamNumber} reported your alliance partner in Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} didn't leave during auto in match Q${matchNumber}`
-         });
-       } else if (warning == WarningType.BREAK) {
-         result = await client.chat.postMessage({
-           channel: channel.channelId,
-           // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
-           text: `Heads up! ${scouterName}from team ${report.scouter.sourceTeamNumber} reported your alliance partner in Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} was broken (${(report.robotBrokeDescription != null || undefined)?"no reason specified":report.robotBrokeDescription}) in match Q${matchNumber}`
          });
        }
 
