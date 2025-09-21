@@ -115,7 +115,7 @@ model ScoutReport {
   bargeResult           BargeResult
   knocksAlgae           KnocksAlgae
   underShallowCage      UnderShallowCage
-  robotBrokeDescription String           @default("null")
+  robotBrokeDescription String?          
   driverAbility         Int
   scouterUuid           String
   scouter               Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
@@ -256,21 +256,21 @@ model SlackWorkspace {
 }
 
 model SlackSubscription {
-  channelId           String                    @unique
+  subscriptionId      String                    @id
+  channelId           String
   workspaceId         String
   workspace           SlackWorkspace            @relation(fields: [workspaceId], references: [workspaceId], onDelete: Cascade)
   subscribedEvent     WarningType
   notificationRecords SlackNotificationThread[]
-
-  @@id([channelId, subscribedEvent])
 }
 
 model SlackNotificationThread {
-  messageId   String            @id
-  matchNumber Int
-  teamNumber  Int
-  channelId   String
-  channel     SlackSubscription @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  messageId      String            @id
+  matchNumber    Int
+  teamNumber     Int
+  subscriptionId String
+  channelId      String
+  channel        SlackSubscription @relation(fields: [subscriptionId], references: [subscriptionId], onDelete: Cascade)
 }
 
 enum WarningType {

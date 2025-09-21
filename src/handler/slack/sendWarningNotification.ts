@@ -18,13 +18,12 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
 
     for (const channel of channels) {
       const client = new WebClient(channel.workspace.authToken);
-      const scouterName = (report.scouter.sourceTeamNumber == channel.workspace.owner)? report.scouter.name: "A Scouter ";
+      const scouterName = (report.scouter.sourceTeamNumber == channel.workspace.owner)? report.scouter.name.trim(): "A Scouter ";
 
       let result;
 
       const thread = await prismaClient.slackNotificationThread.findFirst({
         where: {
-          matchNumber: matchNumber,
           teamNumber: teamNumber,
           channelId: channel.channelId,
           channel: {
@@ -41,40 +40,42 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
         if (warning == WarningType.AUTO_LEAVE) {
           result = await client.chat.postMessage({
            channel: channel.channelId,
-           text: `Heads up! ${scouterName}from team ${report.scouter.sourceTeamNumber} reported your alliance partner in Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} didn't leave during auto in match Q${matchNumber}`
+           text: `Heads up! ${scouterName} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} didn't leave during auto in match Q${matchNumber}`
          });
        } else if (warning == WarningType.BREAK) {
          result = await client.chat.postMessage({
            channel: channel.channelId,
            // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
-           text: `Heads up! ${scouterName}from team ${report.scouter.sourceTeamNumber} reported your alliance partner in Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} was broken (${(report.robotBrokeDescription != null || undefined)?"no reason specified":report.robotBrokeDescription}) in match Q${matchNumber}`
+           text: `Heads up! ${scouterName} from team ${report.scouter.sourceTeamNumber} reported your alliance partner in Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}, Team ${teamNumber} was broken (${(report.robotBrokeDescription == null || undefined || "")?"no reason specified":report.robotBrokeDescription}) in match Q${matchNumber}`
          });
+       }
+         const subscriptionIdent = `${channel.channelId}_${(warning == WarningType.AUTO_LEAVE)?"L":"B"}`;
+
+          await prismaClient.slackNotificationThread.create({
+            data: {
+              messageId: result.ts,
+              channelId: channel.channelId,
+              subscriptionId: subscriptionIdent,
+              matchNumber: matchNumber,
+              teamNumber: teamNumber
+          }
+          })
       } else {
          if (warning == WarningType.AUTO_LEAVE) {
           result = await client.chat.postMessage({
            channel: channel.channelId,
            thread_ts: thread.messageId,
-           text: `Also reported by ${scouterName}from team ${report.scouter.sourceTeamNumber}`
+           text: `Also reported by ${scouterName} from team ${report.scouter.sourceTeamNumber} in Q${matchNumber}`
          });
        } else if (warning == WarningType.BREAK) {
          result = await client.chat.postMessage({
            channel: channel.channelId,
            thread_ts: thread.messageId,
            // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
-           text: `Also reported by ${scouterName}from team ${report.scouter.sourceTeamNumber}${teamNumber} (${(report.robotBrokeDescription != null || undefined)?"no reason specified":report.robotBrokeDescription})`
+           text: `Also reported by ${scouterName} from team ${report.scouter.sourceTeamNumber} (${(report.robotBrokeDescription == null || undefined || "")?"no reason specified":report.robotBrokeDescription}) in Q${matchNumber}`
          });
        }
-
-       await prismaClient.slackNotificationThread.create({
-        data: {
-          messageId: result.ts,
-          channelId: channel.channelId,
-          matchNumber: matchNumber,
-          teamNumber: teamNumber
-        }
-      })
       }
-    }
       console.log(result)
     }
   } catch (error) {
