@@ -113,18 +113,19 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     //constants
                     uuid : paramsScoutReport.data.uuid,
                     startTime: new Date(paramsScoutReport.data.startTime),
+                    teamMatchData: {connect: { key: matchKey }},
+                    scouter: {connect: { uuid: paramsScoutReport.data.scouterUuid }},
                     notes: paramsScoutReport.data.notes,
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
                     robotBrokeDescription: paramsScoutReport.data.robotBrokeDescription ?? null,
+                    
                     //game specfific
                     coralPickup: paramsScoutReport.data.coralPickUp,
                     bargeResult: paramsScoutReport.data.barge,
                     algaePickup: paramsScoutReport.data.algaePickUp,
                     knocksAlgae: paramsScoutReport.data.knocksAlgae,
                     underShallowCage: paramsScoutReport.data.traversesUnderCage,
-                    teamMatchData: {connect: { key: matchKey }},
-                    scouter: {connect: { uuid: paramsScoutReport.data.scouterUuid }},
             }
     })
         const scoutReportUuid = paramsScoutReport.data.uuid
