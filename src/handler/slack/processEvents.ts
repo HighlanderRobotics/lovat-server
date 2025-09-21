@@ -29,7 +29,7 @@ export const processEvent = async (req: Request, res: Response): Promise<void> =
             }
         })
     } else if (params.event.type === "channel_deleted") {
-        await prismaClient.slackSubscription.delete({
+        await prismaClient.slackSubscription.deleteMany({
             where: {
                 channelId: params.event.channel
             }
