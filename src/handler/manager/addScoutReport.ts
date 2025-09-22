@@ -22,7 +22,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             algaePickUp: z.nativeEnum(AlgaePickup),
             knocksAlgae: z.nativeEnum(KnocksAlgae),
             traversesUnderCage: z.nativeEnum(UnderShallowCage),
-            robotBrokeDescription: z.union([z.string(), z.null(), z.undefined()]),
+            robotBrokeDescription: z.union([z.string(), z.null(), z.undefined()]).optional(),
             driverAbility: z.number(),
             scouterUuid: z.string(),
             teamNumber : z.number()
