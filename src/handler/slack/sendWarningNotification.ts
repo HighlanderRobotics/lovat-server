@@ -46,7 +46,15 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
          result = await client.chat.postMessage({
            channel: channel.channelId,
            // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
-           text: `Heads up! *${scouterName}* reported your alliance partner *in Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}*, team *${teamNumber}*, broke <${(report.robotBrokeDescription == null || undefined || "")?"no reason specified":report.robotBrokeDescription}> in *Q${matchNumber}*`
+           text: `Heads up! *${scouterName}* reported your alliance partner in *Q${await getMatchWithTeam(
+            channel.workspace.owner,
+              tournamentKey,
+              upcomingAlliances.map((x) => x[0])
+              )}*, team *${teamNumber}*, broke in *Q${matchNumber}*.\n${
+                  report.robotBrokeDescription && report.robotBrokeDescription.trim() !== ""
+                ? `> ${report.robotBrokeDescription}`
+                : "> no reason specified"
+              }`
          });
        }
          const subscriptionIdent = `${channel.channelId}_${(warning == WarningType.AUTO_LEAVE)?"L":"B"}`;
@@ -72,7 +80,12 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
            channel: channel.channelId,
            thread_ts: thread.messageId,
            // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
-           text: `Also reported by *${scouterName}* <${(report.robotBrokeDescription == null || undefined || "")?"no reason specified":report.robotBrokeDescription}> in *Q${matchNumber}*`
+           text: `Also reported by *${scouterName}* in *Q${matchNumber}*:\n${
+                report.robotBrokeDescription && report.robotBrokeDescription.trim() !== ""
+                  ? `> ${report.robotBrokeDescription}`
+                  : "> no reason specified"
+          }`
+
          });
        }
       }
