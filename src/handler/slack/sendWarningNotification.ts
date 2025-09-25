@@ -32,11 +32,8 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
         }
       });
 
-      console.log(thread)
-
       // Call the chat.postMessage method using the built-in WebClient
       if (thread == null || thread == undefined) {
-        console.log("yay")
         if (warning == WarningType.AUTO_LEAVE) {
           result = await client.chat.postMessage({
            channel: channel.channelId,
@@ -85,11 +82,9 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
                   ? `> ${report.robotBrokeDescription}`
                   : "> no reason specified"
           }`
-
          });
        }
       }
-      console.log(result)
     }
   } catch (error) {
     console.error(error);

@@ -14,10 +14,12 @@ export const addSlackWorkspace = async (req: Request, res: Response): Promise<vo
         form.append("client_secret", process.env.SLACK_CLIENT_SECRET);
         form.append("redirect_uri", process.env.BASE_URL + "/v1/slack/add-workspace");
 
-        const response = await fetch("https://slack.com/api/oauth.v2.access", {
+        const response = await (await fetch("https://slack.com/api/oauth.v2.access", {
             method: "POST",
             body: form
-        })
+        })).json()
+
+        console.log(response);
 
         const data = z.object({
             access_token: z.string(),
@@ -29,7 +31,7 @@ export const addSlackWorkspace = async (req: Request, res: Response): Promise<vo
             authed_user: z.object({
                 id: z.string()
             })
-        }).parse(await response.json());
+        }).parse(response);
 
         await prismaClient.slackWorkspace.upsert({
             where: {
@@ -50,14 +52,7 @@ export const addSlackWorkspace = async (req: Request, res: Response): Promise<vo
             }
         })
 
-        res.status(200).send("workspace added to db")
-
-        const client = new WebClient(data.access_token);
-
-        await client.chat.postMessage({
-            text: "Thanks for adding Lovat! Click <https://lovat-learn.highlanderrobotics.com/guides/slack-notifcations|here> for a quickstart guide",
-            channel: `U${data.authed_user}`
-    })
+        res.redirect("https://lovat-learn.highlanderrobotics.com/guides/slack-notifcations");
     }
     catch (error) {
         console.error(error)

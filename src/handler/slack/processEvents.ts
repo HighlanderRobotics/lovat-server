@@ -20,10 +20,10 @@ export const processEvent = async (req: Request, res: Response): Promise<void> =
                 }
             )]),
             event_id: z.string(),
-        }).parse(req.query);
+        }).parse(req.body);
 
     if (params.event.type === "app_uninstalled") {
-        await prismaClient.slackWorkspace.delete({
+        await prismaClient.slackWorkspace.deleteMany({
             where: {
                 workspaceId: params.team_id
             }

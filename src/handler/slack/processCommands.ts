@@ -15,13 +15,16 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
 
         const body = params.text.split(" ");
 
-        const action = body[0];
+        const action = body[0] ?? null;
 
-        const client = new WebClient((await prismaClient.slackWorkspace.findFirst({where: {workspaceId: params.team_id}})).authToken);
-
-        if (body.length == 0 || body[0] == "help") {
+        if (body.length == 0 || action == "help") {
             res.status(200).send("Click <https://lovat-learn.highlanderrobotics.com/guides/slack-notifcations|here> for a list of all commands and a setup guide"); return
         } else if (action == "subscribe") {
+            if ((await prismaClient.slackWorkspace.findFirstOrThrow({where: { workspaceId: params.team_id }})).owner == null) {
+                res.status(200).send(`You need to set your team number to use /lovat subscribe. Use /lovat team set [your team code]`);
+                return;
+            }
+
             let no_leave = false, breakSub = false;
         
             if (body.length == 1) {
@@ -32,7 +35,7 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
             } else if (body[1] == "break") {
                 breakSub = true;
             } else {
-                res.status(400).send(`${body[1]} is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`);
+                res.status(200).send(`'${body[1]} 'is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`);
                 return;
             }
         
@@ -81,6 +84,11 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
             res.status(200).send(`Successfully subscribed to ${messages.join(" and ")} notifications`);
             return
         } else if (action == "unsubscribe") {
+            if ((await prismaClient.slackWorkspace.findFirstOrThrow({where: { workspaceId: params.team_id }})).owner == null) {
+                res.status(200).send(`You need to set your team number to use /lovat unsubscribe. Use /lovat team set [your team code]`);
+                return;
+            }
+
             let no_leave = false, breakSub = false;
         
             if (body.length == 1) {
@@ -91,7 +99,7 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
             } else if (body[1] == "break") {
                 breakSub = true;
             } else {
-                res.status(400).send(`${body[1]} is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`);
+                res.status(200).send(`'${body[1]}' is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`);
                 return;
             }
         
