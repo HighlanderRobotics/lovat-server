@@ -35,6 +35,7 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
             barge : BargeResultReverseMap[scoutReport.bargeResult],
             autoPath : await autoPathScouter(req.user, scoutReport.teamMatchKey, scoutReport.uuid),
             note : scoutReport.notes,
+            robotBrokeDescription : scoutReport.robotBrokeDescription,
             timeStamp : scoutReport.startTime
         }
 

@@ -5,6 +5,7 @@ import { AlgaePickupMap, PositionMap, MatchTypeMap, CoralPickupMap, BargeResultM
 import { addTournamentMatches } from "./addTournamentMatches";
 import {EventAction, Position} from "@prisma/client";
 import { AlgaePickup, BargeResult, CoralPickup, KnocksAlgae, MatchType, RobotRole, UnderShallowCage } from "@prisma/client";
+import { sendWarningToSlack } from "../slack/sendWarningNotification";
 
 export const addScoutReport = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -21,6 +22,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             algaePickUp: z.nativeEnum(AlgaePickup),
             knocksAlgae: z.nativeEnum(KnocksAlgae),
             traversesUnderCage: z.nativeEnum(UnderShallowCage),
+            robotBrokeDescription: z.union([z.string(), z.null(), z.undefined()]).optional(),
             driverAbility: z.number(),
             scouterUuid: z.string(),
             teamNumber : z.number()
@@ -36,6 +38,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
             coralPickUp:  CoralPickupMap[req.body.coralPickUp],
             knocksAlgae: KnocksAlgaeMap[req.body.knocksAlgae],
             traversesUnderCage: UnderShallowCageMap[req.body.traversesUnderCage],
+            robotBrokeDescription: req.body.robotBrokeDescription,
             matchType : MatchTypeMap[req.body.matchType],
             matchNumber : req.body.matchNumber,
             teamNumber : req.body.teamNumber,
@@ -109,26 +112,30 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 data: {
                     //constants
                     uuid : paramsScoutReport.data.uuid,
-                    teamMatchKey: matchKey,
                     startTime: new Date(paramsScoutReport.data.startTime),
-                    scouterUuid: paramsScoutReport.data.scouterUuid,
+                    teamMatchData: {connect: { key: matchKey }},
+                    scouter: {connect: { uuid: paramsScoutReport.data.scouterUuid }},
                     notes: paramsScoutReport.data.notes,
                     robotRole: paramsScoutReport.data.robotRole,
                     driverAbility: paramsScoutReport.data.driverAbility,
+                    robotBrokeDescription: paramsScoutReport.data.robotBrokeDescription ?? null,
+                    
                     //game specfific
                     coralPickup: paramsScoutReport.data.coralPickUp,
                     bargeResult: paramsScoutReport.data.barge,
                     algaePickup: paramsScoutReport.data.algaePickUp,
                     knocksAlgae: paramsScoutReport.data.knocksAlgae,
-                    underShallowCage: paramsScoutReport.data.traversesUnderCage
-                }
+                    underShallowCage: paramsScoutReport.data.traversesUnderCage,
             }
-        )
+    })
         const scoutReportUuid = paramsScoutReport.data.uuid
         
 
         const eventDataArray = []
         const events = req.body.events;
+
+        let doesLeave = false;
+
         for (const event of events) {
             let points = 0;
             const time = event[0];
@@ -151,6 +158,8 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 }
                 else if (action === EventAction.AUTO_LEAVE) {
                     points = 3
+
+                    doesLeave = true;
                 }
                 else if (action === EventAction.SCORE_PROCESSOR) {
                     points = 6
@@ -181,6 +190,7 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                     points = 4
                 }
             }
+
             const paramsEvents = z.object({
                 time: z.number(),
                 action: z.nativeEnum(EventAction),
@@ -205,6 +215,14 @@ export const addScoutReport = async (req: Request, res: Response): Promise<void>
                 points: paramsEvents.data.points,
                 scoutReportUuid: scoutReportUuid
             })
+        }
+
+        if (!doesLeave) {
+            sendWarningToSlack("AUTO_LEAVE", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey, paramsScoutReport.data.uuid);
+        }
+
+        if (paramsScoutReport.data.robotBrokeDescription != null || undefined) {
+            sendWarningToSlack("BREAK", matchRow.matchNumber, matchRow.teamNumber, matchRow.tournamentKey, paramsScoutReport.data.uuid);
         }
 
         // Push event rows to prisma database

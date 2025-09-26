@@ -104,21 +104,22 @@ model MutablePicklist {
 }
 
 model ScoutReport {
-  uuid             String           @id @default(uuid())
-  teamMatchKey     String
-  teamMatchData    TeamMatchData    @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
-  startTime        DateTime
-  notes            String
-  robotRole        RobotRole
-  algaePickup      AlgaePickup
-  coralPickup      CoralPickup
-  bargeResult      BargeResult
-  knocksAlgae      KnocksAlgae     
-  underShallowCage UnderShallowCage
-  driverAbility    Int
-  scouterUuid      String
-  scouter          Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
-  events           Event[]
+  uuid                  String           @id @default(uuid())
+  teamMatchKey          String
+  teamMatchData         TeamMatchData    @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+  startTime             DateTime
+  notes                 String
+  robotRole             RobotRole
+  algaePickup           AlgaePickup
+  coralPickup           CoralPickup
+  bargeResult           BargeResult
+  knocksAlgae           KnocksAlgae
+  underShallowCage      UnderShallowCage
+  robotBrokeDescription String?          
+  driverAbility         Int
+  scouterUuid           String
+  scouter               Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
+  events                Event[]
   // flaggedScoutReport FlaggedScoutReport?
 }
 
@@ -137,6 +138,11 @@ enum AlgaePickup {
 }
 
 enum KnocksAlgae {
+  NO
+  YES
+}
+
+enum AutoLeave {
   NO
   YES
 }
@@ -231,10 +237,45 @@ model RegisteredTeam {
   email                 String
   emailVerified         Boolean                @default(false)
   teamApproved          Boolean                @default(false)
+  slackChannels         SlackWorkspace[]
   website               String?
   scouterScheduleShifts ScouterScheduleShift[]
   scouters              Scouter[]
   users                 User[]
+}
+
+model SlackWorkspace {
+  workspaceId   String              @id
+  owner         Int?
+  name          String
+  authToken     String
+  subscriptions SlackSubscription[]
+  team          RegisteredTeam?     @relation(fields: [owner], references: [number], onDelete: Cascade)
+  botUserId     String
+  authUserId    String
+}
+
+model SlackSubscription {
+  subscriptionId      String                    @id
+  channelId           String
+  workspaceId         String
+  workspace           SlackWorkspace            @relation(fields: [workspaceId], references: [workspaceId], onDelete: Cascade)
+  subscribedEvent     WarningType
+  notificationRecords SlackNotificationThread[]
+}
+
+model SlackNotificationThread {
+  messageId      String            @id
+  matchNumber    Int
+  teamNumber     Int
+  subscriptionId String
+  channelId      String
+  channel        SlackSubscription @relation(fields: [subscriptionId], references: [subscriptionId], onDelete: Cascade)
+}
+
+enum WarningType {
+  AUTO_LEAVE
+  BREAK
 }
 
 model Tournament {

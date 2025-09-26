@@ -87,6 +87,9 @@ import { breakdownDetails } from "./handler/analysis/teamLookUp/breakdownDetails
 import { getTeamRankings } from "./handler/manager/getTeamRankings";
 import { getTeamTournamentStatus } from "./handler/manager/getTeamTournamentStatus";
 import { getMatchResults } from "./handler/manager/getMatchResults";
+import { addSlackWorkspace } from "./handler/slack/addSlackWorkspace";
+import { processCommand } from "./handler/slack/processCommands";
+import { processEvent } from "./handler/slack/processEvents";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -319,6 +322,21 @@ app.get("/v1/manager/team-tournament-status", requireAuth, getTeamTournamentStat
 
 // match results from scouting reports
 app.get("/v1/manager/match-results-page", requireAuth, getMatchResults)
+
+// add/update slack workspace
+app.get("/v1/slack/add-workspace", addSlackWorkspace)
+
+// process slash commands
+app.post(
+  "/v1/slack/command",
+  express.urlencoded({ extended: true }),
+  processCommand
+);
+
+app.post(
+  "/v1/slack/event",
+  processEvent
+);
 
 getTBAData();
 
