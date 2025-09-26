@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { WebClient } from "@slack/web-api";
 
 export const addSlackWorkspace = async (req: Request, res: Response): Promise<void> => {
     try {

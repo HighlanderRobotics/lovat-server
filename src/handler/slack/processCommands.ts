@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import prismaClient from '../../prismaClient'
 import z from 'zod'
-import { WebClient } from "@slack/web-api";
 
 export const processCommand = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -133,22 +132,25 @@ export const processCommand = async (req: Request, res: Response): Promise<void>
             if (body.length == 1) {
                 res.status(200).send(`Workspace linked to team ${(await prismaClient.slackWorkspace.findUnique({where: {workspaceId: params.team_id}})).owner}`); return;
             } else if (body[1] == "set") {
+                try {
+                    const teamNumber = (await prismaClient.registeredTeam.findUniqueOrThrow({
+                        where: {
+                            code: body[2]
+                        }
+                    })).number;
 
-                const teamNumber = (await prismaClient.registeredTeam.findFirst({
-                    where: {
-                        code: body[2]
-                    }
-                })).number;
-
-                await prismaClient.slackWorkspace.update({
-                    where: {
-                        workspaceId: params.team_id
-                    },
-                    data: {
-                        owner: teamNumber
-                    }
-                })
-                res.status(200).send(`Successfully linked workspace to team ${teamNumber}`); return;
+                    await prismaClient.slackWorkspace.update({
+                        where: {
+                            workspaceId: params.team_id
+                        },
+                        data: {
+                            owner: teamNumber
+                        }
+                    })
+                    res.status(200).send(`Successfully linked workspace to team ${teamNumber}`); return;
+                } catch {
+                    res.status(200).send(`Not a valid team code.`); return;
+                }
             } else {
                 res.status(400).send(`${body[1]} is not a valid argument for '/lovat team'. Try /lovat team set (team code)`);
             }
