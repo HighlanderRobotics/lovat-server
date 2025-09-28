@@ -12,7 +12,7 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
     const upcomingAlliancePartners = await getUpcomingAlliancePartners(teamNumber, matchNumber, tournamentKey)
     const upcomingAlliances = await getUpcomingAlliances(teamNumber, matchNumber, tournamentKey);
 
-    const channels = await getSlackChannels(upcomingAlliancePartners);
+    const channels = await getSlackChannels(upcomingAlliancePartners.map((x) => x[0]));
 
     const report = await prismaClient.scoutReport.findUnique({where: { uuid: reportUuid }, include: { scouter: true }});
 
@@ -37,17 +37,13 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
         if (warning == WarningType.AUTO_LEAVE) {
           result = await client.chat.postMessage({
            channel: channel.channelId,
-           text: `Heads up! *${scouterName}* reported your alliance partner in *Q${await getMatchWithTeam(channel.workspace.owner, tournamentKey, upcomingAlliances.map((x) => x[0]))}*, team *${teamNumber}*, didn't leave during auto in *Q${matchNumber}*`
+           text: `Heads up! *${scouterName}* reported your alliance partner in *Q${upcomingAlliancePartners[upcomingAlliancePartners.map((x) => x[0]).findIndex(num => num === matchNumber)][1]}*, team *${teamNumber}*, didn't leave during auto in *Q${matchNumber}*`
          });
        } else if (warning == WarningType.BREAK) {
          result = await client.chat.postMessage({
            channel: channel.channelId,
            // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
-           text: `Heads up! *${scouterName}* reported your alliance partner in *Q${await getMatchWithTeam(
-            channel.workspace.owner,
-              tournamentKey,
-              upcomingAlliances.map((x) => x[0])
-              )}*, team *${teamNumber}*, broke in *Q${matchNumber}*.\n${
+           text: `Heads up! *${scouterName}* reported your alliance partner in *Q${upcomingAlliancePartners[upcomingAlliancePartners.map((x) => x[0]).findIndex(num => num === matchNumber)][1]}*, team *${teamNumber}*, broke in *Q${matchNumber}*.\n${
                   report.robotBrokeDescription && report.robotBrokeDescription.trim() !== ""
                 ? `> ${report.robotBrokeDescription}`
                 : "> no reason specified"
@@ -66,6 +62,7 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
           }
           })
       } else {
+        // when there have already been problems reported about a team, we just send a message to the thread instead of having multiple messages
          if (warning == WarningType.AUTO_LEAVE) {
           result = await client.chat.postMessage({
            channel: channel.channelId,
@@ -91,19 +88,6 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
   }
 }
 
-
-async function getMatchWithTeam(team: number, tournamentKey: string, upcomingMatches: number[]) {
-  return (await prismaClient.teamMatchData.findFirst({
-    where: {
-      matchNumber: {
-        in: upcomingMatches
-      },
-      tournamentKey: tournamentKey,
-      teamNumber: team
-    }
-  })).matchNumber
-}
-
 // returns an number[] with all match numbers of upcoming matches with team
 async function getUpcomingAlliances(team: number, match: number, tournamentKey: string) {
   return (await prismaClient.teamMatchData.findMany({
@@ -117,7 +101,7 @@ async function getUpcomingAlliances(team: number, match: number, tournamentKey: 
   })).map<[number, boolean]>((x) => [x.matchNumber,(parseInt(x.key.at(-1)) >= 3)]);
 }
 
-async function getUpcomingAlliancePartners(team: number, match: number, tournamentKey: string) {
+export async function getUpcomingAlliancePartners(team: number, match: number, tournamentKey: string) {
   const upcomingAlliances = await getUpcomingAlliances(team, match, tournamentKey)
 
   const upcomingTeams: TeamMatchData[] = await prismaClient.teamMatchData.findMany({
@@ -133,22 +117,29 @@ async function getUpcomingAlliancePartners(team: number, match: number, tourname
   }
   );
 
-  const out: number[] = [];
+  const out: number[][] = [];
 
   for (const data of upcomingTeams) {
     if (upcomingAlliances[upcomingAlliances.findIndex(x => x[0] === data.matchNumber)][1]) {
       if (parseInt(data.key.at(-1)) >= 3) {
-        out.push(data.teamNumber)
+        out.push([data.teamNumber, data.matchNumber])
       }
     } else {
         if (parseInt(data.key.at(-1)) < 3) {
-          out.push(data.teamNumber)
+          out.push([data.teamNumber, data.matchNumber])
       }
     }
   }
 
-  return out.reduce<number[]>((unique, team) => {
-    if (!unique.includes(team)) {
+  console.log(out.reduce<number[][]>((unique, team) => {
+    if (!unique.map((x) => x[0]).includes(team[0])) {
+      unique.push(team);
+    }
+    return unique;
+  }, []))
+
+  return out.reduce<number[][]>((unique, team) => {
+    if (!unique.map((x) => x[0]).includes(team[0])) {
       unique.push(team);
     }
     return unique;
