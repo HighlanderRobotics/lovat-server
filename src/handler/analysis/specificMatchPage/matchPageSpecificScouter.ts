@@ -28,7 +28,7 @@ export const matchPageSpecificScouter = async (req: AuthenticatedRequest, res: R
         })
         const output = {
             totalPoints: (await averageScoutReport(scoutReport.uuid, [Metric.totalPoints]))[Metric.totalPoints],
-            driverAbility: scoutReport.driverAbility,
+            driverAbility: scoutReport.driverAbility + 1, // Stored as 0-4, shown in app as 1-5
             role : FlippedRoleMap[scoutReport.robotRole],
             // stage : stageMap[scoutReport.stage],
             // highNote : highNoteMap[scoutReport.highNote],
