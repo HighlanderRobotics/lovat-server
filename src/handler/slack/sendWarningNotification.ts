@@ -62,6 +62,7 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
           }
           })
       } else {
+        // when there have already been problems reported about a team, we just send a message to the thread instead of having multiple messages
          if (warning == WarningType.AUTO_LEAVE) {
           result = await client.chat.postMessage({
            channel: channel.channelId,
