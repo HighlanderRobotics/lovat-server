@@ -6,19 +6,19 @@ import { TeamMatchData, WarningType } from '@prisma/client';
 // WebClient instantiates a client that can call API methods
 // When using Bolt, youxcan use either `app.client` or the `client` passed to listeners.
 
-// Post a message to a channel your app is in using ID and message text
-export async function sendWarningToSlack(warning: WarningType, matchNumber: number, teamNumber: number, tournamentKey: string, reportUuid: string) {
+// sends a warning to all upcoming alliance partners slack workspaces
+export async function sendWarningToSlack(warning: WarningType, matchNumber: number, teamNumber: number, tournamentKey: string, reportUuid: string): Promise<void> {
   try {
     const upcomingAlliancePartners = await getUpcomingAlliancePartners(teamNumber, matchNumber, tournamentKey)
     const upcomingAlliances = await getUpcomingAlliances(teamNumber, matchNumber, tournamentKey);
 
-    const channels = await getSlackChannels(upcomingAlliancePartners.map((x) => x[0]));
+    const channels = await getSlackChannels(upcomingAlliancePartners.map((x) => x[0]),warning);
 
     const report = await prismaClient.scoutReport.findUnique({where: { uuid: reportUuid }, include: { scouter: true }});
 
     for (const channel of channels) {
       const client = new WebClient(channel.workspace.authToken);
-      const scouterName = (report.scouter.sourceTeamNumber == channel.workspace.owner)? report.scouter.name.trim(): `A Scouter from from team ${report.scouter.sourceTeamNumber}`;
+      const scouterName = (report.scouter.sourceTeamNumber == channel.workspace.owner)? report.scouter.name.trim(): `A Scouter from team ${report.scouter.sourceTeamNumber}`;
 
       let result;
 
@@ -88,7 +88,7 @@ export async function sendWarningToSlack(warning: WarningType, matchNumber: numb
   }
 }
 
-// returns an number[] with all match numbers of upcoming matches with team
+// returns an number[][] with all match numbers of upcoming matches with team and if the team is on the red alliance
 async function getUpcomingAlliances(team: number, match: number, tournamentKey: string) {
   return (await prismaClient.teamMatchData.findMany({
     where: {
@@ -101,7 +101,8 @@ async function getUpcomingAlliances(team: number, match: number, tournamentKey: 
   })).map<[number, boolean]>((x) => [x.matchNumber,(parseInt(x.key.at(-1)) >= 3)]);
 }
 
-export async function getUpcomingAlliancePartners(team: number, match: number, tournamentKey: string) {
+// returns a number[] of upcoming alliance partners by getting a list of all upcoming matches and alliances (stored as [matchNumber,redAlliance]) and getting teams on those alliances
+async function getUpcomingAlliancePartners(team: number, match: number, tournamentKey: string) {
   const upcomingAlliances = await getUpcomingAlliances(team, match, tournamentKey)
 
   const upcomingTeams: TeamMatchData[] = await prismaClient.teamMatchData.findMany({
@@ -131,13 +132,6 @@ export async function getUpcomingAlliancePartners(team: number, match: number, t
     }
   }
 
-  console.log(out.reduce<number[][]>((unique, team) => {
-    if (!unique.map((x) => x[0]).includes(team[0])) {
-      unique.push(team);
-    }
-    return unique;
-  }, []))
-
   return out.reduce<number[][]>((unique, team) => {
     if (!unique.map((x) => x[0]).includes(team[0])) {
       unique.push(team);
@@ -146,14 +140,13 @@ export async function getUpcomingAlliancePartners(team: number, match: number, t
   }, []);
 }
 
-async function getSlackChannels(upcomingAlliancePartners: number[]) {
+// finds all slack channels in workspaces owned by teams in upcomingAlliancePartners and that subscribed to warning
+async function getSlackChannels(upcomingAlliancePartners: number[], warning: WarningType) {
   return prismaClient.slackSubscription.findMany({
     where: {
-      workspace: {team: { number: {in: upcomingAlliancePartners}}} ,
-      subscribedEvent: WarningType.AUTO_LEAVE
+      workspace: { team: { number: { in: upcomingAlliancePartners } } },
+      subscribedEvent: warning
     },
-    include: {
-      workspace: true
-    }
+    include: { workspace: true }
   });
 }
