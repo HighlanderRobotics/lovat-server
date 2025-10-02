@@ -1,7 +1,7 @@
 import axios from "axios";
 import prisma from "../prismaClient";
 
-export default async function fetchTournaments(initialYear?: number, finalYear?: number) {
+export default async function fetchTournaments(initialYear?: number, finalYear?: number): Promise<void> {
     // Get tournaments from TBA and upsert them to the database
     initialYear = initialYear || 2023;
     finalYear = finalYear || new Date().getFullYear();

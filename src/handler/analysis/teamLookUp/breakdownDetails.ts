@@ -13,7 +13,7 @@ import { EventAction } from "@prisma/client";
 export const breakdownDetails = async (
   req: AuthenticatedRequest,
   res: Response
-) => {
+): Promise<void> => {
   try {
     const params = z
       .object({

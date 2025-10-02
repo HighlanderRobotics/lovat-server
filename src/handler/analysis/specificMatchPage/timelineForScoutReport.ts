@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { FlippedActionMap, FlippedPositionMap } from "../analysisConstants";
 
 
-export const timelineForScoutReport = async (req: AuthenticatedRequest, res: Response) => {
+export const timelineForScoutReport = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const params = z.object({
             uuid : z.string()

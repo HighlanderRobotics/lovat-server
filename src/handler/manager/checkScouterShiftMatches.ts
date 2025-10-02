@@ -3,7 +3,7 @@ import prismaClient from '../../prismaClient'
 import { AuthenticatedRequest } from '../../lib/middleware/requireAuth';
 
 //uuid is when editing a shift so it doesnt check that its over lapping with itself
-export const checkScouterShiftMatches = async (req : AuthenticatedRequest, tournamentKey : string, currStart : number, currEnd : number,  uuid : string = null) => {
+export const checkScouterShiftMatches = async (req : AuthenticatedRequest, tournamentKey : string, currStart : number, currEnd : number,  uuid : string = null): Promise<boolean> => {
     try {
         let shifts = []
         if(uuid)

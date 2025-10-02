@@ -1,7 +1,7 @@
 import prisma from "../prismaClient";
 import { addTournamentMatches } from "../handler/manager/addTournamentMatches";
 
-export default async function fetchMatches() {
+export default async function fetchMatches(): Promise<void> {
     // upsert current tournaments in the matches table
     //new tournaments are added to the matches table in getMatches (if it doesn't already exist)
 

@@ -5,7 +5,7 @@ import { metricsCategory, metricToName } from "../analysisConstants";
 import { averageManyFast } from "../coreAnalysis/averageManyFast";
 
 
-export const categoryMetrics = async (req: AuthenticatedRequest, res: Response) => {
+export const categoryMetrics = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const params = z.object({
             team : z.number()

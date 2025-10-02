@@ -6,7 +6,7 @@ import { metricsCategory, metricToName } from "../analysisConstants";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
 
 
-export const multipleFlags = async (req: AuthenticatedRequest, res: Response) => {
+export const multipleFlags = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const params = z.object({
             team: z.number(),

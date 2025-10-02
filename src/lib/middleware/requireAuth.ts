@@ -1,14 +1,14 @@
 import prisma from "../../prismaClient";
 import axios from "axios";
 import { User } from '@prisma/client';
-import { Request as ExpressRequest } from 'express';
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
 import * as jose from 'jose';
 
 export interface AuthenticatedRequest extends ExpressRequest {
     user: User;
 }
 
-export const requireAuth = async (req: AuthenticatedRequest, res, next) => {
+export const requireAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         console.log(`${req.method} ${req.path}`)
         // Validate JWT

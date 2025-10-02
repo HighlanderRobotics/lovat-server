@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { getSourceFilter } from "../coreAnalysis/averageManyFast";
 import { allTeamNumbers, allTournaments } from "../analysisConstants";
 
-export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
+export const getNotes = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const params = z
       .object({

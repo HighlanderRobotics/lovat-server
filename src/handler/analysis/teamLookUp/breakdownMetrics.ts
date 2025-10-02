@@ -5,7 +5,7 @@ import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
 import { lowercaseToBreakdown, MetricsBreakdown } from "../analysisConstants";
 
 
-export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response) => {
+export const breakdownMetrics = async (req: AuthenticatedRequest, res : Response): Promise<void> => {
     try {
         const params = z.object({
            team : z.number()

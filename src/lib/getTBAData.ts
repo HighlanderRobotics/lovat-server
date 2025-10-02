@@ -4,7 +4,7 @@ import fetchTeams from "./fetchTeams";
 import fetchMatches from "./fetchMatches";
 
 
-export default async function  getTBAData() {
+export default async function  getTBAData(): Promise<void> {
     const year = 2024
     // If we don't have any tournaments, fetch them from TBA
     const tournaments = await prisma.tournament.findMany();

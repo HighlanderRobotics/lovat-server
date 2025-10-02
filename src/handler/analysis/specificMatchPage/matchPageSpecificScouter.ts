@@ -16,7 +16,7 @@ import { averageScoutReport } from "../coreAnalysis/averageScoutReport";
 export const matchPageSpecificScouter = async (
   req: AuthenticatedRequest,
   res: Response
-) => {
+): Promise<void> => {
   try {
     const params = z
       .object({
