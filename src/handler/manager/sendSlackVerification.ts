@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-export const sendSlackVerification = async (teamNumber : number, teamEmail : string, website : string) => {
+export const sendSlackVerification = async (teamNumber : number, teamEmail : string, website : string): Promise<void> => {
     const body = {
         "blocks": [
             {

@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { UserRole } from "@prisma/client";
 
 
-export const scoutReportForMatch = async (req: AuthenticatedRequest, res: Response) => {
+export const scoutReportForMatch = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const params = z.object({
             matchKey: z.string(),

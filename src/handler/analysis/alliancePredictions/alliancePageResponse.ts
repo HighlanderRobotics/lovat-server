@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { alliancePage } from "./alliancePage";
 
 
-export const alliancePageResponse = async (req: AuthenticatedRequest, res : Response) => {
+export const alliancePageResponse = async (req: AuthenticatedRequest, res : Response): Promise<void> => {
     try {
        
         const params = z.object({

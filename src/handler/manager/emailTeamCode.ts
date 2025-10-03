@@ -4,7 +4,7 @@ import { Resend } from "resend";
 import prismaClient from "../../prismaClient";
 
 
-export const emailTeamCode = async (req: Request, res: Response) => {
+export const emailTeamCode = async (req: Request, res: Response): Promise<void> => {
     try {
         const params = z.object({
             teamNumber: z.number()

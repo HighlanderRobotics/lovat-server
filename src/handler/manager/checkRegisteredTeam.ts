@@ -5,7 +5,7 @@ import { Response } from "express";
 import { AuthenticatedRequest } from '../../lib/middleware/requireAuth';
 
 
-export const checkRegisteredTeam = async (req: AuthenticatedRequest, res: Response) => {
+export const checkRegisteredTeam = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
 
         const params = z.object({

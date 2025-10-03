@@ -286,9 +286,9 @@ export const getMatches = async (req: AuthenticatedRequest, res: Response): Prom
         // If teams are filtered, the array will be sparse and has to be condensed
         const denseFormattedMatches: typeof finalFormattedMatches = [];
         if (params.data.teamFilter) {
-            for (let i = 0; i < finalFormattedMatches.length; i++) {
-                if (finalFormattedMatches[i]) {
-                    denseFormattedMatches.push(finalFormattedMatches[i]);
+            for (const match of finalFormattedMatches) {
+                if (match) {
+                    denseFormattedMatches.push(match);
                 }
             }
         }

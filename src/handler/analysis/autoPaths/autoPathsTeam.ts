@@ -17,7 +17,13 @@ interface AutoData {
     tournamentName : string,
 }
 
-export const autoPathsTeam = async (user: User, teamNumber : number) => {
+export const autoPathsTeam = async (user: User, teamNumber : number): Promise<{
+    positions: AutoPosition[];
+    matches: { matchKey: string; tournamentName: string }[];
+    score: number[];
+    frequency: number;
+    maxScore: number;
+}[]> => {
     try {
         const params = z.object({
             team: z.number(),

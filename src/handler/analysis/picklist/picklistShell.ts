@@ -13,7 +13,7 @@ import { zScoreMany } from "./zScoreMany";
  *
  * @returns picklist data as given by zScoreMany
  */
-export const picklistShell = async (req: AuthenticatedRequest, res: Response) => {
+export const picklistShell = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         let flags = []
         if (req.query.flags) {

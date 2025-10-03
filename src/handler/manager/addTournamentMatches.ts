@@ -3,7 +3,7 @@ import z from 'zod'
 import axios from "axios";
 
 
-export const addTournamentMatches = async (tournamentKey) => {
+export const addTournamentMatches = async (tournamentKey: string): Promise<void> => {
 
     try {
        
@@ -32,15 +32,15 @@ export const addTournamentMatches = async (tournamentKey) => {
             // For each match in the tournament
             response.data.sort((a, b) => b.actual_time - a.actual_time);
 
-            for (let i = 0; i < response.data.length; i++) {
-                if (response.data[i].comp_level == 'qm') {
+            for (const match of response.data) {
+                if (match.comp_level == 'qm') {
                     //all teams in the match
-                    const teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];
+                    const teams = [...match.alliances.red.team_keys, ...match.alliances.blue.team_keys];
                     let matchesString = ``;
                     //make matches with trailing _0, _1, _2 etc
                     for (let k = 0; k < teams.length; k++) {
-                        matchesString = matchesString + `('${response.data[i].key}_${k}', '${tournamentKey}', ${response.data[i].match_number}, '${teams[k]}', '${response.data[i].comp_level}'), `;
-                        const currMatchKey = `${response.data[i].key}_${k}`;
+                        matchesString = matchesString + `('${match.key}_${k}', '${tournamentKey}', ${match.match_number}, '${teams[k]}', '${match.comp_level}'), `;
+                        const currMatchKey = `${match.key}_${k}`;
                         const currTeam = Number(teams[k].substring(3))
                         
                         const params = z.object({
@@ -51,7 +51,7 @@ export const addTournamentMatches = async (tournamentKey) => {
                         }).safeParse({
                             key: currMatchKey,
                             tournamentKey: tournamentKey,
-                            matchNumber: response.data[i].match_number,
+                            matchNumber: match.match_number,
                             teamNumber: currTeam
                         })
                 
@@ -82,7 +82,7 @@ export const addTournamentMatches = async (tournamentKey) => {
                 }
                 else {
                     
-                    const teams = [...response.data[i].alliances.red.team_keys, ...response.data[i].alliances.blue.team_keys];
+                    const teams = [...match.alliances.red.team_keys, ...match.alliances.blue.team_keys];
 
                     for (let k = 0; k < 6; k++) {
                         const currTeam = Number(teams[k].substring(3))

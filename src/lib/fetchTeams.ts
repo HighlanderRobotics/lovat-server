@@ -1,7 +1,7 @@
 import axios from "axios";
 import prisma from "../prismaClient";
 
-export default async function fetchTeams() {
+export default async function fetchTeams(): Promise<void> {
     // Get teams from TBA and upsert them to the database
     // TBA paginates their API, so we have to loop through all the pages
 

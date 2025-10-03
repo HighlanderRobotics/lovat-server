@@ -1,7 +1,7 @@
 
 
 
-export const checkOnlyOneInstanceOfScouter = async (teamOne: string[], teamTwo: string[], teamThree: string[], teamFour: string[], teamFive: string[], teamSix: string[]) => {
+export const checkOnlyOneInstanceOfScouter = async (teamOne: string[], teamTwo: string[], teamThree: string[], teamFour: string[], teamFive: string[], teamSix: string[]): Promise<boolean> => {
     try {
         const scouterSet = new Set<string>()
         const teamOneData = await checkTeam(teamOne, scouterSet)

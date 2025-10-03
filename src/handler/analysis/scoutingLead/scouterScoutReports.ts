@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 // import { cooperationSingleMatch } from "./cooperationSingleMatch";
 
 
-export const scouterScoutReports = async (req : AuthenticatedRequest, res : Response) => {
+export const scouterScoutReports = async (req : AuthenticatedRequest, res : Response): Promise<void> => {
     try {
         const params = z.object({
             tournamentKey : z.string().nullable(),

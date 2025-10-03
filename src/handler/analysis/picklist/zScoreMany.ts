@@ -11,7 +11,13 @@ import { rankFlag } from "../rankFlag";
  * @param flags flags to send along with data, given in strings matching category metrics
  * @returns object with total Z-score, breakdowns by metric, and flags; organized by team number
  */
-export const zScoreMany = async (data: Partial<Record<Metric, Record<number, number>>>, teams: number[], tournamentKey: string, queries: Record<string, number>, flags: string[]) => {
+export const zScoreMany = async (data: Partial<Record<Metric, Record<number, number>>>, teams: number[], tournamentKey: string, queries: Record<string, number>, flags: string[]): Promise<{
+    team: number,
+    result: number,
+    breakdown: { type: string, result: number }[],
+    unweighted: { type: string, result: number }[],
+    flags: { type: string, result: number }[]
+}[]> => {
     try {
         const results: {
             team: number,
@@ -86,8 +92,8 @@ export const zScoreMany = async (data: Partial<Record<Metric, Record<number, num
         }
 
         // Sum total z score
-        for (let i = 0; i < results.length; i++) {
-            results[i].result = results[i].breakdown.reduce((acc, cur) => acc + cur.result, 0);
+        for (const singleResult of results) {
+            singleResult.result = singleResult.breakdown.reduce((acc, cur) => acc + cur.result, 0);
         }
 
         return results;

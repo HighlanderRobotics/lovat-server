@@ -3,7 +3,15 @@ import { FlippedActionMap, FlippedPositionMap, autoEnd } from "../analysisConsta
 import { User } from "@prisma/client";
 
 
-export const autoPathScouter = async (user: User, matchKey : string, scoutReportUuid : string) => {
+export const autoPathScouter = async (user: User, matchKey : string, scoutReportUuid : string): Promise<{
+            autoPoints : number,
+            positions : {
+                location: number,
+                event: number,
+                time: number}[],
+            match : string,
+            tournamentName : string
+    }> => {
     try {
         const autoData = await prismaClient.event.findMany({
             where : 

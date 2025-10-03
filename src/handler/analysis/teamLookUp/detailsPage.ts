@@ -7,7 +7,7 @@ import { Metric, metricsToNumber} from "../analysisConstants";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
 
 
-export const detailsPage = async (req: AuthenticatedRequest, res: Response) => {
+export const detailsPage = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const params = z.object({
             team: z.number(),
