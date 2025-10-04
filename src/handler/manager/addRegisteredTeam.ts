@@ -60,7 +60,7 @@ export const addRegisteredTeam = async (req: AuthenticatedRequest, res: Response
             }
         })
         //sending email
-        const verificationUrl = `lovat.app/verify/${params.data.code}`
+        const verificationUrl = `https://lovat.app/verify/${params.data.code}`
         const resend = new Resend(process.env.RESEND_KEY);
 
         resend.emails.send({
