@@ -15,7 +15,7 @@ Developed by FRC [Team 8033](https://www.frc8033.com/), [HighlanderRobotics](htt
     </a> 
 </p> 
 <p align="right">
-    <a href="https://www.frc8033.com/">
-    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/globe.svg" alt="Website" height="32" width="32" />
-  </a>
+    <a href="https://frc8033.com">
+        <img alt="Website" src="https://img.shields.io/badge/website-000000?style=for-the-badge&logo=About.me&logoColor=white">
+    </a>
 </p>
