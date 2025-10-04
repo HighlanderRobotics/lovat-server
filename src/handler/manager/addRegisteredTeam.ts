@@ -51,18 +51,19 @@ export const addRegisteredTeam = async (
 
     const user = req.user;
 
-    await prismaClient.user.update({
-      data: {
-        teamNumber: req.body.number,
-        role: "SCOUTING_LEAD",
-      },
-      where: {
-        id: user.id,
-      },
-    });
-    //sending email
-    const verificationUrl = `lovat.app/verify/${params.data.code}`;
-    const resend = new Resend(process.env.RESEND_KEY);
+        await prismaClient.user.update({
+            data: {
+                teamNumber: req.body.number,
+                role: "SCOUTING_LEAD"
+            },
+            where:
+            {
+                id: user.id
+            }
+        })
+        //sending email
+        const verificationUrl = `https://lovat.app/verify/${params.data.code}`
+        const resend = new Resend(process.env.RESEND_KEY);
 
     resend.emails.send({
       from: "noreply@lovat.app",
