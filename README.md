@@ -10,8 +10,5 @@ Developed by FRC [Team 8033](https://www.frc8033.com/), [HighlanderRobotics](htt
   </a>
   <a href="https://www.youtube.com/@frc8033">
         <img src="https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/youtube.svg" alt="YouTube" height="32" width="32" />
-    </a> 
-  <a href="https://frc8033.com">
-        <img alt="Website" src="https://img.shields.io/badge/website-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white">
     </a>
 </p>
