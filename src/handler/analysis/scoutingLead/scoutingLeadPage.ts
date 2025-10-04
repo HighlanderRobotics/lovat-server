@@ -8,7 +8,6 @@
 // import { cooperationSingleMatch } from "../coreAnalysis/cooperationSingleMatch";
 // // import { cooperationSingleMatch } from "./cooperationSingleMatch";
 
-
 // export const scoutingLeadPage = async (req : AuthenticatedRequest, res : Response) => {
 //     try {
 //         if(req.user.role === "SCOUTING_LEAD")
@@ -21,9 +20,9 @@
 //             const flaggedMatches = await prismaClient.flaggedScoutReport.findMany({
 //                 where :
 //                 {
-//                     scoutReport : 
+//                     scoutReport :
 //                     {
-//                         scouter : 
+//                         scouter :
 //                         {
 //                             sourceTeamNumber : req.user.teamNumber
 //                         }

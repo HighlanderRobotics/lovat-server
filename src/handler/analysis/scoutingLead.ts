@@ -3,7 +3,6 @@
 // import z from 'zod'
 // import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
-
 // export const scoutingLead = async (req: AuthenticatedRequest, res : Response) => {
 //     try {
 //         if(req.user.role !== "SCOUTING_LEAD")
@@ -38,7 +37,6 @@
 //                     }
 //                 }
 //             }
-
 
 //         })
 //         const scouters = await prismaClient.scouter.findMany({

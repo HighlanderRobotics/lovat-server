@@ -1,6 +1,6 @@
 import { Response } from "express";
-import prismaClient from '../../prismaClient';
-import z from 'zod';
+import prismaClient from "../../prismaClient";
+import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { addTournamentMatches } from "./addTournamentMatches";
 import {
@@ -13,17 +13,15 @@ import {
 //maybe faster???
 export const getMatches = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const user = req.user;
     const teamNumber = user.teamNumber || 0;
 
-    // parse and validate 
+    // parse and validate
     const isScouted =
-      req.query.isScouted !== undefined
-        ? req.query.isScouted === "true"
-        : null;
+      req.query.isScouted !== undefined ? req.query.isScouted === "true" : null;
     const teams =
       req.query.teams !== undefined
         ? JSON.parse(req.query.teams as string)
@@ -69,9 +67,7 @@ export const getMatches = async (
     if (allMatches.length === 0) {
       res
         .status(404)
-        .send(
-          "The match schedule for this tournament hasn't been posted yet."
-        );
+        .send("The match schedule for this tournament hasn't been posted yet.");
       return;
     }
 
@@ -87,37 +83,40 @@ export const getMatches = async (
         externalReports: number;
         teamPosition: string; // team1, team2, etc.
       }[];
-      scoutReports: typeof allMatches[0]["scoutReports"];
+      scoutReports: (typeof allMatches)[0]["scoutReports"];
     }
 
-    const groupedMatches = allMatches.reduce((acc, match) => {
-      const key = `${match.matchNumber}-${match.matchType}`;
-      if (!acc[key]) {
-        acc[key] = {
-          matchNumber: match.matchNumber,
-          matchType: match.matchType,
-          tournamentKey: match.tournamentKey,
-          teams: [],
-          scoutReports: [],
-        } as GroupedMatch;
-      }
+    const groupedMatches = allMatches.reduce(
+      (acc, match) => {
+        const key = `${match.matchNumber}-${match.matchType}`;
+        if (!acc[key]) {
+          acc[key] = {
+            matchNumber: match.matchNumber,
+            matchType: match.matchType,
+            tournamentKey: match.tournamentKey,
+            teams: [],
+            scoutReports: [],
+          } as GroupedMatch;
+        }
 
-      const teamPosition =
-        ScouterScheduleMap[match.key[match.key.length - 1]];
-      const alliance =
-        parseInt(match.key[match.key.length - 1]) < 3 ? "red" : "blue";
+        const teamPosition =
+          ScouterScheduleMap[match.key[match.key.length - 1]];
+        const alliance =
+          parseInt(match.key[match.key.length - 1]) < 3 ? "red" : "blue";
 
-      acc[key].teams.push({
-        teamNumber: match.teamNumber,
-        alliance: alliance,
-        scouters: [],
-        externalReports: 0,
-        teamPosition: teamPosition,
-      });
+        acc[key].teams.push({
+          teamNumber: match.teamNumber,
+          alliance: alliance,
+          scouters: [],
+          externalReports: 0,
+          teamPosition: teamPosition,
+        });
 
-      acc[key].scoutReports.push(...match.scoutReports);
-      return acc;
-    }, {} as Record<string, GroupedMatch>);
+        acc[key].scoutReports.push(...match.scoutReports);
+        return acc;
+      },
+      {} as Record<string, GroupedMatch>,
+    );
 
     let finalMatches = Object.values(groupedMatches);
 
@@ -130,7 +129,7 @@ export const getMatches = async (
       finalMatches = finalMatches.filter((match) => {
         const teamNumbers = match.teams.map((team) => team.teamNumber);
         return params.data.teamNumbers!.every((num) =>
-          teamNumbers.includes(num)
+          teamNumbers.includes(num),
         );
       });
     }
@@ -138,9 +137,8 @@ export const getMatches = async (
     //filter matches by scouted or not, if provided
     if (params.data.isScouted !== null) {
       finalMatches = finalMatches.filter((match) => {
-        const scouted = match.scoutReports.some(
-          (report) =>
-            user.teamSource.includes(report.scouter.sourceTeamNumber)
+        const scouted = match.scoutReports.some((report) =>
+          user.teamSource.includes(report.scouter.sourceTeamNumber),
         );
         return params.data.isScouted ? scouted : !scouted;
       });
@@ -155,16 +153,15 @@ export const getMatches = async (
 
     const finalFormatedMatches = finalMatches.map((match) => {
       const teams = match.teams.sort((a, b) =>
-        a.teamPosition.localeCompare(b.teamPosition)
+        a.teamPosition.localeCompare(b.teamPosition),
       );
 
       return {
         tournamentKey: match.tournamentKey,
         matchNumber: match.matchNumber,
         matchType: ReverseMatchTypeMap[match.matchType],
-        scouted: match.scoutReports.some(
-          (report) =>
-            user.teamSource.includes(report.scouter.sourceTeamNumber)
+        scouted: match.scoutReports.some((report) =>
+          user.teamSource.includes(report.scouter.sourceTeamNumber),
         ),
         team1: teams.find((team) => team.teamPosition === "team1"),
         team2: teams.find((team) => team.teamPosition === "team2"),
@@ -194,7 +191,6 @@ export const getMatches = async (
       });
     }
 
-  
     const scoutReports = await prismaClient.scoutReport.findMany({
       where: {
         teamMatchData: {
@@ -228,20 +224,26 @@ export const getMatches = async (
       },
     });
 
-    const externalReportsMap = externalReports.reduce((acc, report) => {
-      acc[report.teamMatchKey] = report._count._all;
-      return acc;
-    }, {} as Record<string, number>);
+    const externalReportsMap = externalReports.reduce(
+      (acc, report) => {
+        acc[report.teamMatchKey] = report._count._all;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-    const scouterShiftsMap = scouterShifts.reduce((acc, shift) => {
-      for (let i = 1; i <= 6; i++) {
-        const teamKey = `team${i}` as keyof typeof shift;
-        shift[teamKey]?.forEach((scouter) => {
-          acc[scouter.uuid] = scouter.name;
-        });
-      }
-      return acc;
-    }, {} as Record<string, string>);
+    const scouterShiftsMap = scouterShifts.reduce(
+      (acc, shift) => {
+        for (let i = 1; i <= 6; i++) {
+          const teamKey = `team${i}` as keyof typeof shift;
+          shift[teamKey]?.forEach((scouter) => {
+            acc[scouter.uuid] = scouter.name;
+          });
+        }
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
 
     //update matches w scouter info
     for (const match of finalFormatedMatches) {
@@ -255,11 +257,10 @@ export const getMatches = async (
         const teamScoutReports = scoutReports.filter(
           (report) =>
             report.teamMatchData.key.endsWith(
-              ReverseScouterScheduleMap[teamKey as string]
+              ReverseScouterScheduleMap[teamKey as string],
             ) &&
             report.teamMatchData.matchNumber === match.matchNumber &&
-            report.teamMatchData.matchType ===
-              MatchTypeMap[match.matchType]
+            report.teamMatchData.matchType === MatchTypeMap[match.matchType],
         );
 
         team.scouters = teamScoutReports.map((report) => ({
@@ -271,19 +272,17 @@ export const getMatches = async (
           const assignedShifts = scouterShifts.filter(
             (shift) =>
               shift.startMatchOrdinalNumber <= match.matchNumber &&
-              shift.endMatchOrdinalNumber >= match.matchNumber
+              shift.endMatchOrdinalNumber >= match.matchNumber,
           );
 
           const assignedScouters = assignedShifts
             .flatMap((shift) => shift[teamKey] || [])
-            .filter(
-              (scouter) => scouter.sourceTeamNumber === user.teamNumber
-            );
+            .filter((scouter) => scouter.sourceTeamNumber === user.teamNumber);
 
           assignedScouters.forEach((scouter) => {
             if (
               !team.scouters.some(
-                (s) => s.name === scouter.name && s.scouted === true
+                (s) => s.name === scouter.name && s.scouted === true,
               )
             ) {
               team.scouters.push({ name: scouter.name, scouted: false });
@@ -293,16 +292,14 @@ export const getMatches = async (
 
         const teamMatchKey = `${match.tournamentKey}_${
           MatchTypeToAbrivation[match.matchType]
-        }${match.matchNumber}_${
-          ReverseScouterScheduleMap[teamKey as string]
-        }`;
+        }${match.matchNumber}_${ReverseScouterScheduleMap[teamKey as string]}`;
         team.externalReports = externalReportsMap[teamMatchKey] || 0;
       }
     }
 
     res.status(200).send(finalFormatedMatches);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).send(error);
   }
 };

@@ -7,7 +7,7 @@ import { Metric } from "../analysis/analysisConstants";
 
 export const getMatchResults = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z
@@ -16,23 +16,23 @@ export const getMatchResults = async (
       })
       .parse(req.query);
 
-    const teams = []; 
+    const teams = [];
 
     for (let i = 0; i < 6; i++) {
       teams[i] = await prismaClient.teamMatchData.findUnique({
         where: {
-          key: `${params.matchKey}_${i}`
+          key: `${params.matchKey}_${i}`,
         },
         include: {
-          scoutReports: true
-        }
-      })
+          scoutReports: true,
+        },
+      });
     }
 
     const out: MatchResultsOutput = {
-      red: await getAllianceResults(teams.slice(0,3)),
-      blue: await getAllianceResults(teams.slice(3,6))
-    }
+      red: await getAllianceResults(teams.slice(0, 3)),
+      blue: await getAllianceResults(teams.slice(3, 6)),
+    };
 
     res.status(200).send(out);
   } catch (error) {
@@ -51,45 +51,51 @@ export const ALLIANCE_METRICS: Metric[] = [
   Metric.netScores,
 ];
 
-
 interface MatchResultsOutput {
-  red: AllianceResultsOutput,
-  blue: AllianceResultsOutput
-};
+  red: AllianceResultsOutput;
+  blue: AllianceResultsOutput;
+}
 
 interface AllianceResultsOutput {
-  teams: TeamOutput[],
-  totalPoints: number,
-  coralL1: number,
-  coralL2: number,
-  coralL3: number,
-  coralL4: number,
-  processor: number,
-  net: number
-};
+  teams: TeamOutput[];
+  totalPoints: number;
+  coralL1: number;
+  coralL2: number;
+  coralL3: number;
+  coralL4: number;
+  processor: number;
+  net: number;
+}
 
 interface TeamOutput {
-  teamNumber: number,
-  pointsScored: number,
-  reports: ScoutReport[],
-  role: number[]
-};
+  teamNumber: number;
+  pointsScored: number;
+  reports: ScoutReport[];
+  role: number[];
+}
 
-async function getAllianceResults(matchData: (TeamMatchData & { scoutReports: ScoutReport[] })[]) {
-  const totals = Object.fromEntries(ALLIANCE_METRICS.map(metric => [metric, 0]));;
+async function getAllianceResults(
+  matchData: (TeamMatchData & { scoutReports: ScoutReport[] })[],
+) {
+  const totals = Object.fromEntries(
+    ALLIANCE_METRICS.map((metric) => [metric, 0]),
+  );
 
   for (let i = 0; i < 3; i++) {
-    const teamTotals = Object.fromEntries(ALLIANCE_METRICS.map(metric => [metric, 0]));;
+    const teamTotals = Object.fromEntries(
+      ALLIANCE_METRICS.map((metric) => [metric, 0]),
+    );
 
     for (const report of matchData[i].scoutReports) {
       const result = await averageScoutReport(report.uuid, ALLIANCE_METRICS);
       for (const stat of ALLIANCE_METRICS) {
-        teamTotals[stat] += result[stat]
+        teamTotals[stat] += result[stat];
       }
     }
 
     for (const stat of ALLIANCE_METRICS) {
-      totals[stat] += teamTotals[stat] / (matchData[i].scoutReports.length || 1)
+      totals[stat] +=
+        teamTotals[stat] / (matchData[i].scoutReports.length || 1);
     }
   }
 
@@ -105,13 +111,15 @@ async function getAllianceResults(matchData: (TeamMatchData & { scoutReports: Sc
     coralL3: totals[Metric.coralL3],
     coralL4: totals[Metric.coralL4],
     processor: totals[Metric.processorScores],
-    net: totals[Metric.netScores]
+    net: totals[Metric.netScores],
   };
 
   return out;
 }
 
-async function getTeamResults(matchData: TeamMatchData & { scoutReports: ScoutReport[] }) {
+async function getTeamResults(
+  matchData: TeamMatchData & { scoutReports: ScoutReport[] },
+) {
   let total = 0;
 
   for (const report of matchData.scoutReports) {
@@ -129,10 +137,8 @@ async function getTeamResults(matchData: TeamMatchData & { scoutReports: ScoutRe
   return out;
 }
 
-
-
 function getRobotRole(reports: ScoutReport[]) {
-  const out: number[] = [0,0,0,0];
+  const out: number[] = [0, 0, 0, 0];
 
   for (const report of reports) {
     if (report.robotRole === "OFFENSE") out[0] += 1;
@@ -140,6 +146,6 @@ function getRobotRole(reports: ScoutReport[]) {
     if (report.robotRole === "FEEDER") out[2] += 1;
     if (report.robotRole === "IMMOBILE") out[3] += 1;
   }
-  
+
   return out;
 }

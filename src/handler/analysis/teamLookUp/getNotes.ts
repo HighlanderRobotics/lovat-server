@@ -5,7 +5,10 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { getSourceFilter } from "../coreAnalysis/averageManyFast";
 import { allTeamNumbers, allTournaments } from "../analysisConstants";
 
-export const getNotes = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getNotes = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const params = z
       .object({
@@ -30,11 +33,11 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response): Promis
     // Set up filters to decrease server load
     const sourceTnmtFilter = getSourceFilter(
       req.user.tournamentSource,
-      await allTournaments
+      await allTournaments,
     );
     const sourceTeamFilter = getSourceFilter(
       req.user.teamSource,
-      await allTeamNumbers
+      await allTeamNumbers,
     );
 
     const noteData = await prismaClient.scoutReport.findMany({

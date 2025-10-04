@@ -4,7 +4,7 @@ import z from "zod";
 
 export const getTeamTournamentStatus = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z
@@ -53,7 +53,7 @@ export const getTeamTournamentStatus = async (
         headers: {
           "X-TBA-Auth-Key": process.env.TBA_KEY,
         },
-      }
+      },
     );
     if (!tbaResponse.ok) throw Error("Failed to fetch from TBA");
 
@@ -69,7 +69,7 @@ export const getTeamTournamentStatus = async (
               sort_orders: z.array(z.number()),
             }),
           }),
-        })
+        }),
       )
       .parse(await tbaResponse.json());
 
@@ -78,7 +78,7 @@ export const getTeamTournamentStatus = async (
     out.rank = tbaTeam.qual.ranking.rank;
     out.matchesPlayed = tbaTeam.qual.ranking.matches_played;
     out.rankingPoints = Math.round(
-      tbaTeam.qual.ranking.sort_orders[0] * out.matchesPlayed
+      tbaTeam.qual.ranking.sort_orders[0] * out.matchesPlayed,
     );
     out.matchesTotal = matches.length;
 

@@ -15,7 +15,7 @@ import { averageScoutReport } from "../coreAnalysis/averageScoutReport";
 
 export const matchPageSpecificScouter = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z
@@ -46,7 +46,7 @@ export const matchPageSpecificScouter = async (
       autoPath: await autoPathScouter(
         req.user,
         scoutReport.teamMatchKey,
-        scoutReport.uuid
+        scoutReport.uuid,
       ),
       note: scoutReport.notes,
       robotBrokeDescription: scoutReport.robotBrokeDescription,
@@ -55,7 +55,7 @@ export const matchPageSpecificScouter = async (
 
     const aggregateData = await averageScoutReport(
       scoutReport.uuid,
-      specificMatchPageMetrics
+      specificMatchPageMetrics,
     );
 
     for (const metric of specificMatchPageMetrics) {

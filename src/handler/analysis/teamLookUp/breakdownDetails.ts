@@ -12,7 +12,7 @@ import { EventAction } from "@prisma/client";
 
 export const breakdownDetails = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z
@@ -87,7 +87,7 @@ export const breakdownDetails = async (
     const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
       query,
       req.user.teamSource,
-      req.user.tournamentSource
+      req.user.tournamentSource,
     );
 
     // Edit to work with true/false breakdowns

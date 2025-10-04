@@ -9,7 +9,6 @@
 // import { match } from "assert";
 // import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
 
-
 // export const matchPageAllScouters = async (req: AuthenticatedRequest, res: Response) => {
 //     try {
 //         const params = z.object({
@@ -45,7 +44,6 @@
 //         };
 
 //         res.status(200).send(data)
-
 
 //     }
 //     catch (error) {

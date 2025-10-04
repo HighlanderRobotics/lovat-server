@@ -3,45 +3,42 @@ import typescriptEslintPlugin from "@typescript-eslint/eslint-plugin";
 import typescriptEslintParser from "@typescript-eslint/parser";
 import tseslint from "typescript-eslint";
 
-
-
-
 export default [
-    // js.configs.recommended,
-    ...tseslint.configs.stylistic,
+  // js.configs.recommended,
+  ...tseslint.configs.stylistic,
 
-    {
-        ignores: ["dist/**/*.js"]
+  {
+    ignores: ["dist/**/*.js"],
+  },
+  {
+    files: ["**/*.ts"],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: "module",
+      globals: {
+        window: "readonly",
+        document: "readonly",
+      },
+      parser: typescriptEslintParser, // Use the parser here
     },
-    {
-        files: ["**/*.ts"],
-        languageOptions: {
-            ecmaVersion: 2024,
-            sourceType: "module",
-            globals: {
-                window: "readonly",
-                document: "readonly",
-            },
-            parser: typescriptEslintParser, // Use the parser here
-        },
-        plugins: {
-            "unused-imports": unusedImports,
-            "@typescript-eslint": typescriptEslintPlugin,
-        },
-        rules: {
-            "unused-imports/no-unused-imports": "error",
-            "@typescript-eslint/no-explicit-any": "warn",
-            "@typescript-eslint/explicit-module-boundary-types": "warn",
-            "unused-imports/no-unused-vars": [
-                "off",
-                {
-                    vars: "all",
-                    varsIgnorePattern: "^_",
-                    args: "after-used",
-                    argsIgnorePattern: "^_",
-                },
-            ],
-            "@typescript-eslint/prefer-for-of" : "warn"
-        },
+    plugins: {
+      "unused-imports": unusedImports,
+      "@typescript-eslint": typescriptEslintPlugin,
     },
+    rules: {
+      "unused-imports/no-unused-imports": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/explicit-module-boundary-types": "warn",
+      "unused-imports/no-unused-vars": [
+        "off",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/prefer-for-of": "warn",
+    },
+  },
 ];

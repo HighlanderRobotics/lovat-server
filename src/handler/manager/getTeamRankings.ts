@@ -4,7 +4,7 @@ import z from "zod";
 
 export const getTeamRankings = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z
@@ -33,7 +33,7 @@ export const getTeamRankings = async (
     }
 
     const uniqueTeamNumbers = Array.from(
-      new Set(rows.map((row) => row.teamNumber))
+      new Set(rows.map((row) => row.teamNumber)),
     );
     const teams: {
       number: number;
@@ -58,7 +58,7 @@ export const getTeamRankings = async (
 
     try {
       const tbaResponse = await fetch(
-        `https://www.thebluealliance.com/api/v3/event/${params.data.tournamentKey}/teams/statuses`
+        `https://www.thebluealliance.com/api/v3/event/${params.data.tournamentKey}/teams/statuses`,
       );
       if (!tbaResponse.ok) throw Error("Failed to fetch from TBA");
 
@@ -71,7 +71,7 @@ export const getTeamRankings = async (
           team.rank = tbaTeam.qual.ranking.rank;
           team.matchesPlayed = tbaTeam.qual.ranking.matches_played;
           team.rankingPoints = Math.round(
-            tbaTeam.qual.ranking.sort_orders[0] * team.matchesPlayed
+            tbaTeam.qual.ranking.sort_orders[0] * team.matchesPlayed,
           );
         } catch (e) {
           continue;
