@@ -55,4 +55,15 @@ Run
 npm run dev
 ```
 
-and your server should start. If you make any changes to a file and save, the server will restart automatically
+and your server should start. If you make any changes to a file and save, the server will restart automatically. To stop the server, press Ctrl + C
+
+### Step 5: Import a database backup
+
+Download a [backup of the database]() and run
+
+```bash
+pg_restore -d "YOUR_DATABASE_URL" /path-to-your-backup --clean --if-exists --no-owner
+
+# example
+pg_restore -d "postgresql://johndoe:mytopsecretpassword@localhost:5432/lovat_dev" /Users/johndoe/Downloads/lovat-backup-2025-12-25.dump --clean --if-exists --no-owner
+```
