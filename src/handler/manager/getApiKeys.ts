@@ -1,40 +1,33 @@
 import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
-import { createHash, randomBytes } from "crypto";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
-export const addApiKey = async (
+export const getApiKeys = async (
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> => {
-  if (req.tokenType === "apiKey") {
-    res.status(403).json({ error: "Cannot create API key using an API key" });
-    return;
-  }
   try {
-    const paramsAddApiKey = z.object({
-        name: z.string()
-    }).parse(req.query);
-
     const user = req.user;
 
     if (!user) {
       res.status(404).json({ error: "User not found" });
       return;
     }
-
-    const apiKey = `lvt-${randomBytes(32).toString("hex")}`;
-
-    await prismaClient.apiKey.create({
-      data: {
-        keyHash: createHash('sha256').update(apiKey).digest('hex'),
-        name: paramsAddApiKey.name,
+    const apiKey = await prismaClient.apiKey.findMany({
+      where: {
         userId: user.id,
+      },
+      select: {
+        uuid: true,
+        name: true,
+        createdAt: true,
+        lastUsed: true,
+        requests: true,
       },
     });
 
-    res.status(200).json({ apiKey: apiKey });
+    res.status(200).json({apiKeys : apiKey});
     return;
 
   } catch (error) {

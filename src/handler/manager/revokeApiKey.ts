@@ -1,7 +1,6 @@
 import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
-import { createHash } from "crypto";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 export const revokeApiKey = async (
@@ -10,17 +9,15 @@ export const revokeApiKey = async (
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
-    res.status(403).json({ error: "Cannot create API key using an API key" });
+    res.status(403).json({ error: "Cannot revoke API key using an API key" });
     return;
   }
-    const paramsAddApiKey = z.object({
-        key: z.string()
+    const paramsRevokeApiKey = z.object({
+        uuid: z.string()
     }).parse(req.query);
 
-    const hashedKey = createHash('sha256').update(paramsAddApiKey.key).digest('hex');
-
     const key = await prismaClient.apiKey.deleteMany({
-      where: { keyHash: hashedKey },
+      where: { uuid: paramsRevokeApiKey.uuid, userId: req.user?.id },
     });
 
     if (!key) {
