@@ -115,7 +115,7 @@ model ScoutReport {
   bargeResult           BargeResult
   knocksAlgae           KnocksAlgae
   underShallowCage      UnderShallowCage
-  robotBrokeDescription String?          
+  robotBrokeDescription String?
   driverAbility         Int
   scouterUuid           String
   scouter               Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
@@ -296,10 +296,22 @@ model User {
   emailVerified    Boolean           @default(false)
   username         String?
   role             UserRole          @default(ANALYST)
+  ApiKeys          ApiKey[]
   tournamentSource String[]
   teamSource       Int[]
   mutablePicklists MutablePicklist[]
   sharedPicklists  SharedPicklist[]
+}
+
+model ApiKey {
+  uuid      String    @id @unique @default(uuid())
+  keyHash   String    @unique
+  name      String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  lastUsed  DateTime?
+  requests  Int       @default(0)
 }
 
 enum UserRole {

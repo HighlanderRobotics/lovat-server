@@ -3,9 +3,11 @@ import axios from "axios";
 import { User } from "@prisma/client";
 import { Request as ExpressRequest, Response, NextFunction } from "express";
 import * as jose from "jose";
+import { createHash } from "crypto";
 
 export interface AuthenticatedRequest extends ExpressRequest {
   user: User;
+  tokenType?: "apiKey" | "jwt";
 }
 
 export const requireAuth = async (
@@ -20,6 +22,38 @@ export const requireAuth = async (
 
     if (tokenString === undefined) {
       res.status(401).send("No authorization token provided");
+      return;
+    }
+
+    if (tokenString.startsWith("lvt-")) {
+      // Process as API key
+
+      const keyHash = createHash('sha256').update(tokenString).digest('hex');
+
+      const apiKey = await prisma.apiKey.update({
+        where: {
+          keyHash: keyHash,
+        },
+        data: {
+          lastUsed: new Date(),
+          requests: {
+            increment: 1,
+          }
+        },
+        include: {
+          user: true,
+        }
+      });
+
+      if (!apiKey) {
+        res.status(401).send("Invalid API key");
+        return;
+      }
+
+      req.user = apiKey.user;
+      req.tokenType = "apiKey";
+
+      next();
       return;
     }
 
@@ -81,6 +115,7 @@ export const requireAuth = async (
 
       // Add user to request
       req.user = user;
+      req.tokenType = "jwt";
 
       next();
     } catch (error) {
