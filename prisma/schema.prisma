@@ -296,10 +296,21 @@ model User {
   emailVerified    Boolean           @default(false)
   username         String?
   role             UserRole          @default(ANALYST)
+  apiKeys          Apikey[]
   tournamentSource String[]
   teamSource       Int[]
   mutablePicklists MutablePicklist[]
   sharedPicklists  SharedPicklist[]
+}
+
+model Apikey {
+  key       String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+  lastUsed  DateTime?
+  requests  Int      @default(0)
 }
 
 enum UserRole {
