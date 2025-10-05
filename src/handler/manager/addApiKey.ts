@@ -13,9 +13,11 @@ export const addApiKey = async (
     return;
   }
   try {
-    const paramsAddApiKey = z.object({
-        name: z.string()
-    }).parse(req.query);
+    const paramsAddApiKey = z
+      .object({
+        name: z.string(),
+      })
+      .parse(req.query);
 
     const user = req.user;
 
@@ -28,7 +30,7 @@ export const addApiKey = async (
 
     await prismaClient.apiKey.create({
       data: {
-        keyHash: createHash('sha256').update(apiKey).digest('hex'),
+        keyHash: createHash("sha256").update(apiKey).digest("hex"),
         name: paramsAddApiKey.name,
         userId: user.id,
       },
@@ -36,13 +38,14 @@ export const addApiKey = async (
 
     res.status(200).json({ apiKey: apiKey });
     return;
-
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: "Invalid request parameters", details: error.errors });
+      res
+        .status(400)
+        .json({ error: "Invalid request parameters", details: error.errors });
       return;
     }
-    res.status(500).json({ error: "Internal server error",});
+    res.status(500).json({ error: "Internal server error" });
     console.error(error);
     return;
   }

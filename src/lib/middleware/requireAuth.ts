@@ -28,7 +28,7 @@ export const requireAuth = async (
     if (tokenString.startsWith("lvt-")) {
       // Process as API key
 
-      const keyHash = createHash('sha256').update(tokenString).digest('hex');
+      const keyHash = createHash("sha256").update(tokenString).digest("hex");
 
       const apiKey = await prisma.apiKey.update({
         where: {
@@ -38,11 +38,11 @@ export const requireAuth = async (
           lastUsed: new Date(),
           requests: {
             increment: 1,
-          }
+          },
         },
         include: {
           user: true,
-        }
+        },
       });
 
       if (!apiKey) {

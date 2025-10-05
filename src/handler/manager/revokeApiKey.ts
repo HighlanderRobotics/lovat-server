@@ -9,12 +9,14 @@ export const revokeApiKey = async (
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
-    res.status(403).json({ error: "Cannot revoke API key using an API key" });
-    return;
-  }
-    const paramsRevokeApiKey = z.object({
-        uuid: z.string()
-    }).parse(req.query);
+      res.status(403).json({ error: "Cannot revoke API key using an API key" });
+      return;
+    }
+    const paramsRevokeApiKey = z
+      .object({
+        uuid: z.string(),
+      })
+      .parse(req.query);
 
     const key = await prismaClient.apiKey.deleteMany({
       where: { uuid: paramsRevokeApiKey.uuid, userId: req.user?.id },
@@ -27,8 +29,6 @@ export const revokeApiKey = async (
 
     res.status(200).json("Key successfully revoked");
     return;
-
-
   } catch (error) {
     res.status(400).json({ error: "Invalid request parameters" });
     return;
