@@ -9,8 +9,8 @@ Developed by FRC [Team 8033](https://www.frc8033.com/), [@HighlanderRobotics](ht
 ### Prerequisites
 
 - [Node.js v22.20.0](https://nodejs.org/en/download)
-- [Git](https://git-scm.com/downloads) (obviously)
-- [PostgreSQL](https://www.postgresql.org/download/)
+- [Git](https://git-scm.com/downloads) (latest version)
+- [PostgreSQL](https://www.postgresql.org/download/) (latest version)
 
 #### Recommended
 
@@ -67,3 +67,5 @@ pg_restore -d "YOUR_DATABASE_URL" /path-to-your-backup --clean --if-exists --no-
 # example
 pg_restore -d "postgresql://johndoe:mytopsecretpassword@localhost:5432/lovat_dev" /Users/johndoe/Downloads/lovat-backup-2025-12-25.dump --clean --if-exists --no-owner
 ```
+
+This should fill your local database with real data
