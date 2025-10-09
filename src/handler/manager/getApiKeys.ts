@@ -2,6 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { UserRole } from "@prisma/client";
 
 export const getApiKeys = async (
   req: AuthenticatedRequest,
@@ -14,7 +15,7 @@ export const getApiKeys = async (
       res.status(404).json({ error: "User not found" });
       return;
     }
-    const apiKey = await prismaClient.apiKey.findMany({
+    const apiKeys = await prismaClient.apiKey.findMany({
       where: {
         userId: user.id,
       },
@@ -27,7 +28,34 @@ export const getApiKeys = async (
       },
     });
 
-    res.status(200).json({ apiKeys: apiKey });
+    if (user.role === UserRole.SCOUTING_LEAD) {
+      const teamApiKeys = await prismaClient.apiKey.findMany({
+        where: {
+          user: {
+            teamNumber: user.teamNumber
+          },
+          NOT: {
+            userId: user.id
+          }
+        },
+        select: {
+          uuid: true,
+          name: true,
+          createdAt: true,
+          lastUsed: true,
+          requests: true,
+          user: {
+            select: {
+              username: true,
+            }
+          }
+        }
+      });
+      res.status(200).json({ apiKeys: apiKeys, teamApiKeys: teamApiKeys });
+      return;
+    }
+
+    res.status(200).json({ apiKeys: apiKeys });
     return;
   } catch (error) {
     if (error instanceof z.ZodError) {
