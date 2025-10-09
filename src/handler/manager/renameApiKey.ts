@@ -3,30 +3,32 @@ import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
-export const revokeApiKey = async (
+export const renameApiKey = async (
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
-      res.status(403).json({ error: "Cannot revoke API key using an API key" });
+      res.status(403).json({ error: "Cannot rename API key using an API key" });
       return;
     }
-    const paramsRevokeApiKey = z
+
+    const paramsRenameApiKey = z
       .object({
         uuid: z.string(),
+        newName: z.string(),
       })
       .parse(req.query);
 
     if (
       !(await prismaClient.apiKey.findFirst({
-        where: { uuid: paramsRevokeApiKey.uuid, userId: req.user?.id },
+        where: { uuid: paramsRenameApiKey.uuid, userId: req.user?.id },
       }))
     ) {
       if (
         (await prismaClient.apiKey.findFirst({
           where: {
-            uuid: paramsRevokeApiKey.uuid,
+            uuid: paramsRenameApiKey.uuid,
             user: {
               teamNumber: req.user?.teamNumber,
               NOT: { id: req.user?.id },
@@ -35,23 +37,25 @@ export const revokeApiKey = async (
         })) &&
         req.user?.role == "SCOUTING_LEAD"
       ) {
-        await prismaClient.apiKey.delete({
-          where: { uuid: paramsRevokeApiKey.uuid },
+        await prismaClient.apiKey.update({
+          where: { uuid: paramsRenameApiKey.uuid },
+          data: { name: paramsRenameApiKey.newName },
         });
-        res.status(200).json("Key successfully revoked");
+        res.status(200).json("Key successfully renamed");
         return;
       } else {
         res
           .status(403)
-          .json({ error: "You do not have permission to revoke this API key" });
+          .json({ error: "You do not have permission to rename this API key" });
         return;
       }
     } else {
-      await prismaClient.apiKey.delete({
-        where: { uuid: paramsRevokeApiKey.uuid },
+      await prismaClient.apiKey.update({
+        where: { uuid: paramsRenameApiKey.uuid },
+        data: { name: paramsRenameApiKey.newName },
       });
 
-      res.status(200).json("Key successfully revoked");
+      res.status(200).json("Key successfully renamed");
       return;
     }
   } catch (error) {
