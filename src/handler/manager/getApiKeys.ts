@@ -32,11 +32,11 @@ export const getApiKeys = async (
       const teamApiKeys = await prismaClient.apiKey.findMany({
         where: {
           user: {
-            teamNumber: user.teamNumber
+            teamNumber: user.teamNumber,
           },
           NOT: {
-            userId: user.id
-          }
+            userId: user.id,
+          },
         },
         select: {
           uuid: true,
@@ -47,9 +47,9 @@ export const getApiKeys = async (
           user: {
             select: {
               username: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
       res.status(200).json({ apiKeys: apiKeys, teamApiKeys: teamApiKeys });
       return;
