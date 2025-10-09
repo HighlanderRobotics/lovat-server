@@ -62,7 +62,7 @@ export const renameApiKey = async (
     if (error instanceof z.ZodError) {
       res
         .status(400)
-        .json({ error: "Invalid request parameters", details: error.errors });
+        .json({ error: "Invalid request parameters" });
       return;
     }
     res.status(500).json({ error: "Internal server error" });
