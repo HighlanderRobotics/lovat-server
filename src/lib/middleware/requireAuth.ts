@@ -4,6 +4,7 @@ import { User } from "@prisma/client";
 import { Request as ExpressRequest, Response, NextFunction } from "express";
 import * as jose from "jose";
 import { createHash } from "crypto";
+import { PrismaClient } from "@prisma/client/scripts/default-index";
 
 export interface AuthenticatedRequest extends ExpressRequest {
   user: User;
@@ -30,7 +31,19 @@ export const requireAuth = async (
 
       const keyHash = createHash("sha256").update(tokenString).digest("hex");
 
-      const apiKey = await prisma.apiKey.update({
+      const rateLimit = await PrismaClient.apiKey.findUnique({
+        keyHash: keyHash,
+      });
+
+      if (Date.now() - rateLimit.lastUsed.getTime() <= 3 * 1000) {
+        res.status(429).json({
+          message:
+            "You have exceeded the rate limit for an API Key. Please wait before making more requests.",
+          retryAfterSeconds: 3,
+        });
+      }
+
+      const apiKey = await PrismaClient.apiKey.update({
         where: {
           keyHash: keyHash,
         },

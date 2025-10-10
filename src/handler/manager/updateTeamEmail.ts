@@ -15,14 +15,14 @@ export const updateTeamEmail = async (
       .object({
         email: z.string().email(),
       })
-      .parse(req.query)
+      .parse(req.query);
 
     if (!params) {
       res.status(400).send(params);
       return;
     }
 
-    const code = randomBytes(8).toString("hex")
+    const code = randomBytes(8).toString("hex");
 
     const verificationUrl = `https://lovat.app/verify/${code}`;
     const resend = new Resend(process.env.RESEND_KEY);
@@ -32,9 +32,9 @@ export const updateTeamEmail = async (
         verificationCode: code,
         email: params.email,
         expiresAt: DateTime.now().plus({ minutes: 20 }),
-        teamNumber: req.user.teamNumber
-      }
-    })
+        teamNumber: req.user.teamNumber,
+      },
+    });
 
     resend.emails.send({
       from: "noreply@lovat.app",
@@ -42,7 +42,6 @@ export const updateTeamEmail = async (
       subject: "Lovat Email Verification",
       html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`,
     });
-
 
     res.status(200).send("verification email sent");
   } catch (error) {

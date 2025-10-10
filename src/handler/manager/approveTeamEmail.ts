@@ -12,7 +12,8 @@ export const approveTeamEmail = async (
     const params = z
       .object({
         code: z.string(),
-      }).parse(req.query);
+      })
+      .parse(req.query);
 
     if (!params) {
       res.status(400).send(params);
@@ -34,15 +35,15 @@ export const approveTeamEmail = async (
         },
         data: {
           emailVerified: true,
-          email: row.email
+          email: row.email,
         },
       });
 
       await prismaClient.emailVerificationRequest.delete({
-      where: {
-        verificationCode: params.code,
-      },
-    });
+        where: {
+          verificationCode: params.code,
+        },
+      });
 
       res.status(200).send("Team email sucsessfully verified");
     }

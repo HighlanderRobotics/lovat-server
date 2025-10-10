@@ -59,9 +59,7 @@ export const getApiKeys = async (
     return;
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res
-        .status(400)
-        .json({ error: "Invalid request parameters" });
+      res.status(400).json({ error: "Invalid request parameters" });
       return;
     }
     res.status(500).json({ error: "Internal server error" });

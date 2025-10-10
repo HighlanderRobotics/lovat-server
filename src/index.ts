@@ -349,8 +349,6 @@ app.post("/v1/slack/event", processEvent);
 // app.get("/v1/manager/get-api-keys", requireAuth, getApiKeys);
 // app.get("/v1/manager/rename-api-key", requireAuth, renameApiKey);
 
-
-
 getTBAData();
 
 app.listen(port);

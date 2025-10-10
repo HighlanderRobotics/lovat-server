@@ -19,7 +19,7 @@ export const resendEmail = async (
       res.status(404).send("team not found");
     }
 
-    const code = randomBytes(8).toString("hex")
+    const code = randomBytes(8).toString("hex");
 
     const verificationUrl = `https://lovat.app/verify/${code}`;
     const resend = new Resend(process.env.RESEND_KEY);
@@ -29,9 +29,9 @@ export const resendEmail = async (
         verificationCode: code,
         email: teamRow.email,
         expiresAt: DateTime.now().plus({ minutes: 20 }),
-        teamNumber: req.user.teamNumber
-      }
-    })
+        teamNumber: req.user.teamNumber,
+      },
+    });
 
     resend.emails.send({
       from: "noreply@lovat.app",
