@@ -244,6 +244,13 @@ model RegisteredTeam {
   users                 User[]
 }
 
+model EmailVerificationRequest {
+  verificationCode String   @id
+  email            String
+  expiresAt        DateTime
+  teamNumber       Int
+}
+
 model SlackWorkspace {
   workspaceId   String              @id
   owner         Int?

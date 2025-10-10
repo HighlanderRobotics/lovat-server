@@ -12,33 +12,38 @@ export const approveTeamEmail = async (
     const params = z
       .object({
         code: z.string(),
-      })
-      .safeParse({
-        code: req.body.code,
-      });
+      }).parse(req.query);
 
-    if (!params.success) {
+    if (!params) {
       res.status(400).send(params);
       return;
     }
-    const row = await prismaClient.registeredTeam.findUnique({
+
+    const row = await prismaClient.emailVerificationRequest.findUnique({
       where: {
-        code: params.data.code,
+        verificationCode: params.code,
       },
     });
+
     if (row === null) {
       res.status(404).send("CODE_NOT_RECOGNIZED");
-    } else if (row.emailVerified) {
-      res.status(400).send("EMAIL_ALREADY_VERIFIED");
     } else {
       await prismaClient.registeredTeam.update({
         where: {
-          code: params.data.code,
+          number: row.teamNumber,
         },
         data: {
           emailVerified: true,
+          email: row.email
         },
       });
+
+      await prismaClient.emailVerificationRequest.delete({
+      where: {
+        verificationCode: params.code,
+      },
+    });
+
       res.status(200).send("Team email sucsessfully verified");
     }
   } catch (error) {
