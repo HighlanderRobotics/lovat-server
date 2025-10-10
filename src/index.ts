@@ -90,10 +90,10 @@ import { getMatchResults } from "./handler/manager/getMatchResults";
 import { addSlackWorkspace } from "./handler/slack/addSlackWorkspace";
 import { processCommand } from "./handler/slack/processCommands";
 import { processEvent } from "./handler/slack/processEvents";
-import { addApiKey } from "./handler/manager/addApiKey";
-import { revokeApiKey } from "./handler/manager/revokeApiKey";
-import { getApiKeys } from "./handler/manager/getApiKeys";
-import { renameApiKey } from "./handler/manager/renameApiKey";
+// import { addApiKey } from "./handler/manager/addApiKey";
+// import { revokeApiKey } from "./handler/manager/revokeApiKey";
+// import { getApiKeys } from "./handler/manager/getApiKeys";
+// import { renameApiKey } from "./handler/manager/renameApiKey";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -344,10 +344,10 @@ app.post(
 app.post("/v1/slack/event", processEvent);
 
 // API key management
-app.get("/v1/manager/add-api-key", requireAuth, addApiKey);
-app.get("/v1/manager/revoke-api-key", requireAuth, revokeApiKey);
-app.get("/v1/manager/get-api-keys", requireAuth, getApiKeys);
-app.get("/v1/manager/rename-api-key", requireAuth, renameApiKey);
+// app.get("/v1/manager/add-api-key", requireAuth, addApiKey);
+// app.get("/v1/manager/revoke-api-key", requireAuth, revokeApiKey);
+// app.get("/v1/manager/get-api-keys", requireAuth, getApiKeys);
+// app.get("/v1/manager/rename-api-key", requireAuth, renameApiKey);
 
 
 
