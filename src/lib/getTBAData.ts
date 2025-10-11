@@ -23,8 +23,6 @@ export default async function getTBAData(): Promise<void> {
     console.log("Fetching teams from TBA...");
     await fetchTeams();
     console.log("Done fetching teams from TBA.");
-
-    console.log("Fetching matches from TBA...");
   }, 1000 * 60 * 60 * 24);
   //repeat hourly
   setInterval(async () => {
