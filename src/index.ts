@@ -90,6 +90,7 @@ import { getMatchResults } from "./handler/manager/getMatchResults";
 import { addSlackWorkspace } from "./handler/slack/addSlackWorkspace";
 import { processCommand } from "./handler/slack/processCommands";
 import { processEvent } from "./handler/slack/processEvents";
+import { requireSlackSignature } from "./lib/middleware/requireSlackSignature";
 // import { addApiKey } from "./handler/manager/addApiKey";
 // import { revokeApiKey } from "./handler/manager/revokeApiKey";
 // import { getApiKeys } from "./handler/manager/getApiKeys";
@@ -332,16 +333,17 @@ app.get(
 app.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
 
 // add/update slack workspace
-app.get("/v1/slack/add-workspace", addSlackWorkspace);
+app.get("/v1/slack/add-workspace", requireSlackSignature, addSlackWorkspace);
 
 // process slash commands
 app.post(
   "/v1/slack/command",
+  requireSlackSignature,
   express.urlencoded({ extended: true }),
   processCommand,
 );
 
-app.post("/v1/slack/event", processEvent);
+app.post("/v1/slack/event", requireSlackSignature, processEvent);
 
 // API key management
 // app.get("/v1/manager/add-api-key", requireAuth, addApiKey);
