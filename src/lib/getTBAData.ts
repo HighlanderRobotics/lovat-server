@@ -5,15 +5,15 @@ import prisma from "../prismaClient";
 
 export default async function getTBAData(): Promise<void> {
   const year = 2024;
-  const devEnabled = process.env.NODE_ENV === "development";
 
-  // Prevent fetch on auto-restart in dev mode
-  const skipInitialFetch =
-    devEnabled &&
+  // Prevent unnecessary fetching in dev mode which is frequently restarted
+  if (
+    process.env.NODE_ENV === "development" &&
     (await prisma.tournament.count()) > 0 &&
-    (await prisma.team.count()) > 0;
-
-  if (!skipInitialFetch) {
+    (await prisma.team.count()) > 0
+  ) {
+    console.log("Skipping initial TBA data fetch");
+  } else {
     // Import tournaments
     console.log("Fetching tournaments from TBA...");
     await fetchTournaments(year);
