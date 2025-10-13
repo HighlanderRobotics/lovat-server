@@ -11,7 +11,7 @@ export const requireSlackSignature = async (
     const timestamp = req.headers["x-slack-request-timestamp"] as string;
 
     if (req.body.api_app_id !== process.env.SLACK_APP_ID) {
-      res.send(401).send("Unauthorized")
+      res.send(401).send("Unauthorized");
     }
 
     if (!signature || !timestamp) {
@@ -27,7 +27,8 @@ export const requireSlackSignature = async (
       return;
     }
 
-    const body = JSON.stringify(req.body) === "{}" ? "" : JSON.stringify(req.body);
+    const body =
+      JSON.stringify(req.body) === "{}" ? "" : JSON.stringify(req.body);
 
     if (!body) {
       res.status(400).send("Bad request");

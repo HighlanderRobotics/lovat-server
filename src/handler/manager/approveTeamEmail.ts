@@ -7,8 +7,6 @@ export const approveTeamEmail = async (
   res: Response,
 ): Promise<void> => {
   try {
-    //check its coming from Collin
-
     const params = z
       .object({
         code: z.string(),
@@ -28,6 +26,8 @@ export const approveTeamEmail = async (
 
     if (row === null) {
       res.status(404).send("CODE_NOT_RECOGNIZED");
+    } else if (row.expiresAt.getTime() >= Date.now()) {
+      res.status(400).send("CODE_EXPIRED");
     } else {
       await prismaClient.registeredTeam.update({
         where: {
