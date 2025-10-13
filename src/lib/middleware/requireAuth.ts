@@ -4,7 +4,6 @@ import { User } from "@prisma/client";
 import { Request as ExpressRequest, Response, NextFunction } from "express";
 import * as jose from "jose";
 import { createHash } from "crypto";
-import { PrismaClient } from "@prisma/client/scripts/default-index";
 
 export interface AuthenticatedRequest extends ExpressRequest {
   user: User;
@@ -31,8 +30,10 @@ export const requireAuth = async (
 
       const keyHash = createHash("sha256").update(tokenString).digest("hex");
 
-      const rateLimit = await PrismaClient.apiKey.findUnique({
-        keyHash: keyHash,
+      const rateLimit = await prisma.apiKey.findUnique({
+        where: {
+          keyHash: keyHash
+        }
       });
 
       if (Date.now() - rateLimit.lastUsed.getTime() <= 3 * 1000) {
@@ -43,7 +44,7 @@ export const requireAuth = async (
         });
       }
 
-      const apiKey = await PrismaClient.apiKey.update({
+      const apiKey = await prisma.apiKey.update({
         where: {
           keyHash: keyHash,
         },
