@@ -10,8 +10,13 @@ export const requireSlackSignature = async (
     const signature = req.headers["x-slack-signature"] as string;
     const timestamp = req.headers["x-slack-request-timestamp"] as string;
 
+    if (req.body.challenge !== null) {
+      res.status(200).send(req.body.challenge); return;
+    }
+
     if (req.body.api_app_id !== process.env.SLACK_APP_ID) {
-      res.send(401).send("Unauthorized");
+      res.status(401).send("Unauthorized");
+      return;
     }
 
     if (!signature || !timestamp) {
@@ -48,5 +53,6 @@ export const requireSlackSignature = async (
     next();
   } catch (error) {
     res.status(500).send("Internal server error verifying request");
+    return;
   }
 };
