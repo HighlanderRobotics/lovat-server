@@ -113,6 +113,8 @@ const app = express();
 
 setupExpressErrorHandler(posthog, app);
 
+app.set("trust proxy", true);
+
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
