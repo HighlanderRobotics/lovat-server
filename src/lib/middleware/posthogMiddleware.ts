@@ -25,7 +25,7 @@ const posthogReporter = async (
         role: user.role,
         userType: "user", // as opposed to scouter
         teamNumber: user.teamNumber,
-        $ip: req.ip,
+        $ip: req.ips[0] || req.ip,
       };
     } else {
       try {
@@ -55,7 +55,7 @@ const posthogReporter = async (
         distinctId: user.id,
         event: "response",
         properties: {
-          $ip: req.ip,
+          $ip: req.ips[0] || req.ip,
           $set: userProps,
           $pathname: req.route?.path,
           method: req.method,
