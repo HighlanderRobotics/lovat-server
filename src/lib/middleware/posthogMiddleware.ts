@@ -25,6 +25,7 @@ const posthogReporter = async (
         role: user.role,
         userType: "user", // as opposed to scouter
         teamNumber: user.teamNumber,
+        $ip: req.ip,
       };
     } else {
       try {
