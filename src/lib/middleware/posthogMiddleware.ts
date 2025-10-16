@@ -34,8 +34,6 @@ const posthogReporter = async (
           .optional()
           .parse(req.headers["x-team-code"]);
 
-        if (!teamCode) return;
-
         const team = await prisma.registeredTeam.findUnique({
           where: {
             code: teamCode,
@@ -52,7 +50,7 @@ const posthogReporter = async (
       }
     }
 
-    if (userProps.userType === "user") {
+    if (userProps?.userType === "user") {
       posthog.capture({
         distinctId: user.id,
         event: "response",
