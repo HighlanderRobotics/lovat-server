@@ -93,6 +93,7 @@ import { processEvent } from "./handler/slack/processEvents";
 import { setupExpressErrorHandler } from "posthog-node";
 import { posthog } from "./posthogClient";
 import posthogReporter from "./lib/middleware/posthogMiddleware";
+import { requireSlackToken } from "./lib/middleware/requireSlackToken";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -118,6 +119,19 @@ app.set("trust proxy", true);
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
+
+// add/update slack workspace
+app.get("/v1/slack/add-workspace", requireSlackToken, addSlackWorkspace);
+
+// process slash commands
+app.post(
+  "/v1/slack/command",
+  express.urlencoded({ extended: true }),
+  requireSlackToken,
+  processCommand
+);
+
+app.post("/v1/slack/event", requireSlackToken, processEvent);
 
 // Log requests
 app.use(posthogReporter);
@@ -336,19 +350,6 @@ app.get(
 
 // match results from scouting reports
 app.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
-
-// add/update slack workspace
-app.get("/v1/slack/add-workspace", requireSlackSignature, addSlackWorkspace);
-
-// process slash commands
-app.post(
-  "/v1/slack/command",
-  requireSlackSignature,
-  express.urlencoded({ extended: true }),
-  processCommand
-);
-
-app.post("/v1/slack/event", requireSlackSignature, processEvent);
 
 // API key management
 // app.get("/v1/manager/add-api-key", requireAuth, addApiKey);

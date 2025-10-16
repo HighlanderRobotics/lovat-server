@@ -1,7 +1,6 @@
-import crypto from "crypto";
 import { Request as ExpressRequest, Response, NextFunction } from "express";
 
-export const requireSlackSignature = async (
+export const requireSlackToken = async (
   req: ExpressRequest,
   res: Response,
   next: NextFunction,
@@ -9,8 +8,9 @@ export const requireSlackSignature = async (
   try {
     const signature = req.headers["x-slack-signature"] as string;
     const timestamp = req.headers["x-slack-request-timestamp"] as string;
+    const verificationKey = req.body.token as string;
 
-    if (req.body.challenge !== null) {
+    if (req.body.challenge !== undefined) {
       res.status(200).send(req.body.challenge); return;
     }
 
@@ -32,20 +32,7 @@ export const requireSlackSignature = async (
       return;
     }
 
-    const body =
-      JSON.stringify(req.body) === "{}" ? "" : JSON.stringify(req.body);
-
-    if (!body) {
-      res.status(400).send("Bad request");
-      return;
-    }
-
-    const expectedSignature = `v0=${crypto
-      .createHmac("sha256", process.env.SLACK_SIGNING_SECRET)
-      .update(`v0:${timestamp}:${body}`, "utf8")
-      .digest("hex")}`;
-
-    if (expectedSignature !== signature) {
+    if (process.env.SLACK_VERIFICATION_KEY !== verificationKey) {
       res.status(401).send("Unauthorized");
       return;
     }
