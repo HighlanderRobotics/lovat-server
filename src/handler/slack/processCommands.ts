@@ -210,6 +210,13 @@ export const processCommand = async (
           res.status(200).send(`Not a valid team code.`);
           return;
         }
+      }
+      } else if (action == "ping") {
+          res
+          .status(200)
+          .send(
+            `Pong! Recieved at ${new Intl.DateTimeFormat('en-US').format(Date.now())}`,
+          );
       } else {
         res
           .status(400)
@@ -217,7 +224,6 @@ export const processCommand = async (
             `${body[1]} is not a valid argument for '/lovat team'. Try /lovat team set (team code)`,
           );
       }
-    }
   } catch (error) {
     console.error(error);
     res.status(500).send(error);
