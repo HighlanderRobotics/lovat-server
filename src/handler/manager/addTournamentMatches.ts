@@ -113,7 +113,7 @@ export const addTournamentMatches = async (
         for (let k = 0; k < 6; k++) {
           const fakeTeamKey = teams[k]; // The one TBA sends you which is potentially "fake", like frc6418B
           const mapEntry = Object.entries(remap_teams).find(
-            (v) => v[1] === fakeTeamKey
+            (v) => v[1] === fakeTeamKey,
           );
           const realTeamKey = mapEntry ? mapEntry[0] : fakeTeamKey;
           const currTeam = Number(realTeamKey.substring(3));

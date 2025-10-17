@@ -11,7 +11,8 @@ export const requireSlackToken = async (
     const verificationKey = req.body.token as string;
 
     if (req.body.challenge !== undefined) {
-      res.status(200).send(req.body.challenge); return;
+      res.status(200).send(req.body.challenge);
+      return;
     }
 
     if (req.body.api_app_id !== process.env.SLACK_APP_ID) {

@@ -32,8 +32,8 @@ export const requireAuth = async (
 
       const rateLimit = await prisma.apiKey.findUnique({
         where: {
-          keyHash: keyHash
-        }
+          keyHash: keyHash,
+        },
       });
 
       if (Date.now() - rateLimit.lastUsed.getTime() <= 3 * 1000) {

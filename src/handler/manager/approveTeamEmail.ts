@@ -20,7 +20,7 @@ export const approveTeamEmail = async (
 
     const row = await prismaClient.emailVerificationRequest.findUnique({
       where: {
-        verificationCode: params.code,
+        verificationCode: params.code.toLowerCase(),
       },
     });
 
@@ -41,7 +41,7 @@ export const approveTeamEmail = async (
 
       await prismaClient.emailVerificationRequest.delete({
         where: {
-          verificationCode: params.code,
+          verificationCode: params.code.toLowerCase(),
         },
       });
 
