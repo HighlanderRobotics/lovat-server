@@ -50,7 +50,7 @@ const posthogReporter = async (
       }
     }
 
-    if (userProps.userType === "user") {
+    if (userProps?.userType === "user") {
       posthog.capture({
         distinctId: user.id,
         event: "response",
