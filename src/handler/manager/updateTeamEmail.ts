@@ -31,7 +31,7 @@ export const updateTeamEmail = async (
       data: {
         verificationCode: code,
         email: params.email,
-        expiresAt: DateTime.now().plus({ minutes: 20 }),
+        expiresAt: DateTime.now().plus({ minutes: 20 }).toJSDate(),
         teamNumber: req.user.teamNumber,
       },
     });
