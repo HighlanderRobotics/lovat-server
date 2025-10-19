@@ -2,6 +2,8 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { Resend } from "resend";
+import { randomBytes } from "crypto";
+import { DateTime } from "luxon";
 
 export const resendEmail = async (
   req: AuthenticatedRequest,
@@ -17,12 +19,23 @@ export const resendEmail = async (
       res.status(404).send("team not found");
     }
 
-    const verificationUrl = `https://lovat.app/verify/${teamRow.code}`;
+    const code = randomBytes(8).toString("hex");
+
+    const verificationUrl = `${process.env.LOVAT_WEBSITE}/verify/${code}`;
     const resend = new Resend(process.env.RESEND_KEY);
+
+    await prismaClient.emailVerificationRequest.create({
+      data: {
+        verificationCode: code,
+        email: teamRow.email,
+        expiresAt: DateTime.now().plus({ minutes: 20 }),
+        teamNumber: req.user.teamNumber,
+      },
+    });
 
     resend.emails.send({
       from: "noreply@lovat.app",
-      to: req.body.email,
+      to: teamRow.email,
       subject: "Lovat Email Verification",
       html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`,
     });

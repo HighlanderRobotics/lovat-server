@@ -30,6 +30,20 @@ export const requireAuth = async (
 
       const keyHash = createHash("sha256").update(tokenString).digest("hex");
 
+      const rateLimit = await prisma.apiKey.findUnique({
+        where: {
+          keyHash: keyHash,
+        },
+      });
+
+      if (Date.now() - rateLimit.lastUsed.getTime() <= 3 * 1000) {
+        res.status(429).json({
+          message:
+            "You have exceeded the rate limit for an API Key. Please wait before making more requests.",
+          retryAfterSeconds: 3,
+        });
+      }
+
       const apiKey = await prisma.apiKey.update({
         where: {
           keyHash: keyHash,

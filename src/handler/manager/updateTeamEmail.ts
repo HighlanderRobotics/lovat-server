@@ -3,6 +3,8 @@ import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { Resend } from "resend";
+import { randomBytes } from "crypto";
+import { DateTime } from "luxon";
 
 export const updateTeamEmail = async (
   req: AuthenticatedRequest,
@@ -13,28 +15,30 @@ export const updateTeamEmail = async (
       .object({
         email: z.string().email(),
       })
-      .safeParse({
-        email: req.query.email,
-      });
-    if (!params.success) {
+      .parse(req.query);
+
+    if (!params) {
       res.status(400).send(params);
       return;
     }
-    const emailRow = await prismaClient.registeredTeam.update({
-      where: {
-        number: req.user.teamNumber,
-      },
+
+    const code = randomBytes(8).toString("hex");
+
+    const verificationUrl = `${process.env.LOVAT_WEBSITE}/verify/${code}`;
+    const resend = new Resend(process.env.RESEND_KEY);
+
+    await prismaClient.emailVerificationRequest.create({
       data: {
-        email: params.data.email,
+        verificationCode: code,
+        email: params.email,
+        expiresAt: DateTime.now().plus({ minutes: 20 }).toJSDate(),
+        teamNumber: req.user.teamNumber,
       },
     });
 
-    const verificationUrl = `lovat.app/verify/${emailRow.code}`;
-    const resend = new Resend(process.env.RESEND_KEY);
-
     resend.emails.send({
       from: "noreply@lovat.app",
-      to: params.data.email,
+      to: params.email,
       subject: "Lovat Email Verification",
       html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`,
     });

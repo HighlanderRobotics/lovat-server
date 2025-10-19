@@ -7,7 +7,7 @@ import z from "zod";
 const posthogReporter = async (
   req: Request | AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const t0 = performance.now();
 
