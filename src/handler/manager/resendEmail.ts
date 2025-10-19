@@ -21,7 +21,7 @@ export const resendEmail = async (
 
     const code = randomBytes(8).toString("hex");
 
-    const verificationUrl = `https://lovat.app/verify/${code}`;
+    const verificationUrl = `${process.env.LOVAT_WEBSITE}/verify/${code}`;
     const resend = new Resend(process.env.RESEND_KEY);
 
     await prismaClient.emailVerificationRequest.create({

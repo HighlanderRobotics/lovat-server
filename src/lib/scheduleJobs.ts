@@ -2,8 +2,9 @@ import fetchTournaments from "./fetchTournaments";
 import fetchTeams from "./fetchTeams";
 import fetchMatches from "./fetchMatches";
 import prisma from "../prismaClient";
+import deleteOldRequests from "./deleteOldRequests";
 
-export default async function getTBAData(): Promise<void> {
+export default async function scheduleJobs(): Promise<void> {
   const year = 2024;
 
   // Prevent unnecessary fetching in dev mode which is frequently restarted
@@ -38,6 +39,7 @@ export default async function getTBAData(): Promise<void> {
     },
     1000 * 60 * 60 * 24,
   );
+
   //repeat hourly
   setInterval(
     async () => {
@@ -45,5 +47,14 @@ export default async function getTBAData(): Promise<void> {
       console.log("Done fetching matches from TBA.");
     },
     1000 * 60 * 60,
+  );
+
+  // repeat every 12 hours
+  setInterval(
+    async () => {
+      await deleteOldRequests();
+      console.log("Done deleting old requests.");
+    },
+    1000 * 60 * 60 * 12,
   );
 }

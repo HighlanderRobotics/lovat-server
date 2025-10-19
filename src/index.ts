@@ -24,7 +24,7 @@ import { getTournaments } from "./handler/manager/getTournaments";
 import { addUsername } from "./handler/manager/addUsername";
 import { getTeams } from "./handler/manager/getTeams";
 import { updateScouterShift } from "./handler/manager/updateScouterShift";
-import getTBAData from "./lib/getTBAData";
+import scheduleJobs from "./lib/scheduleJobs";
 import { checkCode } from "./handler/manager/checkCode";
 import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
@@ -135,6 +135,12 @@ app.post(
 
 app.post("/v1/slack/event", requireSlackToken, processEvent);
 
+app.post(
+  "/v1/manager/onboarding/verifyemail",
+  requireLovatSignature,
+  approveTeamEmail,
+); //tested
+
 // Log requests
 app.use(posthogReporter);
 
@@ -227,11 +233,7 @@ app.post(
   rejectRegisteredTeam,
 ); // tested, waiting for new middle ware
 app.post("/v1/manager/onboarding/teamwebsite", requireAuth, addWebsite); //tested
-app.post(
-  "/v1/manager/onboarding/verifyemail",
-  requireLovatSignature,
-  approveTeamEmail,
-); //tested
+
 app.post(
   "/v1/manager/onboarding/resendverificationemail",
   resendEmailLimiter,
@@ -359,6 +361,6 @@ app.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
 // app.get("/v1/manager/get-api-keys", requireAuth, getApiKeys);
 // app.get("/v1/manager/rename-api-key", requireAuth, renameApiKey);
 
-getTBAData();
+scheduleJobs();
 
 app.listen(port);
