@@ -11,13 +11,11 @@ export const getApiKeys = async (
   try {
     const user = req.user;
 
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
     const apiKeys = await prismaClient.apiKey.findMany({
       where: {
-        userId: user.id,
+        user: {
+          teamNumber: user.teamNumber,
+        },
       },
       select: {
         uuid: true,
@@ -25,37 +23,26 @@ export const getApiKeys = async (
         createdAt: true,
         lastUsed: true,
         requests: true,
+        user: {
+          select: {
+            username: true,
+          },
+        },
       },
     });
 
+    const myKeys = apiKeys.filter((key) => key.user.username === user.username);
+
+    const teamKeys = apiKeys.filter(
+      (key) => key.user.username !== user.username,
+    );
+
     if (user.role === UserRole.SCOUTING_LEAD) {
-      const teamApiKeys = await prismaClient.apiKey.findMany({
-        where: {
-          user: {
-            teamNumber: user.teamNumber,
-          },
-          NOT: {
-            userId: user.id,
-          },
-        },
-        select: {
-          uuid: true,
-          name: true,
-          createdAt: true,
-          lastUsed: true,
-          requests: true,
-          user: {
-            select: {
-              username: true,
-            },
-          },
-        },
-      });
-      res.status(200).json({ apiKeys: apiKeys, teamApiKeys: teamApiKeys });
+      res.status(200).json({ apiKeys: myKeys, teamApiKeys: teamKeys });
       return;
     }
 
-    res.status(200).json({ apiKeys: apiKeys });
+    res.status(200).json({ apiKeys: myKeys });
     return;
   } catch (error) {
     if (error instanceof z.ZodError) {

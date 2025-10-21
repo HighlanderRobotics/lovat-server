@@ -2,9 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { Resend } from "resend";
-import { randomBytes } from "crypto";
-import { DateTime } from "luxon";
+import { sendVerificationEmail } from "./resendEmail";
 
 export const updateTeamEmail = async (
   req: AuthenticatedRequest,
@@ -17,34 +15,23 @@ export const updateTeamEmail = async (
       })
       .parse(req.query);
 
-    if (!params) {
-      res.status(400).send(params);
-      return;
-    }
-
-    const code = randomBytes(8).toString("hex");
-
-    const verificationUrl = `${process.env.LOVAT_WEBSITE}/verify/${code}`;
-    const resend = new Resend(process.env.RESEND_KEY);
-
-    await prismaClient.emailVerificationRequest.create({
-      data: {
-        verificationCode: code,
-        email: params.email,
-        expiresAt: DateTime.now().plus({ minutes: 20 }).toJSDate(),
-        teamNumber: req.user.teamNumber,
+    const teamRow = await prismaClient.registeredTeam.findUnique({
+      where: {
+        number: req.user.teamNumber,
       },
     });
 
-    resend.emails.send({
-      from: "noreply@lovat.app",
-      to: params.email,
-      subject: "Lovat Email Verification",
-      html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`,
-    });
+    if (teamRow === null) {
+      res.status(404).send("team not found");
+    }
+
+    sendVerificationEmail(teamRow, params.email);
 
     res.status(200).send("verification email sent");
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: "Invalid request parameters" });
+    }
     console.error(error);
     res.status(500).send("Error in deleting data");
   }

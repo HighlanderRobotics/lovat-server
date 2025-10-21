@@ -18,23 +18,17 @@ export const revokeApiKey = async (
       })
       .parse(req.query);
 
-    if (
-      !(await prismaClient.apiKey.findFirst({
-        where: { uuid: paramsRevokeApiKey.uuid, userId: req.user?.id },
-      }))
-    ) {
-      if (
-        (await prismaClient.apiKey.findFirst({
-          where: {
-            uuid: paramsRevokeApiKey.uuid,
-            user: {
-              teamNumber: req.user?.teamNumber,
-              NOT: { id: req.user?.id },
-            },
-          },
-        })) &&
-        req.user?.role == "SCOUTING_LEAD"
-      ) {
+    const row = await prismaClient.apiKey.findFirst({
+        where: {
+          uuid: paramsRevokeApiKey.uuid
+        },
+        select: {
+          user: true
+        }
+      })
+
+    if (row.user.id !== req.user.id) {
+      if (req.user.role === "SCOUTING_LEAD" && row.user.teamNumber === req.user.teamNumber) {
         await prismaClient.apiKey.delete({
           where: { uuid: paramsRevokeApiKey.uuid },
         });

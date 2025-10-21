@@ -20,23 +20,17 @@ export const renameApiKey = async (
       })
       .parse(req.query);
 
-    if (
-      !(await prismaClient.apiKey.findFirst({
-        where: { uuid: paramsRenameApiKey.uuid, userId: req.user?.id },
-      }))
-    ) {
-      if (
-        (await prismaClient.apiKey.findFirst({
-          where: {
-            uuid: paramsRenameApiKey.uuid,
-            user: {
-              teamNumber: req.user?.teamNumber,
-              NOT: { id: req.user?.id },
-            },
-          },
-        })) &&
-        req.user?.role == "SCOUTING_LEAD"
-      ) {
+    const row = await prismaClient.apiKey.findFirst({
+      where: {
+        uuid: paramsRenameApiKey.uuid,
+      },
+      select: {
+        user: true
+      }
+    });
+
+    if (row.user.id !== req.user.id ) {
+      if (req.user.role == "SCOUTING_LEAD" && row.user.teamNumber == req.user.teamNumber) {
         await prismaClient.apiKey.update({
           where: { uuid: paramsRenameApiKey.uuid },
           data: { name: paramsRenameApiKey.newName },

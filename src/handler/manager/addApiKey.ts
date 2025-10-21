@@ -21,11 +21,6 @@ export const addApiKey = async (
 
     const user = req.user;
 
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
     const apiKey = `lvt-${randomBytes(32).toString("hex")}`;
 
     await prismaClient.apiKey.create({
