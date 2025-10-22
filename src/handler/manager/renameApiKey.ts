@@ -2,6 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { UserRole } from "@prisma/client";
 
 export const renameApiKey = async (
   req: AuthenticatedRequest,
@@ -13,43 +14,38 @@ export const renameApiKey = async (
       return;
     }
 
-    const paramsRenameApiKey = z
+    const params = z
       .object({
         uuid: z.string(),
         newName: z.string(),
       })
       .parse(req.query);
 
-    const row = await prismaClient.apiKey.findFirst({
+    const keyRow = await prismaClient.apiKey.findFirst({
       where: {
-        uuid: paramsRenameApiKey.uuid,
+        uuid: params.uuid,
       },
       select: {
-        user: true
-      }
+        user: true,
+      },
     });
 
-    if (row.user.id !== req.user.id ) {
-      if (req.user.role == "SCOUTING_LEAD" && row.user.teamNumber == req.user.teamNumber) {
-        await prismaClient.apiKey.update({
-          where: { uuid: paramsRenameApiKey.uuid },
-          data: { name: paramsRenameApiKey.newName },
-        });
-        res.status(200).json("Key successfully renamed");
-        return;
-      } else {
-        res
-          .status(403)
-          .json({ error: "You do not have permission to rename this API key" });
-        return;
-      }
-    } else {
+    if (
+      req.user.id === keyRow.user.id ||
+      (req.user.teamNumber === keyRow.user.teamNumber &&
+        req.user.role === UserRole.SCOUTING_LEAD)
+    ) {
       await prismaClient.apiKey.update({
-        where: { uuid: paramsRenameApiKey.uuid },
-        data: { name: paramsRenameApiKey.newName },
+        where: { uuid: params.uuid },
+        data: { name: params.newName },
       });
 
       res.status(200).json("Key successfully renamed");
+      return;
+    } else {
+      res
+        .status(403)
+        .json({ error: "You do not have permission to rename this API key" });
       return;
     }
   } catch (error) {

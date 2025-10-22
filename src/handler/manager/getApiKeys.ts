@@ -13,9 +13,10 @@ export const getApiKeys = async (
 
     const apiKeys = await prismaClient.apiKey.findMany({
       where: {
-        user: {
-          teamNumber: user.teamNumber,
-        },
+        OR: [
+          { user: { teamNumber: req.user.teamNumber } },
+          { userId: req.user.id },
+        ],
       },
       select: {
         uuid: true,

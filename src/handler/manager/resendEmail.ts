@@ -30,25 +30,28 @@ export const resendEmail = async (
   }
 };
 
-export async function sendVerificationEmail(team: RegisteredTeam, email?: string): Promise<void> {
+export async function sendVerificationEmail(
+  team: RegisteredTeam,
+  email?: string,
+): Promise<void> {
   const code = randomBytes(8).toString("hex");
 
-    const verificationUrl = `${process.env.LOVAT_WEBSITE}/verify/${code}`;
-    const resend = new Resend(process.env.RESEND_KEY);
+  const verificationUrl = `${process.env.LOVAT_WEBSITE}/verify/${code}`;
+  const resend = new Resend(process.env.RESEND_KEY);
 
-    await prismaClient.emailVerificationRequest.create({
-      data: {
-        verificationCode: code,
-        email: email ?? team.email,
-        expiresAt: DateTime.now().plus({ minutes: 20 }),
-        teamNumber: team.number,
-      },
-    });
+  await prismaClient.emailVerificationRequest.create({
+    data: {
+      verificationCode: code,
+      email: email ?? team.email,
+      expiresAt: DateTime.now().plus({ minutes: 20 }),
+      teamNumber: team.number,
+    },
+  });
 
-    resend.emails.send({
-      from: "noreply@lovat.app",
-      to: email ?? team.email,
-      subject: "Lovat Email Verification",
-      html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`,
-    });
+  resend.emails.send({
+    from: "noreply@lovat.app",
+    to: email ?? team.email,
+    subject: "Lovat Email Verification",
+    html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`,
+  });
 }

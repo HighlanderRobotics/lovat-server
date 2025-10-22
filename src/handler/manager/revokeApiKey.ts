@@ -2,6 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { UserRole } from "@prisma/client";
 
 export const revokeApiKey = async (
   req: AuthenticatedRequest,
@@ -12,40 +13,36 @@ export const revokeApiKey = async (
       res.status(403).json({ error: "Cannot revoke API key using an API key" });
       return;
     }
-    const paramsRevokeApiKey = z
+    const params = z
       .object({
         uuid: z.string(),
       })
       .parse(req.query);
 
-    const row = await prismaClient.apiKey.findFirst({
-        where: {
-          uuid: paramsRevokeApiKey.uuid
-        },
-        select: {
-          user: true
-        }
-      })
+    const keyRow = await prismaClient.apiKey.findFirst({
+      where: {
+        uuid: params.uuid,
+      },
+      select: {
+        user: true,
+      },
+    });
 
-    if (row.user.id !== req.user.id) {
-      if (req.user.role === "SCOUTING_LEAD" && row.user.teamNumber === req.user.teamNumber) {
-        await prismaClient.apiKey.delete({
-          where: { uuid: paramsRevokeApiKey.uuid },
-        });
-        res.status(200).json("Key successfully revoked");
-        return;
-      } else {
-        res
-          .status(403)
-          .json({ error: "You do not have permission to revoke this API key" });
-        return;
-      }
-    } else {
+    if (
+      req.user.id === keyRow.user.id ||
+      (req.user.teamNumber === keyRow.user.teamNumber &&
+        req.user.role === UserRole.SCOUTING_LEAD)
+    ) {
       await prismaClient.apiKey.delete({
-        where: { uuid: paramsRevokeApiKey.uuid },
+        where: { uuid: params.uuid },
       });
 
       res.status(200).json("Key successfully revoked");
+      return;
+    } else {
+      res
+        .status(403)
+        .json({ error: "You do not have permission to revoke this API key" });
       return;
     }
   } catch (error) {

@@ -22,7 +22,8 @@ export const approveTeamEmail = async (
 
     if (row === null) {
       res.status(404).send("CODE_NOT_RECOGNIZED");
-    } if (row.expiresAt.getTime() <= Date.now()) {
+    }
+    if (row.expiresAt.getTime() <= Date.now()) {
       res.status(400).send("CODE_EXPIRED");
     } else {
       await prismaClient.registeredTeam.update({
