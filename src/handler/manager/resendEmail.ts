@@ -43,7 +43,7 @@ export async function sendVerificationEmail(
     data: {
       verificationCode: code,
       email: email ?? team.email,
-      expiresAt: DateTime.now().plus({ minutes: 20 }),
+      expiresAt: DateTime.now().plus({ minutes: 20 }).toJSDate(),
       teamNumber: team.number,
     },
   });
