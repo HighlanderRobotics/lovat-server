@@ -25,7 +25,7 @@ export const updateTeamEmail = async (
       res.status(404).send("team not found");
     }
 
-    sendVerificationEmail(teamRow, params.email);
+    sendVerificationEmail(params.email, req.user.teamNumber);
 
     res.status(200).send("verification email sent");
   } catch (error) {

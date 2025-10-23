@@ -4,7 +4,6 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { Resend } from "resend";
 import { randomBytes } from "crypto";
 import { DateTime } from "luxon";
-import { RegisteredTeam } from "@prisma/client";
 
 export const resendEmail = async (
   req: AuthenticatedRequest,
@@ -21,7 +20,7 @@ export const resendEmail = async (
       res.status(404).send("team not found");
     }
 
-    sendVerificationEmail(teamRow);
+    sendVerificationEmail(teamRow.email, teamRow.number);
 
     res.status(200).send("verification email sent");
   } catch (error) {
@@ -31,9 +30,8 @@ export const resendEmail = async (
 };
 
 export async function sendVerificationEmail(
-  team?: RegisteredTeam,
-  email?: string,
-  teamNumber?: number,
+  email: string,
+  teamNumber: number,
 ): Promise<void> {
   const code = randomBytes(8).toString("hex");
 
@@ -43,15 +41,15 @@ export async function sendVerificationEmail(
   await prismaClient.emailVerificationRequest.create({
     data: {
       verificationCode: code,
-      email: email ?? team.email,
+      email: email,
       expiresAt: DateTime.now().plus({ minutes: 20 }).toJSDate(),
-      teamNumber: team.number ?? teamNumber,
+      teamNumber: teamNumber,
     },
   });
 
   resend.emails.send({
     from: "noreply@lovat.app",
-    to: email ?? team.email,
+    to: email,
     subject: "Lovat Email Verification",
     html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`,
   });

@@ -61,7 +61,7 @@ export const addRegisteredTeam = async (
       },
     });
 
-    sendVerificationEmail(null, params.data.email, params.data.number);
+    sendVerificationEmail(params.data.email, params.data.number);
 
     res.status(200).send("verification email sent");
   } catch (error) {
