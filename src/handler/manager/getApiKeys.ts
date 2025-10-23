@@ -11,13 +11,13 @@ export const getApiKeys = async (
   try {
     const user = req.user;
 
+    const whereClause =
+      req.user.teamNumber === null || user.role !== UserRole.SCOUTING_LEAD
+        ? { user: { id: req.user.id } }
+        : { user: { teamNumber: req.user.teamNumber } };
+
     const apiKeys = await prismaClient.apiKey.findMany({
-      where: {
-        OR: [
-          { user: { teamNumber: req.user.teamNumber } },
-          { userId: req.user.id },
-        ],
-      },
+      where: whereClause,
       select: {
         uuid: true,
         name: true,
@@ -32,19 +32,7 @@ export const getApiKeys = async (
       },
     });
 
-    const myKeys = apiKeys.filter((key) => key.user.username === user.username);
-
-    const teamKeys = apiKeys.filter(
-      (key) => key.user.username !== user.username,
-    );
-
-    if (user.role === UserRole.SCOUTING_LEAD) {
-      res.status(200).json({ apiKeys: myKeys, teamApiKeys: teamKeys });
-      return;
-    }
-
-    res.status(200).json({ apiKeys: myKeys });
-    return;
+    res.status(200).json({ apiKeys });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: "Invalid request parameters" });
