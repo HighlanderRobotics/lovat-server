@@ -34,17 +34,19 @@ const posthogReporter = async (
           .optional()
           .parse(req.headers["x-team-code"]);
 
-        const team = await prisma.registeredTeam.findUnique({
-          where: {
-            code: teamCode,
-          },
-        });
+        if (teamCode) {
+          const team = await prisma.registeredTeam.findUnique({
+            where: {
+              code: teamCode,
+            },
+          });
 
-        userProps = {
-          teamCode: team && teamCode,
-          userType: "scouter",
-          teamNumber: team?.number,
-        };
+          userProps = {
+            teamCode: team && teamCode,
+            userType: "scouter",
+            teamNumber: team?.number,
+          };
+        }
       } catch (error) {
         console.error(error);
       }
