@@ -31,8 +31,9 @@ export const resendEmail = async (
 };
 
 export async function sendVerificationEmail(
-  team: RegisteredTeam,
+  team?: RegisteredTeam,
   email?: string,
+  teamNumber?: number,
 ): Promise<void> {
   const code = randomBytes(8).toString("hex");
 
@@ -44,7 +45,7 @@ export async function sendVerificationEmail(
       verificationCode: code,
       email: email ?? team.email,
       expiresAt: DateTime.now().plus({ minutes: 20 }).toJSDate(),
-      teamNumber: team.number,
+      teamNumber: team.number ?? teamNumber,
     },
   });
 
