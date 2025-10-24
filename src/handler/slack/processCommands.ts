@@ -21,20 +21,20 @@ export const processCommand = async (
 
     const action = body[0] ?? null;
 
-    if (body.length == 0 || action == "help") {
+    if (body.length === 0 || action === "help") {
       res
         .status(200)
         .send(
           "Click <https://lovat-learn.highlanderrobotics.com/guides/slack-notifcations|here> for a list of all commands and a setup guide",
         );
       return;
-    } else if (action == "subscribe") {
+    } else if (action === "subscribe") {
       if (
         (
           await prismaClient.slackWorkspace.findFirstOrThrow({
             where: { workspaceId: params.team_id },
           })
-        ).owner == null
+        ).owner === null
       ) {
         res
           .status(200)
@@ -47,12 +47,12 @@ export const processCommand = async (
       let no_leave = false,
         breakSub = false;
 
-      if (body.length == 1) {
+      if (body.length === 1) {
         no_leave = true;
         breakSub = true;
-      } else if (body[1] == "no-leave") {
+      } else if (body[1] === "no-leave") {
         no_leave = true;
-      } else if (body[1] == "break") {
+      } else if (body[1] === "break") {
         breakSub = true;
       } else {
         res
@@ -111,7 +111,7 @@ export const processCommand = async (
           `Successfully subscribed to ${messages.join(" and ")} notifications`,
         );
       return;
-    } else if (action == "unsubscribe") {
+    } else if (action === "unsubscribe") {
       if (
         (
           await prismaClient.slackWorkspace.findFirstOrThrow({
@@ -130,12 +130,12 @@ export const processCommand = async (
       let no_leave = false,
         breakSub = false;
 
-      if (body.length == 1) {
+      if (body.length === 1) {
         no_leave = true;
         breakSub = true;
-      } else if (body[1] == "no-leave") {
+      } else if (body[1] === "no-leave") {
         no_leave = true;
-      } else if (body[1] == "break") {
+      } else if (body[1] === "break") {
         breakSub = true;
       } else {
         res
@@ -176,15 +176,15 @@ export const processCommand = async (
           `Successfully unsubscribed from ${messages.join(" and ")} notifications`,
         );
       return;
-    } else if (action == "team") {
-      if (body.length == 1) {
+    } else if (action === "team") {
+      if (body.length === 1) {
         res
           .status(200)
           .send(
             `Workspace linked to team ${(await prismaClient.slackWorkspace.findUnique({ where: { workspaceId: params.team_id } })).owner}`,
           );
         return;
-      } else if (body[1] == "set") {
+      } else if (body[1] === "set") {
         try {
           const teamNumber = (
             await prismaClient.registeredTeam.findUniqueOrThrow({
@@ -210,13 +210,13 @@ export const processCommand = async (
           res.status(200).send(`Not a valid team code.`);
           return;
         }
-      } else {
-        res
-          .status(400)
-          .send(
-            `${body[1]} is not a valid argument for '/lovat team'. Try /lovat team set (team code)`,
-          );
       }
+    } else {
+      res
+        .status(400)
+        .send(
+          `${body[1]} is not a valid argument for '/lovat team'. Try /lovat team set (team code)`,
+        );
     }
   } catch (error) {
     console.error(error);

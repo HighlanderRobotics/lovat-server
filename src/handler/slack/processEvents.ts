@@ -6,7 +6,6 @@ export const processEvent = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  if (req.body.challenge != null) {res.status(200).send(req.body.challenge); return;}
   const params = z
     .object({
       type: z.literal("event_callback"),

@@ -5,7 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // directUrl = env("DIRECT_DATABASE_URL")
 }
 
 model Event {
@@ -18,6 +17,200 @@ model Event {
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
 
   @@index([scoutReportUuid])
+}
+
+model FeatureToggle {
+  feature String  @id
+  enabled Boolean @default(true)
+}
+
+model TeamMatchData {
+  key           String        @id
+  tournamentKey String
+  matchNumber   Int           @db.SmallInt
+  teamNumber    Int
+  matchType     MatchType
+  scoutReports  ScoutReport[]
+  tournament    Tournament    @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
+
+  @@index([tournamentKey, teamNumber])
+}
+
+model MutablePicklist {
+  uuid          String      @id @default(uuid())
+  teams         Int[]
+  authorId      String
+  name          String
+  tournamentKey String?
+  author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tournament    Tournament? @relation(fields: [tournamentKey], references: [key])
+}
+
+model ScoutReport {
+  uuid                  String           @id @default(uuid())
+  teamMatchKey          String
+  startTime             DateTime
+  notes                 String
+  robotRole             RobotRole
+  algaePickup           AlgaePickup
+  coralPickup           CoralPickup
+  bargeResult           BargeResult
+  knocksAlgae           KnocksAlgae
+  underShallowCage      UnderShallowCage
+  robotBrokeDescription String?
+  driverAbility         Int
+  scouterUuid           String
+  events                Event[]
+  scouter               Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
+  teamMatchData         TeamMatchData    @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+}
+
+model ScouterScheduleShift {
+  uuid                    String         @id @default(uuid())
+  sourceTeamNumber        Int
+  tournamentKey           String
+  startMatchOrdinalNumber Int
+  endMatchOrdinalNumber   Int
+  sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
+  tournament              Tournament     @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
+  team1                   Scouter[]      @relation("Team1")
+  team2                   Scouter[]      @relation("Team2")
+  team3                   Scouter[]      @relation("Team3")
+  team4                   Scouter[]      @relation("Team4")
+  team5                   Scouter[]      @relation("Team5")
+  team6                   Scouter[]      @relation("Team6")
+}
+
+model Scouter {
+  uuid               String                 @id @default(uuid())
+  name               String?
+  sourceTeamNumber   Int
+  strikes            Int                    @default(0)
+  scouterReliability Int                    @default(0)
+  scoutReports       ScoutReport[]
+  sourceTeam         RegisteredTeam         @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
+  team1Shifts        ScouterScheduleShift[] @relation("Team1")
+  team2Shifts        ScouterScheduleShift[] @relation("Team2")
+  team3Shifts        ScouterScheduleShift[] @relation("Team3")
+  team4Shifts        ScouterScheduleShift[] @relation("Team4")
+  team5Shifts        ScouterScheduleShift[] @relation("Team5")
+  team6Shifts        ScouterScheduleShift[] @relation("Team6")
+
+  @@index([sourceTeamNumber])
+}
+
+model SharedPicklist {
+  uuid              String @id @default(uuid())
+  name              String
+  totalPoints       Float
+  defense           Float
+  driverAbility     Float
+  autoPoints        Float
+  algaePickups      Float
+  coralPickups      Float
+  barge             Float
+  coralLevel1Scores Float
+  coralLevel2Scores Float
+  coralLevel3Scores Float
+  coralLevel4Scores Float
+  algaeProcessor    Float
+  algaeNet          Float
+  teleopPoints      Float
+  feeds             Float
+  authorId          String
+  author            User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Team {
+  number         Int             @id
+  name           String
+  registeredTeam RegisteredTeam?
+}
+
+model RegisteredTeam {
+  number                Int                    @id
+  code                  String                 @unique
+  email                 String
+  emailVerified         Boolean                @default(false)
+  teamApproved          Boolean                @default(false)
+  website               String?
+  team                  Team                   @relation(fields: [number], references: [number], onDelete: Cascade)
+  scouters              Scouter[]
+  scouterScheduleShifts ScouterScheduleShift[]
+  slackChannels         SlackWorkspace[]
+  users                 User[]
+}
+
+model EmailVerificationRequest {
+  verificationCode String   @id
+  email            String
+  expiresAt        DateTime
+  teamNumber       Int
+}
+
+model SlackWorkspace {
+  workspaceId   String              @id
+  owner         Int?
+  name          String
+  authToken     String
+  botUserId     String
+  authUserId    String
+  subscriptions SlackSubscription[]
+  team          RegisteredTeam?     @relation(fields: [owner], references: [number], onDelete: Cascade)
+}
+
+model SlackSubscription {
+  subscriptionId      String                    @id
+  channelId           String
+  workspaceId         String
+  subscribedEvent     WarningType
+  notificationRecords SlackNotificationThread[]
+  workspace           SlackWorkspace            @relation(fields: [workspaceId], references: [workspaceId], onDelete: Cascade)
+}
+
+model SlackNotificationThread {
+  messageId      String            @id
+  matchNumber    Int
+  teamNumber     Int
+  subscriptionId String
+  channelId      String
+  channel        SlackSubscription @relation(fields: [subscriptionId], references: [subscriptionId], onDelete: Cascade)
+}
+
+model Tournament {
+  key                   String                 @id
+  name                  String
+  location              String?
+  date                  String?
+  mutablePicklists      MutablePicklist[]
+  scouterScheduleShifts ScouterScheduleShift[]
+  teamMatchData         TeamMatchData[]
+}
+
+model User {
+  id               String            @id
+  teamNumber       Int?
+  email            String            @unique
+  emailVerified    Boolean           @default(false)
+  username         String?
+  role             UserRole          @default(ANALYST)
+  tournamentSource String[]
+  teamSource       Int[]
+  ApiKeys          ApiKey[]
+  mutablePicklists MutablePicklist[]
+  sharedPicklists  SharedPicklist[]
+  team             RegisteredTeam?   @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
+}
+
+model ApiKey {
+  uuid      String    @id @unique @default(uuid())
+  keyHash   String    @unique
+  name      String
+  userId    String
+  createdAt DateTime  @default(now())
+  lastUsed  DateTime?
+  requests  Int       @default(0)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Position {
@@ -64,63 +257,9 @@ enum EventAction {
   START_POSITION
 }
 
-model FeatureToggle {
-  feature String  @id
-  enabled Boolean @default(true)
-}
-
-// model FlaggedScoutReport {
-//   uuid            String      @id @default(uuid())
-//   note            String
-//   scoutReportUuid String      @unique
-//   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid])
-// }
-
-model TeamMatchData {
-  key           String        @id
-  tournamentKey String
-  tournament    Tournament    @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
-  matchNumber   Int           @db.SmallInt
-  teamNumber    Int
-  matchType     MatchType
-  scoutReports  ScoutReport[]
-
-  @@index([tournamentKey, teamNumber])
-}
-
 enum MatchType {
   QUALIFICATION
   ELIMINATION
-}
-
-model MutablePicklist {
-  uuid          String      @id @default(uuid())
-  teams         Int[]
-  authorId      String
-  author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  name          String
-  tournamentKey String?
-  tournament    Tournament? @relation(fields: [tournamentKey], references: [key])
-}
-
-model ScoutReport {
-  uuid                  String           @id @default(uuid())
-  teamMatchKey          String
-  teamMatchData         TeamMatchData    @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
-  startTime             DateTime
-  notes                 String
-  robotRole             RobotRole
-  algaePickup           AlgaePickup
-  coralPickup           CoralPickup
-  bargeResult           BargeResult
-  knocksAlgae           KnocksAlgae
-  underShallowCage      UnderShallowCage
-  robotBrokeDescription String?          
-  driverAbility         Int
-  scouterUuid           String
-  scouter               Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
-  events                Event[]
-  // flaggedScoutReport FlaggedScoutReport?
 }
 
 enum RobotRole {
@@ -168,138 +307,9 @@ enum BargeResult {
   FAILED_DEEP
 }
 
-model ScouterScheduleShift {
-  uuid                    String         @id @default(uuid())
-  sourceTeamNumber        Int
-  sourceTeam              RegisteredTeam @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
-  tournamentKey           String
-  tournament              Tournament     @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
-  startMatchOrdinalNumber Int
-  endMatchOrdinalNumber   Int
-  team1                   Scouter[]      @relation(name: "Team1")
-  team2                   Scouter[]      @relation(name: "Team2")
-  team3                   Scouter[]      @relation(name: "Team3")
-  team4                   Scouter[]      @relation(name: "Team4")
-  team5                   Scouter[]      @relation(name: "Team5")
-  team6                   Scouter[]      @relation(name: "Team6")
-}
-
-model Scouter {
-  uuid               String                 @id @default(uuid())
-  name               String?
-  sourceTeamNumber   Int
-  sourceTeam         RegisteredTeam         @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
-  strikes            Int                    @default(0)
-  scouterReliability Int                    @default(0)
-  scoutReports       ScoutReport[]
-  team1Shifts        ScouterScheduleShift[] @relation(name: "Team1")
-  team2Shifts        ScouterScheduleShift[] @relation(name: "Team2")
-  team3Shifts        ScouterScheduleShift[] @relation(name: "Team3")
-  team4Shifts        ScouterScheduleShift[] @relation(name: "Team4")
-  team5Shifts        ScouterScheduleShift[] @relation(name: "Team5")
-  team6Shifts        ScouterScheduleShift[] @relation(name: "Team6")
-
-  @@index([sourceTeamNumber])
-}
-
-model SharedPicklist {
-  uuid              String @id @default(uuid())
-  name              String
-  totalPoints       Float
-  defense           Float
-  driverAbility     Float
-  autoPoints        Float
-  algaePickups      Float
-  coralPickups      Float
-  barge             Float
-  coralLevel1Scores Float
-  coralLevel2Scores Float
-  coralLevel3Scores Float
-  coralLevel4Scores Float
-  algaeProcessor    Float
-  algaeNet          Float
-  teleopPoints      Float
-  feeds             Float
-  authorId          String
-  author            User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-}
-
-model Team {
-  number         Int             @id
-  name           String
-  registeredTeam RegisteredTeam?
-}
-
-model RegisteredTeam {
-  number                Int                    @id
-  team                  Team                   @relation(fields: [number], references: [number], onDelete: Cascade)
-  code                  String                 @unique // 6 digit alphanumeric, case-insensitive code
-  email                 String
-  emailVerified         Boolean                @default(false)
-  teamApproved          Boolean                @default(false)
-  slackChannels         SlackWorkspace[]
-  website               String?
-  scouterScheduleShifts ScouterScheduleShift[]
-  scouters              Scouter[]
-  users                 User[]
-}
-
-model SlackWorkspace {
-  workspaceId   String              @id
-  owner         Int?
-  name          String
-  authToken     String
-  subscriptions SlackSubscription[]
-  team          RegisteredTeam?     @relation(fields: [owner], references: [number], onDelete: Cascade)
-  botUserId     String
-  authUserId    String
-}
-
-model SlackSubscription {
-  subscriptionId      String                    @id
-  channelId           String
-  workspaceId         String
-  workspace           SlackWorkspace            @relation(fields: [workspaceId], references: [workspaceId], onDelete: Cascade)
-  subscribedEvent     WarningType
-  notificationRecords SlackNotificationThread[]
-}
-
-model SlackNotificationThread {
-  messageId      String            @id
-  matchNumber    Int
-  teamNumber     Int
-  subscriptionId String
-  channelId      String
-  channel        SlackSubscription @relation(fields: [subscriptionId], references: [subscriptionId], onDelete: Cascade)
-}
-
 enum WarningType {
   AUTO_LEAVE
   BREAK
-}
-
-model Tournament {
-  key                   String                 @id
-  name                  String
-  location              String?
-  date                  String?
-  teamMatchData         TeamMatchData[]
-  scouterScheduleShifts ScouterScheduleShift[]
-  mutablePicklists      MutablePicklist[]
-}
-
-model User {
-  id               String            @id
-  teamNumber       Int?
-  team             RegisteredTeam?   @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
-  email            String            @unique
-  emailVerified    Boolean           @default(false)
-  username         String?
-  role             UserRole          @default(ANALYST)
-  tournamentSource String[]
-  teamSource       Int[]
-  mutablePicklists MutablePicklist[]
-  sharedPicklists  SharedPicklist[]
 }
 
 enum UserRole {

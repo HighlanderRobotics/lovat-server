@@ -24,7 +24,7 @@ import { getTournaments } from "./handler/manager/getTournaments";
 import { addUsername } from "./handler/manager/addUsername";
 import { getTeams } from "./handler/manager/getTeams";
 import { updateScouterShift } from "./handler/manager/updateScouterShift";
-import getTBAData from "./lib/getTBAData";
+import scheduleJobs from "./lib/scheduleJobs";
 import { checkCode } from "./handler/manager/checkCode";
 import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
@@ -93,6 +93,7 @@ import { processEvent } from "./handler/slack/processEvents";
 import { setupExpressErrorHandler } from "posthog-node";
 import { posthog } from "./posthogClient";
 import posthogReporter from "./lib/middleware/posthogMiddleware";
+import { requireSlackToken } from "./lib/middleware/requireSlackToken";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -100,6 +101,7 @@ const resendEmailLimiter = rateLimit({
   max: 2,
   message:
     "Too many emails sent from this IP, please try again after 2 minutes",
+  validate: { trustProxy: false },
 });
 
 const updateTeamEmails = rateLimit({
@@ -107,6 +109,7 @@ const updateTeamEmails = rateLimit({
   max: 3,
   message:
     "Too many email updates sent from this IP, please try again after 2 minutes",
+  validate: { trustProxy: false },
 });
 
 const app = express();
@@ -119,6 +122,25 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+// add/update slack workspace
+app.get("/v1/slack/add-workspace", requireSlackToken, addSlackWorkspace);
+
+// process slash commands
+app.post(
+  "/v1/slack/command",
+  express.urlencoded({ extended: true }),
+  requireSlackToken,
+  processCommand,
+);
+
+app.post("/v1/slack/event", requireSlackToken, processEvent);
+
+app.post(
+  "/v1/manager/onboarding/verifyemail",
+  requireLovatSignature,
+  approveTeamEmail,
+); //tested
+
 // Log requests
 app.use(posthogReporter);
 
@@ -126,12 +148,12 @@ app.use(posthogReporter);
 app.get(
   "/v1/manager/tournament/:tournament/teams",
   requireAuth,
-  getTeamsInTournament
+  getTeamsInTournament,
 );
 app.get(
   "/v1/manager/tournament/:tournament/rankedTeams",
   requireAuth,
-  getTeamRankings
+  getTeamRankings,
 );
 app.get("/v1/manager/teams", requireAuth, getTeams); //tested
 app.get("/v1/manager/tournaments", requireAuth, getTournaments); //tested
@@ -149,7 +171,7 @@ app.get("/v1/manager/scoutreports/:uuid", getScoutReport); //tested
 app.post(
   "/v1/manager/tournament/:tournament/scoutershifts",
   requireAuth,
-  addScouterShift
+  addScouterShift,
 ); //tested , expecting only 1 at a time
 // app.get('/manager/tournament/:tournament/scoutershifts',requireAuth, getScouterSchedule) //tested
 app.post("/v1/manager/scoutershifts/:uuid", requireAuth, updateScouterShift); //tested
@@ -168,18 +190,18 @@ app.post("/v1/manager/mutablepicklists", requireAuth, addMutablePicklist); // te
 app.delete(
   "/v1/manager/mutablepicklists/:uuid",
   requireAuth,
-  deleteMutablePicklist
+  deleteMutablePicklist,
 ); //tested
 app.get("/v1/manager/mutablepicklists", requireAuth, getMutablePicklists); //tested
 app.get(
   "/v1/manager/mutablepicklists/:uuid",
   requireAuth,
-  getSingleMutablePicklist
+  getSingleMutablePicklist,
 ); //tested
 app.put(
   "/v1/manager/mutablepicklists/:uuid",
   requireAuth,
-  updateMutablePicklist
+  updateMutablePicklist,
 ); //tested
 
 // Also it would be nice to have an endpoint to subscribe to a mutable picklist, so that the client can get updates when it changes
@@ -189,7 +211,7 @@ app.put(
 app.get(
   "/v1/manager/registeredteams/:team/registrationstatus",
   requireAuth,
-  checkRegisteredTeam
+  checkRegisteredTeam,
 ); //tested
 app.post("/v1/manager/onboarding/username", requireAuth, addUsername); //tested
 app.post("/v1/manager/onboarding/teamcode", requireAuth, checkCode); //tested
@@ -197,30 +219,26 @@ app.post("/v1/manager/settings/teamsource", requireAuth, addTeamSource); //teste
 app.post(
   "/v1/manager/settings/tournamentsource",
   requireAuth,
-  addTournamentSource
+  addTournamentSource,
 );
 app.post("/v1/manager/onboarding/team", requireAuth, addRegisteredTeam); //tested, is the link correct?
 app.post(
   "/v1/manager/registeredteams/:team/approve",
   requireLovatSignature,
-  approveRegisteredTeam
+  approveRegisteredTeam,
 ); //tested waiting for new middle ware
 app.post(
   "/v1/manager/registeredteams/:team/reject",
   requireLovatSignature,
-  rejectRegisteredTeam
+  rejectRegisteredTeam,
 ); // tested, waiting for new middle ware
 app.post("/v1/manager/onboarding/teamwebsite", requireAuth, addWebsite); //tested
-app.post(
-  "/v1/manager/onboarding/verifyemail",
-  requireLovatSignature,
-  approveTeamEmail
-); //tested
+
 app.post(
   "/v1/manager/onboarding/resendverificationemail",
   resendEmailLimiter,
   requireAuth,
-  resendEmail
+  resendEmail,
 ); //tested
 app.get("/v1/manager/profile", requireAuth, getProfile); //tested
 app.get("/v1/manager/users", requireAuth, getUsers); //tested
@@ -235,13 +253,13 @@ app.get("/v1/manager/settings/teamsource", requireAuth, getTeamSource);
 app.get(
   "/v1/manager/settings/tournamentsource",
   requireAuth,
-  getTournamentSource
+  getTournamentSource,
 );
 app.put(
   "/v1/manager/settings/teamemail",
   updateTeamEmails,
   requireAuth,
-  updateTeamEmail
+  updateTeamEmail,
 );
 
 //scouting lead information/QR codes
@@ -249,13 +267,13 @@ app.get("/v1/manager/code", requireAuth, getTeamCode);
 app.get(
   "/v1/manager/tournament/:tournament/scoutershifts",
   requireAuth,
-  getScouterSchedule
+  getScouterSchedule,
 ); //tested
 
 app.post(
   "/v1/manager/dashboard/scoutreport",
   requireAuth,
-  addScoutReportDashboard
+  addScoutReportDashboard,
 );
 
 //scouter onboarding
@@ -280,7 +298,7 @@ app.get("/v1/analysis/breakdown/team/:team", requireAuth, breakdownMetrics); //t
 app.get(
   "/v1/analysis/breakdown/team/:team/:breakdown",
   requireAuth,
-  breakdownDetails
+  breakdownDetails,
 );
 app.get("/v1/analysis/notes/team/:team", requireAuth, getNotes); //tested
 app.get("/v1/analysis/flag/team/:team", requireAuth, multipleFlags); //tested
@@ -304,17 +322,17 @@ app.get("/v1/manager/scouterreports", requireAuth, scouterScoutReports);
 app.get(
   "/v1/analysis/metrics/scoutreport/:uuid",
   requireAuth,
-  matchPageSpecificScouter
+  matchPageSpecificScouter,
 );
 app.get(
   "/v1/analysis/scoutreports/match/:match",
   requireAuth,
-  scoutReportForMatch
+  scoutReportForMatch,
 );
 app.get(
   "/v1/analysis/timeline/scoutreport/:uuid",
   requireAuth,
-  timelineForScoutReport
+  timelineForScoutReport,
 );
 
 //pit scouting
@@ -331,24 +349,18 @@ app.get("/v1/analysis/reportcsv", requireAuth, getReportCSV);
 app.get(
   "/v1/manager/team-tournament-status",
   requireAuth,
-  getTeamTournamentStatus
+  getTeamTournamentStatus,
 );
 
 // match results from scouting reports
 app.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
 
-// add/update slack workspace
-app.get("/v1/slack/add-workspace", addSlackWorkspace);
+// API key management
+// app.get("/v1/manager/add-api-key", requireAuth, addApiKey);
+// app.get("/v1/manager/revoke-api-key", requireAuth, revokeApiKey);
+// app.get("/v1/manager/get-api-keys", requireAuth, getApiKeys);
+// app.get("/v1/manager/rename-api-key", requireAuth, renameApiKey);
 
-// process slash commands
-app.post(
-  "/v1/slack/command",
-  express.urlencoded({ extended: true }),
-  processCommand
-);
-
-app.post("/v1/slack/event", processEvent);
-
-getTBAData();
+scheduleJobs();
 
 app.listen(port);
