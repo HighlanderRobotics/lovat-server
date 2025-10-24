@@ -3,6 +3,32 @@ import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { alliancePage } from "./alliancePage";
 import { matchPredictionLogic } from "./matchPredictionLogic";
+import { AnalysisHandlerArgs } from "../analysisHandler";
+
+const paramsSchema = z
+      .object({
+        red1: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
+        red2: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
+        red3: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
+        blue1: z.preprocess(
+          (x) => (x ? x : undefined),
+          z.coerce.number().int(),
+        ),
+        blue2: z.preprocess(
+          (x) => (x ? x : undefined),
+          z.coerce.number().int(),
+        ),
+        blue3: z.preprocess(
+          (x) => (x ? x : undefined),
+          z.coerce.number().int(),
+        ),
+      })
+const matchPredictionHandler: AnalysisHandlerArgs<typeof paramsSchema> = {
+  params: paramsSchema,
+  createKey: (params) => "",
+  calculateAnalysis: async (params) => undefined,
+}
+
 
 export const matchPrediction = async (
   req: AuthenticatedRequest,

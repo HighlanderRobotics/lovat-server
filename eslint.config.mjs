@@ -29,6 +29,7 @@ export default [
       "unused-imports/no-unused-imports": "error",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/explicit-module-boundary-types": "warn",
+      "@typescript-eslint/consistent-type-definitions": "ignore",
       "unused-imports/no-unused-vars": [
         "off",
         {

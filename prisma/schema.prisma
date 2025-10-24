@@ -213,6 +213,12 @@ model ApiKey {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model CachedAnalysis {
+  key              String @id
+  output           Json
+  teamDependencies Int[]
+}
+
 enum Position {
   NONE
   START_ONE
