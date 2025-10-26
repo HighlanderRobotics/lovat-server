@@ -94,6 +94,7 @@ import { setupExpressErrorHandler } from "posthog-node";
 import { posthog } from "./posthogClient";
 import posthogReporter from "./lib/middleware/posthogMiddleware";
 import { requireSlackToken } from "./lib/middleware/requireSlackToken";
+import { migrateDataSources } from "./lib/migrateDataSources";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -362,5 +363,7 @@ app.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
 // app.get("/v1/manager/rename-api-key", requireAuth, renameApiKey);
 
 scheduleJobs();
+
+migrateDataSources();
 
 app.listen(port);

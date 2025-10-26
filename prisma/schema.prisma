@@ -188,18 +188,20 @@ model Tournament {
 }
 
 model User {
-  id               String            @id
-  teamNumber       Int?
-  email            String            @unique
-  emailVerified    Boolean           @default(false)
-  username         String?
-  role             UserRole          @default(ANALYST)
-  tournamentSource String[]
-  teamSource       Int[]
-  ApiKeys          ApiKey[]
-  mutablePicklists MutablePicklist[]
-  sharedPicklists  SharedPicklist[]
-  team             RegisteredTeam?   @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
+  id                   String            @id
+  teamNumber           Int?
+  email                String            @unique
+  emailVerified        Boolean           @default(false)
+  username             String?
+  role                 UserRole          @default(ANALYST)
+  tournamentSource     String[] /// @deprecated Use tournamentSourceRule instead
+  teamSource           Int[] /// @deprecated Use teamSourceRule instead
+  tournamentSourceRule Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
+  teamSourceRule       Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
+  ApiKeys              ApiKey[]
+  mutablePicklists     MutablePicklist[]
+  sharedPicklists      SharedPicklist[]
+  team                 RegisteredTeam?   @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
 }
 
 model ApiKey {
