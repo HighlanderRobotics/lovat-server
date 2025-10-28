@@ -17,7 +17,7 @@ export const addTeamSource = async (
           id: user.id,
         },
         data: {
-          teamSourceRule: {mode: "EXCLUDE", items: []},
+          teamSourceRule: { mode: "EXCLUDE", items: [] },
         },
       });
       res.status(200).send("team sources added");
@@ -32,7 +32,7 @@ export const addTeamSource = async (
             id: user.id,
           },
           data: {
-            teamSourceRule: {mode: "INCLUDE", items: [user.teamNumber]},
+            teamSourceRule: { mode: "INCLUDE", items: [user.teamNumber] },
           },
         });
         res.status(200).send("team sources added");
@@ -56,7 +56,10 @@ export const addTeamSource = async (
           id: user.id,
         },
         data: {
-          teamSourceRule: arrayToRule<number>(params.data.teamSource, await allTeamNumbers),
+          teamSourceRule: arrayToRule<number>(
+            params.data.teamSource,
+            await allTeamNumbers,
+          ),
         },
       });
       res.status(200).send("team sources added");

@@ -1,10 +1,11 @@
-import { User } from "@prisma/client";
+import { Prisma, User } from "@prisma/client";
 import { RequestHandler } from "express";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import prismaClient from "../../prismaClient";
+import { allTeamNumbers } from "./analysisConstants";
 
-const dataSourceRuleSchema = <T extends z.ZodString | z.ZodNumber>(
+export const dataSourceRuleSchema = <T extends z.ZodString | z.ZodNumber>(
   itemType: T,
 ) =>
   z.object({
@@ -15,6 +16,12 @@ const dataSourceRuleSchema = <T extends z.ZodString | z.ZodNumber>(
 export type DataSourceRule<T extends number | string> = {
   mode: "INCLUDE" | "EXCLUDE";
   items: T[];
+};
+
+export const dataSourceRuleToPrismaQuery = <T extends number | string>(
+  rule: DataSourceRule<T>,
+) => {
+  return rule.mode === "EXCLUDE" ? { notIn: rule.items } : { in: rule.items };
 };
 
 type AnalysisContext = {

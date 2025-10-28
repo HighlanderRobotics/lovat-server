@@ -29,7 +29,10 @@ export const addTournamentSource = async (
         id: user.id,
       },
       data: {
-        tournamentSourceRule: arrayToRule<string>(params.data.tournamentSource, await allTournaments),
+        tournamentSourceRule: arrayToRule<string>(
+          params.data.tournamentSource,
+          await allTournaments,
+        ),
       },
     });
     res.status(200).send("tournament sources added");

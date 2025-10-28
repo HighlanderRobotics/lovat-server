@@ -9,6 +9,11 @@ import {
   MetricsBreakdown,
 } from "../analysisConstants";
 import { getSourceFilter } from "./averageManyFast";
+import z from "zod";
+import {
+  dataSourceRuleToPrismaQuery,
+  dataSourceRuleSchema,
+} from "../analysisHandler";
 
 /**
  * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,
@@ -20,17 +25,30 @@ export const nonEventMetric = async (
   metric: MetricsBreakdown,
 ): Promise<Record<string, number>> => {
   try {
-    // Special condition for auto leaves
-    if (metric === MetricsBreakdown.leavesAuto) {
-      const sourceTnmtFilter = getSourceFilter(
-        user.tournamentSource,
-        await allTournaments,
-      );
-      const sourceTeamFilter = getSourceFilter(
-        user.teamSource,
-        await allTeamNumbers,
-      );
+    const tnmRule = dataSourceRuleSchema(z.string()).parse(
+      user.tournamentSourceRule,
+    );
+    const teamRule = dataSourceRuleSchema(z.number()).parse(
+      user.teamSourceRule,
+    );
 
+    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(tnmRule);
+    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(teamRule);
+
+    const tournamentList = tnmRule.items;
+    const teamList = teamRule.items;
+
+    const tournamentCondition =
+      tnmRule.mode === "INCLUDE"
+        ? `tmd."tournamentKey" = ANY($1)`
+        : `tmd."tournamentKey" != ALL($1)`;
+
+    const teamCondition =
+      teamRule.mode === "INCLUDE"
+        ? `sc."sourceTeamNumber" = ANY($2)`
+        : `sc."sourceTeamNumber" != ALL($2)`;
+
+    if (metric === MetricsBreakdown.leavesAuto) {
       const numLeaves = await prismaClient.teamMatchData.count({
         where: {
           teamNumber: team,
@@ -75,16 +93,16 @@ export const nonEventMetric = async (
     }
 
     const query = `
-        SELECT "${metric}" AS breakdown,
-            COUNT(s."scouterUuid") / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
-        FROM "ScoutReport" s
-        JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
-        JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
-        WHERE tmd."teamNumber" = ${team}
-            AND tmd."tournamentKey" = ANY($1)
-            AND sc."sourceTeamNumber" = ANY($2)
-        GROUP BY s."${metric}"
-        `;
+      SELECT s."${metric}" AS breakdown,
+        COUNT(s."scouterUuid")::float / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
+      FROM "ScoutReport" s
+      JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
+      JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
+      WHERE tmd."teamNumber" = $3
+        AND ${tournamentCondition}
+        AND ${teamCondition}
+      GROUP BY s."${metric}"
+    `;
 
     interface QueryRow {
       breakdown: string;
@@ -93,11 +111,12 @@ export const nonEventMetric = async (
 
     const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
       query,
-      user.tournamentSource,
-      user.teamSource,
+      tournamentList,
+      teamList,
+      team,
     );
 
-    const result = {};
+    const result: Record<string, number> = {};
     for (const possibleRow of breakdownToEnum[metric]) {
       result[possibleRow] = 0;
     }

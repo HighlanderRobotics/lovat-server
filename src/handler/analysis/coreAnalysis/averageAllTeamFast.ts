@@ -10,6 +10,11 @@ import {
 } from "../analysisConstants";
 import { Position, Prisma, User } from "@prisma/client";
 import { getSourceFilter } from "./averageManyFast";
+import z from "zod";
+import {
+  dataSourceRuleToPrismaQuery,
+  dataSourceRuleSchema,
+} from "../analysisHandler";
 
 /**
  * Heuristically aggregate an analog metric on all teams simultaneously (weights scout reports equally regardless of duplicate matches).
@@ -28,13 +33,11 @@ export const averageAllTeamFast = async (
       return defaultEndgamePoints;
     }
 
-    const sourceTnmtFilter = getSourceFilter(
-      user.tournamentSource,
-      await allTournaments,
+    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+      dataSourceRuleSchema(z.string()).parse(user.tournamentSourceRule),
     );
-    const sourceTeamFilter = getSourceFilter(
-      user.teamSource,
-      await allTeamNumbers,
+    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+      dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
     );
 
     // Average driver ability across all valid scout reports

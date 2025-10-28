@@ -13,6 +13,11 @@ import { BargeResult, Position, Prisma, User } from "@prisma/client";
 import { endgameRuleOfSuccession } from "../picklist/endgamePicklistTeamFast";
 import { Event } from "@prisma/client";
 import { weightedTourAvgLeft } from "./arrayAndAverageTeams";
+import z from "zod";
+import {
+  dataSourceRuleToPrismaQuery,
+  dataSourceRuleSchema,
+} from "../analysisHandler";
 
 export interface ArrayFilter<T> {
   notIn?: T[];
@@ -35,13 +40,11 @@ export const averageManyFast = async (
 ): Promise<Partial<Record<Metric, Record<number, number>>>> => {
   try {
     // Set up filters to decrease server load
-    const sourceTnmtFilter = getSourceFilter(
-      user.tournamentSource,
-      await allTournaments,
+    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+      dataSourceRuleSchema(z.string()).parse(user.tournamentSourceRule),
     );
-    const sourceTeamFilter = getSourceFilter(
-      user.teamSource,
-      await allTeamNumbers,
+    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+      dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
     );
 
     const tmdFilter: Prisma.TeamMatchDataWhereInput = {

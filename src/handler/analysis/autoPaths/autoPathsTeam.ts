@@ -1,5 +1,5 @@
 import prismaClient from "../../../prismaClient";
-import z from "zod";
+import z, { ZodNumber } from "zod";
 import { User } from "@prisma/client";
 import { getSourceFilter } from "../coreAnalysis/averageManyFast";
 import {
@@ -9,6 +9,10 @@ import {
   FlippedActionMap,
   FlippedPositionMap,
 } from "../analysisConstants";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToPrismaQuery,
+} from "../analysisHandler";
 
 interface AutoPosition {
   location: number;
@@ -47,13 +51,11 @@ export const autoPathsTeam = async (
       throw params;
     }
 
-    const sourceTnmtFilter = getSourceFilter(
-      user.tournamentSource,
-      await allTournaments,
+    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+      dataSourceRuleSchema(z.string()).parse(user.tournamentSourceRule),
     );
-    const sourceTeamFilter = getSourceFilter(
-      user.teamSource,
-      await allTeamNumbers,
+    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+      dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
     );
 
     // Select relevant data in match order

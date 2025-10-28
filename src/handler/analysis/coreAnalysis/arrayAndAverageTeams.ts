@@ -12,6 +12,11 @@ import {
 import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast";
 import { Event, Position, Prisma, ScoutReport, User } from "@prisma/client";
 import { getSourceFilter } from "./averageManyFast";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToPrismaQuery,
+} from "../analysisHandler";
+import z from "zod";
 
 // Could be changed to be SQL dependent. Might be slightly better for readability and performance, but would probably be harder to update each season, especially for newer members.
 
@@ -39,13 +44,11 @@ export const arrayAndAverageTeams = async (
   >
 > => {
   try {
-    const sourceTnmtFilter = getSourceFilter(
-      user.tournamentSource,
-      await allTournaments,
+    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+      dataSourceRuleSchema(z.string()).parse(user.tournamentSourceRule),
     );
-    const sourceTeamFilter = getSourceFilter(
-      user.teamSource,
-      await allTeamNumbers,
+    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+      dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
     );
 
     // Endgame point prediction
