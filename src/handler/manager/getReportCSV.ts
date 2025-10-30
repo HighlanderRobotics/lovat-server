@@ -18,7 +18,10 @@ import {
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
-import { dataSourceRuleToPrismaQuery, dataSourceRuleSchema } from "../analysis/analysisHandler";
+import {
+  dataSourceRuleToPrismaQuery,
+  dataSourceRuleSchema,
+} from "../analysis/analysisHandler";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
 export interface CondensedReport {
@@ -126,7 +129,9 @@ export const getReportCSV = async (
           tournamentKey: params.data.tournamentKey,
         },
         scouter: {
-          sourceTeamNumber: dataSourceRuleToPrismaQuery(dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule))
+          sourceTeamNumber: dataSourceRuleToPrismaQuery(
+            dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+          ),
         },
       },
       select: {

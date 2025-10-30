@@ -29,7 +29,10 @@ export const updateSettings = async (
       },
       data: {
         teamSourceRule: arrayToRule(params.teamSource, await allTeamNumbers),
-        tournamentSourceRule: arrayToRule(params.tournamentSource, await allTournaments)
+        tournamentSourceRule: arrayToRule(
+          params.tournamentSource,
+          await allTournaments,
+        ),
       },
     });
     res.status(200).send("Settings sucsessfully updated");

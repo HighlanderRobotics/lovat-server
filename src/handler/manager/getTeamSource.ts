@@ -1,7 +1,10 @@
 import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { dataSourceRuleSchema, dataSourceRuleToArray } from "../analysis/analysisHandler";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToArray,
+} from "../analysis/analysisHandler";
 import z from "zod";
 import { allTeamNumbers } from "../analysis/analysisConstants";
 
@@ -10,7 +13,9 @@ export const getTeamSource = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const teamSourceRule = dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule);
+    const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
+      req.user.teamSourceRule,
+    );
 
     if (
       teamSourceRule.mode === "INCLUDE" &&
@@ -20,11 +25,16 @@ export const getTeamSource = async (
       return;
     }
     const team = await prismaClient.team.findMany();
-    if (teamSourceRule.mode === "EXCLUDE" && teamSourceRule.items.length === 0) {
+    if (
+      teamSourceRule.mode === "EXCLUDE" &&
+      teamSourceRule.items.length === 0
+    ) {
       res.status(200).send("ALL_TEAMS");
       return;
     } else {
-      res.status(200).send(dataSourceRuleToArray(teamSourceRule, await allTeamNumbers));
+      res
+        .status(200)
+        .send(dataSourceRuleToArray(teamSourceRule, await allTeamNumbers));
     }
   } catch (error) {
     console.error(error);

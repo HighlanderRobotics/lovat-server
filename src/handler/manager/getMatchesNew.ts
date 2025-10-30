@@ -6,7 +6,10 @@ import { addTournamentMatches } from "./addTournamentMatches";
 import { ReverseMatchTypeMap } from "./managerConstants";
 import { MatchType, Prisma } from "@prisma/client";
 import { swrConstant, ttlConstant } from "../analysis/analysisConstants";
-import { dataSourceRuleSchema, dataSourceRuleToPrismaQuery } from "../analysis/analysisHandler";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToPrismaQuery,
+} from "../analysis/analysisHandler";
 
 /**
  * @param params.tournament tournament to pull from
@@ -74,9 +77,9 @@ export const getMatches = async (
     let includeTeamReports: Prisma.TeamMatchData$scoutReportsArgs | undefined =
       undefined;
 
-      const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
-        req.user.teamSourceRule,
-      );
+    const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
+      req.user.teamSourceRule,
+    );
 
     if (user.teamNumber) {
       if (teamSourceRule.mode === "EXCLUDE") {
@@ -124,7 +127,7 @@ export const getMatches = async (
             scoutReports: {
               where: {
                 scouter: {
-                  sourceTeamNumber: dataSourceRuleToPrismaQuery(teamSourceRule)
+                  sourceTeamNumber: dataSourceRuleToPrismaQuery(teamSourceRule),
                 },
               },
             },

@@ -4,7 +4,10 @@ import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { getSourceFilter } from "../coreAnalysis/averageManyFast";
 import { allTeamNumbers, allTournaments } from "../analysisConstants";
-import { dataSourceRuleSchema, dataSourceRuleToPrismaQuery } from "../analysisHandler";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToPrismaQuery,
+} from "../analysisHandler";
 
 export const getNotes = async (
   req: AuthenticatedRequest,
@@ -32,8 +35,12 @@ export const getNotes = async (
     }[];
 
     // Set up filters to decrease server load
-    const sourceTnmtFilter = dataSourceRuleToPrismaQuery(dataSourceRuleSchema(z.string()).parse(req.user.tournamentSourceRule))
-    const sourceTeamFilter = dataSourceRuleToPrismaQuery(dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule))
+    const sourceTnmtFilter = dataSourceRuleToPrismaQuery(
+      dataSourceRuleSchema(z.string()).parse(req.user.tournamentSourceRule),
+    );
+    const sourceTeamFilter = dataSourceRuleToPrismaQuery(
+      dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+    );
 
     const noteData = await prismaClient.scoutReport.findMany({
       where: {

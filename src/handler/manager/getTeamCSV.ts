@@ -16,7 +16,10 @@ import {
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
-import { dataSourceRuleToPrismaQuery, dataSourceRuleSchema } from "../analysis/analysisHandler";
+import {
+  dataSourceRuleToPrismaQuery,
+  dataSourceRuleSchema,
+} from "../analysis/analysisHandler";
 
 interface AggregatedTeamData {
   teamNumber: number;
@@ -131,7 +134,9 @@ export const getTeamCSV = async (
         scoutReports: {
           where: {
             scouter: {
-              sourceTeamNumber: dataSourceRuleToPrismaQuery(dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule))
+              sourceTeamNumber: dataSourceRuleToPrismaQuery(
+                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+              ),
             },
           },
           select: {
