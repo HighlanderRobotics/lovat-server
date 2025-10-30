@@ -24,6 +24,17 @@ export const dataSourceRuleToPrismaQuery = <T extends number | string>(
   return rule.mode === "EXCLUDE" ? { notIn: rule.items } : { in: rule.items };
 };
 
+export const dataSourceRuleToArray = <T extends number | string>(
+  rule: DataSourceRule<T>,
+  allTeams: T[],
+) => {
+  if (rule.mode === "INCLUDE") {
+    return allTeams.filter((team) => rule.items.includes(team));
+  } else if (rule.mode === "EXCLUDE") {
+    return allTeams.filter((team) => !rule.items.includes(team));
+  }
+};
+
 type AnalysisContext = {
   user: User;
   dataSource?: {

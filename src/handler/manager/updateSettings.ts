@@ -2,6 +2,9 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { dataSourceRuleSchema } from "../analysis/analysisHandler";
+import { arrayToRule } from "../../lib/migrateDataSources";
+import { allTeamNumbers, allTournaments } from "../analysis/analysisConstants";
 
 export const updateSettings = async (
   req: AuthenticatedRequest,
@@ -13,11 +16,9 @@ export const updateSettings = async (
         teamSource: z.array(z.number()),
         tournamentSource: z.array(z.string()),
       })
-      .safeParse({
-        teamSource: req.body.teamSource,
-        tournamentSource: req.body.tournamentSource,
-      });
-    if (!params.success) {
+      .parse(req.body);
+
+    if (!params) {
       res.status(400).send(params);
       return;
     }
@@ -27,8 +28,8 @@ export const updateSettings = async (
         id: req.user.id,
       },
       data: {
-        teamSource: params.data.teamSource,
-        tournamentSource: params.data.tournamentSource,
+        teamSourceRule: arrayToRule(params.teamSource, await allTeamNumbers),
+        tournamentSourceRule: arrayToRule(params.tournamentSource, await allTournaments)
       },
     });
     res.status(200).send("Settings sucsessfully updated");

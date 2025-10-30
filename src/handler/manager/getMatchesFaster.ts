@@ -10,6 +10,8 @@ import {
   ReverseScouterScheduleMap,
   ScouterScheduleMap,
 } from "./managerConstants";
+import { dataSourceRuleSchema, dataSourceRuleToArray, dataSourceRuleToPrismaQuery } from "../analysis/analysisHandler";
+import { allTeamNumbers } from "../analysis/analysisConstants";
 //maybe faster???
 export const getMatches = async (
   req: AuthenticatedRequest,
@@ -134,11 +136,13 @@ export const getMatches = async (
       });
     }
 
+    const teamNumbers = await allTeamNumbers;
+
     //filter matches by scouted or not, if provided
     if (params.data.isScouted !== null) {
       finalMatches = finalMatches.filter((match) => {
         const scouted = match.scoutReports.some((report) =>
-          user.teamSource.includes(report.scouter.sourceTeamNumber),
+                        dataSourceRuleToArray(dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule), teamNumbers).includes(report.scouter.sourceTeamNumber),
         );
         return params.data.isScouted ? scouted : !scouted;
       });
@@ -161,7 +165,7 @@ export const getMatches = async (
         matchNumber: match.matchNumber,
         matchType: ReverseMatchTypeMap[match.matchType],
         scouted: match.scoutReports.some((report) =>
-          user.teamSource.includes(report.scouter.sourceTeamNumber),
+          dataSourceRuleToArray(dataSourceRuleSchema(z.number()).parse(user.teamSourceRule), teamNumbers).includes(report.scouter.sourceTeamNumber),
         ),
         team1: teams.find((team) => team.teamPosition === "team1"),
         team2: teams.find((team) => team.teamPosition === "team2"),
@@ -216,10 +220,7 @@ export const getMatches = async (
           tournamentKey: params.data.tournamentKey,
         },
         scouter: {
-          sourceTeamNumber: {
-            in: user.teamSource,
-            not: user.teamNumber,
-          },
+                        sourceTeamNumber: dataSourceRuleToPrismaQuery(dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule))
         },
       },
     });

@@ -3,12 +3,18 @@ import z from "zod";
 import prismaClient from "../../../prismaClient";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import {
+  allTeamNumbers,
+  allTournaments,
   breakdownNeg,
   breakdownPos,
   lowercaseToBreakdown,
   MetricsBreakdown,
 } from "../analysisConstants";
 import { EventAction } from "@prisma/client";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToArray,
+} from "../analysisHandler";
 
 export const breakdownDetails = async (
   req: AuthenticatedRequest,
@@ -86,8 +92,14 @@ export const breakdownDetails = async (
 
     const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
       query,
-      req.user.teamSource,
-      req.user.tournamentSource,
+      dataSourceRuleToArray(
+        dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+        await allTeamNumbers,
+      ),
+      dataSourceRuleToArray(
+        dataSourceRuleSchema(z.string()).parse(req.user.tournamentSourceRule),
+        await allTournaments,
+      ),
     );
 
     // Edit to work with true/false breakdowns

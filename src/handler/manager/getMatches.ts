@@ -10,6 +10,7 @@ import {
   ReverseScouterScheduleMap,
   ScouterScheduleMap,
 } from "./managerConstants";
+import { dataSourceRuleSchema, dataSourceRuleToPrismaQuery } from "../analysis/analysisHandler";
 
 export const getMatches = async (
   req: AuthenticatedRequest,
@@ -78,9 +79,7 @@ export const getMatches = async (
         scoutReports: {
           none: {
             scouter: {
-              sourceTeamNumber: {
-                in: user.teamSource,
-              },
+              sourceTeamNumber: dataSourceRuleToPrismaQuery(dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule))
             },
           },
         },
@@ -495,10 +494,7 @@ async function addExternalReports(req: AuthenticatedRequest, match) {
         matchNumber: match.matchNumber,
       },
       scouter: {
-        sourceTeamNumber: {
-          in: req.user.teamSource,
-          not: teamNumber,
-        },
+              sourceTeamNumber: dataSourceRuleToPrismaQuery(dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule))
       },
     },
   });
