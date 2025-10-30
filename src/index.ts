@@ -95,6 +95,8 @@ import { posthog } from "./posthogClient";
 import posthogReporter from "./lib/middleware/posthogMiddleware";
 import { requireSlackToken } from "./lib/middleware/requireSlackToken";
 import { migrateDataSources } from "./lib/migrateDataSources";
+import { archiveScouter } from "./handler/manager/archiveScouter";
+import { unarchiveScouter } from "./handler/manager/unarchiveScouter";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -280,6 +282,8 @@ app.post(
 //scouter onboarding
 app.post("/v1/manager/emailTeamCode", emailTeamCode);
 app.get("/v1/manager/scouter/checkcode", checkCodeScouter); //tested change name/where request data is coming from/response format as needed
+app.post("/v1/manager/unarchive/uuid/:uuid", unarchiveScouter);
+app.post("/v1/manager/archive/uuid/:uuid", archiveScouter);
 app.post("/v1/manager/name/uuid/:uuid", changeNameScouter); // tested, change name/where request data is coming from/response format as needed
 app.get("/v1/manager/scouters", getScoutersOnTeam); //tested
 app.post("/v1/manager/scouter", addNewScouter); //tested

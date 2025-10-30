@@ -84,6 +84,7 @@ model ScouterScheduleShift {
 model Scouter {
   uuid               String                 @id @default(uuid())
   name               String?
+  archived           Boolean                @default(false)
   sourceTeamNumber   Int
   strikes            Int                    @default(0)
   scouterReliability Int                    @default(0)

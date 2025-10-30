@@ -15,6 +15,7 @@ export const getScouters = async (
     const rows = await prismaClient.scouter.findMany({
       where: {
         sourceTeamNumber: req.user.teamNumber,
+        archived: false
       },
       select: {
         uuid: true,
