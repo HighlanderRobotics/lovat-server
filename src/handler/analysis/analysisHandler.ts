@@ -43,27 +43,30 @@ type AnalysisContext = {
   };
 };
 
-type AnalysisParamsSchema<T extends z.ZodObject, U extends z.ZodObject> = {
+type AnalysisParamsSchema<T extends z.ZodObject, U extends z.ZodObject, V extends z.ZodObject> = {
   body?: T;
   query?: U;
+  params?: V;
 };
 
-type AnalysisParams<T extends z.ZodObject, U extends z.ZodObject> = {
+type AnalysisParams<T extends z.ZodObject, U extends z.ZodObject, V extends z.ZodObject> = {
   body: z.infer<T>;
   query: z.infer<U>;
+  params: z.infer<V>;
 };
 
 export type AnalysisHandlerArgs<
   T extends z.ZodObject,
   U extends z.ZodObject,
+  V extends z.ZodObject,
 > = {
-  params: AnalysisParamsSchema<T, U>;
-  createKey: (params: AnalysisParams<T, U>) => {
+  params: AnalysisParamsSchema<T, U, V>;
+  createKey: (params: AnalysisParams<T, U, V>) => {
     key: string[];
     teamDependencies: number[];
   };
   calculateAnalysis: (
-    params: AnalysisParams<T, U>,
+    params: AnalysisParams<T, U, V>,
     ctx: AnalysisContext,
   ) => Promise<any>;
   usesDataSource: boolean;
@@ -72,15 +75,18 @@ export type AnalysisHandlerArgs<
 export const createAnalysisHandler: <
   T extends z.ZodObject,
   U extends z.ZodObject,
+  V extends z.ZodObject,
 >(
-  args: AnalysisHandlerArgs<T, U>,
+  args: AnalysisHandlerArgs<T, U, V>,
 ) => RequestHandler = (args) => {
   return async (req: AuthenticatedRequest, res) => {
     try {
       const params = {
         body: args.params.body?.parse(req.body),
         query: args.params.query?.parse(req.query),
+        params: args.params.params?.parse(req.params),
       };
+
       const context: AnalysisContext = {
         user: req.user,
         dataSource: {
@@ -156,6 +162,7 @@ export const createAnalysisHandler: <
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).send("Invalid parameters");
+        console.error(error);
       } else {
         res.status(500).send("Internal server error");
         console.error(error);

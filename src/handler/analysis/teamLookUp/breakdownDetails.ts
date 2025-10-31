@@ -1,7 +1,4 @@
-import { Response } from "express";
 import z from "zod";
-import prismaClient from "../../../prismaClient";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import {
   allTeamNumbers,
   allTournaments,
@@ -12,32 +9,30 @@ import {
 } from "../analysisConstants";
 import { EventAction } from "@prisma/client";
 import {
+  AnalysisHandlerArgs,
+  createAnalysisHandler,
   dataSourceRuleSchema,
   dataSourceRuleToArray,
 } from "../analysisHandler";
+import prismaClient from "../../../prismaClient";
 
-export const breakdownDetails = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        team: z.number(),
-        breakdown: z.nativeEnum(MetricsBreakdown),
-      })
-      .safeParse({
-        team: Number(req.params.team),
-        breakdown: lowercaseToBreakdown[req.params.breakdown],
-      });
-    if (!params.success) {
-      console.log(params);
-      res.status(400).send(params);
-      return;
-    }
-
-    let query = `
-        SELECT "${params.data.breakdown}" AS breakdown,
+export const breakdownDetails = createAnalysisHandler({
+  params: {
+    query: z.object({
+      team: z.preprocess((x) => Number(x), z.number()),
+      breakdown: z.nativeEnum(MetricsBreakdown),
+    }),
+  },
+  usesDataSource: true,
+  createKey: ({ query }) => {
+    return {
+      key: ["breakdownDetails", query.team.toString(), query.breakdown],
+      teamDependencies: [query.team],
+    };
+  },
+  calculateAnalysis: async ({ query }, ctx) => {
+    let queryStr = `
+        SELECT "${query.breakdown}" AS breakdown,
             "teamMatchKey" AS key,
             tmnt."name" AS tournament,
             sc."sourceTeamNumber" AS sourceteam,
@@ -45,19 +40,19 @@ export const breakdownDetails = async (
         FROM "ScoutReport" s
         JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
         JOIN "TeamMatchData" tmd
-            ON tmd."teamNumber" = ${params.data.team}
+            ON tmd."teamNumber" = ${query.team}
             AND tmd."key" = s."teamMatchKey"
             AND sc."sourceTeamNumber" = ANY($1)
             AND tmd."tournamentKey" = ANY($2)
         JOIN "Tournament" tmnt ON tmd."tournamentKey" = tmnt."key"
         LEFT JOIN "Scouter" teamScouter
             ON teamScouter."uuid" = s."scouterUuid"
-            AND teamScouter."sourceTeamNumber" = ${req.user.teamNumber}
+            AND teamScouter."sourceTeamNumber" = ${ctx.user.teamNumber}
         ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
         `;
 
-    if (params.data.breakdown === MetricsBreakdown.leavesAuto) {
-      query = `
+    if (query.breakdown === MetricsBreakdown.leavesAuto) {
+      queryStr = `
             SELECT
                 s."teamMatchKey" AS key,
                 tmnt."name" AS tournament,
@@ -67,7 +62,7 @@ export const breakdownDetails = async (
             FROM "ScoutReport" s
             JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
             JOIN "TeamMatchData" tmd
-                ON tmd."teamNumber" = ${params.data.team}
+                ON tmd."teamNumber" = ${query.team}
                 AND tmd."key" = s."teamMatchKey"
                 AND sc."sourceTeamNumber" = ANY($1)
                 AND tmd."tournamentKey" = ANY($2)
@@ -77,7 +72,7 @@ export const breakdownDetails = async (
                 AND e."action" = '${EventAction.AUTO_LEAVE}'
             LEFT JOIN "Scouter" teamScouter
                 ON teamScouter."uuid" = s."scouterUuid"
-                AND teamScouter."sourceTeamNumber" = ${req.user.teamNumber}
+                AND teamScouter."sourceTeamNumber" = ${ctx.user.teamNumber}
             ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
             `;
     }
@@ -91,13 +86,13 @@ export const breakdownDetails = async (
     }
 
     const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
-      query,
+      queryStr,
       dataSourceRuleToArray(
-        dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+        dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
         await allTeamNumbers,
       ),
       dataSourceRuleToArray(
-        dataSourceRuleSchema(z.string()).parse(req.user.tournamentSourceRule),
+        dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
         await allTournaments,
       ),
     );
@@ -131,9 +126,6 @@ export const breakdownDetails = async (
       });
     }
 
-    res.status(200).send(result);
-  } catch (error) {
-    console.error(error);
-    res.status(400).send(error);
-  }
-};
+    return result;
+  },
+});
