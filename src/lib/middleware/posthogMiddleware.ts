@@ -73,6 +73,7 @@ const posthogReporter = async (
         disableGeoip: false,
       });
     }
+    console.log(`${req.method} ${req.path}: %d ms, HTTP ${res.statusCode}`, Math.round(t1 - t0));
   });
 
   next();

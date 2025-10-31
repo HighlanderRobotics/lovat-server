@@ -157,6 +157,15 @@ export const addScoutReport = async (
         underShallowCage: paramsScoutReport.data.traversesUnderCage,
       },
     });
+
+    await prismaClient.cachedAnalysis.deleteMany({
+      where: {
+        teamDependencies: {
+          has: paramsScoutReport.data.teamNumber,
+        },
+      },
+    });
+
     const scoutReportUuid = paramsScoutReport.data.uuid;
 
     const eventDataArray = [];

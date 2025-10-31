@@ -9,7 +9,7 @@ export const archiveScouter = async (
   try {
     const params = z
       .object({
-        uuid: z.string()
+        uuid: z.string(),
       })
       .parse(req.params);
     if (!params) {

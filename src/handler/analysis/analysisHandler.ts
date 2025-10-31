@@ -97,9 +97,18 @@ export const createAnalysisHandler: <
       const { key: keyFragments, teamDependencies: teamDeps } =
         args.createKey(params);
 
+      const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
+        context.dataSource.teams,
+      );
+      const tournamentSourceRule = dataSourceRuleSchema(z.string()).parse(
+        context.dataSource.tournaments,
+      );
+
       if (args.usesDataSource) {
-        keyFragments.push(JSON.stringify(context.dataSource.teams));
-        keyFragments.push(JSON.stringify(context.dataSource.tournaments));
+        keyFragments.push(`{${teamSourceRule.mode}:[${teamSourceRule.items}]}`);
+        keyFragments.push(
+          `{${tournamentSourceRule.mode}:[${tournamentSourceRule.items}]}`,
+        );
       }
 
       // Check to see if there's already an output in the cache
@@ -118,7 +127,11 @@ export const createAnalysisHandler: <
             context,
           );
 
-          res.status(200).send(calculatedAnalysis);
+          res
+            .status(200)
+            .send(
+              calculatedAnalysis.error ?? calculatedAnalysis
+            );
 
           try {
             await prismaClient.cachedAnalysis.create({

@@ -18,11 +18,22 @@ export const matchPrediction = createAnalysisHandler({
   },
   usesDataSource: true,
   createKey: ({ query }) => {
+    const red = [
+      query.red1.toString(),
+      query.red2.toString(),
+      query.red3.toString(),
+    ].sort();
+    const blue = [
+      query.blue1.toString(),
+      query.blue2.toString(),
+      query.blue3.toString(),
+    ].sort();
+
     return {
       key: [
         "matchPrediction",
-        ...[query.red1, query.red2, query.red3].sort().toString(),
-        ...[query.blue1, query.blue2, query.blue3].sort().toString(),
+        ...(red[0] >= blue[0] ? red : blue),
+        ...(red[0] < blue[0] ? red : blue),
       ],
       teamDependencies: [
         query.red1,
@@ -75,7 +86,7 @@ export const matchPrediction = createAnalysisHandler({
       };
     } catch (error) {
       if (error === "not enough data") {
-        return "not enough data";
+        return { error: "not enough data" };
       }
     }
   },
