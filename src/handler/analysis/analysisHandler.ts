@@ -13,13 +13,21 @@ type AnalysisContext = {
   };
 };
 
-type AnalysisParamsSchema<T extends z.ZodObject, U extends z.ZodObject, V extends z.ZodObject> = {
+type AnalysisParamsSchema<
+  T extends z.ZodObject,
+  U extends z.ZodObject,
+  V extends z.ZodObject,
+> = {
   body?: T;
   query?: U;
   params?: V;
 };
 
-type AnalysisParams<T extends z.ZodObject, U extends z.ZodObject, V extends z.ZodObject> = {
+type AnalysisParams<
+  T extends z.ZodObject,
+  U extends z.ZodObject,
+  V extends z.ZodObject,
+> = {
   body: z.infer<T>;
   query: z.infer<U>;
   params: z.infer<V>;
@@ -103,11 +111,7 @@ export const createAnalysisHandler: <
             context,
           );
 
-          res
-            .status(200)
-            .send(
-              calculatedAnalysis.error ?? calculatedAnalysis
-            );
+          res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
 
           try {
             await prismaClient.cachedAnalysis.create({

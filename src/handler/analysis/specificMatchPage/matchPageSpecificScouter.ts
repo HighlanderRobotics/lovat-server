@@ -30,7 +30,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
         uuid: params.uuid,
       },
     });
-    
+
     const output = {
       totalPoints: (
         await averageScoutReport(scoutReport.uuid, [Metric.totalPoints])

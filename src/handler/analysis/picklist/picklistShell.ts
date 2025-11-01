@@ -21,13 +21,16 @@ export const picklistShell = createAnalysisHandler({
   params: {
     query: z.object({
       tournamentKey: z.string().optional(),
-      flags: z.string().transform((val) => {
-        try {
-          return JSON.parse(val) || [];
-        } catch {
-          return [];
-        }
-      }).optional(),
+      flags: z
+        .string()
+        .transform((val) => {
+          try {
+            return JSON.parse(val) || [];
+          } catch {
+            return [];
+          }
+        })
+        .optional(),
       stage: z.string().optional(),
       totalpoints: z.coerce.number().optional(),
       autopoints: z.coerce.number().optional(),
@@ -67,9 +70,14 @@ export const picklistShell = createAnalysisHandler({
       feeds: query.feeds || 0,
       defends: query.defends || 0,
     };
-    
+
     return {
-      key: ["picklistShell", query.tournamentKey || "", JSON.stringify(query.flags || []), JSON.stringify(metricsKey)],
+      key: [
+        "picklistShell",
+        query.tournamentKey || "",
+        JSON.stringify(query.flags || []),
+        JSON.stringify(metricsKey),
+      ],
       teamDependencies: [],
     };
   },

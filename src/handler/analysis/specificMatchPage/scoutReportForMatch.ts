@@ -24,7 +24,7 @@ export const scoutReportForMatch = createAnalysisHandler({
     ) {
       throw new Error("Not authorized to access this endpoint.");
     }
-    
+
     const scoutReports = await prismaClient.scoutReport.findMany({
       where: {
         teamMatchKey: params.match,

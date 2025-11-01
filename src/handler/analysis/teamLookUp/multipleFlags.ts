@@ -23,7 +23,12 @@ export const multipleFlags = createAnalysisHandler({
   usesDataSource: true,
   createKey: ({ params, query }) => {
     return {
-      key: ["multipleFlags", params.team.toString(), JSON.stringify(query.flags), query.tournamentKey || ""],
+      key: [
+        "multipleFlags",
+        params.team.toString(),
+        JSON.stringify(query.flags),
+        query.tournamentKey || "",
+      ],
       teamDependencies: [params.team],
     };
   },
@@ -34,9 +39,7 @@ export const multipleFlags = createAnalysisHandler({
         // Find team rank if a tournament is provided
         if (query.tournamentKey) {
           arr.push(
-            (await rankFlag(query.tournamentKey, params.team))[
-              params.team
-            ],
+            (await rankFlag(query.tournamentKey, params.team))[params.team],
           );
         } else {
           arr.push(0);
@@ -57,9 +60,7 @@ export const multipleFlags = createAnalysisHandler({
             break;
           } else if (i === 0) {
             // No flag found probably shouldnt throw a full error, just push a falsy
-            console.error(
-              `Bad flag string: ${flag} for team ${params.team}`,
-            );
+            console.error(`Bad flag string: ${flag} for team ${params.team}`);
             arr.push(NaN);
           }
         }

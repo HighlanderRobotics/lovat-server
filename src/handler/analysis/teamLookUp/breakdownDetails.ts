@@ -9,10 +9,7 @@ import {
 } from "../analysisConstants";
 import { EventAction } from "@prisma/client";
 import { createAnalysisHandler } from "../analysisHandler";
-import {
-  dataSourceRuleSchema,
-  dataSourceRuleToArray,
-} from "../dataSourceRule";
+import { dataSourceRuleSchema, dataSourceRuleToArray } from "../dataSourceRule";
 import prismaClient from "../../../prismaClient";
 
 export const breakdownDetails = createAnalysisHandler({
@@ -25,7 +22,11 @@ export const breakdownDetails = createAnalysisHandler({
   usesDataSource: true,
   createKey: ({ params }) => {
     return {
-      key: ["breakdownDetails", params.team.toString(), lowercaseToBreakdown[params.breakdown]],
+      key: [
+        "breakdownDetails",
+        params.team.toString(),
+        lowercaseToBreakdown[params.breakdown],
+      ],
       teamDependencies: [params.team],
     };
   },
@@ -50,7 +51,9 @@ export const breakdownDetails = createAnalysisHandler({
         ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
         `;
 
-    if (lowercaseToBreakdown[params.breakdown] === MetricsBreakdown.leavesAuto) {
+    if (
+      lowercaseToBreakdown[params.breakdown] === MetricsBreakdown.leavesAuto
+    ) {
       queryStr = `
             SELECT
                 s."teamMatchKey" AS key,
