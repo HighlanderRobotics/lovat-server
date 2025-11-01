@@ -1,9 +1,7 @@
-import { Response } from "express";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { alliancePage } from "./alliancePage";
 import { matchPredictionLogic } from "./matchPredictionLogic";
-import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
+import { createAnalysisHandler } from "../analysisHandler";
 
 export const matchPrediction = createAnalysisHandler({
   params: {

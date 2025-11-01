@@ -9,7 +9,7 @@ import {
 } from "../analysisConstants";
 import { averageManyFast } from "../coreAnalysis/averageManyFast";
 import { zScoreMany } from "./zScoreMany";
-import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
+import { createAnalysisHandler } from "../analysisHandler";
 
 /**
  * Main picklist endpoint. Note inconsistent strings make it confusing for this season.

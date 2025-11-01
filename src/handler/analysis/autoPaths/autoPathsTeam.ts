@@ -1,10 +1,7 @@
 import prismaClient from "../../../prismaClient";
-import z, { ZodNumber } from "zod";
+import z from "zod";
 import { User } from "@prisma/client";
-import { getSourceFilter } from "../coreAnalysis/averageManyFast";
 import {
-  allTeamNumbers,
-  allTournaments,
   autoEnd,
   FlippedActionMap,
   FlippedPositionMap,
@@ -12,7 +9,7 @@ import {
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaQuery,
-} from "../analysisHandler";
+} from "../dataSourceRule";
 
 interface AutoPosition {
   location: number;

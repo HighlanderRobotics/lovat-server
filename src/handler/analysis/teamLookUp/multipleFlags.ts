@@ -2,7 +2,7 @@ import z from "zod";
 import { rankFlag } from "../rankFlag";
 import { metricsCategory, metricToName } from "../analysisConstants";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
-import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
+import { createAnalysisHandler } from "../analysisHandler";
 
 export const multipleFlags = createAnalysisHandler({
   params: {

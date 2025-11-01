@@ -1,12 +1,10 @@
 import prismaClient from "../../../prismaClient";
 import z from "zod";
-import { allTeamNumbers, allTournaments } from "../analysisConstants";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaQuery,
-  AnalysisHandlerArgs,
-  createAnalysisHandler,
-} from "../analysisHandler";
+} from "../dataSourceRule";
+import { createAnalysisHandler } from "../analysisHandler";
 
 export const getNotes = createAnalysisHandler({
   params: {

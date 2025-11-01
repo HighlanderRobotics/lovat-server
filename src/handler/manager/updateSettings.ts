@@ -2,7 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { dataSourceRuleSchema } from "../analysis/analysisHandler";
+
 import { arrayToRule } from "../../lib/migrateDataSources";
 import { allTeamNumbers, allTournaments } from "../analysis/analysisConstants";
 

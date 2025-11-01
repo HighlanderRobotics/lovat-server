@@ -1,7 +1,5 @@
 import prismaClient from "../../../prismaClient";
 import {
-  allTeamNumbers,
-  allTournaments,
   autoEnd,
   defaultEndgamePoints,
   endgameToPoints,
@@ -9,12 +7,11 @@ import {
   metricToEvent,
 } from "../analysisConstants";
 import { Position, Prisma, User } from "@prisma/client";
-import { getSourceFilter } from "./averageManyFast";
 import z from "zod";
 import {
   dataSourceRuleToPrismaQuery,
   dataSourceRuleSchema,
-} from "../analysisHandler";
+} from "../dataSourceRule";
 
 /**
  * Heuristically aggregate an analog metric on all teams simultaneously (weights scout reports equally regardless of duplicate matches).

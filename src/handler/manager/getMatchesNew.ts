@@ -9,7 +9,7 @@ import { swrConstant, ttlConstant } from "../analysis/analysisConstants";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaQuery,
-} from "../analysis/analysisHandler";
+} from "../analysis/dataSourceRule";
 
 /**
  * @param params.tournament tournament to pull from

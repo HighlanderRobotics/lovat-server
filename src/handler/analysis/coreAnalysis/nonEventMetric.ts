@@ -1,19 +1,17 @@
 import prismaClient from "../../../prismaClient";
 import { EventAction, User } from "@prisma/client";
 import {
-  allTeamNumbers,
-  allTournaments,
   breakdownNeg,
   breakdownPos,
   breakdownToEnum,
   MetricsBreakdown,
 } from "../analysisConstants";
-import { getSourceFilter } from "./averageManyFast";
+
 import z from "zod";
 import {
   dataSourceRuleToPrismaQuery,
   dataSourceRuleSchema,
-} from "../analysisHandler";
+} from "../dataSourceRule";
 
 /**
  * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,

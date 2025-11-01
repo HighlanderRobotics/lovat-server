@@ -21,7 +21,7 @@ import { z } from "zod";
 import {
   dataSourceRuleToPrismaQuery,
   dataSourceRuleSchema,
-} from "../analysis/analysisHandler";
+} from "../analysis/dataSourceRule";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
 export interface CondensedReport {

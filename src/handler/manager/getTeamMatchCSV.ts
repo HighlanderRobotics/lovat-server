@@ -21,7 +21,7 @@ import { CondensedReport } from "./getReportCSV";
 import {
   dataSourceRuleToPrismaQuery,
   dataSourceRuleSchema,
-} from "../analysis/analysisHandler";
+} from "../analysis/dataSourceRule";
 
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {

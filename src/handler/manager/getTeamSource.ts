@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToArray,
-} from "../analysis/analysisHandler";
+} from "../analysis/dataSourceRule";
 import z from "zod";
 import { allTeamNumbers } from "../analysis/analysisConstants";
 

@@ -8,12 +8,11 @@ import {
   MetricsBreakdown,
 } from "../analysisConstants";
 import { EventAction } from "@prisma/client";
+import { createAnalysisHandler } from "../analysisHandler";
 import {
-  AnalysisHandlerArgs,
-  createAnalysisHandler,
   dataSourceRuleSchema,
   dataSourceRuleToArray,
-} from "../analysisHandler";
+} from "../dataSourceRule";
 import prismaClient from "../../../prismaClient";
 
 export const breakdownDetails = createAnalysisHandler({

@@ -3,7 +3,7 @@ import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 import { averageAllTeamFast } from "../coreAnalysis/averageAllTeamFast";
 import { Metric, metricsToNumber } from "../analysisConstants";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
-import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
+import { createAnalysisHandler } from "../analysisHandler";
 
 export const detailsPage = createAnalysisHandler({
   params: {

@@ -1,7 +1,5 @@
 import prismaClient from "../../../prismaClient";
 import {
-  allTeamNumbers,
-  allTournaments,
   autoEnd,
   endgameToPoints,
   Metric,
@@ -11,11 +9,10 @@ import {
 } from "../analysisConstants";
 import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast";
 import { Event, Position, Prisma, ScoutReport, User } from "@prisma/client";
-import { getSourceFilter } from "./averageManyFast";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaQuery,
-} from "../analysisHandler";
+} from "../dataSourceRule";
 import z from "zod";
 
 // Could be changed to be SQL dependent. Might be slightly better for readability and performance, but would probably be harder to update each season, especially for newer members.

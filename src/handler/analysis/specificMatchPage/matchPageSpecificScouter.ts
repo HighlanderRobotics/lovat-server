@@ -9,7 +9,7 @@ import {
 import { BargeResultReverseMap } from "../../manager/managerConstants";
 import { autoPathScouter } from "./autoPathScouter";
 import { averageScoutReport } from "../coreAnalysis/averageScoutReport";
-import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
+import { createAnalysisHandler } from "../analysisHandler";
 
 export const matchPageSpecificScouter = createAnalysisHandler({
   params: {

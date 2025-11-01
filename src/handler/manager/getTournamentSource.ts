@@ -3,8 +3,8 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToArray,
-} from "../analysis/analysisHandler";
-import { allTeamNumbers, allTournaments } from "../analysis/analysisConstants";
+} from "../analysis/dataSourceRule";
+import { allTournaments } from "../analysis/analysisConstants";
 import z from "zod";
 
 export const getTournamentSource = async (

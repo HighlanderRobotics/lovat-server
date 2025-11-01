@@ -19,7 +19,7 @@ import { z } from "zod";
 import {
   dataSourceRuleToPrismaQuery,
   dataSourceRuleSchema,
-} from "../analysis/analysisHandler";
+} from "../analysis/dataSourceRule";
 
 interface AggregatedTeamData {
   teamNumber: number;

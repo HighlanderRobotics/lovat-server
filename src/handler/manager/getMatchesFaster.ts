@@ -14,7 +14,7 @@ import {
   dataSourceRuleSchema,
   dataSourceRuleToArray,
   dataSourceRuleToPrismaQuery,
-} from "../analysis/analysisHandler";
+} from "../analysis/dataSourceRule";
 import { allTeamNumbers } from "../analysis/analysisConstants";
 //maybe faster???
 export const getMatches = async (

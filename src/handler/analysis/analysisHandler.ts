@@ -1,39 +1,9 @@
-import { Prisma, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { RequestHandler } from "express";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import prismaClient from "../../prismaClient";
-import { allTeamNumbers } from "./analysisConstants";
-
-export const dataSourceRuleSchema = <T extends z.ZodString | z.ZodNumber>(
-  itemType: T,
-) =>
-  z.object({
-    mode: z.enum(["INCLUDE", "EXCLUDE"]),
-    items: z.array(itemType),
-  });
-
-export type DataSourceRule<T extends number | string> = {
-  mode: "INCLUDE" | "EXCLUDE";
-  items: T[];
-};
-
-export const dataSourceRuleToPrismaQuery = <T extends number | string>(
-  rule: DataSourceRule<T>,
-) => {
-  return rule.mode === "EXCLUDE" ? { notIn: rule.items } : { in: rule.items };
-};
-
-export const dataSourceRuleToArray = <T extends number | string>(
-  rule: DataSourceRule<T>,
-  allTeams: T[],
-) => {
-  if (rule.mode === "INCLUDE") {
-    return allTeams.filter((team) => rule.items.includes(team));
-  } else if (rule.mode === "EXCLUDE") {
-    return allTeams.filter((team) => !rule.items.includes(team));
-  }
-};
+import { DataSourceRule, dataSourceRuleSchema } from "./dataSourceRule";
 
 type AnalysisContext = {
   user: User;

@@ -1,13 +1,12 @@
 import prismaClient from "../../../prismaClient";
 import {
-  allTeamNumbers,
-  allTournaments,
   autoEnd,
   endgameToPoints,
   Metric,
   metricToEvent,
   swrConstant,
   ttlConstant,
+  allTournaments,
 } from "../analysisConstants";
 import { BargeResult, Position, Prisma, User } from "@prisma/client";
 import { endgameRuleOfSuccession } from "../picklist/endgamePicklistTeamFast";
@@ -17,7 +16,7 @@ import z from "zod";
 import {
   dataSourceRuleToPrismaQuery,
   dataSourceRuleSchema,
-} from "../analysisHandler";
+} from "../dataSourceRule";
 
 export interface ArrayFilter<T> {
   notIn?: T[];

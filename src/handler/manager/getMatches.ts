@@ -13,7 +13,7 @@ import {
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaQuery,
-} from "../analysis/analysisHandler";
+} from "../analysis/dataSourceRule";
 
 export const getMatches = async (
   req: AuthenticatedRequest,

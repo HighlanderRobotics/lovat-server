@@ -1,5 +1,5 @@
 import { User } from "@prisma/client";
-import { DataSourceRule } from "../handler/analysis/analysisHandler";
+import { DataSourceRule } from "../handler/analysis/dataSourceRule";
 import {
   allTeamNumbers,
   allTournaments,

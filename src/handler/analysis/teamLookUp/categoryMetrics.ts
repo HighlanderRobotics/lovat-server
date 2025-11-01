@@ -1,7 +1,7 @@
 import z from "zod";
 import { metricsCategory, metricToName } from "../analysisConstants";
 import { averageManyFast } from "../coreAnalysis/averageManyFast";
-import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
+import { createAnalysisHandler } from "../analysisHandler";
 
 export const categoryMetrics = createAnalysisHandler({
   params: {
