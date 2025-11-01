@@ -1,38 +1,31 @@
-import { Response } from "express";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { alliancePage } from "./alliancePage";
+import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
 
-export const alliancePageResponse = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        team1: z.number(),
-        team2: z.number(),
-        team3: z.number(),
-      })
-      .safeParse({
-        team1: Number(req.query.teamOne),
-        team2: Number(req.query.teamTwo),
-        team3: Number(req.query.teamThree),
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+export const alliancePageResponse = createAnalysisHandler({
+  params: {
+    query: z.object({
+      teamOne: z.preprocess((x) => Number(x), z.number()),
+      teamTwo: z.preprocess((x) => Number(x), z.number()),
+      teamThree: z.preprocess((x) => Number(x), z.number()),
+    }),
+  },
+  usesDataSource: true,
+  createKey: ({ query }) => {
+    const teams = [query.teamOne, query.teamTwo, query.teamThree].sort();
+    return {
+      key: ["alliancePageResponse", ...teams.map(t => t.toString())],
+      teamDependencies: teams,
+    };
+  },
+  calculateAnalysis: async ({ query }, ctx) => {
     const alliancePageData = await alliancePage(
-      req.user,
-      params.data.team1,
-      params.data.team2,
-      params.data.team3,
+      ctx.user,
+      query.teamOne,
+      query.teamTwo,
+      query.teamThree,
     );
 
-    res.status(200).send(alliancePageData);
-  } catch (error) {
-    res.status(400).send(error);
-    throw error;
-  }
-};
+    return alliancePageData;
+  },
+});

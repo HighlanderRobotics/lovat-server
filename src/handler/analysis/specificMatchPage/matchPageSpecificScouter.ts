@@ -1,7 +1,5 @@
-import { Response } from "express";
 import prismaClient from "../../../prismaClient";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import {
   Metric,
   FlippedRoleMap,
@@ -9,31 +7,30 @@ import {
   metricToName,
 } from "../analysisConstants";
 import { BargeResultReverseMap } from "../../manager/managerConstants";
-
 import { autoPathScouter } from "./autoPathScouter";
 import { averageScoutReport } from "../coreAnalysis/averageScoutReport";
+import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
 
-export const matchPageSpecificScouter = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        scoutReportUuid: z.string(),
-      })
-      .safeParse({
-        scoutReportUuid: req.params.uuid,
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+export const matchPageSpecificScouter = createAnalysisHandler({
+  params: {
+    params: z.object({
+      uuid: z.string(),
+    }),
+  },
+  usesDataSource: false,
+  createKey: ({ params }) => {
+    return {
+      key: ["matchPageSpecificScouter", params.uuid],
+      teamDependencies: [],
+    };
+  },
+  calculateAnalysis: async ({ params }, ctx) => {
     const scoutReport = await prismaClient.scoutReport.findUnique({
       where: {
-        uuid: params.data.scoutReportUuid,
+        uuid: params.uuid,
       },
     });
+    
     const output = {
       totalPoints: (
         await averageScoutReport(scoutReport.uuid, [Metric.totalPoints])
@@ -44,7 +41,7 @@ export const matchPageSpecificScouter = async (
       // highNote : highNoteMap[scoutReport.highNote],
       barge: BargeResultReverseMap[scoutReport.bargeResult],
       autoPath: await autoPathScouter(
-        req.user,
+        ctx.user,
         scoutReport.teamMatchKey,
         scoutReport.uuid,
       ),
@@ -62,9 +59,6 @@ export const matchPageSpecificScouter = async (
       output[metricToName[metric]] = aggregateData[metric];
     }
 
-    res.status(200).send(output);
-  } catch (error) {
-    console.error(error);
-    res.status(400).send(error);
-  }
-};
+    return output;
+  },
+});

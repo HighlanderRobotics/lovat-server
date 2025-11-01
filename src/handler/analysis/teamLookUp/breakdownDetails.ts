@@ -18,21 +18,21 @@ import prismaClient from "../../../prismaClient";
 
 export const breakdownDetails = createAnalysisHandler({
   params: {
-    query: z.object({
+    params: z.object({
       team: z.preprocess((x) => Number(x), z.number()),
-      breakdown: z.nativeEnum(MetricsBreakdown),
+      breakdown: z.string(),
     }),
   },
   usesDataSource: true,
-  createKey: ({ query }) => {
+  createKey: ({ params }) => {
     return {
-      key: ["breakdownDetails", query.team.toString(), query.breakdown],
-      teamDependencies: [query.team],
+      key: ["breakdownDetails", params.team.toString(), lowercaseToBreakdown[params.breakdown]],
+      teamDependencies: [params.team],
     };
   },
-  calculateAnalysis: async ({ query }, ctx) => {
+  calculateAnalysis: async ({ params }, ctx) => {
     let queryStr = `
-        SELECT "${query.breakdown}" AS breakdown,
+        SELECT "${lowercaseToBreakdown[params.breakdown]}" AS breakdown,
             "teamMatchKey" AS key,
             tmnt."name" AS tournament,
             sc."sourceTeamNumber" AS sourceteam,
@@ -40,7 +40,7 @@ export const breakdownDetails = createAnalysisHandler({
         FROM "ScoutReport" s
         JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
         JOIN "TeamMatchData" tmd
-            ON tmd."teamNumber" = ${query.team}
+            ON tmd."teamNumber" = ${params.team}
             AND tmd."key" = s."teamMatchKey"
             AND sc."sourceTeamNumber" = ANY($1)
             AND tmd."tournamentKey" = ANY($2)
@@ -51,7 +51,7 @@ export const breakdownDetails = createAnalysisHandler({
         ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
         `;
 
-    if (query.breakdown === MetricsBreakdown.leavesAuto) {
+    if (lowercaseToBreakdown[params.breakdown] === MetricsBreakdown.leavesAuto) {
       queryStr = `
             SELECT
                 s."teamMatchKey" AS key,
@@ -62,7 +62,7 @@ export const breakdownDetails = createAnalysisHandler({
             FROM "ScoutReport" s
             JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
             JOIN "TeamMatchData" tmd
-                ON tmd."teamNumber" = ${query.team}
+                ON tmd."teamNumber" = ${params.team}
                 AND tmd."key" = s."teamMatchKey"
                 AND sc."sourceTeamNumber" = ANY($1)
                 AND tmd."tournamentKey" = ANY($2)

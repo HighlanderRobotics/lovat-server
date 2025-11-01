@@ -1,39 +1,41 @@
-import { Response } from "express";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { rankFlag } from "../rankFlag";
 import { metricsCategory, metricToName } from "../analysisConstants";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
+import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
 
-export const multipleFlags = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        team: z.number(),
-        flags: z.array(z.string()),
-        tournamentKey: z.string().nullable(),
-      })
-      .safeParse({
-        team: Number(req.params.team),
-        flags: JSON.parse(req.query.flags as string) || [],
-        tournamentKey: req.query.tournamentKey || null,
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
-
+export const multipleFlags = createAnalysisHandler({
+  params: {
+    params: z.object({
+      team: z.preprocess((x) => Number(x), z.number()),
+    }),
+    query: z.object({
+      flags: z.string().transform((val) => {
+        try {
+          return JSON.parse(val) || [];
+        } catch {
+          return [];
+        }
+      }),
+      tournamentKey: z.string().nullable().optional(),
+    }),
+  },
+  usesDataSource: true,
+  createKey: ({ params, query }) => {
+    return {
+      key: ["multipleFlags", params.team.toString(), JSON.stringify(query.flags), query.tournamentKey || ""],
+      teamDependencies: [params.team],
+    };
+  },
+  calculateAnalysis: async ({ params, query }, ctx) => {
     const arr: number[] = [];
-    for (const flag of params.data.flags) {
+    for (const flag of query.flags) {
       if (flag === "rank") {
         // Find team rank if a tournament is provided
-        if (params.data.tournamentKey) {
+        if (query.tournamentKey) {
           arr.push(
-            (await rankFlag(params.data.tournamentKey, params.data.team))[
-              params.data.team
+            (await rankFlag(query.tournamentKey, params.team))[
+              params.team
             ],
           );
         } else {
@@ -46,17 +48,17 @@ export const multipleFlags = async (
             arr.push(
               (
                 await arrayAndAverageTeams(
-                  [params.data.team],
+                  [params.team],
                   metricsCategory[i],
-                  req.user,
+                  ctx.user,
                 )
-              )[params.data.team].average,
+              )[params.team].average,
             );
             break;
           } else if (i === 0) {
             // No flag found probably shouldnt throw a full error, just push a falsy
             console.error(
-              `Bad flag string: ${flag} for team ${params.data.team}`,
+              `Bad flag string: ${flag} for team ${params.team}`,
             );
             arr.push(NaN);
           }
@@ -64,9 +66,6 @@ export const multipleFlags = async (
       }
     }
 
-    res.status(200).send(arr);
-  } catch (error) {
-    console.error(error);
-    res.status(400).send(error);
-  }
-};
+    return arr;
+  },
+});

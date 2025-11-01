@@ -1,30 +1,27 @@
-import { Response } from "express";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
 import { lowercaseToBreakdown, MetricsBreakdown } from "../analysisConstants";
+import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
 
-export const breakdownMetrics = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        team: z.number(),
-      })
-      .safeParse({
-        team: Number(req.params.team),
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+export const breakdownMetrics = createAnalysisHandler({
+  params: {
+    params: z.object({
+      team: z.preprocess((x) => Number(x), z.number()),
+    }),
+  },
+  usesDataSource: true,
+  createKey: ({ params }) => {
+    return {
+      key: ["breakdownMetrics", params.team.toString()],
+      teamDependencies: [params.team],
+    };
+  },
+  calculateAnalysis: async ({ params }, ctx) => {
     const result = {};
     for (const [key, metric] of Object.entries(lowercaseToBreakdown)) {
       const data = await nonEventMetric(
-        req.user,
-        params.data.team,
+        ctx.user,
+        params.team,
         MetricsBreakdown[metric as keyof typeof MetricsBreakdown],
       );
 
@@ -35,8 +32,6 @@ export const breakdownMetrics = async (
       }
     }
 
-    res.status(200).send(result);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-};
+    return result;
+  },
+});

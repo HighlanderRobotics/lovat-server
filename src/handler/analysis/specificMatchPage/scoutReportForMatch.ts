@@ -1,38 +1,35 @@
-import { Response } from "express";
 import prismaClient from "../../../prismaClient";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { UserRole } from "@prisma/client";
+import { AnalysisHandlerArgs, createAnalysisHandler } from "../analysisHandler";
 
-export const scoutReportForMatch = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        matchKey: z.string(),
-      })
-      .safeParse({
-        matchKey: req.params.match,
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+export const scoutReportForMatch = createAnalysisHandler({
+  params: {
+    params: z.object({
+      match: z.string(),
+    }),
+  },
+  usesDataSource: false,
+  createKey: ({ params }) => {
+    return {
+      key: ["scoutReportForMatch", params.match],
+      teamDependencies: [],
+    };
+  },
+  calculateAnalysis: async ({ params }, ctx) => {
     //comfirm if finding first is ideal
     if (
-      req.user.teamNumber === null ||
-      req.user.role !== UserRole.SCOUTING_LEAD
+      ctx.user.teamNumber === null ||
+      ctx.user.role !== UserRole.SCOUTING_LEAD
     ) {
-      res.status(403).send("Not authorized to acsess this endpoint.");
-      return;
+      throw new Error("Not authorized to access this endpoint.");
     }
+    
     const scoutReports = await prismaClient.scoutReport.findMany({
       where: {
-        teamMatchKey: params.data.matchKey,
+        teamMatchKey: params.match,
         scouter: {
-          sourceTeamNumber: req.user.teamNumber,
+          sourceTeamNumber: ctx.user.teamNumber,
         },
       },
 
@@ -49,9 +46,6 @@ export const scoutReportForMatch = async (
       },
     });
 
-    res.status(200).send(scoutReports);
-  } catch (error) {
-    console.error(error);
-    res.status(400).send(error);
-  }
-};
+    return scoutReports;
+  },
+});
