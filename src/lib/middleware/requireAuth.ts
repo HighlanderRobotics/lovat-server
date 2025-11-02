@@ -10,6 +10,10 @@ export interface AuthenticatedRequest extends ExpressRequest {
   tokenType?: "apiKey" | "jwt";
 }
 
+const JWKS = jose.createRemoteJWKSet(
+  new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`),
+);
+
 export const requireAuth = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -72,10 +76,6 @@ export const requireAuth = async (
     }
 
     try {
-      const JWKS = jose.createRemoteJWKSet(
-        new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`),
-      );
-
       const { payload, protectedHeader } = await jose.jwtVerify(
         tokenString,
         JWKS,

@@ -80,7 +80,7 @@ export const picklistShell = createAnalysisHandler({
         JSON.stringify(metricsKey),
       ],
       teamDependencies: [],
-      tournamentDependencies: [query.tournamentKey]
+      tournamentDependencies: [query.tournamentKey],
     };
   },
   calculateAnalysis: async ({ query }, ctx) => {

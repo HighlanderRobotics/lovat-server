@@ -95,8 +95,11 @@ export const createAnalysisHandler: <
         }
       }
       // Make the key - including data source if necessary
-      const { key: keyFragments, teamDependencies: teamDeps, tournamentDependencies: tournamentDeps } =
-        args.createKey(params);
+      const {
+        key: keyFragments,
+        teamDependencies: teamDeps,
+        tournamentDependencies: tournamentDeps,
+      } = args.createKey(params);
 
       const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
         context.dataSource.teams,

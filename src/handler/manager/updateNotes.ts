@@ -37,8 +37,8 @@ export const updateNotes = async (
         notes: params.data.note,
       },
       include: {
-        teamMatchData: true
-      }
+        teamMatchData: true,
+      },
     });
     await prismaClient.cachedAnalysis.deleteMany({
       where: {
