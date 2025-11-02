@@ -36,6 +36,19 @@ export const updateNotes = async (
       data: {
         notes: params.data.note,
       },
+      include: {
+        teamMatchData: true
+      }
+    });
+    await prismaClient.cachedAnalysis.deleteMany({
+      where: {
+        teamDependencies: {
+          has: row.teamMatchData.teamNumber,
+        },
+        tournamentDependencies: {
+          has: row.teamMatchData.tournamentKey,
+        },
+      },
     });
     if (!row) {
       res.status(403).send("Not authorized to update this picklist");

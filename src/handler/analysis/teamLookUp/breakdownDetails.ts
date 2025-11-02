@@ -20,6 +20,7 @@ export const breakdownDetails = createAnalysisHandler({
     }),
   },
   usesDataSource: true,
+  shouldCache: true,
   createKey: ({ params }) => {
     return {
       key: [
@@ -28,6 +29,7 @@ export const breakdownDetails = createAnalysisHandler({
         lowercaseToBreakdown[params.breakdown],
       ],
       teamDependencies: [params.team],
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {

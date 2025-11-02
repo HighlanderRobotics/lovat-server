@@ -10,10 +10,12 @@ export const scoutReportForMatch = createAnalysisHandler({
     }),
   },
   usesDataSource: false,
+  shouldCache: false,
   createKey: ({ params }) => {
     return {
       key: ["scoutReportForMatch", params.match],
       teamDependencies: [],
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {
@@ -38,6 +40,7 @@ export const scoutReportForMatch = createAnalysisHandler({
         scouterUuid: true,
         notes: true,
         startTime: true,
+        robotBrokeDescription: true,
         scouter: {
           select: {
             name: true,

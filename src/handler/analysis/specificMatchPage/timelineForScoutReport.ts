@@ -10,10 +10,12 @@ export const timelineForScoutReport = createAnalysisHandler({
     }),
   },
   usesDataSource: false,
+  shouldCache: false,
   createKey: ({ params }) => {
     return {
       key: ["timelineForScoutReport", params.uuid],
       teamDependencies: [],
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ params }) => {

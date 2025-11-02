@@ -158,10 +158,13 @@ export const addScoutReport = async (
       },
     });
 
-    await prismaClient.cachedAnalysis.deleteMany({
+await prismaClient.cachedAnalysis.deleteMany({
       where: {
         teamDependencies: {
           has: paramsScoutReport.data.teamNumber,
+        },
+        tournamentDependencies: {
+          has: paramsScoutReport.data.tournamentKey,
         },
       },
     });

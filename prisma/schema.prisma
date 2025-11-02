@@ -217,9 +217,10 @@ model ApiKey {
 }
 
 model CachedAnalysis {
-  key              String @id
-  output           Json
-  teamDependencies Int[]
+  key                    String   @id
+  output                 Json
+  teamDependencies       Int[]    @default([])
+  tournamentDependencies String[] @default([])
 }
 
 enum Position {

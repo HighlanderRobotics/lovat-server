@@ -45,12 +45,30 @@ export const deleteScoutReport = async (
           scoutReportUuid: params.data.uuid,
         },
       });
-      await prismaClient.scoutReport.delete({
+      const reportRow = await prismaClient.scoutReport.delete({
         where: {
           uuid: params.data.uuid,
         },
+        include: {
+          teamMatchData: true
+        }
       });
+
       res.status(200).send("Data deleted successfully");
+
+      // delete cached analysis that relies on the deleted report
+      await prismaClient.cachedAnalysis.deleteMany({
+      where: {
+        teamDependencies: {
+          has: reportRow.teamMatchData.teamNumber,
+        },
+        tournamentDependencies: {
+          has: reportRow.teamMatchData.tournamentKey,
+        },
+      },
+    });
+
+      
     } else {
       res.status(403).send("Unauthorized to delete this picklist");
     }

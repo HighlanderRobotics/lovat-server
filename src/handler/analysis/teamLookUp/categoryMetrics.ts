@@ -10,10 +10,12 @@ export const categoryMetrics = createAnalysisHandler({
     }),
   },
   usesDataSource: true,
+  shouldCache: true,
   createKey: ({ params }) => {
     return {
       key: ["categoryMetrics", params.team.toString()],
       teamDependencies: [params.team],
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {

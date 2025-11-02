@@ -41,13 +41,15 @@ export type AnalysisHandlerArgs<
   params: AnalysisParamsSchema<T, U, V>;
   createKey: (params: AnalysisParams<T, U, V>) => {
     key: string[];
-    teamDependencies: number[];
+    teamDependencies?: number[];
+    tournamentDependencies?: string[];
   };
   calculateAnalysis: (
     params: AnalysisParams<T, U, V>,
     ctx: AnalysisContext,
   ) => Promise<any>;
   usesDataSource: boolean;
+  shouldCache: boolean;
 };
 
 export const createAnalysisHandler: <
@@ -77,8 +79,23 @@ export const createAnalysisHandler: <
         },
       };
 
+      if (!args.shouldCache) {
+        try {
+          const calculatedAnalysis = await args.calculateAnalysis(
+            params,
+            context,
+          );
+
+          res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
+        } catch (error) {
+          res.status(500).send("Error calculating analysis");
+          console.error(error);
+        } finally {
+          return;
+        }
+      }
       // Make the key - including data source if necessary
-      const { key: keyFragments, teamDependencies: teamDeps } =
+      const { key: keyFragments, teamDependencies: teamDeps, tournamentDependencies: tournamentDeps } =
         args.createKey(params);
 
       const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
@@ -118,7 +135,8 @@ export const createAnalysisHandler: <
               data: {
                 key: keyFragments.join(":"),
                 output: calculatedAnalysis,
-                teamDependencies: teamDeps,
+                teamDependencies: teamDeps ?? [],
+                tournamentDependencies: tournamentDeps ?? [],
               },
             });
           } catch (error) {

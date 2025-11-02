@@ -13,10 +13,12 @@ export const getNotes = createAnalysisHandler({
     }),
   },
   usesDataSource: true,
+  shouldCache: true,
   createKey: ({ params }) => {
     return {
       key: ["getNotes", params.team.toString()],
       teamDependencies: [params.team],
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {

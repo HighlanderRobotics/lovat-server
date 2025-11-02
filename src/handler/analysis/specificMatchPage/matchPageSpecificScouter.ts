@@ -18,10 +18,12 @@ export const matchPageSpecificScouter = createAnalysisHandler({
     }),
   },
   usesDataSource: false,
+  shouldCache: false,
   createKey: ({ params }) => {
     return {
       key: ["matchPageSpecificScouter", params.uuid],
       teamDependencies: [],
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {

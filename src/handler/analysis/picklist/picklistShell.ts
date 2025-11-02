@@ -51,6 +51,7 @@ export const picklistShell = createAnalysisHandler({
     }),
   },
   usesDataSource: true,
+  shouldCache: true,
   createKey: ({ query }) => {
     const metricsKey = {
       totalpoints: query.totalpoints || 0,
@@ -79,6 +80,7 @@ export const picklistShell = createAnalysisHandler({
         JSON.stringify(metricsKey),
       ],
       teamDependencies: [],
+      tournamentDependencies: [query.tournamentKey]
     };
   },
   calculateAnalysis: async ({ query }, ctx) => {

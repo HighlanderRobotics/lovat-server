@@ -15,6 +15,7 @@ export const matchPrediction = createAnalysisHandler({
     }),
   },
   usesDataSource: true,
+  shouldCache: true,
   createKey: ({ query }) => {
     const red = [
       query.red1.toString(),
@@ -41,6 +42,7 @@ export const matchPrediction = createAnalysisHandler({
         query.blue2,
         query.blue3,
       ],
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ query }, ctx) => {

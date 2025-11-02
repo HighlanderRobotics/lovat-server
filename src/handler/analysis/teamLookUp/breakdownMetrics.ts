@@ -10,10 +10,12 @@ export const breakdownMetrics = createAnalysisHandler({
     }),
   },
   usesDataSource: true,
+  shouldCache: true,
   createKey: ({ params }) => {
     return {
       key: ["breakdownMetrics", params.team.toString()],
       teamDependencies: [params.team],
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {

@@ -21,6 +21,7 @@ export const multipleFlags = createAnalysisHandler({
     }),
   },
   usesDataSource: true,
+  shouldCache: true,
   createKey: ({ params, query }) => {
     return {
       key: [
@@ -30,6 +31,7 @@ export const multipleFlags = createAnalysisHandler({
         query.tournamentKey || "",
       ],
       teamDependencies: [params.team],
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ params, query }, ctx) => {

@@ -11,11 +11,13 @@ export const alliancePageResponse = createAnalysisHandler({
     }),
   },
   usesDataSource: true,
+  shouldCache: true,
   createKey: ({ query }) => {
     const teams = [query.teamOne, query.teamTwo, query.teamThree].sort();
     return {
       key: ["alliancePageResponse", ...teams.map((t) => t.toString())],
       teamDependencies: teams,
+      tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ query }, ctx) => {
