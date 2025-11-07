@@ -9,20 +9,21 @@ import { AnalysisContext } from "./analysisConstants";
 export type AnalysisHandlerParamsSchema<
   T extends z.ZodObject,
   U extends z.ZodObject,
-  V extends z.ZodObject> = {
-    body?: T;
-    query?: U;
-    params?: V;
-  };
+  V extends z.ZodObject,
+> = {
+  body?: T;
+  query?: U;
+  params?: V;
+};
 export type AnalysisHandlerParams<
   T extends z.ZodObject,
   U extends z.ZodObject,
-  V extends z.ZodObject> = {
-    body: z.infer<T>;
-    query: z.infer<U>;
-    params: z.infer<V>;
-  };
-
+  V extends z.ZodObject,
+> = {
+  body: z.infer<T>;
+  query: z.infer<U>;
+  params: z.infer<V>;
+};
 
 export type AnalysisHandlerArgs<
   T extends z.ZodObject,
@@ -106,7 +107,7 @@ export const createAnalysisHandler: <
         );
       }
 
-      const key = ["analysis", "handler", ...keyFragments].join(":")
+      const key = ["analysis", "handler", ...keyFragments].join(":");
 
       // Check to see if there's already an output in the cache
       const cacheRow = await kv.get(key);
@@ -123,7 +124,7 @@ export const createAnalysisHandler: <
           res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
 
           try {
-            await kv.set(keyFragments.join(":"), JSON.stringify(calculatedAnalysis))
+            await kv.set(key, JSON.stringify(calculatedAnalysis));
 
             await prismaClient.cachedAnalysis.create({
               data: {

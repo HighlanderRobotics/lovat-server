@@ -26,6 +26,7 @@ import {
   RobotRole,
   UnderShallowCage,
 } from "@prisma/client";
+import { kv } from "../../redisClient";
 
 export const addScoutReportDashboard = async (
   req: AuthenticatedRequest,
@@ -155,16 +156,27 @@ export const addScoutReportDashboard = async (
       },
     });
 
-  await prismaClient.cachedAnalysis.deleteMany({
+    const analysisRows = await prismaClient.cachedAnalysis.findMany({
       where: {
         teamDependencies: {
-          has: paramsScoutReport.data.teamNumber,
+          has: matchRow.teamNumber,
         },
         tournamentDependencies: {
-          has: paramsScoutReport.data.tournamentKey,
+          has: matchRow.tournamentKey,
         },
       },
+      select: { key: true },
     });
+
+    if (analysisRows.length > 0) {
+      const keysToDelete = analysisRows.map((row) => row.key);
+
+      await Promise.allSettled(keysToDelete.map((key) => kv.del(key)));
+
+      await prismaClient.cachedAnalysis.deleteMany({
+        where: { key: { in: keysToDelete } },
+      });
+    }
 
     const scoutReportUuid = row.uuid;
     const eventDataArray = [];

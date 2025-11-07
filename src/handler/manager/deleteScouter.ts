@@ -2,6 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { kv } from "../../redisClient";
 
 export const deleteScouter = async (
   req: AuthenticatedRequest,
@@ -61,8 +62,8 @@ export const deleteScouter = async (
         team6Shifts: true,
         scoutReports: {
           include: {
-            teamMatchData: true
-          }
+            teamMatchData: true,
+          },
         },
       },
     });
@@ -101,11 +102,15 @@ export const deleteScouter = async (
         });
       }
     }
-    
-    const teamsScouted: number[] = scouterRow.scoutReports.map(report => report.teamMatchData.teamNumber);
-    const tournamentsScouted: string[] = scouterRow.scoutReports.map(report => report.teamMatchData.tournamentKey);
 
-    await prismaClient.cachedAnalysis.deleteMany({
+    const teamsScouted: number[] = scouterRow.scoutReports.map(
+      (report) => report.teamMatchData.teamNumber,
+    );
+    const tournamentsScouted: string[] = scouterRow.scoutReports.map(
+      (report) => report.teamMatchData.tournamentKey,
+    );
+
+    const analysisRows = await prismaClient.cachedAnalysis.findMany({
       where: {
         teamDependencies: {
           hasSome: teamsScouted,
@@ -114,7 +119,18 @@ export const deleteScouter = async (
           hasSome: tournamentsScouted,
         },
       },
+      select: { key: true },
     });
+
+    if (analysisRows.length > 0) {
+      const keysToDelete = analysisRows.map((row) => row.key);
+
+      await Promise.allSettled(keysToDelete.map((key) => kv.del(key)));
+
+      await prismaClient.cachedAnalysis.deleteMany({
+        where: { key: { in: keysToDelete } },
+      });
+    }
 
     res.status(200).send("Scouter deleted");
   } catch (error) {

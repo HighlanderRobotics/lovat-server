@@ -2,6 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { kv } from "../../redisClient";
 
 export const deleteScoutReport = async (
   req: AuthenticatedRequest,
@@ -56,8 +57,8 @@ export const deleteScoutReport = async (
 
       res.status(200).send("Data deleted successfully");
 
-      // delete cached analysis that relies on the deleted report
-      await prismaClient.cachedAnalysis.deleteMany({
+      // Collect all affected cached analyses
+      const analysisRows = await prismaClient.cachedAnalysis.findMany({
         where: {
           teamDependencies: {
             has: reportRow.teamMatchData.teamNumber,
@@ -66,7 +67,18 @@ export const deleteScoutReport = async (
             has: reportRow.teamMatchData.tournamentKey,
           },
         },
+        select: { key: true },
       });
+
+      if (analysisRows.length > 0) {
+        const keysToDelete = analysisRows.map((row) => row.key);
+
+        await Promise.allSettled(keysToDelete.map((key) => kv.del(key)));
+
+        await prismaClient.cachedAnalysis.deleteMany({
+          where: { key: { in: keysToDelete } },
+        });
+      }
     } else {
       res.status(403).send("Unauthorized to delete this picklist");
     }

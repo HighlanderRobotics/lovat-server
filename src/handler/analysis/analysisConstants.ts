@@ -309,10 +309,9 @@ export {
 };
 
 export type AnalysisContext = {
-    user: User;
-    dataSource?: {
-      teams: DataSourceRule<number>;
-      tournaments: DataSourceRule<string>;
-    };
+  user: User;
+  dataSource?: {
+    teams: DataSourceRule<number>;
+    tournaments: DataSourceRule<string>;
   };
-
+};

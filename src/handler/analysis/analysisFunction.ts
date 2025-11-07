@@ -5,18 +5,14 @@ import { kv } from "../../redisClient";
 import { AnalysisContext } from "./analysisConstants";
 import { User } from "@prisma/client";
 
-export type AnalysisFunctionParamsSchema<
-  T extends z.ZodObject> = {
-    args: T[]
-  };
-export type AnalysisFunctionParams<
-  T extends z.ZodObject> = {
-    args: z.infer<T>[]
-  };
+export type AnalysisFunctionParamsSchema<T extends z.ZodObject> = {
+  args: T[];
+};
+export type AnalysisFunctionParams<T extends z.ZodObject> = {
+  args: z.infer<T>[];
+};
 
-export type AnalysisFunctionArgs<
-  T extends z.ZodObject
-> = {
+export type AnalysisFunctionArgs<T extends z.ZodObject> = {
   params: AnalysisFunctionParamsSchema<T>;
   createKey: (params: AnalysisFunctionParams<T>) => {
     key: string[];
@@ -31,22 +27,18 @@ export type AnalysisFunctionArgs<
   shouldCache: boolean;
 };
 
-export const createAnalysisFunction = <
-  T extends z.ZodObject
->(
-  args: AnalysisFunctionArgs<T>,
-) => async ( user: User, ...passedArgs: any[]) => {
+export const createAnalysisFunction =
+  <T extends z.ZodObject>(args: AnalysisFunctionArgs<T>) =>
+  async (user: User, ...passedArgs: any[]) => {
     try {
       const params = {
-        args: passedArgs
+        args: passedArgs,
       };
 
       const context: AnalysisContext = {
         user: user,
         dataSource: {
-          teams: dataSourceRuleSchema(z.number()).parse(
-            user.teamSourceRule,
-          ),
+          teams: dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
           tournaments: dataSourceRuleSchema(z.string()).parse(
             user.tournamentSourceRule,
           ),
@@ -60,9 +52,9 @@ export const createAnalysisFunction = <
             context,
           );
 
-          return calculatedAnalysis.error ?? calculatedAnalysis
+          return calculatedAnalysis.error ?? calculatedAnalysis;
         } catch (error) {
-          return "error"
+          return "error";
           console.error(error);
         }
       }
@@ -87,7 +79,7 @@ export const createAnalysisFunction = <
         );
       }
 
-      const key = ["analysis", "function", ...keyFragments].join(":")
+      const key = ["analysis", "function", ...keyFragments].join(":");
 
       // Check to see if there's already an output in the cache
       const cacheRow = await kv.get(key);
@@ -102,7 +94,10 @@ export const createAnalysisFunction = <
           );
 
           try {
-            await kv.set(keyFragments.join(":"), JSON.stringify(calculatedAnalysis))
+            await kv.set(
+              keyFragments.join(":"),
+              JSON.stringify(calculatedAnalysis),
+            );
 
             await prismaClient.cachedAnalysis.create({
               data: {
@@ -112,25 +107,25 @@ export const createAnalysisFunction = <
               },
             });
 
-            return calculatedAnalysis.error ?? calculatedAnalysis
+            return calculatedAnalysis.error ?? calculatedAnalysis;
           } catch (error) {
             console.error(error);
             return 400;
           }
         } catch (error) {
           console.error(error);
-          return 400
+          return 400;
         }
       } else {
-        return JSON.parse(cacheRow.toString())
+        return JSON.parse(cacheRow.toString());
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error(error);
-        return 400
+        return 400;
       } else {
         console.error(error);
-        return 500
+        return 500;
       }
     }
   };

@@ -2,6 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { kv } from "../../redisClient";
 
 export const updateNotes = async (
   req: AuthenticatedRequest,
@@ -40,7 +41,7 @@ export const updateNotes = async (
         teamMatchData: true,
       },
     });
-    await prismaClient.cachedAnalysis.deleteMany({
+    const analysisRows = await prismaClient.cachedAnalysis.findMany({
       where: {
         teamDependencies: {
           has: row.teamMatchData.teamNumber,
@@ -49,7 +50,18 @@ export const updateNotes = async (
           has: row.teamMatchData.tournamentKey,
         },
       },
+      select: { key: true },
     });
+
+    if (analysisRows.length > 0) {
+      const keysToDelete = analysisRows.map((row) => row.key);
+
+      await Promise.allSettled(keysToDelete.map((key) => kv.del(key)));
+
+      await prismaClient.cachedAnalysis.deleteMany({
+        where: { key: { in: keysToDelete } },
+      });
+    }
     if (!row) {
       res.status(403).send("Not authorized to update this picklist");
       return;

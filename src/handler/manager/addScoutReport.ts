@@ -24,6 +24,7 @@ import {
   UnderShallowCage,
 } from "@prisma/client";
 import { sendWarningToSlack } from "../slack/sendWarningNotification";
+import { kv } from "../../redisClient";
 
 export const addScoutReport = async (
   req: Request,
@@ -158,7 +159,8 @@ export const addScoutReport = async (
       },
     });
 
-    await prismaClient.cachedAnalysis.deleteMany({
+    // Collect all affected cached analyses
+    const analysisRows = await prismaClient.cachedAnalysis.findMany({
       where: {
         teamDependencies: {
           has: paramsScoutReport.data.teamNumber,
@@ -167,7 +169,18 @@ export const addScoutReport = async (
           has: paramsScoutReport.data.tournamentKey,
         },
       },
+      select: { key: true },
     });
+
+    if (analysisRows.length > 0) {
+      const keysToDelete = analysisRows.map((row) => row.key);
+
+      await Promise.allSettled(keysToDelete.map((key) => kv.del(key)));
+
+      await prismaClient.cachedAnalysis.deleteMany({
+        where: { key: { in: keysToDelete } },
+      });
+    }
 
     const scoutReportUuid = paramsScoutReport.data.uuid;
 
