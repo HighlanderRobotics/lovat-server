@@ -5,8 +5,10 @@ import {
   RobotRole,
   CoralPickup,
   AlgaePickup,
+  User,
 } from "@prisma/client";
 import prismaClient from "../../prismaClient";
+import { DataSourceRule } from "./dataSourceRule";
 //add cooperation
 
 // Tunable constants
@@ -305,3 +307,12 @@ export {
   breakdownNeg,
   breakdownToEnum,
 };
+
+export type AnalysisContext = {
+    user: User;
+    dataSource?: {
+      teams: DataSourceRule<number>;
+      tournaments: DataSourceRule<string>;
+    };
+  };
+

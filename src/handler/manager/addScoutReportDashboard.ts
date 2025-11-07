@@ -154,6 +154,18 @@ export const addScoutReportDashboard = async (
         knocksAlgae: paramsScoutReport.data.knocksAlgae,
       },
     });
+
+  await prismaClient.cachedAnalysis.deleteMany({
+      where: {
+        teamDependencies: {
+          has: paramsScoutReport.data.teamNumber,
+        },
+        tournamentDependencies: {
+          has: paramsScoutReport.data.tournamentKey,
+        },
+      },
+    });
+
     const scoutReportUuid = row.uuid;
     const eventDataArray = [];
     const events = req.body.events;

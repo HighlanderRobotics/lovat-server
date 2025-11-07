@@ -1,71 +1,54 @@
-import { RequestHandler } from "express";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import prismaClient from "../../prismaClient";
 import { dataSourceRuleSchema } from "./dataSourceRule";
 import { kv } from "../../redisClient";
 import { AnalysisContext } from "./analysisConstants";
+import { User } from "@prisma/client";
 
-export type AnalysisHandlerParamsSchema<
-  T extends z.ZodObject,
-  U extends z.ZodObject,
-  V extends z.ZodObject> = {
-    body?: T;
-    query?: U;
-    params?: V;
+export type AnalysisFunctionParamsSchema<
+  T extends z.ZodObject> = {
+    args: T[]
   };
-export type AnalysisHandlerParams<
-  T extends z.ZodObject,
-  U extends z.ZodObject,
-  V extends z.ZodObject> = {
-    body: z.infer<T>;
-    query: z.infer<U>;
-    params: z.infer<V>;
+export type AnalysisFunctionParams<
+  T extends z.ZodObject> = {
+    args: z.infer<T>[]
   };
 
-
-export type AnalysisHandlerArgs<
-  T extends z.ZodObject,
-  U extends z.ZodObject,
-  V extends z.ZodObject,
+export type AnalysisFunctionArgs<
+  T extends z.ZodObject
 > = {
-  params: AnalysisHandlerParamsSchema<T, U, V>;
-  createKey: (params: AnalysisHandlerParams<T, U, V>) => {
+  params: AnalysisFunctionParamsSchema<T>;
+  createKey: (params: AnalysisFunctionParams<T>) => {
     key: string[];
     teamDependencies?: number[];
     tournamentDependencies?: string[];
   };
   calculateAnalysis: (
-    params: AnalysisHandlerParams<T, U, V>,
+    params: AnalysisFunctionParams<T>,
     ctx: AnalysisContext,
   ) => Promise<any>;
   usesDataSource: boolean;
   shouldCache: boolean;
 };
 
-export const createAnalysisHandler: <
-  T extends z.ZodObject,
-  U extends z.ZodObject,
-  V extends z.ZodObject,
+export const createAnalysisFunction = <
+  T extends z.ZodObject
 >(
-  args: AnalysisHandlerArgs<T, U, V>,
-) => RequestHandler = (args) => {
-  return async (req: AuthenticatedRequest, res) => {
+  args: AnalysisFunctionArgs<T>,
+) => async ( user: User, ...passedArgs: any[]) => {
     try {
       const params = {
-        body: args.params.body?.parse(req.body),
-        query: args.params.query?.parse(req.query),
-        params: args.params.params?.parse(req.params),
+        args: passedArgs
       };
 
       const context: AnalysisContext = {
-        user: req.user,
+        user: user,
         dataSource: {
           teams: dataSourceRuleSchema(z.number()).parse(
-            req.user.teamSourceRule,
+            user.teamSourceRule,
           ),
           tournaments: dataSourceRuleSchema(z.string()).parse(
-            req.user.tournamentSourceRule,
+            user.tournamentSourceRule,
           ),
         },
       };
@@ -77,12 +60,10 @@ export const createAnalysisHandler: <
             context,
           );
 
-          res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
+          return calculatedAnalysis.error ?? calculatedAnalysis
         } catch (error) {
-          res.status(500).send("Error calculating analysis");
+          return "error"
           console.error(error);
-        } finally {
-          return;
         }
       }
       // Make the key - including data source if necessary
@@ -106,7 +87,7 @@ export const createAnalysisHandler: <
         );
       }
 
-      const key = ["analysis", "handler", ...keyFragments].join(":")
+      const key = ["analysis", "function", ...keyFragments].join(":")
 
       // Check to see if there's already an output in the cache
       const cacheRow = await kv.get(key);
@@ -120,8 +101,6 @@ export const createAnalysisHandler: <
             context,
           );
 
-          res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
-
           try {
             await kv.set(keyFragments.join(":"), JSON.stringify(calculatedAnalysis))
 
@@ -132,26 +111,26 @@ export const createAnalysisHandler: <
                 tournamentDependencies: tournamentDeps ?? [],
               },
             });
+
+            return calculatedAnalysis.error ?? calculatedAnalysis
           } catch (error) {
             console.error(error);
-            return;
+            return 400;
           }
         } catch (error) {
-          res.status(500).send("Error calculating analysis");
           console.error(error);
-          return;
+          return 400
         }
       } else {
-        res.status(200).send(JSON.parse(cacheRow.toString()));
+        return JSON.parse(cacheRow.toString())
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).send("Invalid parameters");
         console.error(error);
+        return 400
       } else {
-        res.status(500).send("Internal server error");
         console.error(error);
+        return 500
       }
     }
   };
-};
