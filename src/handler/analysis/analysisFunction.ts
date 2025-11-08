@@ -55,7 +55,6 @@ export const createAnalysisFunction =
           return calculatedAnalysis.error ?? calculatedAnalysis;
         } catch (error) {
           return "error";
-          console.error(error);
         }
       }
       // Make the key - including data source if necessary
