@@ -13,7 +13,7 @@ import { createAnalysisHandler } from "../analysisHandler";
 
 /**
  * Main picklist endpoint. Note inconsistent strings make it confusing for this season.
- * Normal metrics are send and received in lettering suggested by query inputs, but FLAGS are send and received as shown in metricToName.
+ * Normal metrics are sent and received in lettering suggested by query inputs, but FLAGS are sent and received as shown in metricToName.
  *
  * @returns picklist data as given by zScoreMany
  */
