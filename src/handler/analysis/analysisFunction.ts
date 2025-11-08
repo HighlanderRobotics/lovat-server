@@ -95,7 +95,7 @@ export const createAnalysisFunction =
 
           try {
             await kv.set(
-              keyFragments.join(":"),
+              key,
               JSON.stringify(calculatedAnalysis),
             );
 
