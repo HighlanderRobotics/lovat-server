@@ -114,7 +114,7 @@ export const createAnalysisHandler: <
 
       // If not, calculate, respond, then store in cache
 
-      if (cacheRow === null || cacheRow === undefined) {
+      if (cacheRow == null) {
         try {
           const calculatedAnalysis = await args.calculateAnalysis(
             params,
