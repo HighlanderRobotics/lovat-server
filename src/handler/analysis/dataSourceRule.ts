@@ -28,4 +28,4 @@ export const dataSourceRuleToArray = <T extends number | string>(
   } else if (rule.mode === "EXCLUDE") {
     return allTeams.filter((team) => !rule.items.includes(team));
   }
-};
+  return [];
