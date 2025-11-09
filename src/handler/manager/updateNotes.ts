@@ -18,11 +18,6 @@ export const updateNotes = async (
         note: req.body.note,
         uuid: req.params.uuid,
       });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
-
     if (req.user.role !== "SCOUTING_LEAD") {
       res.status(403).send("Not authorized to edit this note");
       return;
@@ -68,6 +63,10 @@ export const updateNotes = async (
     }
     res.status(200).send("Note updated");
   } catch (error) {
+    if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid request parameters" });
+        return;
+      }
     console.error(error);
     res.status(500).send(error);
   }

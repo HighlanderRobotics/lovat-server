@@ -83,7 +83,7 @@ export const getMatches = async (
 
     if (user.teamNumber) {
       if (teamSourceRule.mode === "EXCLUDE") {
-        teamSourceRule.items.filter((item) => item !== user.teamNumber);
+        teamSourceRule.items = teamSourceRule.items.filter((item) => item !== user.teamNumber);
       } else if (
         teamSourceRule.mode === "INCLUDE" &&
         !teamSourceRule.items.includes(user.teamNumber)

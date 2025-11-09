@@ -12,14 +12,7 @@ export const archiveScouter = async (
         uuid: z.string(),
       })
       .parse(req.params);
-    if (!params) {
-      res.status(400).send({
-        error: params,
-        displayError:
-          "Invalid input. Make sure you are using the correct input.",
-      });
-      return;
-    }
+    
     await prismaClient.scouter.update({
       where: {
         uuid: params.uuid,
@@ -30,6 +23,10 @@ export const archiveScouter = async (
     });
     res.status(200).send("done archiving scouter");
   } catch (error) {
+    if (error instanceof z.ZodError) {
+          res.status(400).json({ error: "Invalid request parameters" });
+          return;
+        }
     console.error(error);
     res.status(500).send({ error: error, displayError: "Error" });
   }

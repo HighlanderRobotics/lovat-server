@@ -55,8 +55,6 @@ export const deleteScoutReport = async (
         },
       });
 
-      res.status(200).send("Data deleted successfully");
-
       // Collect all affected cached analyses
       const analysisRows = await prismaClient.cachedAnalysis.findMany({
         where: {
@@ -79,6 +77,7 @@ export const deleteScoutReport = async (
           where: { key: { in: keysToDelete } },
         });
       }
+      res.status(200).send("Data deleted successfully");
     } else {
       res.status(403).send("Unauthorized to delete this picklist");
     }
