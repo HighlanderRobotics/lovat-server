@@ -35,7 +35,11 @@ export const updateNotes = async (
       include: {
         teamMatchData: true,
       },
-    });
+    });    
+    if (!row) {
+      res.status(403).send("Not authorized to update this picklist");
+      return;
+    }
     const analysisRows = await prismaClient.cachedAnalysis.findMany({
       where: {
         teamDependencies: {
@@ -57,10 +61,7 @@ export const updateNotes = async (
         where: { key: { in: keysToDelete } },
       });
     }
-    if (!row) {
-      res.status(403).send("Not authorized to update this picklist");
-      return;
-    }
+
     res.status(200).send("Note updated");
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -11,7 +11,7 @@ export const getScoutersOnTeam = async (
     const params = z
       .object({
         teamCode: z.string(),
-        archived: z.boolean().optional(),
+        archived: z.coerce.boolean().optional(),
       })
       .safeParse({
         teamCode: req.headers["x-team-code"],
