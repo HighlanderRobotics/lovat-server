@@ -33,10 +33,10 @@ export const updateSettings = async (
     res.status(200).send("Settings successfully updated");
   } catch (error) {
     if (error instanceof z.ZodError) {
-            res.status(400).json({ error: "Invalid request parameters" });
-            return;
-          }
+      res.status(400).json({ error: "Invalid request parameters" });
+      return;
+    }
     console.error(error);
-    res.status(500).send("Error in deleting data");
+    res.status(500).send("Error in updating settings");
   }
 };

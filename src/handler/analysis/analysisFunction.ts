@@ -93,10 +93,7 @@ export const createAnalysisFunction =
           );
 
           try {
-            await kv.set(
-              key,
-              JSON.stringify(calculatedAnalysis),
-            );
+            await kv.set(key, JSON.stringify(calculatedAnalysis));
 
             await prismaClient.cachedAnalysis.create({
               data: {

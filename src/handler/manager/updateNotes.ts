@@ -64,9 +64,9 @@ export const updateNotes = async (
     res.status(200).send("Note updated");
   } catch (error) {
     if (error instanceof z.ZodError) {
-        res.status(400).json({ error: "Invalid request parameters" });
-        return;
-      }
+      res.status(400).json({ error: "Invalid request parameters" });
+      return;
+    }
     console.error(error);
     res.status(500).send(error);
   }
