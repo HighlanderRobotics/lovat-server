@@ -44,9 +44,9 @@ export const detailsPage = createAnalysisHandler({
     else {
       const teamAverageAndTimeLine = (
         await arrayAndAverageTeams(
+          ctx.user,
           [params.team],
           metricsToNumber[params.metric] as Metric,
-          ctx.user,
         )
       )[params.team];
       const allTeamAverage = (await averageAllTeamFast(

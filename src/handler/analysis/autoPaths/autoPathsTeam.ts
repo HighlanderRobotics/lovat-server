@@ -1,6 +1,6 @@
 import prismaClient from "../../../prismaClient";
 import z from "zod";
-import { User } from "@prisma/client";
+import { createAnalysisFunction } from "../analysisFunction";
 import {
   autoEnd,
   FlippedActionMap,
@@ -24,19 +24,38 @@ interface AutoData {
   tournamentName: string;
 }
 
-export const autoPathsTeam = async (
-  user: User,
-  teamNumber: number,
-): Promise<
-  {
-    positions: AutoPosition[];
-    matches: { matchKey: string; tournamentName: string }[];
-    score: number[];
-    frequency: number;
-    maxScore: number;
-  }[]
-> => {
-  try {
+export const autoPathsTeam = createAnalysisFunction({
+  argsSchema: [z.number()],
+  returnSchema: z.array(
+    z.object({
+      positions: z.array(
+        z.object({
+          location: z.number(),
+          event: z.number(),
+          time: z.number().optional(),
+        }),
+      ),
+      matches: z.array(
+        z.object({ matchKey: z.string(), tournamentName: z.string() }),
+      ),
+      score: z.array(z.number()),
+      frequency: z.number(),
+      maxScore: z.number(),
+    }),
+  ),
+  usesDataSource: true,
+  shouldCache: true,
+  createKey: ({ args }) => {
+    const [teamNumber] = args as [number];
+    return {
+      key: ["autoPathsTeam", teamNumber.toString()],
+      teamDependencies: [teamNumber],
+      tournamentDependencies: [],
+    };
+  },
+  calculateAnalysis: async ({ args }, ctx) => {
+    const [teamNumber] = args as [number];
+
     const params = z
       .object({
         team: z.number(),
@@ -49,10 +68,10 @@ export const autoPathsTeam = async (
     }
 
     const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
-      dataSourceRuleSchema(z.string()).parse(user.tournamentSourceRule),
+      dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
     const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
-      dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
+      dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 
     // Select relevant data in match order
@@ -160,11 +179,8 @@ export const autoPathsTeam = async (
     });
 
     return result;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
+  },
+});
 
 // Check if one auto path includes another
 const isSubsetPositions = (

@@ -23,9 +23,9 @@ export const categoryMetrics = createAnalysisHandler({
 
     //update if statments in arrayAndAverage if the metric needs to look at scoutReport instead of events table
     const data = await averageManyFast(
+      ctx.user,
       [params.team],
       metricsCategory,
-      ctx.user,
     );
 
     for (const metric of metricsCategory) {

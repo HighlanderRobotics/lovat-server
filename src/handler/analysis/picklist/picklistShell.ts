@@ -154,11 +154,9 @@ export const picklistShell = createAnalysisHandler({
       }
     }
 
-    const allTeamData = await averageManyFast(
-      includedTeams,
-      [...includedMetrics],
-      ctx.user,
-    );
+    const allTeamData = await averageManyFast(ctx.user, includedTeams, [
+      ...includedMetrics,
+    ]);
 
     const dataArr = await zScoreMany(
       allTeamData,

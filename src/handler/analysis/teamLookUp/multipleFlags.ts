@@ -53,9 +53,9 @@ export const multipleFlags = createAnalysisHandler({
             arr.push(
               (
                 await arrayAndAverageTeams(
+                  ctx.user,
                   [params.team],
                   metricsCategory[i],
-                  ctx.user,
                 )
               )[params.team].average,
             );

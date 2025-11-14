@@ -17,30 +17,29 @@ export type CreateKeyResult = {
 
 export type AnalysisFunctionConfig<
   T extends z.ZodTypeAny,
-  R extends z.ZodTypeAny
+  R extends z.ZodTypeAny,
 > = {
   argsSchema: T[];
+  returnSchema?: R;
   createKey: (params: AnalysisFunctionParams<T>) => CreateKeyResult;
   calculateAnalysis: (
     params: AnalysisFunctionParams<T>,
-    ctx: AnalysisContext
+    ctx: AnalysisContext,
   ) => Promise<z.infer<R>>;
   usesDataSource: boolean;
   shouldCache: boolean;
 };
 export const createAnalysisFunction =
-  <
-    T extends z.ZodTypeAny,
-    R extends z.ZodTypeAny
-  >(config: AnalysisFunctionConfig<T, R>) =>
+  <T extends z.ZodTypeAny, R extends z.ZodTypeAny>(
+    config: AnalysisFunctionConfig<T, R>,
+  ) =>
   async (user: User, ...passedArgs: unknown[]): Promise<z.infer<R>> => {
-
     if (passedArgs.length !== config.argsSchema.length) {
       throw new Error("Incorrect number of arguments passed.");
     }
 
     const parsedArgs = passedArgs.map((arg, i) =>
-      config.argsSchema[i].parse(arg)
+      config.argsSchema[i].parse(arg),
     ) as z.infer<T>[];
 
     const params: AnalysisFunctionParams<T> = {
@@ -52,7 +51,7 @@ export const createAnalysisFunction =
       dataSource: {
         teams: dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
         tournaments: dataSourceRuleSchema(z.string()).parse(
-          user.tournamentSourceRule
+          user.tournamentSourceRule,
         ),
       },
     };
@@ -61,14 +60,19 @@ export const createAnalysisFunction =
       return await config.calculateAnalysis(params, context);
     }
 
-    const { key: keyFragments, teamDependencies, tournamentDependencies } =
-      config.createKey(params);
+    const {
+      key: keyFragments,
+      teamDependencies,
+      tournamentDependencies,
+    } = config.createKey(params);
 
     if (config.usesDataSource) {
       const teamSource = context.dataSource.teams;
       const tournamentSource = context.dataSource.tournaments;
       keyFragments.push(`{${teamSource.mode}:[${teamSource.items}]}`);
-      keyFragments.push(`{${tournamentSource.mode}:[${tournamentSource.items}]}`);
+      keyFragments.push(
+        `{${tournamentSource.mode}:[${tournamentSource.items}]}`,
+      );
     }
 
     const key = ["analysis", "function", ...keyFragments].join(":");
@@ -86,9 +90,12 @@ export const createAnalysisFunction =
         },
       });
 
-      console.log(result)
+      console.log(result);
       return result;
     }
 
-    return JSON.parse(cacheRow.toString()) as z.infer<R>;
+    const parsed = JSON.parse(cacheRow.toString());
+    return config.returnSchema
+      ? config.returnSchema.parse(parsed)
+      : (parsed as z.infer<R>);
   };

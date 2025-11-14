@@ -1,8 +1,17 @@
 import prismaClient from "../../../prismaClient";
-import { autoEnd, defaultEndgamePoints, endgameToPoints, Metric, metricToEvent } from "../analysisConstants";
+import {
+  autoEnd,
+  defaultEndgamePoints,
+  endgameToPoints,
+  Metric,
+  metricToEvent,
+} from "../analysisConstants";
 import { Position, Prisma } from "@prisma/client";
 import z from "zod";
-import { dataSourceRuleToPrismaQuery, dataSourceRuleSchema } from "../dataSourceRule";
+import {
+  dataSourceRuleToPrismaQuery,
+  dataSourceRuleSchema,
+} from "../dataSourceRule";
 import { createAnalysisFunction } from "../analysisFunction";
 
 export const averageAllTeamFast = createAnalysisFunction({
@@ -67,7 +76,8 @@ export const averageAllTeamFast = createAnalysisFunction({
 
       if (data.length === 0) return 0;
 
-      const avgMatchPoints = data.reduce((acc, cur) => acc + cur._sum.points, 0) / data.length;
+      const avgMatchPoints =
+        data.reduce((acc, cur) => acc + cur._sum.points, 0) / data.length;
 
       let avgEndgamePoints = 0;
       if (metric === Metric.totalPoints) {
@@ -81,9 +91,11 @@ export const averageAllTeamFast = createAnalysisFunction({
         });
 
         bargeResults.forEach((endgame) => {
-          avgEndgamePoints += endgameToPoints[endgame.bargeResult] * endgame._count._all;
+          avgEndgamePoints +=
+            endgameToPoints[endgame.bargeResult] * endgame._count._all;
         });
-        avgEndgamePoints /= bargeResults.reduce((acc, cur) => acc + cur._count._all, 0) || 1;
+        avgEndgamePoints /=
+          bargeResults.reduce((acc, cur) => acc + cur._count._all, 0) || 1;
       }
 
       return avgMatchPoints + avgEndgamePoints;
@@ -93,10 +105,18 @@ export const averageAllTeamFast = createAnalysisFunction({
     const action = metricToEvent[metric];
     let position: Position = undefined;
     switch (metric) {
-      case Metric.coralL1: position = Position.LEVEL_ONE; break;
-      case Metric.coralL2: position = Position.LEVEL_TWO; break;
-      case Metric.coralL3: position = Position.LEVEL_THREE; break;
-      case Metric.coralL4: position = Position.LEVEL_FOUR; break;
+      case Metric.coralL1:
+        position = Position.LEVEL_ONE;
+        break;
+      case Metric.coralL2:
+        position = Position.LEVEL_TWO;
+        break;
+      case Metric.coralL3:
+        position = Position.LEVEL_THREE;
+        break;
+      case Metric.coralL4:
+        position = Position.LEVEL_FOUR;
+        break;
     }
 
     const data = await prismaClient.event.groupBy({
@@ -112,7 +132,8 @@ export const averageAllTeamFast = createAnalysisFunction({
       },
     });
 
-    const avgCount = data.reduce((acc, cur) => acc + cur._count._all, 0) / data.length;
+    const avgCount =
+      data.reduce((acc, cur) => acc + cur._count._all, 0) / data.length;
     return avgCount || 0;
   },
 });

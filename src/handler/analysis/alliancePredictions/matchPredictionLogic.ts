@@ -54,9 +54,9 @@ export const matchPredictionLogic = async (
     }
 
     const redArrs = await arrayAndAverageTeams(
+      user,
       [params.data.red1, params.data.red2, params.data.red3],
       Metric.totalPoints,
-      user,
     );
     const redArr1 = redArrs[params.data.red1].timeLine.map(
       (item) => item.dataPoint,
@@ -85,9 +85,9 @@ export const matchPredictionLogic = async (
       (await getMean(redArr3));
 
     const blueArrs = await arrayAndAverageTeams(
+      user,
       [params.data.blue1, params.data.blue2, params.data.blue3],
       Metric.totalPoints,
-      user,
     );
     const blueArr1 = blueArrs[params.data.blue1].timeLine.map(
       (item) => item.dataPoint,
