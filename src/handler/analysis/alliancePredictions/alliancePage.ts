@@ -1,42 +1,42 @@
-import { robotRole } from "../coreAnalysis/robotRole";
-import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
-import { User } from "@prisma/client";
+import z from "zod";
+import { createAnalysisFunction } from "../analysisFunction";
 import { FlippedRoleMap, Metric } from "../analysisConstants";
-import { averageManyFast } from "../coreAnalysis/averageManyFast";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
+import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
+import { robotRole } from "../coreAnalysis/robotRole";
+import { averageManyFast } from "../coreAnalysis/averageManyFast";
 
-export const alliancePage = async (
-  user: User,
-  team1: number,
-  team2: number,
-  team3: number,
-): Promise<{
-  totalPoints: number;
-  teams: object[];
-  coralL1: number;
-  coralL2: number;
-  coralL3: number;
-  coralL4: number;
-  processor: number;
-  net: number;
-}> => {
-  try {
+export const alliancePage = createAnalysisFunction({
+  argsSchema: [z.number(), z.number(), z.number()],
+  usesDataSource: false,
+  shouldCache: true,
+
+  createKey: ({ args }) => {
+    const [team1, team2, team3] = args;
+    return {
+      key: ["alliancePage", team1.toString(), team2.toString(), team3.toString()],
+      teamDependencies: [team1, team2, team3],
+    };
+  },
+
+  calculateAnalysis: async ({ args }, ctx) => {
+    const [team1, team2, team3] = args;
     const teamPoints = await arrayAndAverageTeams(
       [team1, team2, team3],
       Metric.totalPoints,
-      user,
+      ctx.user,
     );
 
     const teamOneMainRole =
-      FlippedRoleMap[(await robotRole(user, team1)).mainRole];
+      FlippedRoleMap[(await robotRole(ctx.user, team1)).mainRole];
     const teamTwoMainRole =
-      FlippedRoleMap[(await robotRole(user, team2)).mainRole];
+      FlippedRoleMap[(await robotRole(ctx.user, team2)).mainRole];
     const teamThreeMainRole =
-      FlippedRoleMap[(await robotRole(user, team3)).mainRole];
+      FlippedRoleMap[(await robotRole(ctx.user, team3)).mainRole];
 
-    const teamOneAutoPaths = await autoPathsTeam(user, team1);
-    const teamTwoAutoPaths = await autoPathsTeam(user, team2);
-    const teamThreeAutoPaths = await autoPathsTeam(user, team3);
+    const teamOneAutoPaths = await autoPathsTeam(ctx.user, team1);
+    const teamTwoAutoPaths = await autoPathsTeam(ctx.user, team2);
+    const teamThreeAutoPaths = await autoPathsTeam(ctx.user, team3);
 
     const teamData = await averageManyFast(
       [team1, team2, team3],
@@ -48,7 +48,7 @@ export const alliancePage = async (
         Metric.processorScores,
         Metric.netScores,
       ],
-      user,
+      ctx.user,
     );
 
     //constants: total points, teams {team, role, autoPaths, averagePoints}
@@ -102,8 +102,5 @@ export const alliancePage = async (
         teamData[Metric.netScores][team2] +
         teamData[Metric.netScores][team3],
     };
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
+  },
+});

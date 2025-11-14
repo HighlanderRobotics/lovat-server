@@ -29,4 +29,4 @@ export const dataSourceRuleToArray = <T extends number | string>(
     return allTeams.filter((team) => !rule.items.includes(team));
   }
   return [];
-}
+};
