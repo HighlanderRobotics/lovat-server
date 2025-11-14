@@ -124,7 +124,7 @@ export const createAnalysisHandler: <
           res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
 
           try {
-            await kv.set(key, JSON.stringify(calculatedAnalysis));
+            await kv.set(key, JSON.stringify(calculatedAnalysis), 60 * 60 * 24);
 
             await prismaClient.cachedAnalysis.create({
               data: {

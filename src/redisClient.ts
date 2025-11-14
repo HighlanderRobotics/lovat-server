@@ -5,10 +5,9 @@ const redis = createClient({ url: process.env.REDIS_URL })
   .connect();
 
 const set = async (
-  key: string,
-  data: string,
+key: string, data: string, ttl?: number
 ): ReturnType<Awaited<typeof redis>["set"]> => {
-  return await (await redis).set(key, data);
+  return await (await redis).set(key, data, {EX: ttl});
 };
 
 const get = async (key: string): ReturnType<Awaited<typeof redis>["get"]> => {
