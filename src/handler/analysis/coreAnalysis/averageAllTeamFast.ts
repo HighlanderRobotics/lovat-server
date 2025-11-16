@@ -15,19 +15,19 @@ import {
 import { createAnalysisFunction } from "../analysisFunction";
 
 export const averageAllTeamFast = createAnalysisFunction({
-  argsSchema: [z.nativeEnum(Metric)],
+  argsSchema: z.object({ metric: z.nativeEnum(Metric) }),
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ args }) => {
-    const [metric] = args;
+  createKey: (args) => {
+    const metric = args.metric;
     return {
       key: ["averageAllTeamFast", String(metric)],
       teamDependencies: [],
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async ({ args }, ctx) => {
-    const [metric] = args;
+  calculateAnalysis: async (args, ctx) => {
+    const metric = args.metric;
     // Early return for barge points default
     if (metric === Metric.bargePoints) {
       return defaultEndgamePoints;

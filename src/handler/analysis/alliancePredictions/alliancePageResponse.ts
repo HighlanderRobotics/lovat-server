@@ -23,9 +23,9 @@ export const alliancePageResponse = createAnalysisHandler({
   calculateAnalysis: async ({ query }, ctx) => {
     const alliancePageData = await alliancePage(
       ctx.user,
-      query.teamOne,
-      query.teamTwo,
-      query.teamThree,
+      {team1: query.teamOne,
+      team2: query.teamTwo,
+      team3: query.teamThree}
     );
 
     return alliancePageData;

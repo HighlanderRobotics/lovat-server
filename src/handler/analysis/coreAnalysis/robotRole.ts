@@ -5,24 +5,22 @@ import { createAnalysisFunction } from "../analysisFunction";
 
 // Finds main robot role for a team
 export const robotRole = createAnalysisFunction({
-  argsSchema: [z.number()],
+  argsSchema: z.object({team: z.number()}),
   returnSchema: z.object({ mainRole: z.string().nullable() }),
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ args }) => {
-    const [team] = args as [number];
+  createKey: (args) => {
     return {
-      key: ["robotRole", team.toString()],
-      teamDependencies: [team],
+      key: ["robotRole", args.team.toString()],
+      teamDependencies: [args.team],
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async ({ args }, ctx) => {
-    const [team] = args as [number];
+  calculateAnalysis: async (args, ctx) => {
     try {
       const roles = await nonEventMetric(
         ctx.user,
-        team,
+        args.team,
         MetricsBreakdown.robotRole,
       );
 

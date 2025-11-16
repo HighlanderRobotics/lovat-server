@@ -52,11 +52,10 @@ export const multipleFlags = createAnalysisHandler({
           if (flag === metricToName[metricsCategory[i]]) {
             arr.push(
               (
-                await arrayAndAverageTeams(
-                  ctx.user,
-                  [params.team],
-                  metricsCategory[i],
-                )
+                await arrayAndAverageTeams(ctx.user, {
+                  teams: [params.team],
+                  metric: metricsCategory[i],
+                })
               )[params.team].average,
             );
             break;

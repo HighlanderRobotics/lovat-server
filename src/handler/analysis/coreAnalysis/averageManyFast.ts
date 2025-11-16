@@ -25,25 +25,22 @@ export interface ArrayFilter<T> {
 }
 
 export const averageManyFast = createAnalysisFunction({
-  argsSchema: [z.array(z.number()), z.array(z.nativeEnum(Metric))],
+  argsSchema: z.object({teams: z.array(z.number()), metrics: z.array(z.nativeEnum(Metric))}),
   returnSchema: z.record(z.string(), z.record(z.string(), z.number())),
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ args }) => {
-    const [teams, metrics] = args;
+  createKey: (args) => {
     return {
       key: [
         "averageManyFast",
-        JSON.stringify(teams.sort((a, b) => a - b)),
-        JSON.stringify(metrics.map(String).sort()),
+        JSON.stringify(args.teams.sort((a, b) => a - b)),
+        JSON.stringify(args.metrics.map(String).sort()),
       ],
-      teamDependencies: teams,
+      teamDependencies: args.teams,
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async ({ args }, ctx) => {
-    console.log("PING");
-    const [teams, metrics] = args;
+  calculateAnalysis: async (args, ctx) => {
 
     const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
@@ -53,7 +50,7 @@ export const averageManyFast = createAnalysisFunction({
     );
 
     const tmdFilter: Prisma.TeamMatchDataWhereInput = {
-      teamNumber: { in: teams },
+      teamNumber: { in: args.teams },
     };
     if (sourceTnmtFilter) {
       tmdFilter.tournamentKey = sourceTnmtFilter;
@@ -102,7 +99,7 @@ export const averageManyFast = createAnalysisFunction({
     }
 
     const rawDataGrouped = new Array<GroupedData>();
-    for (const team of teams) {
+    for (const team of args.teams) {
       rawDataGrouped[team] ||= {
         tournamentData: [],
         endgame: { resultCount: {}, totalAttempts: 0 },
@@ -131,7 +128,7 @@ export const averageManyFast = createAnalysisFunction({
         currRowTournament.endgamePoints.push(endgameToPoints[sr.bargeResult]);
 
         if (
-          metrics.includes(Metric.bargePoints) &&
+          args.metrics.includes(Metric.bargePoints) &&
           sr.bargeResult !== BargeResult.NOT_ATTEMPTED
         ) {
           currRow.endgame.totalAttempts++;
@@ -145,12 +142,12 @@ export const averageManyFast = createAnalysisFunction({
     const autoPoints: number[][] = [];
 
     const finalResults: Record<string, Record<string, number>> = {};
-    for (const metric of metrics) {
+    for (const metric of args.metrics) {
       let resultsByTournament: number[][] = [];
 
       if (metric === Metric.bargePoints) {
         finalResults[String(metric)] = {};
-        for (const team of teams) {
+        for (const team of args.teams) {
           finalResults[String(metric)][String(team)] = endgameRuleOfSuccession(
             rawDataGrouped[team].endgame.resultCount,
             rawDataGrouped[team].endgame.totalAttempts,
@@ -158,7 +155,7 @@ export const averageManyFast = createAnalysisFunction({
         }
         continue;
       } else if (metric === Metric.driverAbility) {
-        for (const team of teams) {
+        for (const team of args.teams) {
           resultsByTournament[team] = [];
           rawDataGrouped[team].tournamentData.forEach((tournament) => {
             resultsByTournament[team].push(avgOrZero(tournament.driverAbility));
@@ -173,7 +170,7 @@ export const averageManyFast = createAnalysisFunction({
           teleopPoints.length === 0 &&
           (metric === Metric.totalPoints || metric === Metric.teleopPoints)
         ) {
-          for (const team of teams) {
+          for (const team of args.teams) {
             teleopPoints[team] = [];
             rawDataGrouped[team].tournamentData.forEach((tournament) => {
               const timedEvents = tournament.srEvents.map((val) =>
@@ -190,7 +187,7 @@ export const averageManyFast = createAnalysisFunction({
           autoPoints.length === 0 &&
           (metric === Metric.totalPoints || metric === Metric.autoPoints)
         ) {
-          for (const team of teams) {
+          for (const team of args.teams) {
             autoPoints[team] = [];
             rawDataGrouped[team].tournamentData.forEach((tournament) => {
               const timedEvents = tournament.srEvents.map((val) =>
@@ -209,7 +206,7 @@ export const averageManyFast = createAnalysisFunction({
         } else if (metric === Metric.autoPoints) {
           resultsByTournament = autoPoints;
         } else if (metric === Metric.totalPoints) {
-          for (const team of teams) {
+          for (const team of args.teams) {
             resultsByTournament[team] = [];
             let tournamentIndex = 0;
             rawDataGrouped[team].tournamentData.forEach((tournament) => {
@@ -239,7 +236,7 @@ export const averageManyFast = createAnalysisFunction({
             break;
         }
 
-        for (const team of teams) {
+        for (const team of args.teams) {
           resultsByTournament[team] = [];
           rawDataGrouped[team].tournamentData.forEach((tournament) => {
             let countAtTournament = 0;
@@ -261,7 +258,7 @@ export const averageManyFast = createAnalysisFunction({
       }
 
       finalResults[String(metric)] = {};
-      for (const team of teams) {
+      for (const team of args.teams) {
         finalResults[String(metric)][String(team)] = weightedTourAvgLeft(
           resultsByTournament[team],
         );

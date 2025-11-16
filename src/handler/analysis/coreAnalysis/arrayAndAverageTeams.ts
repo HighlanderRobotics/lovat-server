@@ -24,7 +24,7 @@ import { createAnalysisFunction } from "../analysisFunction";
  * Optimized to compare one metric over a few teams.
  */
 export const arrayAndAverageTeams = createAnalysisFunction({
-  argsSchema: [z.array(z.number()), z.nativeEnum(Metric)],
+  argsSchema: z.object({ teams: z.array(z.number()), metric: z.nativeEnum(Metric) }),
   returnSchema: z.record(
     z.string(),
     z.object({
@@ -42,8 +42,8 @@ export const arrayAndAverageTeams = createAnalysisFunction({
   ),
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ args }) => {
-    const [teams, metric] = args as [number[], Metric];
+  createKey: (args) => {
+    const { teams, metric } = args;
     return {
       key: [
         "arrayAndAverageTeams",
@@ -54,8 +54,8 @@ export const arrayAndAverageTeams = createAnalysisFunction({
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async ({ args }, ctx) => {
-    const [teams, metric] = args as [number[], Metric];
+  calculateAnalysis: async (args, ctx) => {
+    const { teams, metric } = args;
     try {
       const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
         dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),

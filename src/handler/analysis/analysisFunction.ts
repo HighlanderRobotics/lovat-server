@@ -5,46 +5,34 @@ import { kv } from "../../redisClient";
 import { AnalysisContext } from "./analysisConstants";
 import { User } from "@prisma/client";
 
-export type AnalysisFunctionParams<T extends z.ZodTypeAny> = {
-  args: z.infer<T>[];
-};
-
 export type CreateKeyResult = {
   key: string[];
   teamDependencies?: number[];
   tournamentDependencies?: string[];
 };
 
+
+
 export type AnalysisFunctionConfig<
-  T extends z.ZodTypeAny,
-  R extends z.ZodTypeAny,
+  T extends z.ZodObject,
+  R extends z.ZodType,
 > = {
-  argsSchema: T[];
+  argsSchema: T;
   returnSchema?: R;
-  createKey: (params: AnalysisFunctionParams<T>) => CreateKeyResult;
+  createKey: (params: z.infer<T>) => CreateKeyResult;
   calculateAnalysis: (
-    params: AnalysisFunctionParams<T>,
+    params: z.infer<T>,
     ctx: AnalysisContext,
   ) => Promise<z.infer<R>>;
   usesDataSource: boolean;
   shouldCache: boolean;
 };
 export const createAnalysisFunction =
-  <T extends z.ZodTypeAny, R extends z.ZodTypeAny>(
+  <T extends z.ZodObject, R extends z.ZodType>(
     config: AnalysisFunctionConfig<T, R>,
   ) =>
-  async (user: User, ...passedArgs: unknown[]): Promise<z.infer<R>> => {
-    if (passedArgs.length !== config.argsSchema.length) {
-      throw new Error("Incorrect number of arguments passed.");
-    }
+  async (user: User, passedArgs: z.infer<T>): Promise<z.infer<R>> => {
 
-    const parsedArgs = passedArgs.map((arg, i) =>
-      config.argsSchema[i].parse(arg),
-    ) as z.infer<T>[];
-
-    const params: AnalysisFunctionParams<T> = {
-      args: parsedArgs,
-    };
 
     const context: AnalysisContext = {
       user,
@@ -57,14 +45,14 @@ export const createAnalysisFunction =
     };
 
     if (!config.shouldCache) {
-      return await config.calculateAnalysis(params, context);
+      return await config.calculateAnalysis(passedArgs, context);
     }
 
     const {
       key: keyFragments,
       teamDependencies,
       tournamentDependencies,
-    } = config.createKey(params);
+    } = config.createKey(passedArgs);
 
     if (config.usesDataSource) {
       const teamSource = context.dataSource.teams;
@@ -79,7 +67,7 @@ export const createAnalysisFunction =
     const cacheRow = await kv.get(key);
 
     if (!cacheRow) {
-      const result = await config.calculateAnalysis(params, context);
+      const result = await config.calculateAnalysis(passedArgs, context);
 
       await kv.set(key, JSON.stringify(result));
       await prismaClient.cachedAnalysis.create({
@@ -89,8 +77,6 @@ export const createAnalysisFunction =
           tournamentDependencies: tournamentDependencies ?? [],
         },
       });
-
-      console.log(result);
       return result;
     }
 

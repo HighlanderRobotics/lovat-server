@@ -25,7 +25,7 @@ interface AutoData {
 }
 
 export const autoPathsTeam = createAnalysisFunction({
-  argsSchema: [z.number()],
+  argsSchema: z.object({ team: z.number() }),
   returnSchema: z.array(
     z.object({
       positions: z.array(
@@ -45,27 +45,16 @@ export const autoPathsTeam = createAnalysisFunction({
   ),
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ args }) => {
-    const [teamNumber] = args as [number];
+  createKey: (args) => {
+    const teamNumber = args.team;
     return {
       key: ["autoPathsTeam", teamNumber.toString()],
       teamDependencies: [teamNumber],
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async ({ args }, ctx) => {
-    const [teamNumber] = args as [number];
-
-    const params = z
-      .object({
-        team: z.number(),
-      })
-      .safeParse({
-        team: teamNumber,
-      });
-    if (!params.success) {
-      throw params;
-    }
+  calculateAnalysis: async (args, ctx) => {
+    const teamNumber = args.team;
 
     const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
@@ -78,7 +67,7 @@ export const autoPathsTeam = createAnalysisFunction({
     const autoData = await prismaClient.scoutReport.findMany({
       where: {
         teamMatchData: {
-          teamNumber: params.data.team,
+          teamNumber: teamNumber,
           tournamentKey: sourceTnmtFilter,
         },
         scouter: {
