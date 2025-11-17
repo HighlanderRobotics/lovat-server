@@ -35,27 +35,23 @@ export const matchPageSpecificScouter = createAnalysisHandler({
 
     const output = {
       totalPoints: (
-        await averageScoutReport(scoutReport.uuid, [Metric.totalPoints])
+        await averageScoutReport(ctx.user, { scoutReportUuid: scoutReport.uuid, metrics: [Metric.totalPoints] })
       )[Metric.totalPoints],
       driverAbility: scoutReport.driverAbility,
       role: FlippedRoleMap[scoutReport.robotRole],
       // stage : stageMap[scoutReport.stage],
       // highNote : highNoteMap[scoutReport.highNote],
       barge: BargeResultReverseMap[scoutReport.bargeResult],
-      autoPath: await autoPathScouter(
-        ctx.user,
-        scoutReport.teamMatchKey,
-        scoutReport.uuid,
-      ),
+      autoPath: await autoPathScouter(ctx.user, {
+        matchKey: scoutReport.teamMatchKey,
+        scoutReportUuid: scoutReport.uuid,
+      }),
       note: scoutReport.notes,
       robotBrokeDescription: scoutReport.robotBrokeDescription,
       timeStamp: scoutReport.startTime,
     };
 
-    const aggregateData = await averageScoutReport(
-      scoutReport.uuid,
-      specificMatchPageMetrics,
-    );
+    const aggregateData = await averageScoutReport(ctx.user, { scoutReportUuid: scoutReport.uuid, metrics: specificMatchPageMetrics });
 
     for (const metric of specificMatchPageMetrics) {
       output[metricToName[metric]] = aggregateData[metric];

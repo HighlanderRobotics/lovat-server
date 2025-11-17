@@ -18,11 +18,10 @@ export const robotRole = createAnalysisFunction({
   },
   calculateAnalysis: async (args, ctx) => {
     try {
-      const roles = await nonEventMetric(
-        ctx.user,
-        args.team,
-        MetricsBreakdown.robotRole,
-      );
+      const roles = await nonEventMetric(ctx.user, {
+        team: args.team,
+        metric: MetricsBreakdown.robotRole,
+      });
 
       let eventTypeWithMostOccurrences: string = null;
       let maxCount = 0;

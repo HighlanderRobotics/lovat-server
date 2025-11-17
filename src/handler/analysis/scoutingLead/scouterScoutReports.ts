@@ -1,120 +1,89 @@
-import { Response } from "express";
 import prismaClient from "../../../prismaClient";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-// import { cooperationSingleMatch } from "./cooperationSingleMatch";
+import { createAnalysisHandler } from "../../analysis/analysisHandler";
 
-export const scouterScoutReports = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        tournamentKey: z.string().nullable(),
-        scouterUuid: z.string(),
-      })
-      .safeParse({
-        tournamentKey: req.query.tournamentKey || null,
-        scouterUuid: req.query.scouterUuid,
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+export const scouterScoutReports = createAnalysisHandler({
+  params: {
+    query: z.object({
+      tournamentKey: z.string().nullable().optional(),
+      scouterUuid: z.string(),
+    }),
+  },
+  usesDataSource: false,
+  shouldCache: false,
+  createKey: ({ query }) => ({
+    key: [
+      "scouterScoutReports",
+      query.scouterUuid,
+      query.tournamentKey || "",
+    ],
+    teamDependencies: [],
+    tournamentDependencies: query.tournamentKey ? [query.tournamentKey] : [],
+  }),
+  calculateAnalysis: async ({ query }, ctx) => {
     const scouter = await prismaClient.scouter.findUnique({
-      where: {
-        uuid: params.data.scouterUuid,
-      },
+      where: { uuid: query.scouterUuid },
     });
     if (!scouter) {
-      res.status(500).send("Scouter doesn't exist");
-      return;
+      throw new Error("SCOUTER_NOT_FOUND");
     }
     if (
-      req.user.role !== "SCOUTING_LEAD" ||
-      req.user.teamNumber === null ||
-      req.user.teamNumber !== scouter.sourceTeamNumber
+      ctx.user.role !== "SCOUTING_LEAD" ||
+      ctx.user.teamNumber === null ||
+      ctx.user.teamNumber !== scouter.sourceTeamNumber
     ) {
-      res.status(403).send("Not authorized for this endpoint");
-      return;
+      throw new Error("FORBIDDEN");
     }
-    if (!params.data.tournamentKey) {
+
+    if (!query.tournamentKey) {
       const allScoutReports = await prismaClient.scoutReport.findMany({
-        where: {
-          scouterUuid: params.data.scouterUuid,
-        },
+        where: { scouterUuid: query.scouterUuid },
         select: {
-          scouter: {
-            select: {
-              name: true,
-            },
-          },
+          scouter: { select: { name: true } },
           teamMatchData: {
             select: {
               teamNumber: true,
               key: true,
               matchNumber: true,
               matchType: true,
-              tournament: {
-                select: {
-                  key: true,
-                  name: true,
-                },
-              },
+              tournament: { select: { key: true, name: true } },
             },
           },
           uuid: true,
         },
-        // Most recent first
         orderBy: [
           { teamMatchData: { tournament: { date: "desc" } } },
           { teamMatchData: { matchType: "desc" } },
           { teamMatchData: { matchNumber: "desc" } },
         ],
       });
-      res.status(200).send(allScoutReports);
-    } else {
-      const tournamentScoutReports = await prismaClient.scoutReport.findMany({
-        where: {
-          scouterUuid: params.data.scouterUuid,
-          teamMatchData: {
-            tournamentKey: params.data.tournamentKey,
-          },
-        },
-        select: {
-          scouter: {
-            select: {
-              name: true,
-            },
-          },
-          teamMatchData: {
-            select: {
-              teamNumber: true,
-              key: true,
-              matchNumber: true,
-              matchType: true,
-              tournament: {
-                select: {
-                  key: true,
-                  name: true,
-                },
-              },
-            },
-          },
-          uuid: true,
-        },
-        // Most recent first
-        orderBy: [
-          { teamMatchData: { tournament: { date: "desc" } } },
-          { teamMatchData: { matchType: "desc" } },
-          { teamMatchData: { matchNumber: "desc" } },
-        ],
-      });
-      res.status(200).send(tournamentScoutReports);
+      return allScoutReports;
     }
-  } catch (error) {
-    console.log(error);
-    res.status(500).send(error);
-  }
-};
+
+    const tournamentScoutReports = await prismaClient.scoutReport.findMany({
+      where: {
+        scouterUuid: query.scouterUuid,
+        teamMatchData: { tournamentKey: query.tournamentKey },
+      },
+      select: {
+        scouter: { select: { name: true } },
+        teamMatchData: {
+          select: {
+            teamNumber: true,
+            key: true,
+            matchNumber: true,
+            matchType: true,
+            tournament: { select: { key: true, name: true } },
+          },
+        },
+        uuid: true,
+      },
+      orderBy: [
+        { teamMatchData: { tournament: { date: "desc" } } },
+        { teamMatchData: { matchType: "desc" } },
+        { teamMatchData: { matchNumber: "desc" } },
+      ],
+    });
+    return tournamentScoutReports;
+  },
+});

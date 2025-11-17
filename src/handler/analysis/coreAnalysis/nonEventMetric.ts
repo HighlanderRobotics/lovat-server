@@ -1,5 +1,5 @@
 import prismaClient from "../../../prismaClient";
-import { EventAction, User } from "@prisma/client";
+import { EventAction } from "@prisma/client";
 import {
   breakdownNeg,
   breakdownPos,
@@ -12,86 +12,96 @@ import {
   dataSourceRuleToPrismaQuery,
   dataSourceRuleSchema,
 } from "../dataSourceRule";
+import { createAnalysisFunction } from "../analysisFunction";
 
 /**
  * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,
  * calculated directly in the database with a single query.
  */
-export const nonEventMetric = async (
-  user: User,
-  team: number,
-  metric: MetricsBreakdown,
-): Promise<Record<string, number>> => {
-  try {
-    const tnmRule = dataSourceRuleSchema(z.string()).parse(
-      user.tournamentSourceRule,
-    );
-    const teamRule = dataSourceRuleSchema(z.number()).parse(
-      user.teamSourceRule,
-    );
+export const nonEventMetric = createAnalysisFunction({
+  argsSchema: z.object({
+    team: z.number(),
+    metric: z.nativeEnum(MetricsBreakdown),
+  }),
+  // Record<string, number>
+  usesDataSource: true,
+  shouldCache: true,
+  createKey: (args) => ({
+    key: ["nonEventMetric", args.team.toString(), String(args.metric)],
+    teamDependencies: [args.team],
+    tournamentDependencies: [],
+  }),
+  calculateAnalysis: async (args, ctx) => {
+    try {
+      const tnmRule = dataSourceRuleSchema(z.string()).parse(
+        ctx.user.tournamentSourceRule,
+      );
+      const teamRule = dataSourceRuleSchema(z.number()).parse(
+        ctx.user.teamSourceRule,
+      );
 
-    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(tnmRule);
-    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(teamRule);
+      const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(tnmRule);
+      const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(teamRule);
 
-    const tournamentList = tnmRule.items;
-    const teamList = teamRule.items;
+      const tournamentList = tnmRule.items;
+      const teamList = teamRule.items;
 
-    const tournamentCondition =
-      tnmRule.mode === "INCLUDE"
-        ? `tmd."tournamentKey" = ANY($1)`
-        : `tmd."tournamentKey" != ALL($1)`;
+      const tournamentCondition =
+        tnmRule.mode === "INCLUDE"
+          ? `tmd."tournamentKey" = ANY($1)`
+          : `tmd."tournamentKey" != ALL($1)`;
 
-    const teamCondition =
-      teamRule.mode === "INCLUDE"
-        ? `sc."sourceTeamNumber" = ANY($2)`
-        : `sc."sourceTeamNumber" != ALL($2)`;
+      const teamCondition =
+        teamRule.mode === "INCLUDE"
+          ? `sc."sourceTeamNumber" = ANY($2)`
+          : `sc."sourceTeamNumber" != ALL($2)`;
 
-    if (metric === MetricsBreakdown.leavesAuto) {
-      const numLeaves = await prismaClient.teamMatchData.count({
-        where: {
-          teamNumber: team,
-          tournamentKey: sourceTnmtFilter,
-          scoutReports: {
-            some: {
-              AND: {
-                events: {
-                  some: {
-                    action: EventAction.AUTO_LEAVE,
+      if (args.metric === MetricsBreakdown.leavesAuto) {
+        const numLeaves = await prismaClient.teamMatchData.count({
+          where: {
+            teamNumber: args.team,
+            tournamentKey: sourceTnmtFilter,
+            scoutReports: {
+              some: {
+                AND: {
+                  events: {
+                    some: {
+                      action: EventAction.AUTO_LEAVE,
+                    },
+                  },
+                  scouter: {
+                    sourceTeamNumber: sourceTeamFilter,
                   },
                 },
+              },
+            },
+          },
+        });
+
+        const totalMatches = await prismaClient.teamMatchData.count({
+          where: {
+            teamNumber: args.team,
+            tournamentKey: sourceTnmtFilter,
+            scoutReports: {
+              some: {
                 scouter: {
                   sourceTeamNumber: sourceTeamFilter,
                 },
               },
             },
           },
-        },
-      });
+        });
 
-      const totalMatches = await prismaClient.teamMatchData.count({
-        where: {
-          teamNumber: team,
-          tournamentKey: sourceTnmtFilter,
-          scoutReports: {
-            some: {
-              scouter: {
-                sourceTeamNumber: sourceTeamFilter,
-              },
-            },
-          },
-        },
-      });
+        const perc = numLeaves / totalMatches;
 
-      const perc = numLeaves / totalMatches;
+        return {
+          True: perc,
+          False: 1 - perc,
+        } as Record<string, number>;
+      }
 
-      return {
-        True: perc,
-        False: 1 - perc,
-      };
-    }
-
-    const query = `
-      SELECT s."${metric}" AS breakdown,
+      const query = `
+      SELECT s."${args.metric}" AS breakdown,
         COUNT(s."scouterUuid")::float / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
       FROM "ScoutReport" s
       JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
@@ -99,36 +109,37 @@ export const nonEventMetric = async (
       WHERE tmd."teamNumber" = $3
         AND ${tournamentCondition}
         AND ${teamCondition}
-      GROUP BY s."${metric}"
+      GROUP BY s."${args.metric}"
     `;
 
-    interface QueryRow {
-      breakdown: string;
-      percentage: string;
-    }
+      interface QueryRow {
+        breakdown: string;
+        percentage: string;
+      }
 
-    const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
-      query,
-      tournamentList,
-      teamList,
-      team,
-    );
+      const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
+        query,
+        tournamentList,
+        teamList,
+        args.team,
+      );
 
-    const result: Record<string, number> = {};
-    for (const possibleRow of breakdownToEnum[metric]) {
-      result[possibleRow] = 0;
-    }
-    for (const row of data) {
-      const option = transformBreakdown(row.breakdown);
-      result[option] = parseFloat(row.percentage);
-    }
+      const result: Record<string, number> = {};
+      for (const possibleRow of breakdownToEnum[args.metric]) {
+        result[possibleRow] = 0;
+      }
+      for (const row of data) {
+        const option = transformBreakdown(row.breakdown);
+        result[option] = parseFloat(row.percentage);
+      }
 
-    return result;
-  } catch (error) {
-    console.error("Error in nonEventMetric:", error);
-    throw error;
-  }
-};
+      return result;
+    } catch (error) {
+      console.error("Error in nonEventMetric:", error);
+      throw error;
+    }
+  },
+});
 
 // Edit to work with true/false breakdowns
 export const transformBreakdown = (input: string): string => {

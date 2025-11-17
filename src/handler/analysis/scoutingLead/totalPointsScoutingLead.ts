@@ -1,23 +1,25 @@
 import prismaClient from "../../../prismaClient";
-// import { cooperationSingleMatch } from "./cooperationSingleMatch";
+import z from "zod";
+import { createAnalysisFunction } from "../analysisFunction";
 
-export const totalPointsScoutingLead = async (
-  scoutReportUuid: string,
-): Promise<number> => {
-  try {
+export const totalPointsScoutingLead = createAnalysisFunction({
+  argsSchema: z.object({ scoutReportUuid: z.string() }),
+  returnSchema: z.number(),
+  usesDataSource: false,
+  shouldCache: true,
+  createKey: (args) => ({
+    key: ["totalPointsScoutingLead", args.scoutReportUuid],
+  }),
+  calculateAnalysis: async (args) => {
     const points = await prismaClient.event.aggregate({
       where: {
-        scoutReportUuid: scoutReportUuid,
+        scoutReportUuid: args.scoutReportUuid,
       },
       _sum: {
         points: true,
       },
     });
     const totalPoints = points._sum.points || 0;
-    //only doing events bc "strikes" will be calculated sepratly
     return totalPoints;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
+  },
+});
