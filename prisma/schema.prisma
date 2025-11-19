@@ -151,13 +151,13 @@ model EmailVerificationRequest {
 
 model SlackWorkspace {
   workspaceId   String              @id
-  owner         Int?
+  owner         Int
   name          String
   authToken     String
   botUserId     String
   authUserId    String
   subscriptions SlackSubscription[]
-  team          RegisteredTeam?     @relation(fields: [owner], references: [number], onDelete: Cascade)
+  team          RegisteredTeam     @relation(fields: [owner], references: [number], onDelete: Cascade)
 }
 
 model SlackSubscription {

@@ -176,41 +176,6 @@ export const processCommand = async (
           `Successfully unsubscribed from ${messages.join(" and ")} notifications`,
         );
       return;
-    } else if (action === "team") {
-      if (body.length === 1) {
-        res
-          .status(200)
-          .send(
-            `Workspace linked to team ${(await prismaClient.slackWorkspace.findUnique({ where: { workspaceId: params.team_id } })).owner}`,
-          );
-        return;
-      } else if (body[1] === "set") {
-        try {
-          const teamNumber = (
-            await prismaClient.registeredTeam.findUniqueOrThrow({
-              where: {
-                code: body[2],
-              },
-            })
-          ).number;
-
-          await prismaClient.slackWorkspace.update({
-            where: {
-              workspaceId: params.team_id,
-            },
-            data: {
-              owner: teamNumber,
-            },
-          });
-          res
-            .status(200)
-            .send(`Successfully linked workspace to team ${teamNumber}`);
-          return;
-        } catch {
-          res.status(200).send(`Not a valid team code.`);
-          return;
-        }
-      }
     } else {
       res
         .status(400)
