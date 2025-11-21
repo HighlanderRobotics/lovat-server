@@ -11,7 +11,8 @@ export async function computeRankFlag(
       `https://www.thebluealliance.com/api/v3/event/${eventKey}/rankings`,
       { headers: { "X-TBA-Auth-Key": process.env.TBA_KEY } },
     );
-    const rankings: { team_key: string; rank: number }[] = response.data.rankings;
+    const rankings: { team_key: string; rank: number }[] =
+      response.data.rankings;
 
     const out: Record<number, number> = {};
     for (const team of teams) {

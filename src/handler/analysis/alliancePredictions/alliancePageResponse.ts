@@ -21,12 +21,11 @@ export const alliancePageResponse = createAnalysisHandler({
     };
   },
   calculateAnalysis: async ({ query }, ctx) => {
-    const alliancePageData = await alliancePage(
-      ctx.user,
-      {team1: query.teamOne,
+    const alliancePageData = await alliancePage(ctx.user, {
+      team1: query.teamOne,
       team2: query.teamTwo,
-      team3: query.teamThree}
-    );
+      team3: query.teamThree,
+    });
 
     return alliancePageData;
   },

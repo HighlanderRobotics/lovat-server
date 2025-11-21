@@ -15,7 +15,7 @@ export const getScoutersOnTeam = async (
       })
       .safeParse({
         teamCode: req.headers["x-team-code"],
-        archived: req.query.archived,
+        archived: req.query.filterArchivedScouters,
       });
 
     if (!params.success) {

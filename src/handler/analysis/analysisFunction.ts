@@ -11,8 +11,6 @@ export type CreateKeyResult = {
   tournamentDependencies?: string[];
 };
 
-
-
 export type AnalysisFunctionConfig<
   T extends z.ZodObject,
   R extends z.ZodType,
@@ -32,8 +30,6 @@ export const createAnalysisFunction =
     config: AnalysisFunctionConfig<T, R>,
   ) =>
   async (user: User, passedArgs: z.infer<T>): Promise<z.infer<R>> => {
-
-
     const context: AnalysisContext = {
       user,
       dataSource: {

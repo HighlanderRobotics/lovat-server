@@ -2,9 +2,9 @@ import prismaClient from "../prismaClient";
 import { kv } from "../redisClient";
 
 const clearCache = async () => {
-    await prismaClient.cachedAnalysis.deleteMany()
+  await prismaClient.cachedAnalysis.deleteMany();
 
-    kv.flush()
+  kv.flush();
 
-    console.log("Cache cleared")
-}
+  console.log("Cache cleared");
+};
