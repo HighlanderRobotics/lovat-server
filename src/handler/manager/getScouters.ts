@@ -2,12 +2,17 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import { SHA256 } from "crypto-js";
+import z from "zod";
 
 export const getScouters = async (
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> => {
   try {
+    const params = z.object({
+      filterArchivedScouters: z.boolean()
+    }).parse(req.params);
+
     if (req.user.teamNumber === null) {
       res.status(403).send("User is not affilated with a team");
       return;
@@ -15,7 +20,7 @@ export const getScouters = async (
     const rows = await prismaClient.scouter.findMany({
       where: {
         sourceTeamNumber: req.user.teamNumber,
-        archived: false,
+        archived: params.filterArchivedScouters,
       },
       select: {
         uuid: true,
