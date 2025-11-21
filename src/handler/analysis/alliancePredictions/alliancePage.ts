@@ -8,7 +8,11 @@ import { averageManyFast } from "../coreAnalysis/averageManyFast";
 import { RobotRole } from "@prisma/client";
 
 export const alliancePage = createAnalysisFunction({
-  argsSchema: z.object({ team1: z.number(), team2: z.number(), team3: z.number() }),
+  argsSchema: z.object({
+    team1: z.number(),
+    team2: z.number(),
+    team3: z.number(),
+  }),
   returnSchema: z.object({
     totalPoints: z.number(),
     teams: z.array(
@@ -79,9 +83,15 @@ export const alliancePage = createAnalysisFunction({
           RobotRole.IMMOBILE
       ];
 
-    const teamOneAutoPaths = await autoPathsTeam(ctx.user, { team: args.team1 });
-    const teamTwoAutoPaths = await autoPathsTeam(ctx.user, { team: args.team2 });
-    const teamThreeAutoPaths = await autoPathsTeam(ctx.user, { team: args.team3 });
+    const teamOneAutoPaths = await autoPathsTeam(ctx.user, {
+      team: args.team1,
+    });
+    const teamTwoAutoPaths = await autoPathsTeam(ctx.user, {
+      team: args.team2,
+    });
+    const teamThreeAutoPaths = await autoPathsTeam(ctx.user, {
+      team: args.team3,
+    });
 
     const teamData = await averageManyFast(ctx.user, {
       teams: [args.team1, args.team2, args.team3],

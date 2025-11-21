@@ -39,9 +39,12 @@ export const multipleFlags = createAnalysisHandler({
     for (const flag of query.flags) {
       if (flag === "rank") {
         // Find team rank if a tournament is provided
-          if (query.tournamentKey) {
-            const rankings = await rankFlag(ctx.user, { eventKey: query.tournamentKey, teams: [params.team] });
-            arr.push(rankings[params.team]);
+        if (query.tournamentKey) {
+          const rankings = await rankFlag(ctx.user, {
+            eventKey: query.tournamentKey,
+            teams: [params.team],
+          });
+          arr.push(rankings[params.team]);
         } else {
           arr.push(0);
         }

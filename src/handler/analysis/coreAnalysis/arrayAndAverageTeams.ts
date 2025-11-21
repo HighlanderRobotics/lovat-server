@@ -24,7 +24,10 @@ import { createAnalysisFunction } from "../analysisFunction";
  * Optimized to compare one metric over a few teams.
  */
 export const arrayAndAverageTeams = createAnalysisFunction({
-  argsSchema: z.object({ teams: z.array(z.number()), metric: z.nativeEnum(Metric) }),
+  argsSchema: z.object({
+    teams: z.array(z.number()),
+    metric: z.nativeEnum(Metric),
+  }),
   returnSchema: z.record(
     z.string(),
     z.object({

@@ -27,5 +27,5 @@ export const kv = {
   set,
   get,
   del,
-  flush
+  flush,
 };

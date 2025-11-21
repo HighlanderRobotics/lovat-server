@@ -78,7 +78,9 @@ export async function computeAverageScoutReport(
             (e) => e.action === action && e.position === position,
           ).length;
         } else {
-          result[metric] = report.events.filter((e) => e.action === action).length;
+          result[metric] = report.events.filter(
+            (e) => e.action === action,
+          ).length;
         }
         break;
     }
