@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "dev": "NODE_ENV=development ts-node-dev --respawn src/index.ts",
-    "build": "tsc",
+    "postinstall": "prisma generate",
+    "build": "prisma generate && tsc",
     "start": "node dist/index.js",
     "test": "tsc",
     "lint": "eslint ."
