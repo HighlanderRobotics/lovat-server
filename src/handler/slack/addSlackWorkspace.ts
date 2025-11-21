@@ -42,9 +42,9 @@ export const addSlackWorkspace = async (
 
     const teamRow = await prismaClient.registeredTeam.findUnique({
       where: {
-        code: req.cookies.user_team_code
-      }
-    })
+        code: req.cookies.user_team_code,
+      },
+    });
 
     await prismaClient.slackWorkspace.upsert({
       where: {
@@ -55,7 +55,7 @@ export const addSlackWorkspace = async (
         authToken: data.access_token,
         botUserId: data.bot_user_id,
         authUserId: data.authed_user.id,
-        owner: teamRow.number
+        owner: teamRow.number,
       },
       create: {
         workspaceId: data.team.id,
@@ -63,7 +63,7 @@ export const addSlackWorkspace = async (
         authToken: data.access_token,
         botUserId: data.bot_user_id,
         authUserId: data.authed_user.id,
-        owner: teamRow.number
+        owner: teamRow.number,
       },
     });
 

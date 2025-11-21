@@ -9,9 +9,11 @@ export const getScouters = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const params = z.object({
-      filterArchivedScouters: z.boolean()
-    }).parse(req.params);
+    const params = z
+      .object({
+        filterArchivedScouters: z.boolean(),
+      })
+      .parse(req.params);
 
     if (req.user.teamNumber === null) {
       res.status(403).send("User is not affilated with a team");

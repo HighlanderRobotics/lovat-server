@@ -98,7 +98,7 @@ import { migrateDataSources } from "./lib/migrateDataSources";
 import { archiveScouter } from "./handler/manager/archiveScouter";
 import { unarchiveScouter } from "./handler/manager/unarchiveScouter";
 import { onboardingRedirect } from "./handler/slack/onboardingRedirect";
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -129,7 +129,7 @@ app.use(bodyParser.json());
 
 app.use(cookieParser());
 
-app.get("/v1/slack-invite", onboardingRedirect)
+app.get("/v1/slack-invite", onboardingRedirect);
 
 // add/update slack workspace
 app.get("/v1/slack/add-workspace", requireSlackToken, addSlackWorkspace);
