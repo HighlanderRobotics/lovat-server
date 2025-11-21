@@ -6,5 +6,5 @@
     "moduleResolution": "node",
     "esModuleInterop": true
   },
-  "include": ["src/**/*", "prisma/seed.ts"]
+  "include": ["src/**/*"]
 }
