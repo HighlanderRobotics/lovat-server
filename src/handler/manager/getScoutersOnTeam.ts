@@ -41,7 +41,7 @@ export const getScoutersOnTeam = async (
     const rows = await prismaClient.scouter.findMany({
       where: {
         sourceTeamNumber: teamRow.number,
-        archived: params.data.archived ?? false,
+        archived: params.data.archived,
       },
     });
     res.status(200).send(rows);
