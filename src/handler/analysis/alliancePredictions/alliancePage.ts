@@ -1,46 +1,91 @@
-import { robotRole } from "../coreAnalysis/robotRole";
-import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
-import { User } from "@prisma/client";
+import z from "zod";
+import { createAnalysisFunction } from "../analysisFunction";
 import { FlippedRoleMap, Metric } from "../analysisConstants";
-import { averageManyFast } from "../coreAnalysis/averageManyFast";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
+import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
+import { robotRole } from "../coreAnalysis/robotRole";
+import { averageManyFast } from "../coreAnalysis/averageManyFast";
+import { RobotRole } from "@prisma/client";
 
-export const alliancePage = async (
-  user: User,
-  team1: number,
-  team2: number,
-  team3: number,
-): Promise<{
-  totalPoints: number;
-  teams: object[];
-  coralL1: number;
-  coralL2: number;
-  coralL3: number;
-  coralL4: number;
-  processor: number;
-  net: number;
-}> => {
-  try {
-    const teamPoints = await arrayAndAverageTeams(
-      [team1, team2, team3],
-      Metric.totalPoints,
-      user,
-    );
+export const alliancePage = createAnalysisFunction({
+  argsSchema: z.object({ team1: z.number(), team2: z.number(), team3: z.number() }),
+  returnSchema: z.object({
+    totalPoints: z.number(),
+    teams: z.array(
+      z.object({
+        team: z.number(),
+        role: z.number(),
+        averagePoints: z.number(),
+        paths: z.array(
+          z.object({
+            positions: z.array(
+              z.object({
+                location: z.number(),
+                event: z.number(),
+                time: z.number().optional(),
+              }),
+            ),
+            matches: z.array(
+              z.object({ matchKey: z.string(), tournamentName: z.string() }),
+            ),
+            score: z.array(z.number()),
+            frequency: z.number(),
+            maxScore: z.number(),
+          }),
+        ),
+      }),
+    ),
+    coralL1: z.number(),
+    coralL2: z.number(),
+    coralL3: z.number(),
+    coralL4: z.number(),
+    processor: z.number(),
+    net: z.number(),
+  }),
+  usesDataSource: true,
+  shouldCache: true,
+
+  createKey: (args) => {
+    return {
+      key: [
+        "alliancePage",
+        args.team1.toString(),
+        args.team2.toString(),
+        args.team3.toString(),
+      ],
+      teamDependencies: [args.team1, args.team2, args.team3],
+    };
+  },
+
+  calculateAnalysis: async (args, ctx) => {
+    const teamPoints = await arrayAndAverageTeams(ctx.user, {
+      teams: [args.team1, args.team2, args.team3],
+      metric: Metric.totalPoints,
+    });
 
     const teamOneMainRole =
-      FlippedRoleMap[(await robotRole(user, team1)).mainRole];
+      FlippedRoleMap[
+        (await robotRole(ctx.user, { team: args.team1 })).mainRole ??
+          RobotRole.IMMOBILE
+      ];
     const teamTwoMainRole =
-      FlippedRoleMap[(await robotRole(user, team2)).mainRole];
+      FlippedRoleMap[
+        (await robotRole(ctx.user, { team: args.team2 })).mainRole ??
+          RobotRole.IMMOBILE
+      ];
     const teamThreeMainRole =
-      FlippedRoleMap[(await robotRole(user, team3)).mainRole];
+      FlippedRoleMap[
+        (await robotRole(ctx.user, { team: args.team3 })).mainRole ??
+          RobotRole.IMMOBILE
+      ];
 
-    const teamOneAutoPaths = await autoPathsTeam(user, team1);
-    const teamTwoAutoPaths = await autoPathsTeam(user, team2);
-    const teamThreeAutoPaths = await autoPathsTeam(user, team3);
+    const teamOneAutoPaths = await autoPathsTeam(ctx.user, { team: args.team1 });
+    const teamTwoAutoPaths = await autoPathsTeam(ctx.user, { team: args.team2 });
+    const teamThreeAutoPaths = await autoPathsTeam(ctx.user, { team: args.team3 });
 
-    const teamData = await averageManyFast(
-      [team1, team2, team3],
-      [
+    const teamData = await averageManyFast(ctx.user, {
+      teams: [args.team1, args.team2, args.team3],
+      metrics: [
         Metric.coralL1,
         Metric.coralL2,
         Metric.coralL3,
@@ -48,62 +93,57 @@ export const alliancePage = async (
         Metric.processorScores,
         Metric.netScores,
       ],
-      user,
-    );
+    });
 
-    //constants: total points, teams {team, role, autoPaths, averagePoints}
     return {
       totalPoints:
-        teamPoints[team1].average +
-        teamPoints[team2].average +
-        teamPoints[team3].average,
+        teamPoints[args.team1].average +
+        teamPoints[args.team2].average +
+        teamPoints[args.team3].average,
       teams: [
         {
-          team: team1,
+          team: args.team1,
           role: teamOneMainRole,
-          averagePoints: teamPoints[team1].average,
+          averagePoints: teamPoints[args.team1].average,
           paths: teamOneAutoPaths,
         },
         {
-          team: team2,
+          team: args.team2,
           role: teamTwoMainRole,
-          averagePoints: teamPoints[team2].average,
+          averagePoints: teamPoints[args.team2].average,
           paths: teamTwoAutoPaths,
         },
         {
-          team: team3,
+          team: args.team3,
           role: teamThreeMainRole,
-          averagePoints: teamPoints[team3].average,
+          averagePoints: teamPoints[args.team3].average,
           paths: teamThreeAutoPaths,
         },
       ],
       coralL1:
-        teamData[Metric.coralL1][team1] +
-        teamData[Metric.coralL1][team2] +
-        teamData[Metric.coralL1][team3],
+        teamData[Metric.coralL1][args.team1] +
+        teamData[Metric.coralL1][args.team2] +
+        teamData[Metric.coralL1][args.team3],
       coralL2:
-        teamData[Metric.coralL2][team1] +
-        teamData[Metric.coralL2][team2] +
-        teamData[Metric.coralL2][team3],
+        teamData[Metric.coralL2][args.team1] +
+        teamData[Metric.coralL2][args.team2] +
+        teamData[Metric.coralL2][args.team3],
       coralL3:
-        teamData[Metric.coralL3][team1] +
-        teamData[Metric.coralL3][team2] +
-        teamData[Metric.coralL3][team3],
+        teamData[Metric.coralL3][args.team1] +
+        teamData[Metric.coralL3][args.team2] +
+        teamData[Metric.coralL3][args.team3],
       coralL4:
-        teamData[Metric.coralL4][team1] +
-        teamData[Metric.coralL4][team2] +
-        teamData[Metric.coralL4][team3],
+        teamData[Metric.coralL4][args.team1] +
+        teamData[Metric.coralL4][args.team2] +
+        teamData[Metric.coralL4][args.team3],
       processor:
-        teamData[Metric.processorScores][team1] +
-        teamData[Metric.processorScores][team2] +
-        teamData[Metric.processorScores][team3],
+        teamData[Metric.processorScores][args.team1] +
+        teamData[Metric.processorScores][args.team2] +
+        teamData[Metric.processorScores][args.team3],
       net:
-        teamData[Metric.netScores][team1] +
-        teamData[Metric.netScores][team2] +
-        teamData[Metric.netScores][team3],
+        teamData[Metric.netScores][args.team1] +
+        teamData[Metric.netScores][args.team2] +
+        teamData[Metric.netScores][args.team3],
     };
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
+  },
+});

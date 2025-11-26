@@ -286,15 +286,14 @@ async function matchFormat(
       },
     });
     try {
-      const matchPredictions = await matchPredictionLogic(
-        user,
-        redTeams[0],
-        redTeams[1],
-        redTeams[2],
-        blueTeams[0],
-        blueTeams[1],
-        blueTeams[2],
-      );
+      const matchPredictions = await matchPredictionLogic(user!, {
+        red1: redTeams[0],
+        red2: redTeams[1],
+        red3: redTeams[2],
+        blue1: blueTeams[0],
+        blue2: blueTeams[1],
+        blue3: blueTeams[2],
+      });
       return {
         key: key,
         alliances: {

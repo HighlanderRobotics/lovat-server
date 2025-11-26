@@ -35,7 +35,7 @@ export const updateNotes = async (
       include: {
         teamMatchData: true,
       },
-    });    
+    });
     if (!row) {
       res.status(403).send("Not authorized to update this picklist");
       return;

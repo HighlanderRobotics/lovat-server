@@ -47,28 +47,25 @@ export const matchPrediction = createAnalysisHandler({
   },
   calculateAnalysis: async ({ query }, ctx) => {
     try {
-      const matchPreictionData = await matchPredictionLogic(
-        ctx.user,
-        query.red1,
-        query.red2,
-        query.red3,
-        query.blue1,
-        query.blue2,
-        query.blue3,
-      );
+      const matchPreictionData = await matchPredictionLogic(ctx.user, {
+        red1: query.red1,
+        red2: query.red2,
+        red3: query.red3,
+        blue1: query.blue1,
+        blue2: query.blue2,
+        blue3: query.blue3,
+      });
 
-      const redAlliance = await alliancePage(
-        ctx.user,
-        query.red1,
-        query.red2,
-        query.red3,
-      );
-      const blueAlliance = await alliancePage(
-        ctx.user,
-        query.blue1,
-        query.blue2,
-        query.blue3,
-      );
+      const redAlliance = await alliancePage(ctx.user, {
+        team1: query.red1,
+        team2: query.red2,
+        team3: query.red3,
+      });
+      const blueAlliance = await alliancePage(ctx.user, {
+        team1: query.blue1,
+        team2: query.blue2,
+        team3: query.blue3,
+      });
 
       return {
         red1: query.red1,

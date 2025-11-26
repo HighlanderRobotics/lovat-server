@@ -5,123 +5,83 @@ import { kv } from "../../redisClient";
 import { AnalysisContext } from "./analysisConstants";
 import { User } from "@prisma/client";
 
-export type AnalysisFunctionParamsSchema<T extends z.ZodObject> = {
-  args: T[];
-};
-export type AnalysisFunctionParams<T extends z.ZodObject> = {
-  args: z.infer<T>[];
+export type CreateKeyResult = {
+  key: string[];
+  teamDependencies?: number[];
+  tournamentDependencies?: string[];
 };
 
-export type AnalysisFunctionArgs<T extends z.ZodObject> = {
-  params: AnalysisFunctionParamsSchema<T>;
-  createKey: (params: AnalysisFunctionParams<T>) => {
-    key: string[];
-    teamDependencies?: number[];
-    tournamentDependencies?: string[];
-  };
+
+
+export type AnalysisFunctionConfig<
+  T extends z.ZodObject,
+  R extends z.ZodType,
+> = {
+  argsSchema: T;
+  returnSchema?: R;
+  createKey: (params: z.infer<T>) => CreateKeyResult;
   calculateAnalysis: (
-    params: AnalysisFunctionParams<T>,
+    params: z.infer<T>,
     ctx: AnalysisContext,
-  ) => Promise<any>;
+  ) => Promise<z.infer<R>>;
   usesDataSource: boolean;
   shouldCache: boolean;
 };
-
 export const createAnalysisFunction =
-  <T extends z.ZodObject>(args: AnalysisFunctionArgs<T>) =>
-  async (user: User, ...passedArgs: any[]) => {
-    try {
-      const params = {
-        args: passedArgs,
-      };
+  <T extends z.ZodObject, R extends z.ZodType>(
+    config: AnalysisFunctionConfig<T, R>,
+  ) =>
+  async (user: User, passedArgs: z.infer<T>): Promise<z.infer<R>> => {
 
-      const context: AnalysisContext = {
-        user: user,
-        dataSource: {
-          teams: dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
-          tournaments: dataSourceRuleSchema(z.string()).parse(
-            user.tournamentSourceRule,
-          ),
-        },
-      };
 
-      if (!args.shouldCache) {
-        try {
-          const calculatedAnalysis = await args.calculateAnalysis(
-            params,
-            context,
-          );
+    const context: AnalysisContext = {
+      user,
+      dataSource: {
+        teams: dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
+        tournaments: dataSourceRuleSchema(z.string()).parse(
+          user.tournamentSourceRule,
+        ),
+      },
+    };
 
-          return calculatedAnalysis.error ?? calculatedAnalysis;
-        } catch (error) {
-          return "error";
-        }
-      }
-      // Make the key - including data source if necessary
-      const {
-        key: keyFragments,
-        teamDependencies: teamDeps,
-        tournamentDependencies: tournamentDeps,
-      } = args.createKey(params);
-
-      const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
-        context.dataSource.teams,
-      );
-      const tournamentSourceRule = dataSourceRuleSchema(z.string()).parse(
-        context.dataSource.tournaments,
-      );
-
-      if (args.usesDataSource) {
-        keyFragments.push(`{${teamSourceRule.mode}:[${teamSourceRule.items}]}`);
-        keyFragments.push(
-          `{${tournamentSourceRule.mode}:[${tournamentSourceRule.items}]}`,
-        );
-      }
-
-      const key = ["analysis", "function", ...keyFragments].join(":");
-
-      // Check to see if there's already an output in the cache
-      const cacheRow = await kv.get(key);
-
-      // If not, calculate, respond, then store in cache
-
-      if (cacheRow === null) {
-        try {
-          const calculatedAnalysis = await args.calculateAnalysis(
-            params,
-            context,
-          );
-
-          try {
-            await kv.set(key, JSON.stringify(calculatedAnalysis));
-
-            await prismaClient.cachedAnalysis.create({
-              data: {
-                key: key,
-                teamDependencies: teamDeps ?? [],
-                tournamentDependencies: tournamentDeps ?? [],
-              },
-            });
-
-            return calculatedAnalysis.error ?? calculatedAnalysis;
-          } catch (error) {
-            console.error(error);
-            return 400;
-          }
-        } catch (error) {
-          console.error(error);
-          return 400;
-        }
-      } else {
-        return JSON.parse(cacheRow.toString());
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error(error);
-        return 400;
-      } else {
-        console.error(error);
-        return 500;
-      }
+    if (!config.shouldCache) {
+      return await config.calculateAnalysis(passedArgs, context);
     }
+
+    const {
+      key: keyFragments,
+      teamDependencies,
+      tournamentDependencies,
+    } = config.createKey(passedArgs);
+
+    if (config.usesDataSource) {
+      const teamSource = context.dataSource.teams;
+      const tournamentSource = context.dataSource.tournaments;
+      keyFragments.push(`{${teamSource.mode}:[${teamSource.items}]}`);
+      keyFragments.push(
+        `{${tournamentSource.mode}:[${tournamentSource.items}]}`,
+      );
+    }
+
+    const key = ["analysis", "function", ...keyFragments].join(":");
+    const cacheRow = await kv.get(key);
+
+    if (!cacheRow) {
+      const result = await config.calculateAnalysis(passedArgs, context);
+
+      await kv.set(key, JSON.stringify(result));
+      await prismaClient.cachedAnalysis.create({
+        data: {
+          key,
+          teamDependencies: teamDependencies ?? [],
+          tournamentDependencies: tournamentDependencies ?? [],
+        },
+      });
+      return result;
+    }
+
+    const parsed = JSON.parse(cacheRow.toString());
+    return config.returnSchema
+      ? config.returnSchema.parse(parsed)
+      : (parsed as z.infer<R>);
   };

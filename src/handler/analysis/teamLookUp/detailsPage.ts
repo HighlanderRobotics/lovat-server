@@ -23,7 +23,7 @@ export const detailsPage = createAnalysisHandler({
   },
   calculateAnalysis: async ({ params }, ctx) => {
     if (metricsToNumber[params.metric] === Metric.autoPoints) {
-      const autoPaths = await autoPathsTeam(ctx.user, params.team);
+      const autoPaths = await autoPathsTeam(ctx.user, { team: params.team });
       return { paths: autoPaths };
     }
     // else if (params.metric === Metric.scores) {
@@ -43,16 +43,14 @@ export const detailsPage = createAnalysisHandler({
     // }
     else {
       const teamAverageAndTimeLine = (
-        await arrayAndAverageTeams(
-          [params.team],
-          metricsToNumber[params.metric],
-          ctx.user,
-        )
+        await arrayAndAverageTeams(ctx.user, {
+          teams: [params.team],
+          metric: metricsToNumber[params.metric] as Metric,
+        })
       )[params.team];
-      const allTeamAverage = await averageAllTeamFast(
-        metricsToNumber[params.metric],
-        ctx.user,
-      );
+      const allTeamAverage = (await averageAllTeamFast(ctx.user, {
+        metric: metricsToNumber[params.metric] as Metric,
+      })) as number;
       const result = {
         array: teamAverageAndTimeLine.timeLine,
         result: teamAverageAndTimeLine.average,

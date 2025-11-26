@@ -4,27 +4,33 @@ import {
   FlippedPositionMap,
   autoEnd,
 } from "../analysisConstants";
-import { User } from "@prisma/client";
+import z from "zod";
+import { createAnalysisFunction } from "../analysisFunction";
 
-export const autoPathScouter = async (
-  user: User,
-  matchKey: string,
-  scoutReportUuid: string,
-): Promise<{
-  autoPoints: number;
-  positions: {
-    location: number;
-    event: number;
-    time: number;
-  }[];
-  match: string;
-  tournamentName: string;
-}> => {
-  try {
+export const autoPathScouter = createAnalysisFunction({
+  argsSchema: z.object({ matchKey: z.string(), scoutReportUuid: z.string() }),
+  returnSchema: z.object({
+    autoPoints: z.number(),
+    positions: z.array(
+      z.object({
+        location: z.number(),
+        event: z.number(),
+        time: z.number(),
+      }),
+    ),
+    match: z.string(),
+    tournamentName: z.string(),
+  }),
+  usesDataSource: false,
+  shouldCache: true,
+  createKey: (args) => ({
+    key: ["autoPathScouter", args.matchKey, args.scoutReportUuid],
+  }),
+  calculateAnalysis: async (args) => {
     const autoData = await prismaClient.event.findMany({
       where: {
         scoutReport: {
-          uuid: scoutReportUuid,
+          uuid: args.scoutReportUuid,
         },
         time: {
           lte: autoEnd,
@@ -33,7 +39,7 @@ export const autoPathScouter = async (
     });
     const scoutReport = await prismaClient.scoutReport.findUnique({
       where: {
-        uuid: scoutReportUuid,
+        uuid: args.scoutReportUuid,
       },
     });
     const match = await prismaClient.teamMatchData.findUnique({
@@ -44,7 +50,7 @@ export const autoPathScouter = async (
         tournament: true,
       },
     });
-    //GET SCOUT REPORT COLUMNN IF NESSISARY
+
     const totalScore = autoData.reduce((sum, event) => sum + event.points, 0);
     const positions = autoData.map((event) => ({
       location: FlippedPositionMap[event.position],
@@ -55,11 +61,8 @@ export const autoPathScouter = async (
     return {
       autoPoints: totalScore,
       positions: positions,
-      match: matchKey,
+      match: args.matchKey,
       tournamentName: match.tournament.name,
     };
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
+  },
+});

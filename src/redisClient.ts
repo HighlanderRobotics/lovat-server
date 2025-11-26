@@ -19,8 +19,13 @@ const del = async (key: string): ReturnType<Awaited<typeof redis>["del"]> => {
   return await (await redis).del(key);
 };
 
+const flush = async (): ReturnType<Awaited<typeof redis>["flushDb"]> => {
+  return await (await redis).flushDb();
+};
+
 export const kv = {
   set,
   get,
   del,
+  flush
 };

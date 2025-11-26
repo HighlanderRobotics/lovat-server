@@ -21,11 +21,10 @@ export const breakdownMetrics = createAnalysisHandler({
   calculateAnalysis: async ({ params }, ctx) => {
     const result = {};
     for (const [key, metric] of Object.entries(lowercaseToBreakdown)) {
-      const data = await nonEventMetric(
-        ctx.user,
-        params.team,
-        MetricsBreakdown[metric as keyof typeof MetricsBreakdown],
-      );
+      const data = await nonEventMetric(ctx.user, {
+        team: params.team,
+        metric: MetricsBreakdown[metric as keyof typeof MetricsBreakdown],
+      });
 
       const valid = Object.values(data).some((val) => Boolean(val));
 
