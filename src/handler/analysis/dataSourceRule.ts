@@ -13,7 +13,7 @@ export type DataSourceRule<T extends number | string> = {
   items: T[];
 };
 
-export const dataSourceRuleToPrismaQuery = <T extends number | string>(
+export const dataSourceRuleToPrismaFilter = <T extends number | string>(
   rule: DataSourceRule<T>,
 ) => {
   return rule.mode === "EXCLUDE" ? { notIn: rule.items } : { in: rule.items };

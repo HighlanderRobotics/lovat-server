@@ -9,7 +9,7 @@ import {
 import { Position, Prisma } from "@prisma/client";
 import z from "zod";
 import {
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule";
 import { createAnalysisFunction } from "../analysisFunction";
@@ -33,10 +33,10 @@ export const averageAllTeamFast = createAnalysisFunction({
       return defaultEndgamePoints;
     }
 
-    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+    const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
-    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+    const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
       dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 

@@ -14,7 +14,7 @@ import { Event } from "@prisma/client";
 import { weightedTourAvgLeft } from "./arrayAndAverageTeams";
 import z from "zod";
 import {
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule";
 import { createAnalysisFunction } from "../analysisFunction";
@@ -42,10 +42,10 @@ export const averageManyFast = createAnalysisFunction({
   },
   calculateAnalysis: async (args, ctx) => {
 
-    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+    const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
-    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+    const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
       dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 

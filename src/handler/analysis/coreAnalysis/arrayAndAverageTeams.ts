@@ -11,7 +11,7 @@ import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast";
 import { Event, Position, Prisma, ScoutReport } from "@prisma/client";
 import {
   dataSourceRuleSchema,
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
 } from "../dataSourceRule";
 import z from "zod";
 import { createAnalysisFunction } from "../analysisFunction";
@@ -57,10 +57,10 @@ export const arrayAndAverageTeams = createAnalysisFunction({
   calculateAnalysis: async (args, ctx) => {
     const { teams, metric } = args;
     try {
-      const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+      const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
         dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
       );
-      const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+      const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
         dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
       );
 

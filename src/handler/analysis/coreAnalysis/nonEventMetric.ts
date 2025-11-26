@@ -9,7 +9,7 @@ import {
 
 import z from "zod";
 import {
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule";
 import { createAnalysisFunction } from "../analysisFunction";
@@ -40,8 +40,8 @@ export const nonEventMetric = createAnalysisFunction({
         ctx.user.teamSourceRule,
       );
 
-      const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(tnmRule);
-      const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(teamRule);
+      const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(tnmRule);
+      const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(teamRule);
 
       const tournamentList = tnmRule.items;
       const teamList = teamRule.items;

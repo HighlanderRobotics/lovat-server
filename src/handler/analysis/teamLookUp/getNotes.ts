@@ -2,7 +2,7 @@ import prismaClient from "../../../prismaClient";
 import z from "zod";
 import {
   dataSourceRuleSchema,
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
 } from "../dataSourceRule";
 import { createAnalysisHandler } from "../analysisHandler";
 
@@ -31,10 +31,10 @@ export const getNotes = createAnalysisHandler({
     }[];
 
     // Set up filters to decrease server load
-    const sourceTnmtFilter = dataSourceRuleToPrismaQuery(
+    const sourceTnmtFilter = dataSourceRuleToPrismaFilter(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
-    const sourceTeamFilter = dataSourceRuleToPrismaQuery(
+    const sourceTeamFilter = dataSourceRuleToPrismaFilter(
       dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 

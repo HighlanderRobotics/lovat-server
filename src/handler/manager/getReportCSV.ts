@@ -19,7 +19,7 @@ import {
 import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
 import {
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../analysis/dataSourceRule";
 
@@ -129,7 +129,7 @@ export const getReportCSV = async (
           tournamentKey: params.data.tournamentKey,
         },
         scouter: {
-          sourceTeamNumber: dataSourceRuleToPrismaQuery(
+          sourceTeamNumber: dataSourceRuleToPrismaFilter(
             dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
           ),
         },

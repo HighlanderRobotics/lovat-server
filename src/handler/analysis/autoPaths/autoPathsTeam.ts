@@ -8,7 +8,7 @@ import {
 } from "../analysisConstants";
 import {
   dataSourceRuleSchema,
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
 } from "../dataSourceRule";
 
 interface AutoPosition {
@@ -56,10 +56,10 @@ export const autoPathsTeam = createAnalysisFunction({
   calculateAnalysis: async (args, ctx) => {
     const teamNumber = args.team;
 
-    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+    const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
-    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+    const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
       dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 

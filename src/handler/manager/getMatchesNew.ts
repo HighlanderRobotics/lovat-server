@@ -8,7 +8,7 @@ import { MatchType, Prisma } from "@prisma/client";
 import { swrConstant, ttlConstant } from "../analysis/analysisConstants";
 import {
   dataSourceRuleSchema,
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
 } from "../analysis/dataSourceRule";
 
 /**
@@ -129,7 +129,7 @@ export const getMatches = async (
             scoutReports: {
               where: {
                 scouter: {
-                  sourceTeamNumber: dataSourceRuleToPrismaQuery(teamSourceRule),
+                  sourceTeamNumber: dataSourceRuleToPrismaFilter(teamSourceRule),
                 },
               },
             },
