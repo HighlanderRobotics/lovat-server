@@ -82,11 +82,14 @@ export const getMatches = async (
     );
 
     if (user.teamNumber) {
+      // make sure the user's teamSourceRule has their own team included
       if (teamSourceRule.mode === "EXCLUDE") {
+        // if their source rule is exclude, make sure the user's team number isn't in items
         teamSourceRule.items = teamSourceRule.items.filter(
           (item) => item !== user.teamNumber,
         );
       } else if (
+        // if their mode is include, make sure the user's team number is on their list of items
         teamSourceRule.mode === "INCLUDE" &&
         !teamSourceRule.items.includes(user.teamNumber)
       ) {

@@ -1,7 +1,6 @@
 import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { SHA256 } from "crypto-js";
 
 export const getScouters = async (
   req: AuthenticatedRequest,
@@ -14,8 +13,7 @@ export const getScouters = async (
     }
     const rows = await prismaClient.scouter.findMany({
       where: {
-        sourceTeamNumber: req.user.teamNumber,
-        archived: false,
+        sourceTeamNumber: req.user.teamNumber
       },
       select: {
         uuid: true,
@@ -29,10 +27,3 @@ export const getScouters = async (
     res.status(500).send(error);
   }
 };
-function hashJsonObject(json: object): string {
-  const jsonString = JSON.stringify(json);
-
-  const hash = SHA256(jsonString);
-
-  return hash.toString();
-}
