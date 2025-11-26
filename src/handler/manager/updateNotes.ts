@@ -2,7 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { kv } from "../../redisClient";
+import { invalidateCache } from "../../lib/clearCache";
 
 export const updateNotes = async (
   req: AuthenticatedRequest,
@@ -40,27 +40,7 @@ export const updateNotes = async (
       res.status(403).send("Not authorized to update this picklist");
       return;
     }
-    const analysisRows = await prismaClient.cachedAnalysis.findMany({
-      where: {
-        teamDependencies: {
-          has: row.teamMatchData.teamNumber,
-        },
-        tournamentDependencies: {
-          has: row.teamMatchData.tournamentKey,
-        },
-      },
-      select: { key: true },
-    });
-
-    if (analysisRows.length > 0) {
-      const keysToDelete = analysisRows.map((row) => row.key);
-
-      await Promise.allSettled(keysToDelete.map((key) => kv.del(key)));
-
-      await prismaClient.cachedAnalysis.deleteMany({
-        where: { key: { in: keysToDelete } },
-      });
-    }
+    invalidateCache(row.teamMatchData.teamNumber, row.teamMatchData.tournamentKey);
 
     res.status(200).send("Note updated");
   } catch (error) {

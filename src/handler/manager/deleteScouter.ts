@@ -2,7 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { kv } from "../../redisClient";
+import { invalidateCache } from "../../lib/clearCache";
 
 export const deleteScouter = async (
   req: AuthenticatedRequest,
@@ -110,27 +110,7 @@ export const deleteScouter = async (
       (report) => report.teamMatchData.tournamentKey,
     );
 
-    const analysisRows = await prismaClient.cachedAnalysis.findMany({
-      where: {
-        teamDependencies: {
-          hasSome: teamsScouted,
-        },
-        tournamentDependencies: {
-          hasSome: tournamentsScouted,
-        },
-      },
-      select: { key: true },
-    });
-
-    if (analysisRows.length > 0) {
-      const keysToDelete = analysisRows.map((row) => row.key);
-
-      await Promise.allSettled(keysToDelete.map((key) => kv.del(key)));
-
-      await prismaClient.cachedAnalysis.deleteMany({
-        where: { key: { in: keysToDelete } },
-      });
-    }
+    invalidateCache(teamsScouted, tournamentsScouted)
 
     res.status(200).send("Scouter deleted");
   } catch (error) {
