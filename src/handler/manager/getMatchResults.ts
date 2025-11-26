@@ -87,7 +87,10 @@ async function getAllianceResults(
     );
 
     for (const report of matchData[i].scoutReports) {
-      const result = await computeAverageScoutReport(report.uuid, ALLIANCE_METRICS);
+      const result = await computeAverageScoutReport(
+        report.uuid,
+        ALLIANCE_METRICS,
+      );
       for (const stat of ALLIANCE_METRICS) {
         teamTotals[stat] += result[stat];
       }
@@ -123,7 +126,9 @@ async function getTeamResults(
   let total = 0;
 
   for (const report of matchData.scoutReports) {
-    const result = await computeAverageScoutReport(report.uuid, [Metric.totalPoints]);
+    const result = await computeAverageScoutReport(report.uuid, [
+      Metric.totalPoints,
+    ]);
     total += result[Metric.totalPoints];
   }
 

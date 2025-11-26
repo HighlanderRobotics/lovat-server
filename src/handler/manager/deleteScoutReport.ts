@@ -56,8 +56,11 @@ export const deleteScoutReport = async (
       });
 
       // Collect all affected cached analyses
-      invalidateCache(reportRow.teamMatchData.teamNumber,reportRow.teamMatchData.tournamentKey)
-      
+      invalidateCache(
+        reportRow.teamMatchData.teamNumber,
+        reportRow.teamMatchData.tournamentKey,
+      );
+
       res.status(200).send("Data deleted successfully");
     } else {
       res.status(403).send("Unauthorized to delete this picklist");

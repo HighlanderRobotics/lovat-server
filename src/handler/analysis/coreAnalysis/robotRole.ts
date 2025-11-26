@@ -5,7 +5,7 @@ import { createAnalysisFunction } from "../analysisFunction";
 
 // Finds main robot role for a team
 export const robotRole = createAnalysisFunction({
-  argsSchema: z.object({team: z.number()}),
+  argsSchema: z.object({ team: z.number() }),
   returnSchema: z.object({ mainRole: z.string().nullable() }),
   usesDataSource: true,
   shouldCache: true,

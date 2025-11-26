@@ -160,7 +160,10 @@ export const addScoutReport = async (
     });
 
     // Collect all affected cached analyses
-    invalidateCache(paramsScoutReport.data.teamNumber,paramsScoutReport.data.tournamentKey);
+    invalidateCache(
+      paramsScoutReport.data.teamNumber,
+      paramsScoutReport.data.tournamentKey,
+    );
 
     const scoutReportUuid = paramsScoutReport.data.uuid;
 

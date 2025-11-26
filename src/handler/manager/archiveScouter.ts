@@ -16,9 +16,11 @@ export const archiveScouter = async (
       .parse(req.params);
 
     if (req.user.role !== UserRole.SCOUTING_LEAD) {
-          res.status(403).send("You need to be a scouting lead to archive scouters")
-          return;
-        }
+      res
+        .status(403)
+        .send("You need to be a scouting lead to archive scouters");
+      return;
+    }
 
     await prismaClient.scouter.update({
       where: {

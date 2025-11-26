@@ -75,14 +75,9 @@ export const createAnalysisHandler: <
         try {
           let calculatedAnalysis = null;
           if (args.usesDataSource) {
-            calculatedAnalysis = await args.calculateAnalysis(
-              params,
-              context
-            );
+            calculatedAnalysis = await args.calculateAnalysis(params, context);
           } else {
-            calculatedAnalysis = await args.calculateAnalysis(
-              params
-            );
+            calculatedAnalysis = await args.calculateAnalysis(params);
           }
 
           res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);

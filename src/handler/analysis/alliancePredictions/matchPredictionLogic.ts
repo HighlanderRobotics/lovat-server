@@ -136,7 +136,9 @@ function getZPercent(z: number) {
   const loopStop = Math.exp(-23);
   while (Math.abs(term) > loopStop) {
     term =
-      (((0.3989422804 * Math.pow(-1, k) * Math.pow(z, k)) / (2 * k + 1) / Math.pow(2, k)) *
+      (((0.3989422804 * Math.pow(-1, k) * Math.pow(z, k)) /
+        (2 * k + 1) /
+        Math.pow(2, k)) *
         Math.pow(z, k + 1)) /
       factK;
     sum += term;

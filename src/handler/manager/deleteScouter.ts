@@ -110,7 +110,7 @@ export const deleteScouter = async (
       (report) => report.teamMatchData.tournamentKey,
     );
 
-    invalidateCache(teamsScouted, tournamentsScouted)
+    invalidateCache(teamsScouted, tournamentsScouted);
 
     res.status(200).send("Scouter deleted");
   } catch (error) {

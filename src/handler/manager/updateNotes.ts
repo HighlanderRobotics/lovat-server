@@ -40,7 +40,10 @@ export const updateNotes = async (
       res.status(403).send("Not authorized to update this picklist");
       return;
     }
-    invalidateCache(row.teamMatchData.teamNumber, row.teamMatchData.tournamentKey);
+    invalidateCache(
+      row.teamMatchData.teamNumber,
+      row.teamMatchData.tournamentKey,
+    );
 
     res.status(200).send("Note updated");
   } catch (error) {

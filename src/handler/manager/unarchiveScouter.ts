@@ -16,7 +16,9 @@ export const unarchiveScouter = async (
       .parse(req.params);
 
     if (req.user.role !== UserRole.SCOUTING_LEAD) {
-      res.status(403).send("You need to be a scouting lead to unarchive scouters");
+      res
+        .status(403)
+        .send("You need to be a scouting lead to unarchive scouters");
       return;
     }
 

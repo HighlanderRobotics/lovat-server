@@ -156,7 +156,10 @@ export const addScoutReportDashboard = async (
       },
     });
 
-    invalidateCache(paramsScoutReport.data.teamNumber, paramsScoutReport.data.tournamentKey)
+    invalidateCache(
+      paramsScoutReport.data.teamNumber,
+      paramsScoutReport.data.tournamentKey,
+    );
 
     const scoutReportUuid = row.uuid;
     const eventDataArray = [];

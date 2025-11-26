@@ -25,7 +25,10 @@ export interface ArrayFilter<T> {
 }
 
 export const averageManyFast = createAnalysisFunction({
-  argsSchema: z.object({teams: z.array(z.number()), metrics: z.array(z.nativeEnum(Metric))}),
+  argsSchema: z.object({
+    teams: z.array(z.number()),
+    metrics: z.array(z.nativeEnum(Metric)),
+  }),
   returnSchema: z.record(z.string(), z.record(z.string(), z.number())),
   usesDataSource: true,
   shouldCache: true,
@@ -41,7 +44,6 @@ export const averageManyFast = createAnalysisFunction({
     };
   },
   calculateAnalysis: async (args, ctx) => {
-
     const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );

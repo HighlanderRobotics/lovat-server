@@ -13,7 +13,7 @@ export const getScouters = async (
     }
     const rows = await prismaClient.scouter.findMany({
       where: {
-        sourceTeamNumber: req.user.teamNumber
+        sourceTeamNumber: req.user.teamNumber,
       },
       select: {
         uuid: true,

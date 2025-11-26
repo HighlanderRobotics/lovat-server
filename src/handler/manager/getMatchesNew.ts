@@ -132,7 +132,8 @@ export const getMatches = async (
             scoutReports: {
               where: {
                 scouter: {
-                  sourceTeamNumber: dataSourceRuleToPrismaFilter(teamSourceRule),
+                  sourceTeamNumber:
+                    dataSourceRuleToPrismaFilter(teamSourceRule),
                 },
               },
             },
