@@ -366,8 +366,8 @@ app.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
 // app.get("/v1/manager/get-api-keys", requireAuth, getApiKeys);
 // app.get("/v1/manager/rename-api-key", requireAuth, renameApiKey);
 
-scheduleJobs();
+await scheduleJobs();
 
-migrateDataSources();
+await migrateDataSources();
 
 app.listen(port);
