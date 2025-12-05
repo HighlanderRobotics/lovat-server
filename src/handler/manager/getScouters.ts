@@ -1,19 +1,30 @@
 import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import z from "zod";
 
 export const getScouters = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
+    const params = z
+      .object({
+        archived: z
+          .string()
+          .transform((val) => val === "true")
+          .optional(),
+      })
+      .parse(req.query);
+
     if (req.user.teamNumber === null) {
       res.status(403).send("User is not affilated with a team");
       return;
     }
     const rows = await prismaClient.scouter.findMany({
       where: {
-        sourceTeamNumber: req.user.teamNumber
+        sourceTeamNumber: req.user.teamNumber,
+        archived: params.archived,
       },
       select: {
         uuid: true,
