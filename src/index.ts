@@ -99,6 +99,7 @@ import { archiveScouter } from "./handler/manager/archiveScouter";
 import { unarchiveScouter } from "./handler/manager/unarchiveScouter";
 import { onboardingRedirect } from "./handler/slack/onboardingRedirect";
 import cookieParser from "cookie-parser";
+import { clearCache } from "./lib/clearCache";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -375,5 +376,7 @@ app.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
 await scheduleJobs();
 
 await migrateDataSources();
+
+await clearCache();
 
 app.listen(port);
