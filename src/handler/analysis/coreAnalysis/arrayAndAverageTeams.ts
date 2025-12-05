@@ -6,15 +6,15 @@ import {
   metricToEvent,
   swrConstant,
   ttlConstant,
-} from "../analysisConstants";
-import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast";
+} from "../analysisConstants.js";
+import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast.js";
 import { Event, Position, Prisma, ScoutReport } from "@prisma/client";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
-} from "../dataSourceRule";
+} from "../dataSourceRule.js";
 import z from "zod";
-import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 
 // Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
 // Provides a timeline of metric value per match.

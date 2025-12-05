@@ -1,10 +1,10 @@
-import prismaClient from "../../../prismaClient";
+import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
-} from "../dataSourceRule";
-import { createAnalysisHandler } from "../analysisHandler";
+} from "../dataSourceRule.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const getNotes = createAnalysisHandler({
   params: {

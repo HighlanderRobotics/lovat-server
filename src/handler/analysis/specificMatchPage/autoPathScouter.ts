@@ -1,11 +1,11 @@
-import prismaClient from "../../../prismaClient";
+import prismaClient from "../../../prismaClient.js";
 import {
   FlippedActionMap,
   FlippedPositionMap,
   autoEnd,
-} from "../analysisConstants";
+} from "../analysisConstants.js";
 import z from "zod";
-import { runAnalysis } from "../analysisFunction";
+import { runAnalysis } from "../analysisFunction.js";
 
 const config = {
   argsSchema: z.object({ matchKey: z.string(), scoutReportUuid: z.string() }),

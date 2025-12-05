@@ -1,7 +1,7 @@
 import z from "zod";
-import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
-import { lowercaseToBreakdown, MetricsBreakdown } from "../analysisConstants";
-import { createAnalysisHandler } from "../analysisHandler";
+import { nonEventMetric } from "../coreAnalysis/nonEventMetric.js";
+import { lowercaseToBreakdown, MetricsBreakdown } from "../analysisConstants.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const breakdownMetrics = createAnalysisHandler({
   params: {

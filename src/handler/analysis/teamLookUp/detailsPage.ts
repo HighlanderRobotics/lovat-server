@@ -1,9 +1,9 @@
 import z from "zod";
-import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
-import { averageAllTeamFast } from "../coreAnalysis/averageAllTeamFast";
-import { Metric, metricsToNumber } from "../analysisConstants";
-import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
-import { createAnalysisHandler } from "../analysisHandler";
+import { autoPathsTeam } from "../autoPaths/autoPathsTeam.js";
+import { averageAllTeamFast } from "../coreAnalysis/averageAllTeamFast.js";
+import { Metric, metricsToNumber } from "../analysisConstants.js";
+import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const detailsPage = createAnalysisHandler({
   params: {
