@@ -1,12 +1,15 @@
 import z from "zod";
 import { MetricsBreakdown } from "../analysisConstants";
-import { nonEventMetric } from "./nonEventMetric";
-import { createAnalysisFunction } from "../analysisFunction";
+import { nonEventMetric, NonEventMetricResult } from "./nonEventMetric";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction";
+import { User } from "@prisma/client";
 
-// Finds main robot role for a team
-export const robotRole = createAnalysisFunction({
-  argsSchema: z.object({ team: z.number() }),
-  returnSchema: z.object({ mainRole: z.string().nullable() }),
+const argsSchema = z.object({ team: z.number() });
+const returnSchema = z.object({ mainRole: z.string().nullable() });
+
+const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
+  argsSchema,
+  returnSchema,
   usesDataSource: true,
   shouldCache: true,
   createKey: (args) => {
@@ -16,9 +19,12 @@ export const robotRole = createAnalysisFunction({
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async (args, ctx) => {
+  calculateAnalysis: async (
+    args: z.infer<typeof argsSchema>,
+    ctx: { user: User },
+  ) => {
     try {
-      const roles = await nonEventMetric(ctx.user, {
+      const roles: NonEventMetricResult = await nonEventMetric(ctx.user, {
         team: args.team,
         metric: MetricsBreakdown.robotRole,
       });
@@ -27,7 +33,7 @@ export const robotRole = createAnalysisFunction({
       let maxCount = 0;
 
       // Iterate through robot roles
-      for (const [type, count] of Object.entries(roles)) {
+      for (const [type, count] of Object.entries(roles) as [string, number][]) {
         if (count > maxCount) {
           maxCount = count;
           eventTypeWithMostOccurrences = type;
@@ -42,4 +48,9 @@ export const robotRole = createAnalysisFunction({
       throw error;
     }
   },
-});
+};
+
+export const robotRole = async (
+  user: User,
+  args: z.infer<typeof argsSchema>,
+) => runAnalysis(config, user, args);

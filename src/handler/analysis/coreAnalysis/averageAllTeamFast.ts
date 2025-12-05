@@ -12,13 +12,13 @@ import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis } from "../analysisFunction";
 
-export const averageAllTeamFast = createAnalysisFunction({
+const config = {
   argsSchema: z.object({ metric: z.nativeEnum(Metric) }),
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args) => {
+  createKey: (args: { metric: Metric }) => {
     const metric = args.metric;
     return {
       key: ["averageAllTeamFast", String(metric)],
@@ -26,9 +26,11 @@ export const averageAllTeamFast = createAnalysisFunction({
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async (args, ctx) => {
+  calculateAnalysis: async (
+    args: { metric: Metric },
+    ctx: { user: { teamSourceRule: unknown; tournamentSourceRule: unknown } },
+  ) => {
     const metric = args.metric;
-    // Early return for barge points default
     if (metric === Metric.bargePoints) {
       return defaultEndgamePoints;
     }
@@ -40,7 +42,6 @@ export const averageAllTeamFast = createAnalysisFunction({
       dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 
-    // Driver ability average
     if (metric === Metric.driverAbility) {
       const data = await prismaClient.scoutReport.aggregate({
         _avg: { driverAbility: true },
@@ -52,7 +53,6 @@ export const averageAllTeamFast = createAnalysisFunction({
       return data._avg.driverAbility;
     }
 
-    // Point totals (teleop / auto / total)
     if (
       metric === Metric.teleopPoints ||
       metric === Metric.autoPoints ||
@@ -101,7 +101,6 @@ export const averageAllTeamFast = createAnalysisFunction({
       return avgMatchPoints + avgEndgamePoints;
     }
 
-    // Generic event count metrics
     const action = metricToEvent[metric];
     let position: Position = undefined;
     switch (metric) {
@@ -136,4 +135,8 @@ export const averageAllTeamFast = createAnalysisFunction({
       data.reduce((acc, cur) => acc + cur._count._all, 0) / data.length;
     return avgCount || 0;
   },
-});
+} as const;
+
+export async function averageAllTeamFast(user: any, args: { metric: Metric }) {
+  return runAnalysis(config as any, user, args as any);
+}

@@ -1,5 +1,5 @@
 import prismaClient from "../../../prismaClient";
-import { EventAction } from "@prisma/client";
+import { EventAction, User } from "@prisma/client";
 import {
   breakdownNeg,
   breakdownPos,
@@ -12,18 +12,18 @@ import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis } from "../analysisFunction";
 
 /**
  * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,
  * calculated directly in the database with a single query.
  */
-export const nonEventMetric = createAnalysisFunction({
+const config = {
   argsSchema: z.object({
     team: z.number(),
     metric: z.nativeEnum(MetricsBreakdown),
   }),
-  // Record<string, number>
+  returnSchema: z.object({}).catchall(z.number()),
   usesDataSource: true,
   shouldCache: true,
   createKey: (args) => ({
@@ -31,7 +31,10 @@ export const nonEventMetric = createAnalysisFunction({
     teamDependencies: [args.team],
     tournamentDependencies: [],
   }),
-  calculateAnalysis: async (args, ctx) => {
+  calculateAnalysis: async (
+    args: z.infer<typeof config.argsSchema>,
+    ctx: { user: User },
+  ) => {
     try {
       const tnmRule = dataSourceRuleSchema(z.string()).parse(
         ctx.user.tournamentSourceRule,
@@ -97,7 +100,7 @@ export const nonEventMetric = createAnalysisFunction({
         return {
           True: perc,
           False: 1 - perc,
-        } as Record<string, number>;
+        };
       }
 
       const query = `
@@ -139,7 +142,16 @@ export const nonEventMetric = createAnalysisFunction({
       throw error;
     }
   },
-});
+} as const;
+
+export type NonEventMetricArgs = z.infer<typeof config.argsSchema>;
+export type NonEventMetricResult = z.infer<typeof config.returnSchema>;
+export async function nonEventMetric(
+  user: User,
+  args: NonEventMetricArgs,
+): Promise<NonEventMetricResult> {
+  return runAnalysis(config, user, args);
+}
 
 // Edit to work with true/false breakdowns
 export const transformBreakdown = (input: string): string => {

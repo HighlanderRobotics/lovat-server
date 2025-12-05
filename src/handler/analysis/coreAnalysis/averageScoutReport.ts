@@ -5,9 +5,9 @@ import {
   Metric,
   metricToEvent,
 } from "../analysisConstants";
-import { EventAction, Position } from "@prisma/client";
+import { EventAction, Position, User } from "@prisma/client";
 import z from "zod";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction";
 
 export async function computeAverageScoutReport(
   scoutReportUuid: string,
@@ -89,11 +89,13 @@ export async function computeAverageScoutReport(
   return result;
 }
 
-export const averageScoutReport = createAnalysisFunction({
-  argsSchema: z.object({
-    scoutReportUuid: z.string(),
-    metrics: z.array(z.nativeEnum(Metric)),
-  }),
+const argsSchema = z.object({
+  scoutReportUuid: z.string(),
+  metrics: z.array(z.nativeEnum(Metric)),
+});
+
+const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
+  argsSchema,
   usesDataSource: false,
   shouldCache: true,
   createKey: (args) => ({
@@ -108,6 +110,11 @@ export const averageScoutReport = createAnalysisFunction({
       args.scoutReportUuid,
       args.metrics,
     );
-    return result;
+    return result as any;
   },
-});
+};
+
+export const averageScoutReport = async (
+  user: User,
+  args: z.infer<typeof argsSchema>,
+) => runAnalysis(config, user, args);

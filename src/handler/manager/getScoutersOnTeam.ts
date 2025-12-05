@@ -13,7 +13,7 @@ export const getScoutersOnTeam = async (
         teamCode: z.string(),
       })
       .safeParse({
-        teamCode: req.headers["x-team-code"]
+        teamCode: req.headers["x-team-code"],
       });
 
     if (!params.success) {

@@ -17,18 +17,21 @@ import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction";
+import { User } from "@prisma/client";
 
 export interface ArrayFilter<T> {
   notIn?: T[];
   in?: T[];
 }
 
-export const averageManyFast = createAnalysisFunction({
-  argsSchema: z.object({
-    teams: z.array(z.number()),
-    metrics: z.array(z.nativeEnum(Metric)),
-  }),
+const argsSchema = z.object({
+  teams: z.array(z.number()),
+  metrics: z.array(z.nativeEnum(Metric)),
+});
+
+const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
+  argsSchema,
   returnSchema: z.record(z.string(), z.record(z.string(), z.number())),
   usesDataSource: true,
   shouldCache: true,
@@ -43,7 +46,10 @@ export const averageManyFast = createAnalysisFunction({
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async (args, ctx) => {
+  calculateAnalysis: async (
+    args: z.infer<typeof argsSchema>,
+    ctx: { user: User },
+  ) => {
     const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
@@ -269,7 +275,12 @@ export const averageManyFast = createAnalysisFunction({
 
     return finalResults;
   },
-});
+};
+
+export const averageManyFast = async (
+  user: User,
+  args: z.infer<typeof argsSchema>,
+) => runAnalysis(config, user, args);
 
 export const getSourceFilter = <T>(
   sources: T[],

@@ -5,9 +5,9 @@ import {
   autoEnd,
 } from "../analysisConstants";
 import z from "zod";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis } from "../analysisFunction";
 
-export const autoPathScouter = createAnalysisFunction({
+const config = {
   argsSchema: z.object({ matchKey: z.string(), scoutReportUuid: z.string() }),
   returnSchema: z.object({
     autoPoints: z.number(),
@@ -23,10 +23,13 @@ export const autoPathScouter = createAnalysisFunction({
   }),
   usesDataSource: false,
   shouldCache: true,
-  createKey: (args) => ({
+  createKey: (args: { matchKey: string; scoutReportUuid: string }) => ({
     key: ["autoPathScouter", args.matchKey, args.scoutReportUuid],
   }),
-  calculateAnalysis: async (args) => {
+  calculateAnalysis: async (args: {
+    matchKey: string;
+    scoutReportUuid: string;
+  }) => {
     const autoData = await prismaClient.event.findMany({
       where: {
         scoutReport: {
@@ -65,4 +68,11 @@ export const autoPathScouter = createAnalysisFunction({
       tournamentName: match.tournament.name,
     };
   },
-});
+} as const;
+
+export async function autoPathScouter(
+  user: any,
+  args: { matchKey: string; scoutReportUuid: string },
+) {
+  return runAnalysis(config as any, user, args as any);
+}
