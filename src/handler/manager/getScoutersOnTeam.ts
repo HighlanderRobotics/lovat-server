@@ -11,11 +11,9 @@ export const getScoutersOnTeam = async (
     const params = z
       .object({
         teamCode: z.string(),
-        archived: z.boolean().optional(),
       })
       .safeParse({
-        teamCode: req.headers["x-team-code"],
-        archived: req.query.archived,
+        teamCode: req.headers["x-team-code"]
       });
 
     if (!params.success) {
@@ -41,7 +39,7 @@ export const getScoutersOnTeam = async (
     const rows = await prismaClient.scouter.findMany({
       where: {
         sourceTeamNumber: teamRow.number,
-        archived: params.data.archived,
+        archived: false,
       },
     });
     res.status(200).send(rows);
