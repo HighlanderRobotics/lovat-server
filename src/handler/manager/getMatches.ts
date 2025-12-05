@@ -12,7 +12,7 @@ import {
 } from "./managerConstants";
 import {
   dataSourceRuleSchema,
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
 } from "../analysis/dataSourceRule";
 
 export const getMatches = async (
@@ -82,7 +82,7 @@ export const getMatches = async (
         scoutReports: {
           none: {
             scouter: {
-              sourceTeamNumber: dataSourceRuleToPrismaQuery(
+              sourceTeamNumber: dataSourceRuleToPrismaFilter(
                 dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
               ),
             },
@@ -499,7 +499,7 @@ async function addExternalReports(req: AuthenticatedRequest, match) {
         matchNumber: match.matchNumber,
       },
       scouter: {
-        sourceTeamNumber: dataSourceRuleToPrismaQuery(
+        sourceTeamNumber: dataSourceRuleToPrismaFilter(
           dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
         ),
       },

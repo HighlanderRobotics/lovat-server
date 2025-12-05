@@ -15,7 +15,9 @@ const get = async (key: string): ReturnType<Awaited<typeof redis>["get"]> => {
   return await (await redis).get(key);
 };
 
-const del = async (key: string): ReturnType<Awaited<typeof redis>["del"]> => {
+const del = async (
+  key: string[] | string,
+): ReturnType<Awaited<typeof redis>["del"]> => {
   return await (await redis).del(key);
 };
 

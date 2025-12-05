@@ -1,4 +1,4 @@
-import prismaClient from "../../../prismaClient";
+import prismaClient from "../../../prismaClient.js";
 import {
   autoEnd,
   endgameToPoints,
@@ -11,38 +11,39 @@ import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast";
 import { Event, Position, Prisma, ScoutReport } from "@prisma/client";
 import {
   dataSourceRuleSchema,
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
 } from "../dataSourceRule";
 import z from "zod";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction";
 
-// Could be changed to be SQL dependent. Might be slightly better for readability and performance, but would probably be harder to update each season, especially for newer members.
+// Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
+// Provides a timeline of metric value per match.
+// Optimized to compare one metric over a few teams.
 
-/**
- * Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
- * Provides a timeline of metric value per match.
- * Optimized to compare one metric over a few teams.
- */
-export const arrayAndAverageTeams = createAnalysisFunction({
-  argsSchema: z.object({
-    teams: z.array(z.number()),
-    metric: z.nativeEnum(Metric),
+const argsSchema = z.object({
+  teams: z.array(z.number()),
+  metric: z.nativeEnum(Metric),
+});
+
+const returnSchema = z.record(
+  z.string(),
+  z.object({
+    average: z.number(),
+    timeLine: z
+      .array(
+        z.object({
+          match: z.string(),
+          dataPoint: z.number(),
+          tournamentName: z.string(),
+        }),
+      )
+      .nullable(),
   }),
-  returnSchema: z.record(
-    z.string(),
-    z.object({
-      average: z.number(),
-      timeLine: z
-        .array(
-          z.object({
-            match: z.string(),
-            dataPoint: z.number(),
-            tournamentName: z.string(),
-          }),
-        )
-        .nullable(),
-    }),
-  ),
+);
+
+const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
+  argsSchema,
+  returnSchema,
   usesDataSource: true,
   shouldCache: true,
   createKey: (args) => {
@@ -57,13 +58,16 @@ export const arrayAndAverageTeams = createAnalysisFunction({
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async (args, ctx) => {
+  calculateAnalysis: async (
+    args: z.infer<typeof argsSchema>,
+    ctx: { user: import("@prisma/client").User },
+  ) => {
     const { teams, metric } = args;
     try {
-      const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+      const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
         dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
       );
-      const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+      const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
         dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
       );
 
@@ -328,7 +332,12 @@ export const arrayAndAverageTeams = createAnalysisFunction({
       throw error;
     }
   },
-});
+};
+
+export const arrayAndAverageTeams = async (
+  user: import("@prisma/client").User,
+  args: z.infer<typeof argsSchema>,
+) => runAnalysis(config, user, args);
 
 // Most recent is last
 export function weightedTourAvgLeft(values: number[]): number {

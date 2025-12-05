@@ -1,4 +1,4 @@
-import prismaClient from "../../../prismaClient";
+import prismaClient from "../../../prismaClient.js";
 import {
   autoEnd,
   endgameToPoints,
@@ -14,21 +14,24 @@ import { Event } from "@prisma/client";
 import { weightedTourAvgLeft } from "./arrayAndAverageTeams";
 import z from "zod";
 import {
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction";
+import { User } from "@prisma/client";
 
 export interface ArrayFilter<T> {
   notIn?: T[];
   in?: T[];
 }
 
-export const averageManyFast = createAnalysisFunction({
-  argsSchema: z.object({
-    teams: z.array(z.number()),
-    metrics: z.array(z.nativeEnum(Metric)),
-  }),
+const argsSchema = z.object({
+  teams: z.array(z.number()),
+  metrics: z.array(z.nativeEnum(Metric)),
+});
+
+const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
+  argsSchema,
   returnSchema: z.record(z.string(), z.record(z.string(), z.number())),
   usesDataSource: true,
   shouldCache: true,
@@ -43,11 +46,14 @@ export const averageManyFast = createAnalysisFunction({
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async (args, ctx) => {
-    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+  calculateAnalysis: async (
+    args: z.infer<typeof argsSchema>,
+    ctx: { user: User },
+  ) => {
+    const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
-    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+    const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
       dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 
@@ -269,7 +275,12 @@ export const averageManyFast = createAnalysisFunction({
 
     return finalResults;
   },
-});
+};
+
+export const averageManyFast = async (
+  user: User,
+  args: z.infer<typeof argsSchema>,
+) => runAnalysis(config, user, args);
 
 export const getSourceFilter = <T>(
   sources: T[],

@@ -11,6 +11,10 @@ export const scoutingLeadProgressPage = async (
     const params = z
       .object({
         tournamentKey: z.string().nullable(),
+        archived: z
+          .string()
+          .transform((val) => val === "true")
+          .optional(),
       })
       .safeParse({
         tournamentKey: req.query.tournamentKey || null,
@@ -42,6 +46,7 @@ export const scoutingLeadProgressPage = async (
       const scouters = await prismaClient.scouter.findMany({
         where: {
           sourceTeamNumber: req.user.teamNumber,
+          archived: params.data.archived,
         },
         include: {
           scoutReports: true,
@@ -155,6 +160,7 @@ export const scoutingLeadProgressPage = async (
       const scouters = await prismaClient.scouter.findMany({
         where: {
           sourceTeamNumber: req.user.teamNumber,
+          archived: params.data.archived,
         },
         include: {
           scoutReports: true,

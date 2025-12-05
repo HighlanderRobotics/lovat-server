@@ -2,7 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { SHA256 } from "crypto-js";
+import SHA256 from "crypto-js/sha256";
 
 export const getScouterSchedule = async (
   req: AuthenticatedRequest,

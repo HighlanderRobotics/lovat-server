@@ -19,7 +19,7 @@ import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
 import { z } from "zod";
 import { CondensedReport } from "./getReportCSV";
 import {
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../analysis/dataSourceRule";
 
@@ -102,7 +102,7 @@ export const getTeamMatchCSV = async (
         scoutReports: {
           where: {
             scouter: {
-              sourceTeamNumber: dataSourceRuleToPrismaQuery(
+              sourceTeamNumber: dataSourceRuleToPrismaFilter(
                 dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
               ),
             },

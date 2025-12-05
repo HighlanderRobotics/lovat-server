@@ -1,5 +1,4 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 import {
   dataSourceRuleSchema,
@@ -19,12 +18,12 @@ export const getTeamSource = async (
 
     if (
       teamSourceRule.mode === "INCLUDE" &&
-      teamSourceRule.items[0] === req.user.teamNumber
+      teamSourceRule.items[0] === req.user.teamNumber &&
+      teamSourceRule.items.length === 1
     ) {
       res.status(200).send("THIS_TEAM");
       return;
     }
-    const team = await prismaClient.team.findMany();
     if (
       teamSourceRule.mode === "EXCLUDE" &&
       teamSourceRule.items.length === 0

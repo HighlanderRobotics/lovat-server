@@ -1,6 +1,6 @@
 import prismaClient from "../../../prismaClient";
 import z from "zod";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis } from "../analysisFunction";
 import {
   autoEnd,
   FlippedActionMap,
@@ -8,8 +8,9 @@ import {
 } from "../analysisConstants";
 import {
   dataSourceRuleSchema,
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
 } from "../dataSourceRule";
+import { User } from "@prisma/client";
 
 interface AutoPosition {
   location: number;
@@ -24,7 +25,22 @@ interface AutoData {
   tournamentName: string;
 }
 
-export const autoPathsTeam = createAnalysisFunction({
+const isSubsetPositions = (
+  listOne: AutoPosition[],
+  listTwo: AutoPosition[],
+): boolean => {
+  const shorter = listOne.length > listTwo.length ? listTwo : listOne;
+  const longer = listOne.length > listTwo.length ? listOne : listTwo;
+
+  const result = shorter.every(
+    (posA, i) =>
+      longer[i].event === posA.event && longer[i].location === posA.location,
+  );
+
+  return result;
+};
+
+const config = {
   argsSchema: z.object({ team: z.number() }),
   returnSchema: z.array(
     z.object({
@@ -45,7 +61,7 @@ export const autoPathsTeam = createAnalysisFunction({
   ),
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args) => {
+  createKey: (args: { team: number }) => {
     const teamNumber = args.team;
     return {
       key: ["autoPathsTeam", teamNumber.toString()],
@@ -53,17 +69,16 @@ export const autoPathsTeam = createAnalysisFunction({
       tournamentDependencies: [],
     };
   },
-  calculateAnalysis: async (args, ctx) => {
+  calculateAnalysis: async (args: { team: number }, ctx: { user: User }) => {
     const teamNumber = args.team;
 
-    const sourceTnmtFilter = dataSourceRuleToPrismaQuery<string>(
+    const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
-    const sourceTeamFilter = dataSourceRuleToPrismaQuery<number>(
+    const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
       dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 
-    // Select relevant data in match order
     const autoData = await prismaClient.scoutReport.findMany({
       where: {
         teamMatchData: {
@@ -93,7 +108,6 @@ export const autoPathsTeam = createAnalysisFunction({
           },
         },
       },
-      // Most recent first
       orderBy: [
         { teamMatchData: { tournament: { date: "desc" } } },
         { teamMatchData: { matchType: "desc" } },
@@ -101,7 +115,6 @@ export const autoPathsTeam = createAnalysisFunction({
       ],
     });
 
-    // Transform data into position list and score
     const autoPaths: AutoData[] = [];
     for (const report of autoData) {
       const score = report.events.reduce((acc, cur) => acc + cur.points, 0);
@@ -129,10 +142,8 @@ export const autoPathsTeam = createAnalysisFunction({
       maxScore: number;
     }[] = [];
 
-    // Group autos with frequency and scoring potential
     autoPaths.forEach((auto) => {
       for (const group of result) {
-        // If the auto is found within a different group, add to that one instead
         if (isSubsetPositions(auto.positions, group.positions)) {
           if (auto.positions.length > group.positions.length) {
             group.positions = auto.positions;
@@ -141,7 +152,6 @@ export const autoPathsTeam = createAnalysisFunction({
           if (
             group.matches.every((match) => match.matchKey !== auto.matchKey)
           ) {
-            // Add the match and tournament if it isn't already included
             group.matches.push({
               matchKey: auto.matchKey,
               tournamentName: auto.tournamentName,
@@ -155,7 +165,6 @@ export const autoPathsTeam = createAnalysisFunction({
         }
       }
 
-      // Create a new group
       result.push({
         positions: auto.positions,
         matches: [
@@ -169,20 +178,13 @@ export const autoPathsTeam = createAnalysisFunction({
 
     return result;
   },
-});
+} as const;
 
-// Check if one auto path includes another
-const isSubsetPositions = (
-  listOne: AutoPosition[],
-  listTwo: AutoPosition[],
-): boolean => {
-  const shorter = listOne.length > listTwo.length ? listTwo : listOne;
-  const longer = listOne.length > listTwo.length ? listOne : listTwo;
-
-  const result = shorter.every(
-    (posA, i) =>
-      longer[i].event === posA.event && longer[i].location === posA.location,
-  );
-
-  return result;
-};
+export type AutoPathsTeamArgs = z.infer<typeof config.argsSchema>;
+export type AutoPathsTeamResult = z.infer<typeof config.returnSchema>;
+export async function autoPathsTeam(
+  user: User,
+  args: AutoPathsTeamArgs,
+): Promise<AutoPathsTeamResult> {
+  return runAnalysis(config, user, args);
+}

@@ -1,9 +1,11 @@
-import { Request, Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { UserRole } from "@prisma/client";
+import { Response } from "express";
 
 export const unarchiveScouter = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> => {
   try {
@@ -12,6 +14,14 @@ export const unarchiveScouter = async (
         uuid: z.string(),
       })
       .parse(req.params);
+
+    if (req.user.role !== UserRole.SCOUTING_LEAD) {
+      res
+        .status(403)
+        .send("You need to be a scouting lead to unarchive scouters");
+      return;
+    }
+
     await prismaClient.scouter.update({
       where: {
         uuid: params.uuid,
@@ -20,6 +30,7 @@ export const unarchiveScouter = async (
         archived: false,
       },
     });
+
     res.status(200).send("done unarchiving scouter");
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -1,9 +1,10 @@
 import z from "zod";
 import { Metric } from "../analysisConstants";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis } from "../analysisFunction";
+import { User } from "@prisma/client";
 
-export const matchPredictionLogic = createAnalysisFunction({
+const config = {
   argsSchema: z.object({
     red1: z.coerce.number().int(),
     red2: z.coerce.number().int(),
@@ -124,7 +125,16 @@ export const matchPredictionLogic = createAnalysisFunction({
       winningAlliance: winningAlliance,
     };
   },
-});
+} as const;
+
+export type MatchPredictionArgs = z.infer<typeof config.argsSchema>;
+export type MatchPredictionResult = z.infer<typeof config.returnSchema>;
+export async function matchPredictionLogic(
+  user: User,
+  args: MatchPredictionArgs,
+): Promise<MatchPredictionResult> {
+  return runAnalysis(config, user, args);
+}
 
 function getZPercent(z: number) {
   if (z < -6.5) return 0.0;

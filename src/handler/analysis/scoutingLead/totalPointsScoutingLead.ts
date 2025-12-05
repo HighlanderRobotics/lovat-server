@@ -1,16 +1,16 @@
 import prismaClient from "../../../prismaClient";
 import z from "zod";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis } from "../analysisFunction";
 
-export const totalPointsScoutingLead = createAnalysisFunction({
+const config = {
   argsSchema: z.object({ scoutReportUuid: z.string() }),
   returnSchema: z.number(),
   usesDataSource: false,
   shouldCache: true,
-  createKey: (args) => ({
+  createKey: (args: { scoutReportUuid: string }) => ({
     key: ["totalPointsScoutingLead", args.scoutReportUuid],
   }),
-  calculateAnalysis: async (args) => {
+  calculateAnalysis: async (args: { scoutReportUuid: string }) => {
     const points = await prismaClient.event.aggregate({
       where: {
         scoutReportUuid: args.scoutReportUuid,
@@ -22,4 +22,11 @@ export const totalPointsScoutingLead = createAnalysisFunction({
     const totalPoints = points._sum.points || 0;
     return totalPoints;
   },
-});
+} as const;
+
+export async function totalPointsScoutingLead(
+  user: any,
+  args: { scoutReportUuid: string },
+) {
+  return runAnalysis(config as any, user, args as any);
+}

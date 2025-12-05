@@ -1,6 +1,7 @@
 import axios from "axios";
 import z from "zod";
-import { createAnalysisFunction } from "./analysisFunction";
+import { runAnalysis, AnalysisFunctionConfig } from "./analysisFunction";
+import { User } from "@prisma/client";
 
 export async function computeRankFlag(
   eventKey: string,
@@ -27,10 +28,15 @@ export async function computeRankFlag(
   }
 }
 
-/** Returns list of ranks by team. Invalid ranks are returned as 0 */
-export const rankFlag = createAnalysisFunction({
-  argsSchema: z.object({ eventKey: z.string(), teams: z.array(z.number()) }),
-  returnSchema: z.record(z.string(), z.number()),
+const argsSchema = z.object({
+  eventKey: z.string(),
+  teams: z.array(z.number()),
+});
+const returnSchema = z.record(z.string(), z.number());
+
+const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
+  argsSchema,
+  returnSchema,
   usesDataSource: false,
   shouldCache: true,
   createKey: (args) => ({
@@ -44,4 +50,7 @@ export const rankFlag = createAnalysisFunction({
     const out = await computeRankFlag(args.eventKey, args.teams);
     return out as unknown as Record<string, number>;
   },
-});
+};
+
+export const rankFlag = async (user: User, args: z.infer<typeof argsSchema>) =>
+  runAnalysis(config as any, user as any, args);

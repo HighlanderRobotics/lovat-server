@@ -13,7 +13,7 @@ import {
 import {
   dataSourceRuleSchema,
   dataSourceRuleToArray,
-  dataSourceRuleToPrismaQuery,
+  dataSourceRuleToPrismaFilter,
 } from "../analysis/dataSourceRule";
 import { allTeamNumbers } from "../analysis/analysisConstants";
 //maybe faster???
@@ -230,7 +230,7 @@ export const getMatches = async (
           tournamentKey: params.data.tournamentKey,
         },
         scouter: {
-          sourceTeamNumber: dataSourceRuleToPrismaQuery(
+          sourceTeamNumber: dataSourceRuleToPrismaFilter(
             dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
           ),
         },

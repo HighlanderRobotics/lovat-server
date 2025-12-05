@@ -1,13 +1,13 @@
 import z from "zod";
-import { createAnalysisFunction } from "../analysisFunction";
+import { runAnalysis } from "../analysisFunction";
 import { FlippedRoleMap, Metric } from "../analysisConstants";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
 import { robotRole } from "../coreAnalysis/robotRole";
 import { averageManyFast } from "../coreAnalysis/averageManyFast";
-import { RobotRole } from "@prisma/client";
+import { RobotRole, User } from "@prisma/client";
 
-export const alliancePage = createAnalysisFunction({
+const config = {
   argsSchema: z.object({
     team1: z.number(),
     team2: z.number(),
@@ -156,4 +156,13 @@ export const alliancePage = createAnalysisFunction({
         teamData[Metric.netScores][args.team3],
     };
   },
-});
+} as const;
+
+export type AlliancePageArgs = { team1: number; team2: number; team3: number };
+export type AlliancePageResult = z.infer<typeof config.returnSchema>;
+export async function alliancePage(
+  user: User,
+  args: AlliancePageArgs,
+): Promise<AlliancePageResult> {
+  return runAnalysis(config, user, args);
+}
