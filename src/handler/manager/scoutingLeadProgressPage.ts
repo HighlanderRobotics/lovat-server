@@ -5,17 +5,18 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
 
 export const scoutingLeadProgressPage = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const params = z
       .object({
-        tournamentKey: z.string().nullable(),
-        archived: z.string().transform(val => val === 'true').optional()
+        tournamentKey: z.string().optional(),
+        archived: z
+          .string()
+          .transform((val) => val === "true")
+          .optional(),
       })
-      .safeParse({
-        tournamentKey: req.query.tournamentKey || null,
-      });
+      .safeParse(req.query);
     if (!params.success) {
       res.status(400).send(params);
       return;
@@ -43,7 +44,7 @@ export const scoutingLeadProgressPage = async (
       const scouters = await prismaClient.scouter.findMany({
         where: {
           sourceTeamNumber: req.user.teamNumber,
-          archived: params.data.archived
+          archived: params.data.archived,
         },
         include: {
           scoutReports: true,
@@ -146,7 +147,7 @@ export const scoutingLeadProgressPage = async (
           matchesScouted: matchesScoutedAtTournament.length,
           missedMatches: Math.max(
             0,
-            totalAssignedScouterMatches - matchesScoutedAtTournament.length,
+            totalAssignedScouterMatches - matchesScoutedAtTournament.length
           ),
         };
         result.push(currData);
@@ -157,7 +158,7 @@ export const scoutingLeadProgressPage = async (
       const scouters = await prismaClient.scouter.findMany({
         where: {
           sourceTeamNumber: req.user.teamNumber,
-          archived: params.data.archived
+          archived: params.data.archived,
         },
         include: {
           scoutReports: true,

@@ -9,14 +9,10 @@ export const scouterScoutReports = createAnalysisHandler({
       scouterUuid: z.string(),
     }),
   },
-  usesDataSource: false,
+  usesDataSource: true,
   shouldCache: false,
   createKey: ({ query }) => ({
-    key: [
-      "scouterScoutReports",
-      query.scouterUuid,
-      query.tournamentKey || "",
-    ],
+    key: ["scouterScoutReports", query.scouterUuid, query.tournamentKey || ""],
     teamDependencies: [],
     tournamentDependencies: query.tournamentKey ? [query.tournamentKey] : [],
   }),
