@@ -2,8 +2,9 @@
   "name": "lovat-server",
   "version": "0.1.0",
   "description": "",
+  "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development ts-node-dev --respawn src/index.ts",
+    "dev": "NODE_ENV=development tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "tsc",
@@ -27,6 +28,7 @@
     "posthog-node": "^5.9.5",
     "redis": "^5.9.0",
     "resend": "^2.0.0",
+    "ts-node": "^10.9.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
@@ -41,6 +43,7 @@
     "globals": "^15.8.0",
     "prisma": "^6.19.0",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.0.0"
   },
