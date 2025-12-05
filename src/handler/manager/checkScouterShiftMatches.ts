@@ -1,5 +1,5 @@
-import prismaClient from "../../prismaClient";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import prismaClient from "../../prismaClient.js";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 
 //uuid is when editing a shift so it doesnt check that its over lapping with itself
 export const checkScouterShiftMatches = async (

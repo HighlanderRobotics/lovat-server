@@ -1,5 +1,5 @@
-import prismaClient from "../prismaClient";
-import { kv } from "../redisClient";
+import prismaClient from "../prismaClient.js";
+import { kv } from "../redisClient.js";
 
 export const clearCache = async () => {
   await prismaClient.cachedAnalysis.deleteMany();

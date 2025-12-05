@@ -1,10 +1,10 @@
 import z from "zod";
-import { runAnalysis } from "../analysisFunction";
-import { FlippedRoleMap, Metric } from "../analysisConstants";
-import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
-import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
-import { robotRole } from "../coreAnalysis/robotRole";
-import { averageManyFast } from "../coreAnalysis/averageManyFast";
+import { runAnalysis } from "../analysisFunction.js";
+import { FlippedRoleMap, Metric } from "../analysisConstants.js";
+import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
+import { autoPathsTeam } from "../autoPaths/autoPathsTeam.js";
+import { robotRole } from "../coreAnalysis/robotRole.js";
+import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
 import { RobotRole, User } from "@prisma/client";
 
 const config = {

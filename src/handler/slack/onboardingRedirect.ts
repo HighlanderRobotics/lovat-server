@@ -1,4 +1,4 @@
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import { Request, Response } from "express";
 import z from "zod";
 

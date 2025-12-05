@@ -1,6 +1,6 @@
 import axios from "axios";
 import z from "zod";
-import { runAnalysis, AnalysisFunctionConfig } from "./analysisFunction";
+import { runAnalysis, AnalysisFunctionConfig } from "./analysisFunction.js";
 import { User } from "@prisma/client";
 
 export async function computeRankFlag(

@@ -7,7 +7,7 @@ import {
   metricToName,
 } from "../analysisConstants";
 import { BargeResultReverseMap } from "../../manager/managerConstants";
-import { autoPathScouter } from "./autoPathScouter";
+import { autoPathScouter } from "./autoPathScouter.js";
 import { averageScoutReport } from "../coreAnalysis/averageScoutReport";
 import { createAnalysisHandler } from "../analysisHandler";
 

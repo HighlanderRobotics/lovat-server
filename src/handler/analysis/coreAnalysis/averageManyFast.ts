@@ -7,17 +7,17 @@ import {
   swrConstant,
   ttlConstant,
   allTournaments,
-} from "../analysisConstants";
+} from "../analysisConstants.js";
 import { BargeResult, Position, Prisma } from "@prisma/client";
-import { endgameRuleOfSuccession } from "../picklist/endgamePicklistTeamFast";
+import { endgameRuleOfSuccession } from "../picklist/endgamePicklistTeamFast.js";
 import { Event } from "@prisma/client";
-import { weightedTourAvgLeft } from "./arrayAndAverageTeams";
+import { weightedTourAvgLeft } from "./arrayAndAverageTeams.js";
 import z from "zod";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
-} from "../dataSourceRule";
-import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction";
+} from "../dataSourceRule.js";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 import { User } from "@prisma/client";
 
 export interface ArrayFilter<T> {

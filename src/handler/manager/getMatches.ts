@@ -1,19 +1,19 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { addTournamentMatches } from "./addTournamentMatches";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { addTournamentMatches } from "./addTournamentMatches.js";
 import {
   MatchTypeMap,
   MatchTypeToAbrivation,
   ReverseMatchTypeMap,
   ReverseScouterScheduleMap,
   ScouterScheduleMap,
-} from "./managerConstants";
+} from "./managerConstants.js";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
-} from "../analysis/dataSourceRule";
+} from "../analysis/dataSourceRule.js";
 
 export const getMatches = async (
   req: AuthenticatedRequest,

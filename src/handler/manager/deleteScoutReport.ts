@@ -1,8 +1,8 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { invalidateCache } from "../../lib/clearCache";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { invalidateCache } from "../../lib/clearCache.js";
 
 export const deleteScoutReport = async (
   req: AuthenticatedRequest,

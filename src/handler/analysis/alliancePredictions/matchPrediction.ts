@@ -1,7 +1,7 @@
 import z from "zod";
-import { alliancePage } from "./alliancePage";
-import { matchPredictionLogic } from "./matchPredictionLogic";
-import { createAnalysisHandler } from "../analysisHandler";
+import { alliancePage } from "./alliancePage.js";
+import { matchPredictionLogic } from "./matchPredictionLogic.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const matchPrediction = createAnalysisHandler({
   params: {

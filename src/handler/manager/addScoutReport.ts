@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import {
   AlgaePickupMap,
@@ -11,8 +11,8 @@ import {
   UnderShallowCageMap,
   RobotRoleMap,
   EventActionMap,
-} from "./managerConstants";
-import { addTournamentMatches } from "./addTournamentMatches";
+} from "./managerConstants.js";
+import { addTournamentMatches } from "./addTournamentMatches.js";
 import { EventAction, Position } from "@prisma/client";
 import {
   AlgaePickup,
@@ -23,8 +23,8 @@ import {
   RobotRole,
   UnderShallowCage,
 } from "@prisma/client";
-import { sendWarningToSlack } from "../slack/sendWarningNotification";
-import { invalidateCache } from "../../lib/clearCache";
+import { sendWarningToSlack } from "../slack/sendWarningNotification.js";
+import { invalidateCache } from "../../lib/clearCache.js";
 
 export const addScoutReport = async (
   req: Request,

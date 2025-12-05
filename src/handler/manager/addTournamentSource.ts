@@ -1,9 +1,9 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { allTournaments } from "../analysis/analysisConstants";
-import { arrayToRule } from "../../lib/migrateDataSources";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { allTournaments } from "../analysis/analysisConstants.js";
+import { arrayToRule } from "../../lib/migrateDataSources.js";
 
 export const addTournamentSource = async (
   req: AuthenticatedRequest,

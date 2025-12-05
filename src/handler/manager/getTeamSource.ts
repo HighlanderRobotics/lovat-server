@@ -1,11 +1,11 @@
 import { Response } from "express";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToArray,
-} from "../analysis/dataSourceRule";
+} from "../analysis/dataSourceRule.js";
 import z from "zod";
-import { allTeamNumbers } from "../analysis/analysisConstants";
+import { allTeamNumbers } from "../analysis/analysisConstants.js";
 
 export const getTeamSource = async (
   req: AuthenticatedRequest,

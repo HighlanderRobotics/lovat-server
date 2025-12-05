@@ -1,8 +1,8 @@
 import z from "zod";
-import prismaClient from "../../prismaClient";
-import { dataSourceRuleSchema } from "./dataSourceRule";
-import { kv } from "../../redisClient";
-import { AnalysisContext } from "./analysisConstants";
+import prismaClient from "../../prismaClient.js";
+import { dataSourceRuleSchema } from "./dataSourceRule.js";
+import { kv } from "../../redisClient.js";
+import { AnalysisContext } from "./analysisConstants.js";
 import { User } from "@prisma/client";
 
 export type CreateKeyResult = {

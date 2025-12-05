@@ -1,6 +1,6 @@
 // Require the Node Slack SDK package (github.com/slackapi/node-slack-sdk)
 import { WebClient } from "@slack/web-api";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import { TeamMatchData, WarningType } from "@prisma/client";
 
 // WebClient instantiates a client that can call API methods

@@ -1,8 +1,8 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { addTournamentMatches } from "./addTournamentMatches";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { addTournamentMatches } from "./addTournamentMatches.js";
 import {
   MatchTypeMap,
   MatchTypeToAbrivation,
@@ -14,8 +14,8 @@ import {
   dataSourceRuleSchema,
   dataSourceRuleToArray,
   dataSourceRuleToPrismaFilter,
-} from "../analysis/dataSourceRule";
-import { allTeamNumbers } from "../analysis/analysisConstants";
+} from "../analysis/dataSourceRule.js";
+import { allTeamNumbers } from "../analysis/analysisConstants.js";
 //maybe faster???
 export const getMatches = async (
   req: AuthenticatedRequest,

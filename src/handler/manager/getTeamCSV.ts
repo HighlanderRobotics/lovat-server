@@ -1,6 +1,6 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import prismaClient from "../../prismaClient.js";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 import { stringify } from "csv-stringify/sync";
 import {
   UserRole,
@@ -14,12 +14,12 @@ import {
   UnderShallowCage,
   Event,
 } from "@prisma/client";
-import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
+import { autoEnd, endgameToPoints } from "../analysis/analysisConstants.js";
 import { z } from "zod";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
-} from "../analysis/dataSourceRule";
+} from "../analysis/dataSourceRule.js";
 
 interface AggregatedTeamData {
   teamNumber: number;
