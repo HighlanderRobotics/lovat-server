@@ -50,7 +50,5 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
   },
 };
 
-export const robotRole = async (
-  user: User,
-  args: z.infer<typeof argsSchema>,
-) => runAnalysis(config, user, args);
+export const robotRole = async (user: User, args: z.infer<typeof argsSchema>) =>
+  runAnalysis(config, user, args);
