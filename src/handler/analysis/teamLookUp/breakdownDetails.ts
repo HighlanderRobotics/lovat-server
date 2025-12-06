@@ -9,7 +9,10 @@ import {
 } from "../analysisConstants.js";
 import { EventAction } from "@prisma/client";
 import { createAnalysisHandler } from "../analysisHandler.js";
-import { dataSourceRuleSchema, dataSourceRuleToArray } from "../dataSourceRule.js";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToArray,
+} from "../dataSourceRule.js";
 import prismaClient from "../../../prismaClient.js";
 
 export const breakdownDetails = createAnalysisHandler({
