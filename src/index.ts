@@ -24,7 +24,7 @@ import { getTournaments } from "./handler/manager/getTournaments";
 import { addUsername } from "./handler/manager/addUsername";
 import { getTeams } from "./handler/manager/getTeams";
 import { updateScouterShift } from "./handler/manager/updateScouterShift";
-import getTBAData from "./lib/getTBAData";
+import scheduleJobs from "./lib/scheduleJobs";
 import { checkCode } from "./handler/manager/checkCode";
 import { addTournamentSource } from "./handler/manager/addTournamentSource";
 import { addTeamSource } from "./handler/manager/addTeamSource";
@@ -90,6 +90,10 @@ import { getMatchResults } from "./handler/manager/getMatchResults";
 import { addSlackWorkspace } from "./handler/slack/addSlackWorkspace";
 import { processCommand } from "./handler/slack/processCommands";
 import { processEvent } from "./handler/slack/processEvents";
+import { setupExpressErrorHandler } from "posthog-node";
+import { posthog } from "./posthogClient";
+import posthogReporter from "./lib/middleware/posthogMiddleware";
+import { requireSlackToken } from "./lib/middleware/requireSlackToken";
 // import { addTournamentMatchesOneTime } from "./handler/manager/addTournamentMatchesOneTime";
 
 const resendEmailLimiter = rateLimit({
@@ -97,6 +101,7 @@ const resendEmailLimiter = rateLimit({
   max: 2,
   message:
     "Too many emails sent from this IP, please try again after 2 minutes",
+  validate: { trustProxy: false },
 });
 
 const updateTeamEmails = rateLimit({
@@ -104,13 +109,40 @@ const updateTeamEmails = rateLimit({
   max: 3,
   message:
     "Too many email updates sent from this IP, please try again after 2 minutes",
+  validate: { trustProxy: false },
 });
 
 const app = express();
 
+setupExpressErrorHandler(posthog, app);
+
+app.set("trust proxy", true);
+
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
+
+// add/update slack workspace
+app.get("/v1/slack/add-workspace", requireSlackToken, addSlackWorkspace);
+
+// process slash commands
+app.post(
+  "/v1/slack/command",
+  express.urlencoded({ extended: true }),
+  requireSlackToken,
+  processCommand,
+);
+
+app.post("/v1/slack/event", requireSlackToken, processEvent);
+
+app.post(
+  "/v1/manager/onboarding/verifyemail",
+  requireLovatSignature,
+  approveTeamEmail,
+); //tested
+
+// Log requests
+app.use(posthogReporter);
 
 //general endpoints
 app.get(
@@ -201,11 +233,7 @@ app.post(
   rejectRegisteredTeam,
 ); // tested, waiting for new middle ware
 app.post("/v1/manager/onboarding/teamwebsite", requireAuth, addWebsite); //tested
-app.post(
-  "/v1/manager/onboarding/verifyemail",
-  requireLovatSignature,
-  approveTeamEmail,
-); //tested
+
 app.post(
   "/v1/manager/onboarding/resendverificationemail",
   resendEmailLimiter,
@@ -327,18 +355,12 @@ app.get(
 // match results from scouting reports
 app.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
 
-// add/update slack workspace
-app.get("/v1/slack/add-workspace", addSlackWorkspace);
+// API key management
+// app.get("/v1/manager/add-api-key", requireAuth, addApiKey);
+// app.get("/v1/manager/revoke-api-key", requireAuth, revokeApiKey);
+// app.get("/v1/manager/get-api-keys", requireAuth, getApiKeys);
+// app.get("/v1/manager/rename-api-key", requireAuth, renameApiKey);
 
-// process slash commands
-app.post(
-  "/v1/slack/command",
-  express.urlencoded({ extended: true }),
-  processCommand,
-);
-
-app.post("/v1/slack/event", processEvent);
-
-getTBAData();
+scheduleJobs();
 
 app.listen(port);

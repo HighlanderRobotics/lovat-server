@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "dev": "ts-node-dev --respawn src/index.ts",
+    "dev": "NODE_ENV=development ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "tsc",
@@ -26,9 +26,11 @@
     "flatted": "^3.3.1",
     "form-data": "^4.0.4",
     "jose": "^5.1.1",
+    "luxon": "^3.7.2",
+    "posthog-node": "^5.9.5",
     "resend": "^2.0.0",
-    "zod": "^3.22.4",
-    "zod-validation-error": "^2.1.0"
+    "zod": "^4.1.12",
+    "zod-validation-error": "^4.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

@@ -2,7 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { Resend } from "resend";
+import { sendVerificationEmail } from "./resendEmail";
 
 export const addRegisteredTeam = async (
   req: AuthenticatedRequest,
@@ -60,16 +60,8 @@ export const addRegisteredTeam = async (
         id: user.id,
       },
     });
-    //sending email
-    const verificationUrl = `https://lovat.app/verify/${params.data.code}`;
-    const resend = new Resend(process.env.RESEND_KEY);
 
-    resend.emails.send({
-      from: "noreply@lovat.app",
-      to: req.body.email,
-      subject: "Lovat Email Verification",
-      html: `<p>Welcome to Lovat, click <a href="${verificationUrl}" target="_blank">here</a> to verify your team email!</p>`,
-    });
+    sendVerificationEmail(params.data.email, params.data.number);
 
     res.status(200).send("verification email sent");
   } catch (error) {

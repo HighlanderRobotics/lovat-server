@@ -26,8 +26,6 @@ export const addSlackWorkspace = async (
       })
     ).json();
 
-    console.log(response);
-
     const data = z
       .object({
         access_token: z.string(),
