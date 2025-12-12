@@ -94,8 +94,10 @@ const config = {
           avgEndgamePoints +=
             endgameToPoints[endgame.bargeResult] * endgame._count._all;
         });
-        avgEndgamePoints /=
-          bargeResults.reduce((acc, cur) => acc + cur._count._all, 0) || 1;
+        avgEndgamePoints /= bargeResults.reduce(
+          (acc, cur) => acc + cur._count._all,
+          0,
+        );
       }
 
       return avgMatchPoints + avgEndgamePoints;
