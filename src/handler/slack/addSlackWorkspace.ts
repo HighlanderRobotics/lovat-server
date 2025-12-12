@@ -46,6 +46,11 @@ export const addSlackWorkspace = async (
       },
     });
 
+    if (!teamRow) {
+      res.status(404).send("Team not found");
+      return
+    }
+
     await prismaClient.slackWorkspace.upsert({
       where: {
         workspaceId: data.team.id,
