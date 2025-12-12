@@ -1,7 +1,7 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 import {
   CoralPickupMap,
   AlgaePickupMap,
@@ -12,9 +12,9 @@ import {
   UnderShallowCageMap,
   RobotRoleMap,
   EventActionMap,
-} from "./managerConstants";
-import { addTournamentMatches } from "./addTournamentMatches";
-import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead";
+} from "./managerConstants.js";
+import { addTournamentMatches } from "./addTournamentMatches.js";
+import { totalPointsScoutingLead } from "../analysis/scoutingLead/totalPointsScoutingLead.js";
 import {
   AlgaePickup,
   BargeResult,
@@ -26,6 +26,7 @@ import {
   RobotRole,
   UnderShallowCage,
 } from "@prisma/client";
+import { invalidateCache } from "../../lib/clearCache.js";
 
 export const addScoutReportDashboard = async (
   req: AuthenticatedRequest,
@@ -154,6 +155,12 @@ export const addScoutReportDashboard = async (
         knocksAlgae: paramsScoutReport.data.knocksAlgae,
       },
     });
+
+    invalidateCache(
+      paramsScoutReport.data.teamNumber,
+      paramsScoutReport.data.tournamentKey,
+    );
+
     const scoutReportUuid = row.uuid;
     const eventDataArray = [];
     const events = req.body.events;
@@ -248,7 +255,7 @@ export const addScoutReportDashboard = async (
     await prismaClient.event.createMany({
       data: eventDataArray,
     });
-    await totalPointsScoutingLead(scoutReportUuid);
+    await totalPointsScoutingLead(req.user, { scoutReportUuid });
     //recalibrate the max resonable points for every year
     //uncomment for scouting lead page
     // if (totalPoints === 0 || totalPoints > 80) {

@@ -1,70 +1,68 @@
-import { Response } from "express";
-import prismaClient from "../../../prismaClient";
+import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import {
   Metric,
   FlippedRoleMap,
   specificMatchPageMetrics,
   metricToName,
-} from "../analysisConstants";
-import { BargeResultReverseMap } from "../../manager/managerConstants";
+} from "../analysisConstants.js";
+import { BargeResultReverseMap } from "../../manager/managerConstants.js";
+import { autoPathScouter } from "./autoPathScouter.js";
+import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
-import { autoPathScouter } from "./autoPathScouter";
-import { averageScoutReport } from "../coreAnalysis/averageScoutReport";
-
-export const matchPageSpecificScouter = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        scoutReportUuid: z.string(),
-      })
-      .safeParse({
-        scoutReportUuid: req.params.uuid,
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+export const matchPageSpecificScouter = createAnalysisHandler({
+  params: {
+    params: z.object({
+      uuid: z.string(),
+    }),
+  },
+  usesDataSource: false,
+  shouldCache: false,
+  createKey: ({ params }) => {
+    return {
+      key: ["matchPageSpecificScouter", params.uuid],
+      teamDependencies: [],
+      tournamentDependencies: [],
+    };
+  },
+  calculateAnalysis: async ({ params }, ctx) => {
     const scoutReport = await prismaClient.scoutReport.findUnique({
       where: {
-        uuid: params.data.scoutReportUuid,
+        uuid: params.uuid,
       },
     });
+
     const output = {
       totalPoints: (
-        await averageScoutReport(scoutReport.uuid, [Metric.totalPoints])
+        await averageScoutReport(ctx.user, {
+          scoutReportUuid: scoutReport.uuid,
+          metrics: [Metric.totalPoints],
+        })
       )[Metric.totalPoints],
       driverAbility: scoutReport.driverAbility,
       role: FlippedRoleMap[scoutReport.robotRole],
       // stage : stageMap[scoutReport.stage],
       // highNote : highNoteMap[scoutReport.highNote],
       barge: BargeResultReverseMap[scoutReport.bargeResult],
-      autoPath: await autoPathScouter(
-        req.user,
-        scoutReport.teamMatchKey,
-        scoutReport.uuid,
-      ),
+      autoPath: await autoPathScouter(ctx.user, {
+        matchKey: scoutReport.teamMatchKey,
+        scoutReportUuid: scoutReport.uuid,
+      }),
       note: scoutReport.notes,
       robotBrokeDescription: scoutReport.robotBrokeDescription,
       timeStamp: scoutReport.startTime,
     };
 
-    const aggregateData = await averageScoutReport(
-      scoutReport.uuid,
-      specificMatchPageMetrics,
-    );
+    const aggregateData = await averageScoutReport(ctx.user, {
+      scoutReportUuid: scoutReport.uuid,
+      metrics: specificMatchPageMetrics,
+    });
 
     for (const metric of specificMatchPageMetrics) {
       output[metricToName[metric]] = aggregateData[metric];
     }
 
-    res.status(200).send(output);
-  } catch (error) {
-    console.error(error);
-    res.status(400).send(error);
-  }
-};
+    return output;
+  },
+});

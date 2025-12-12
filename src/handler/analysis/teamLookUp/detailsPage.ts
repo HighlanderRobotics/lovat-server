@@ -1,73 +1,64 @@
-import { Response } from "express";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { autoPathsTeam } from "../autoPaths/autoPathsTeam";
-import { averageAllTeamFast } from "../coreAnalysis/averageAllTeamFast";
-import { Metric, metricsToNumber } from "../analysisConstants";
-import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
+import { autoPathsTeam } from "../autoPaths/autoPathsTeam.js";
+import { averageAllTeamFast } from "../coreAnalysis/averageAllTeamFast.js";
+import { Metric, metricsToNumber } from "../analysisConstants.js";
+import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
-export const detailsPage = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        team: z.number(),
-        metric: z.nativeEnum(Metric),
-      })
-      .safeParse({
-        team: Number(req.params.team),
-        metric: metricsToNumber[req.params.metric],
-      });
-    if (!params.success) {
-      console.log(params);
-      res.status(400).send(params);
-      return;
+export const detailsPage = createAnalysisHandler({
+  params: {
+    params: z.object({
+      team: z.preprocess((x) => Number(x), z.number()),
+      metric: z.string(),
+    }),
+  },
+  usesDataSource: true,
+  shouldCache: true,
+  createKey: ({ params }) => {
+    return {
+      key: ["detailsPage", params.team.toString(), params.metric.toString()],
+      teamDependencies: [params.team],
+      tournamentDependencies: [],
+    };
+  },
+  calculateAnalysis: async ({ params }, ctx) => {
+    if (metricsToNumber[params.metric] === Metric.autoPoints) {
+      const autoPaths = await autoPathsTeam(ctx.user, { team: params.team });
+      return { paths: autoPaths };
     }
-    if (params.data.metric === Metric.autoPoints) {
-      const autoPaths = await autoPathsTeam(req.user, params.data.team);
-      res.status(200).send({ paths: autoPaths });
-      return;
-    }
-    // else if (params.data.metric === Metric.scores) {
-    //     const teamAverageAndTimeLine = await arrayAndAverageTeam(req.user, params.data.metric, params.data.team)
-    //     const allTeamAverage = await averageAllTeamOneQuery(req.user, params.data.metric)
-    //     // let ampScores = await arrayAndAverageTeam(req.user, "ampscores", params.data.team)
-    //     const speakerScores = await arrayAndAverageTeam(req.user, Metric.speakerscores, params.data.team)
+    // else if (params.metric === Metric.scores) {
+    //     const teamAverageAndTimeLine = await arrayAndAverageTeam(ctx.user, params.metric, params.team)
+    //     const allTeamAverage = await averageAllTeamOneQuery(ctx.user, params.metric)
+    //     // let ampScores = await arrayAndAverageTeam(ctx.user, "ampscores", params.team)
+    //     const speakerScores = await arrayAndAverageTeam(ctx.user, Metric.speakerscores, params.team)
 
     //     const result = {
     //         array: speakerScores,
     //         result: teamAverageAndTimeLine.average,
     //         all: allTeamAverage,
     //         difference: teamAverageAndTimeLine.average - allTeamAverage,
-    //         team: params.data.team
+    //         team: params.team
     //     }
-    //     res.status(200).send(result)
+    //     return result
     // }
     else {
       const teamAverageAndTimeLine = (
-        await arrayAndAverageTeams(
-          [params.data.team],
-          params.data.metric,
-          req.user,
-        )
-      )[params.data.team];
-      const allTeamAverage = await averageAllTeamFast(
-        params.data.metric,
-        req.user,
-      );
+        await arrayAndAverageTeams(ctx.user, {
+          teams: [params.team],
+          metric: metricsToNumber[params.metric] as Metric,
+        })
+      )[params.team];
+      const allTeamAverage = (await averageAllTeamFast(ctx.user, {
+        metric: metricsToNumber[params.metric] as Metric,
+      })) as number;
       const result = {
         array: teamAverageAndTimeLine.timeLine,
         result: teamAverageAndTimeLine.average,
         all: allTeamAverage,
         difference: teamAverageAndTimeLine.average - allTeamAverage,
-        team: params.data.team,
+        team: params.team,
       };
-      res.status(200).send(result);
+      return result;
     }
-  } catch (error) {
-    console.error(error);
-    res.status(400).send(error);
-  }
-};
+  },
+});

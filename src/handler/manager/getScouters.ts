@@ -1,13 +1,22 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { SHA256 } from "crypto-js";
+import prismaClient from "../../prismaClient.js";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import z from "zod";
 
 export const getScouters = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
+    const params = z
+      .object({
+        archived: z
+          .string()
+          .transform((val) => val === "true")
+          .optional(),
+      })
+      .parse(req.query);
+
     if (req.user.teamNumber === null) {
       res.status(403).send("User is not affilated with a team");
       return;
@@ -15,6 +24,7 @@ export const getScouters = async (
     const rows = await prismaClient.scouter.findMany({
       where: {
         sourceTeamNumber: req.user.teamNumber,
+        archived: params.archived,
       },
       select: {
         uuid: true,
@@ -28,10 +38,3 @@ export const getScouters = async (
     res.status(500).send(error);
   }
 };
-function hashJsonObject(json: object): string {
-  const jsonString = JSON.stringify(json);
-
-  const hash = SHA256(jsonString);
-
-  return hash.toString();
-}

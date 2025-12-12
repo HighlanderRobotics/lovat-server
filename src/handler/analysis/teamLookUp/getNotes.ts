@@ -1,27 +1,27 @@
-import { Response } from "express";
-import prismaClient from "../../../prismaClient";
+import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { getSourceFilter } from "../coreAnalysis/averageManyFast";
-import { allTeamNumbers, allTournaments } from "../analysisConstants";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToPrismaFilter,
+} from "../dataSourceRule.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
-export const getNotes = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        team: z.number(),
-      })
-      .safeParse({
-        team: Number(req.params.team),
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
-
+export const getNotes = createAnalysisHandler({
+  params: {
+    params: z.object({
+      team: z.preprocess((x) => Number(x), z.number()),
+    }),
+  },
+  usesDataSource: true,
+  shouldCache: true,
+  createKey: ({ params }) => {
+    return {
+      key: ["getNotes", params.team.toString()],
+      teamDependencies: [params.team],
+      tournamentDependencies: [],
+    };
+  },
+  calculateAnalysis: async ({ params }, ctx) => {
     let notesAndMatches: {
       notes: string;
       match: string;
@@ -31,19 +31,17 @@ export const getNotes = async (
     }[];
 
     // Set up filters to decrease server load
-    const sourceTnmtFilter = getSourceFilter(
-      req.user.tournamentSource,
-      await allTournaments,
+    const sourceTnmtFilter = dataSourceRuleToPrismaFilter(
+      dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
-    const sourceTeamFilter = getSourceFilter(
-      req.user.teamSource,
-      await allTeamNumbers,
+    const sourceTeamFilter = dataSourceRuleToPrismaFilter(
+      dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 
     const noteData = await prismaClient.scoutReport.findMany({
       where: {
         teamMatchData: {
-          teamNumber: params.data.team,
+          teamNumber: params.team,
           tournamentKey: sourceTnmtFilter,
         },
         scouter: {
@@ -68,7 +66,7 @@ export const getNotes = async (
         scouter: {
           select: {
             sourceTeamNumber: true,
-            name: Boolean(req.user.teamNumber),
+            name: Boolean(ctx.user.teamNumber),
           },
         },
       },
@@ -80,14 +78,14 @@ export const getNotes = async (
       ],
     });
 
-    if (Boolean(req.user.teamNumber)) {
+    if (Boolean(ctx.user.teamNumber)) {
       notesAndMatches = noteData.map((report) => ({
         notes: report.notes,
         match: report.teamMatchKey,
         tounramentName: report.teamMatchData.tournament.name,
         sourceTeam: report.scouter.sourceTeamNumber,
         scouterName:
-          report.scouter.sourceTeamNumber === req.user.teamNumber
+          report.scouter.sourceTeamNumber === ctx.user.teamNumber
             ? report.scouter.name
             : undefined,
       }));
@@ -100,9 +98,6 @@ export const getNotes = async (
       }));
     }
 
-    res.status(200).send(notesAndMatches);
-  } catch (error) {
-    console.error(error);
-    res.status(400).send(error);
-  }
-};
+    return notesAndMatches;
+  },
+});

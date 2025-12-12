@@ -1,7 +1,13 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+
+import { arrayToRule } from "../../lib/migrateDataSources.js";
+import {
+  allTeamNumbers,
+  allTournaments,
+} from "../analysis/analysisConstants.js";
 
 export const updateSettings = async (
   req: AuthenticatedRequest,
@@ -13,27 +19,27 @@ export const updateSettings = async (
         teamSource: z.array(z.number()),
         tournamentSource: z.array(z.string()),
       })
-      .safeParse({
-        teamSource: req.body.teamSource,
-        tournamentSource: req.body.tournamentSource,
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+      .parse(req.body);
 
     await prismaClient.user.update({
       where: {
         id: req.user.id,
       },
       data: {
-        teamSource: params.data.teamSource,
-        tournamentSource: params.data.tournamentSource,
+        teamSourceRule: arrayToRule(params.teamSource, await allTeamNumbers),
+        tournamentSourceRule: arrayToRule(
+          params.tournamentSource,
+          await allTournaments,
+        ),
       },
     });
-    res.status(200).send("Settings sucsessfully updated");
+    res.status(200).send("Settings successfully updated");
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: "Invalid request parameters" });
+      return;
+    }
     console.error(error);
-    res.status(500).send("Error in deleting data");
+    res.status(500).send("Error in updating settings");
   }
 };

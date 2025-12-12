@@ -1,41 +1,36 @@
-import { Response } from "express";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { metricsCategory, metricToName } from "../analysisConstants";
-import { averageManyFast } from "../coreAnalysis/averageManyFast";
+import { metricsCategory, metricToName } from "../analysisConstants.js";
+import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
-export const categoryMetrics = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        team: z.number(),
-      })
-      .safeParse({
-        team: Number(req.params.team),
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+export const categoryMetrics = createAnalysisHandler({
+  params: {
+    params: z.object({
+      team: z.preprocess((x) => Number(x), z.number()),
+    }),
+  },
+  usesDataSource: true,
+  shouldCache: true,
+  createKey: ({ params }) => {
+    return {
+      key: ["categoryMetrics", params.team.toString()],
+      teamDependencies: [params.team],
+      tournamentDependencies: [],
+    };
+  },
+  calculateAnalysis: async ({ params }, ctx) => {
     const result = {};
 
     //update if statments in arrayAndAverage if the metric needs to look at scoutReport instead of events table
-    const data = await averageManyFast(
-      [params.data.team],
-      metricsCategory,
-      req.user,
-    );
+    const data = await averageManyFast(ctx.user, {
+      teams: [params.team],
+      metrics: metricsCategory,
+    });
 
     for (const metric of metricsCategory) {
-      result[metricToName[metric]] = data[metric][params.data.team];
+      result[metricToName[metric]] = data[metric][params.team];
     }
 
-    res.status(200).send(result);
-  } catch (error) {
-    console.error(error);
-    res.status(400).send(error);
-  }
-};
+    return result;
+  },
+});

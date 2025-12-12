@@ -1,32 +1,33 @@
-import { Response } from "express";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { nonEventMetric } from "../coreAnalysis/nonEventMetric";
-import { lowercaseToBreakdown, MetricsBreakdown } from "../analysisConstants";
+import { nonEventMetric } from "../coreAnalysis/nonEventMetric.js";
+import {
+  lowercaseToBreakdown,
+  MetricsBreakdown,
+} from "../analysisConstants.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
-export const breakdownMetrics = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        team: z.number(),
-      })
-      .safeParse({
-        team: Number(req.params.team),
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
+export const breakdownMetrics = createAnalysisHandler({
+  params: {
+    params: z.object({
+      team: z.preprocess((x) => Number(x), z.number()),
+    }),
+  },
+  usesDataSource: true,
+  shouldCache: true,
+  createKey: ({ params }) => {
+    return {
+      key: ["breakdownMetrics", params.team.toString()],
+      teamDependencies: [params.team],
+      tournamentDependencies: [],
+    };
+  },
+  calculateAnalysis: async ({ params }, ctx) => {
     const result = {};
     for (const [key, metric] of Object.entries(lowercaseToBreakdown)) {
-      const data = await nonEventMetric(
-        req.user,
-        params.data.team,
-        MetricsBreakdown[metric as keyof typeof MetricsBreakdown],
-      );
+      const data = await nonEventMetric(ctx.user, {
+        team: params.team,
+        metric: MetricsBreakdown[metric as keyof typeof MetricsBreakdown],
+      });
 
       const valid = Object.values(data).some((val) => Boolean(val));
 
@@ -35,8 +36,6 @@ export const breakdownMetrics = async (
       }
     }
 
-    res.status(200).send(result);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-};
+    return result;
+  },
+});

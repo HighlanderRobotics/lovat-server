@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
 
 export const addSlackWorkspace = async (
@@ -40,6 +40,17 @@ export const addSlackWorkspace = async (
       })
       .parse(response);
 
+    const teamRow = await prismaClient.registeredTeam.findUnique({
+      where: {
+        code: req.cookies.user_team_code,
+      },
+    });
+
+    if (!teamRow) {
+      res.status(404).send("Team not found");
+      return
+    }
+
     await prismaClient.slackWorkspace.upsert({
       where: {
         workspaceId: data.team.id,
@@ -49,6 +60,7 @@ export const addSlackWorkspace = async (
         authToken: data.access_token,
         botUserId: data.bot_user_id,
         authUserId: data.authed_user.id,
+        owner: teamRow.number,
       },
       create: {
         workspaceId: data.team.id,
@@ -56,6 +68,7 @@ export const addSlackWorkspace = async (
         authToken: data.access_token,
         botUserId: data.bot_user_id,
         authUserId: data.authed_user.id,
+        owner: teamRow.number,
       },
     });
 

@@ -1,4 +1,4 @@
-import prisma from "../../prismaClient";
+import prisma from "../../prismaClient.js";
 import axios from "axios";
 import { User } from "@prisma/client";
 import { Request as ExpressRequest, Response, NextFunction } from "express";
@@ -9,6 +9,10 @@ export interface AuthenticatedRequest extends ExpressRequest {
   user: User;
   tokenType?: "apiKey" | "jwt";
 }
+
+const JWKS = jose.createRemoteJWKSet(
+  new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`),
+);
 
 export const requireAuth = async (
   req: AuthenticatedRequest,
@@ -72,10 +76,6 @@ export const requireAuth = async (
     }
 
     try {
-      const JWKS = jose.createRemoteJWKSet(
-        new URL(`https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`),
-      );
-
       const { payload, protectedHeader } = await jose.jwtVerify(
         tokenString,
         JWKS,

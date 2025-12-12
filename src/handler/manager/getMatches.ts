@@ -1,15 +1,19 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { addTournamentMatches } from "./addTournamentMatches";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { addTournamentMatches } from "./addTournamentMatches.js";
 import {
   MatchTypeMap,
   MatchTypeToAbrivation,
   ReverseMatchTypeMap,
   ReverseScouterScheduleMap,
   ScouterScheduleMap,
-} from "./managerConstants";
+} from "./managerConstants.js";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToPrismaFilter,
+} from "../analysis/dataSourceRule.js";
 
 export const getMatches = async (
   req: AuthenticatedRequest,
@@ -78,9 +82,9 @@ export const getMatches = async (
         scoutReports: {
           none: {
             scouter: {
-              sourceTeamNumber: {
-                in: user.teamSource,
-              },
+              sourceTeamNumber: dataSourceRuleToPrismaFilter(
+                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+              ),
             },
           },
         },
@@ -495,10 +499,9 @@ async function addExternalReports(req: AuthenticatedRequest, match) {
         matchNumber: match.matchNumber,
       },
       scouter: {
-        sourceTeamNumber: {
-          in: req.user.teamSource,
-          not: teamNumber,
-        },
+        sourceTeamNumber: dataSourceRuleToPrismaFilter(
+          dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+        ),
       },
     },
   });

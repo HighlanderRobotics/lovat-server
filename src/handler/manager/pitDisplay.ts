@@ -1,11 +1,11 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import axios from "axios";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { matchPredictionLogic } from "../analysis/alliancePredictions/matchPredictionLogic";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { matchPredictionLogic } from "../analysis/alliancePredictions/matchPredictionLogic.js";
 import { MatchType } from "@prisma/client";
-import { MatchEnumToAbrivation } from "./managerConstants";
+import { MatchEnumToAbrivation } from "./managerConstants.js";
 
 export const pitDisplay = async (
   req: AuthenticatedRequest,
@@ -286,15 +286,14 @@ async function matchFormat(
       },
     });
     try {
-      const matchPredictions = await matchPredictionLogic(
-        user,
-        redTeams[0],
-        redTeams[1],
-        redTeams[2],
-        blueTeams[0],
-        blueTeams[1],
-        blueTeams[2],
-      );
+      const matchPredictions = await matchPredictionLogic(user!, {
+        red1: redTeams[0],
+        red2: redTeams[1],
+        red3: redTeams[2],
+        blue1: blueTeams[0],
+        blue2: blueTeams[1],
+        blue3: blueTeams[2],
+      });
       return {
         key: key,
         alliances: {

@@ -1,7 +1,9 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { allTournaments } from "../analysis/analysisConstants.js";
+import { arrayToRule } from "../../lib/migrateDataSources.js";
 
 export const addTournamentSource = async (
   req: AuthenticatedRequest,
@@ -27,7 +29,10 @@ export const addTournamentSource = async (
         id: user.id,
       },
       data: {
-        tournamentSource: params.data.tournamentSource,
+        tournamentSourceRule: arrayToRule<string>(
+          params.data.tournamentSource,
+          await allTournaments,
+        ),
       },
     });
     res.status(200).send("tournament sources added");

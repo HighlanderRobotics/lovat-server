@@ -1,7 +1,8 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { invalidateCache } from "../../lib/clearCache.js";
 
 export const deleteScoutReport = async (
   req: AuthenticatedRequest,
@@ -45,11 +46,21 @@ export const deleteScoutReport = async (
           scoutReportUuid: params.data.uuid,
         },
       });
-      await prismaClient.scoutReport.delete({
+      const reportRow = await prismaClient.scoutReport.delete({
         where: {
           uuid: params.data.uuid,
         },
+        include: {
+          teamMatchData: true,
+        },
       });
+
+      // Collect all affected cached analyses
+      invalidateCache(
+        reportRow.teamMatchData.teamNumber,
+        reportRow.teamMatchData.tournamentKey,
+      );
+
       res.status(200).send("Data deleted successfully");
     } else {
       res.status(403).send("Unauthorized to delete this picklist");

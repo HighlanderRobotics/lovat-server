@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import { TeamMatchData, ScoutReport } from "@prisma/client";
-import { averageScoutReport } from "../analysis/coreAnalysis/averageScoutReport";
-import { Metric } from "../analysis/analysisConstants";
+import { computeAverageScoutReport } from "../analysis/coreAnalysis/averageScoutReport.js";
+import { Metric } from "../analysis/analysisConstants.js";
 
 export const getMatchResults = async (
   req: Request,
@@ -87,7 +87,10 @@ async function getAllianceResults(
     );
 
     for (const report of matchData[i].scoutReports) {
-      const result = await averageScoutReport(report.uuid, ALLIANCE_METRICS);
+      const result = await computeAverageScoutReport(
+        report.uuid,
+        ALLIANCE_METRICS,
+      );
       for (const stat of ALLIANCE_METRICS) {
         teamTotals[stat] += result[stat];
       }
@@ -123,7 +126,9 @@ async function getTeamResults(
   let total = 0;
 
   for (const report of matchData.scoutReports) {
-    const result = await averageScoutReport(report.uuid, [Metric.totalPoints]);
+    const result = await computeAverageScoutReport(report.uuid, [
+      Metric.totalPoints,
+    ]);
     total += result[Metric.totalPoints];
   }
 

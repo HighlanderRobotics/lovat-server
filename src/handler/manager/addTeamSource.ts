@@ -1,8 +1,9 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { allTeamNumbers } from "../analysis/analysisConstants";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { allTeamNumbers } from "../analysis/analysisConstants.js";
+import { arrayToRule } from "../../lib/migrateDataSources.js";
 
 export const addTeamSource = async (
   req: AuthenticatedRequest,
@@ -16,7 +17,7 @@ export const addTeamSource = async (
           id: user.id,
         },
         data: {
-          teamSource: await allTeamNumbers,
+          teamSourceRule: { mode: "EXCLUDE", items: [] },
         },
       });
       res.status(200).send("team sources added");
@@ -31,7 +32,7 @@ export const addTeamSource = async (
             id: user.id,
           },
           data: {
-            teamSource: [user.teamNumber],
+            teamSourceRule: { mode: "INCLUDE", items: [user.teamNumber] },
           },
         });
         res.status(200).send("team sources added");
@@ -55,7 +56,10 @@ export const addTeamSource = async (
           id: user.id,
         },
         data: {
-          teamSource: params.data.teamSource,
+          teamSourceRule: arrayToRule<number>(
+            params.data.teamSource,
+            await allTeamNumbers,
+          ),
         },
       });
       res.status(200).send("team sources added");

@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { MatchTypeMap, ScouterScheduleMap } from "./managerConstants";
-import { SHA256 } from "crypto-js";
-import { addTournamentMatches } from "./addTournamentMatches";
+import { MatchTypeMap, ScouterScheduleMap } from "./managerConstants.js";
+import SHA256 from "crypto-js/sha256.js";
+import { addTournamentMatches } from "./addTournamentMatches.js";
 
 export const getScheduleForScouter = async (
   req: Request,

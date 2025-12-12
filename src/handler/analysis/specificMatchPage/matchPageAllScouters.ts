@@ -4,7 +4,7 @@
 // import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 // import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
 // import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
-// import { specificMatchPageMetrics } from "../analysisConstants";
+// import { specificMatchPageMetrics } from "../analysisConstants.js";
 // import { singleMatchSingleScouter } from "../coreAnalysis/singleMatchSingleScouter";
 // import { match } from "assert";
 // import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";

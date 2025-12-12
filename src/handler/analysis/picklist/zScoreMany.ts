@@ -4,8 +4,8 @@ import {
   metricsCategory,
   metricToName,
   picklistToMetric,
-} from "../analysisConstants";
-import { rankFlag } from "../rankFlag";
+} from "../analysisConstants.js";
+import { computeRankFlag } from "../rankFlag.js";
 
 /**
  * Take in data for many teams and return z-score values and breakdowns for queried metrics.
@@ -107,7 +107,7 @@ export const zScoreMany = async (
 
     // Deal with rankings
     if (flags.includes("rank")) {
-      const rankings = await rankFlag(tournamentKey, ...teams);
+      const rankings = await computeRankFlag(tournamentKey, teams);
 
       teams.forEach((team, i) => {
         results[i].flags.push({ type: "rank", result: rankings[team] });

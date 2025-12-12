@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { AuthenticatedRequest } from "./requireAuth";
-import { posthog } from "../../posthogClient";
-import prisma from "../../prismaClient";
+import { AuthenticatedRequest } from "./requireAuth.js";
+import { posthog } from "../../posthogClient.js";
+import prisma from "../../prismaClient.js";
 import z from "zod";
 
 const posthogReporter = async (
@@ -72,6 +72,12 @@ const posthogReporter = async (
         },
         disableGeoip: false,
       });
+    }
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `${req.method} ${req.path}: %d ms, HTTP ${res.statusCode}`,
+        Math.round(t1 - t0),
+      );
     }
   });
 

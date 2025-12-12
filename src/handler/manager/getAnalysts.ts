@@ -1,6 +1,6 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import prismaClient from "../../prismaClient.js";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 import { UserRole } from "@prisma/client";
 
 export const getAnalysts = async (

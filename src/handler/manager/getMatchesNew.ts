@@ -1,11 +1,15 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { addTournamentMatches } from "./addTournamentMatches";
-import { ReverseMatchTypeMap } from "./managerConstants";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { addTournamentMatches } from "./addTournamentMatches.js";
+import { ReverseMatchTypeMap } from "./managerConstants.js";
 import { MatchType, Prisma } from "@prisma/client";
-import { swrConstant, ttlConstant } from "../analysis/analysisConstants";
+import { swrConstant, ttlConstant } from "../analysis/analysisConstants.js";
+import {
+  dataSourceRuleSchema,
+  dataSourceRuleToPrismaFilter,
+} from "../analysis/dataSourceRule.js";
 
 /**
  * @param params.tournament tournament to pull from
@@ -72,8 +76,25 @@ export const getMatches = async (
     // Filter to return a list of user's team's scout reports for each row, only valid if user has a team number
     let includeTeamReports: Prisma.TeamMatchData$scoutReportsArgs | undefined =
       undefined;
+
+    const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
+      req.user.teamSourceRule,
+    );
+
     if (user.teamNumber) {
-      user.teamSource.push(user.teamNumber);
+      // make sure the user's teamSourceRule has their own team included
+      if (teamSourceRule.mode === "EXCLUDE") {
+        // if their source rule is exclude, make sure the user's team number isn't in items
+        teamSourceRule.items = teamSourceRule.items.filter(
+          (item) => item !== user.teamNumber,
+        );
+      } else if (
+        // if their mode is include, make sure the user's team number is on their list of items
+        teamSourceRule.mode === "INCLUDE" &&
+        !teamSourceRule.items.includes(user.teamNumber)
+      ) {
+        teamSourceRule.items.push(user.teamNumber);
+      }
 
       includeTeamReports = {
         where: {
@@ -111,9 +132,8 @@ export const getMatches = async (
             scoutReports: {
               where: {
                 scouter: {
-                  sourceTeamNumber: {
-                    in: user.teamSource,
-                  },
+                  sourceTeamNumber:
+                    dataSourceRuleToPrismaFilter(teamSourceRule),
                 },
               },
             },

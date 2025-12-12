@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
 
 export const getScoutersOnTeam = async (
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     console.log(req.headers);
@@ -39,6 +39,7 @@ export const getScoutersOnTeam = async (
     const rows = await prismaClient.scouter.findMany({
       where: {
         sourceTeamNumber: teamRow.number,
+        archived: false,
       },
     });
     res.status(200).send(rows);

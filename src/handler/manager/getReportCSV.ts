@@ -1,6 +1,6 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import prismaClient from "../../prismaClient.js";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 import { stringify } from "csv-stringify/sync";
 import {
   UserRole,
@@ -16,8 +16,12 @@ import {
   TeamMatchData,
   Event,
 } from "@prisma/client";
-import { autoEnd, endgameToPoints } from "../analysis/analysisConstants";
+import { autoEnd, endgameToPoints } from "../analysis/analysisConstants.js";
 import { z } from "zod";
+import {
+  dataSourceRuleToPrismaFilter,
+  dataSourceRuleSchema,
+} from "../analysis/dataSourceRule.js";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
 export interface CondensedReport {
@@ -125,9 +129,9 @@ export const getReportCSV = async (
           tournamentKey: params.data.tournamentKey,
         },
         scouter: {
-          sourceTeamNumber: {
-            in: req.user.teamSource,
-          },
+          sourceTeamNumber: dataSourceRuleToPrismaFilter(
+            dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+          ),
         },
       },
       select: {

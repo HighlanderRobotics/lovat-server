@@ -1,7 +1,8 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { invalidateCache } from "../../lib/clearCache.js";
 
 export const deleteScouter = async (
   req: AuthenticatedRequest,
@@ -48,7 +49,7 @@ export const deleteScouter = async (
         .send("Not authorized to update the name of the given scouter");
       return;
     }
-    await prismaClient.scouter.delete({
+    const scouterRow = await prismaClient.scouter.delete({
       where: {
         uuid: params.data.uuid,
       },
@@ -59,6 +60,11 @@ export const deleteScouter = async (
         team4Shifts: true,
         team5Shifts: true,
         team6Shifts: true,
+        scoutReports: {
+          include: {
+            teamMatchData: true,
+          },
+        },
       },
     });
     const deletedScouterUuid = params.data.uuid;
@@ -96,6 +102,15 @@ export const deleteScouter = async (
         });
       }
     }
+
+    const teamsScouted: number[] = scouterRow.scoutReports.map(
+      (report) => report.teamMatchData.teamNumber,
+    );
+    const tournamentsScouted: string[] = scouterRow.scoutReports.map(
+      (report) => report.teamMatchData.tournamentKey,
+    );
+
+    invalidateCache(teamsScouted, tournamentsScouted);
 
     res.status(200).send("Scouter deleted");
   } catch (error) {

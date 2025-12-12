@@ -19,6 +19,7 @@ Developed by FRC [Team 8033](https://www.frc8033.com/), [@HighlanderRobotics](ht
 ### Step 1: Clone the repository from github
 
 In your terminal, run
+
 ```bash
 git clone https://github.com/HighlanderRobotics/lovat-server.
 ```
@@ -33,6 +34,7 @@ nvm use
 ```
 
 To install dependencies from package.json:
+
 ```bash
 npm install
 ```

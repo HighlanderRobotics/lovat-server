@@ -84,6 +84,7 @@ model ScouterScheduleShift {
 model Scouter {
   uuid               String                 @id @default(uuid())
   name               String?
+  archived           Boolean                @default(false)
   sourceTeamNumber   Int
   strikes            Int                    @default(0)
   scouterReliability Int                    @default(0)
@@ -150,13 +151,13 @@ model EmailVerificationRequest {
 
 model SlackWorkspace {
   workspaceId   String              @id
-  owner         Int?
+  owner         Int
   name          String
   authToken     String
   botUserId     String
   authUserId    String
   subscriptions SlackSubscription[]
-  team          RegisteredTeam?     @relation(fields: [owner], references: [number], onDelete: Cascade)
+  team          RegisteredTeam     @relation(fields: [owner], references: [number], onDelete: Cascade)
 }
 
 model SlackSubscription {
@@ -188,18 +189,20 @@ model Tournament {
 }
 
 model User {
-  id               String            @id
-  teamNumber       Int?
-  email            String            @unique
-  emailVerified    Boolean           @default(false)
-  username         String?
-  role             UserRole          @default(ANALYST)
-  tournamentSource String[]
-  teamSource       Int[]
-  ApiKeys          ApiKey[]
-  mutablePicklists MutablePicklist[]
-  sharedPicklists  SharedPicklist[]
-  team             RegisteredTeam?   @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
+  id                   String            @id
+  teamNumber           Int?
+  email                String            @unique
+  emailVerified        Boolean           @default(false)
+  username             String?
+  role                 UserRole          @default(ANALYST)
+  tournamentSource     String[] /// @deprecated Use tournamentSourceRule instead
+  teamSource           Int[] /// @deprecated Use teamSourceRule instead
+  tournamentSourceRule Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
+  teamSourceRule       Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
+  ApiKeys              ApiKey[]
+  mutablePicklists     MutablePicklist[]
+  sharedPicklists      SharedPicklist[]
+  team                 RegisteredTeam?   @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
 }
 
 model ApiKey {
@@ -211,6 +214,12 @@ model ApiKey {
   lastUsed  DateTime?
   requests  Int       @default(0)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CachedAnalysis {
+  key                    String   @id
+  teamDependencies       Int[]    @default([])
+  tournamentDependencies String[] @default([])
 }
 
 enum Position {

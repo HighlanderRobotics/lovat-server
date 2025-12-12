@@ -1,8 +1,8 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth";
-import { sendSlackVerification } from "./sendSlackVerification";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { sendSlackVerification } from "./sendSlackVerification.js";
 
 export const addWebsite = async (
   req: AuthenticatedRequest,

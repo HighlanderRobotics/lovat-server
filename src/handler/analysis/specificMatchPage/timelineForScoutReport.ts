@@ -1,29 +1,27 @@
-import { Response } from "express";
-import prismaClient from "../../../prismaClient";
+import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-import { FlippedActionMap, FlippedPositionMap } from "../analysisConstants";
+import { FlippedActionMap, FlippedPositionMap } from "../analysisConstants.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
-export const timelineForScoutReport = async (
-  req: AuthenticatedRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const params = z
-      .object({
-        uuid: z.string(),
-      })
-      .safeParse({
-        uuid: req.params.uuid,
-      });
-    if (!params.success) {
-      res.status(400).send(params);
-      return;
-    }
-
+export const timelineForScoutReport = createAnalysisHandler({
+  params: {
+    params: z.object({
+      uuid: z.string(),
+    }),
+  },
+  usesDataSource: false,
+  shouldCache: false,
+  createKey: ({ params }) => {
+    return {
+      key: ["timelineForScoutReport", params.uuid],
+      teamDependencies: [],
+      tournamentDependencies: [],
+    };
+  },
+  calculateAnalysis: async ({ params }) => {
     const events = await prismaClient.event.findMany({
       where: {
-        scoutReportUuid: params.data.uuid,
+        scoutReportUuid: params.uuid,
       },
     });
     const timelineArray = [];
@@ -35,9 +33,6 @@ export const timelineForScoutReport = async (
       ]);
     }
 
-    res.status(200).send(timelineArray);
-  } catch (error) {
-    console.error(error);
-    res.status(400).send(error);
-  }
-};
+    return timelineArray;
+  },
+});

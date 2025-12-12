@@ -1,63 +1,53 @@
 import z from "zod";
+import { Metric } from "../analysisConstants.js";
+import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
+import { runAnalysis } from "../analysisFunction.js";
 import { User } from "@prisma/client";
-import { Metric } from "../analysisConstants";
-import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams";
 
-export const matchPredictionLogic = async (
-  user: User,
-  red1,
-  red2,
-  red3,
-  blue1,
-  blue2,
-  blue3,
-): Promise<{
-  red1: number;
-  red2: number;
-  red3: number;
-  blue1: number;
-  blue2: number;
-  blue3: number;
-  redWinning: number;
-  blueWinning: number;
-  winningAlliance: number;
-}> => {
-  try {
-    const params = z
-      .object({
-        red1: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
-        red2: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
-        red3: z.preprocess((x) => (x ? x : undefined), z.coerce.number().int()),
-        blue1: z.preprocess(
-          (x) => (x ? x : undefined),
-          z.coerce.number().int(),
-        ),
-        blue2: z.preprocess(
-          (x) => (x ? x : undefined),
-          z.coerce.number().int(),
-        ),
-        blue3: z.preprocess(
-          (x) => (x ? x : undefined),
-          z.coerce.number().int(),
-        ),
-      })
-      .safeParse({
-        red1: red1,
-        red2: red2,
-        red3: red3,
-        blue1: blue1,
-        blue2: blue2,
-        blue3: blue3,
-      });
-    if (!params.success) {
-      throw params;
-    }
+const config = {
+  argsSchema: z.object({
+    red1: z.coerce.number().int(),
+    red2: z.coerce.number().int(),
+    red3: z.coerce.number().int(),
+    blue1: z.coerce.number().int(),
+    blue2: z.coerce.number().int(),
+    blue3: z.coerce.number().int(),
+  }),
+  returnSchema: z.object({
+    red1: z.number(),
+    red2: z.number(),
+    red3: z.number(),
+    blue1: z.number(),
+    blue2: z.number(),
+    blue3: z.number(),
+    redWinning: z.number(),
+    blueWinning: z.number(),
+    winningAlliance: z.number(),
+  }),
+  usesDataSource: true,
+  shouldCache: true,
+  createKey: (args) => ({
+    key: [
+      "matchPredictionLogic",
+      ...[args.red1, args.red2, args.red3].sort().map(String),
+      ...[args.blue1, args.blue2, args.blue3].sort().map(String),
+    ],
+    teamDependencies: [
+      args.red1,
+      args.red2,
+      args.red3,
+      args.blue1,
+      args.blue2,
+      args.blue3,
+    ],
+  }),
+  calculateAnalysis: async (args, ctx) => {
+    const params = { data: args } as const;
 
-    const redArrs = await arrayAndAverageTeams(
-      [params.data.red1, params.data.red2, params.data.red3],
-      Metric.totalPoints,
-      user,
-    );
+    const redArrs = await arrayAndAverageTeams(ctx.user, {
+      teams: [params.data.red1, params.data.red2, params.data.red3],
+      metric: Metric.totalPoints,
+    });
     const redArr1 = redArrs[params.data.red1].timeLine.map(
       (item) => item.dataPoint,
     );
@@ -69,7 +59,6 @@ export const matchPredictionLogic = async (
     );
 
     if (redArr1.length <= 1 || redArr2.length <= 1 || redArr3.length <= 1) {
-      //not enough data
       throw "not enough data";
     }
     const red1SDV = getSDV(redArr1);
@@ -80,15 +69,12 @@ export const matchPredictionLogic = async (
       Math.pow(red1SDV, 2) + Math.pow(red2SDV, 2) + Math.pow(red3SDV, 2),
     );
     const redAllianceMean =
-      (await getMean(redArr1)) +
-      (await getMean(redArr2)) +
-      (await getMean(redArr3));
+      getMean(redArr1) + getMean(redArr2) + getMean(redArr3);
 
-    const blueArrs = await arrayAndAverageTeams(
-      [params.data.blue1, params.data.blue2, params.data.blue3],
-      Metric.totalPoints,
-      user,
-    );
+    const blueArrs = await arrayAndAverageTeams(ctx.user, {
+      teams: [params.data.blue1, params.data.blue2, params.data.blue3],
+      metric: Metric.totalPoints,
+    });
     const blueArr1 = blueArrs[params.data.blue1].timeLine.map(
       (item) => item.dataPoint,
     );
@@ -100,7 +86,6 @@ export const matchPredictionLogic = async (
     );
 
     if (blueArr1.length <= 1 || blueArr2.length <= 1 || blueArr3.length <= 1) {
-      //not enough data
       throw "not enough data";
     }
     const blue1SDV = getSDV(blueArr1);
@@ -111,25 +96,19 @@ export const matchPredictionLogic = async (
       Math.pow(blue1SDV, 2) + Math.pow(blue2SDV, 2) + Math.pow(blue3SDV, 2),
     );
     const blueAllianceMean =
-      (await getMean(blueArr1)) +
-      (await getMean(blueArr2)) +
-      (await getMean(blueArr3));
+      getMean(blueArr1) + getMean(blueArr2) + getMean(blueArr3);
 
     const differentialSDV = Math.sqrt(
       Math.pow(redAllianceSDV, 2) + Math.pow(blueAllianceSDV, 2),
     );
     const differentialMean = redAllianceMean - blueAllianceMean;
 
-    const redLoosing = await getZPercent(
-      (0 - differentialMean) / differentialSDV,
-    );
+    const redLoosing = getZPercent((0 - differentialMean) / differentialSDV);
 
     const redWinning = 1 - redLoosing;
     const blueWiinning = 1 - redWinning;
 
-    //starting at 1 (1 = blue, 0 = red)
     let winningAlliance = 1;
-
     if (Math.max(redWinning, blueWiinning) == redWinning) {
       winningAlliance = 0;
     }
@@ -145,15 +124,21 @@ export const matchPredictionLogic = async (
       blueWinning: blueWiinning,
       winningAlliance: winningAlliance,
     };
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
+  },
+} as const;
+
+export type MatchPredictionArgs = z.infer<typeof config.argsSchema>;
+export type MatchPredictionResult = z.infer<typeof config.returnSchema>;
+export async function matchPredictionLogic(
+  user: User,
+  args: MatchPredictionArgs,
+): Promise<MatchPredictionResult> {
+  return runAnalysis(config, user, args);
+}
+
 function getZPercent(z: number) {
   if (z < -6.5) return 0.0;
   if (z > 6.5) return 1.0;
-
   let factK = 1;
   let sum = 0;
   let term = 1;
@@ -171,7 +156,6 @@ function getZPercent(z: number) {
     factK *= k;
   }
   sum += 0.5;
-
   return sum;
 }
 function getMean(teamArray: number[]) {
@@ -181,15 +165,12 @@ function getMean(teamArray: number[]) {
   }
   return total / teamArray.length;
 }
-
 function getSDV(arr: number[]) {
   const mean = getMean(arr);
-
   let variance = 0;
   for (const num of arr) {
     variance += (num - mean) * (num - mean);
   }
   variance /= arr.length;
-
   return Math.sqrt(variance);
 }
