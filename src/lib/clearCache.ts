@@ -4,7 +4,7 @@ import { kv } from "../redisClient.js";
 export const clearCache = async () => {
   await prismaClient.cachedAnalysis.deleteMany();
 
-  kv.flush();
+  await kv.flush();
 
   console.log("Cache cleared");
 };
@@ -31,7 +31,7 @@ export const invalidateCache = async (
   if (analysisRows.length > 0) {
     const keysToDelete = analysisRows.map((row) => row.key);
 
-    kv.del(keysToDelete);
+    await kv.del(keysToDelete);
 
     await prismaClient.cachedAnalysis.deleteMany({
       where: { key: { in: keysToDelete } },
