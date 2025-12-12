@@ -38,7 +38,7 @@ export type AnalysisHandlerArgs<
   };
   calculateAnalysis: (
     params: AnalysisHandlerParams<T, U, V>,
-    ctx?: AnalysisContext,
+    ctx: AnalysisContext,
   ) => Promise<any>;
   usesDataSource: boolean;
   shouldCache: boolean;
@@ -74,11 +74,7 @@ export const createAnalysisHandler: <
       if (!args.shouldCache) {
         try {
           let calculatedAnalysis = null;
-          if (args.usesDataSource) {
-            calculatedAnalysis = await args.calculateAnalysis(params, context);
-          } else {
-            calculatedAnalysis = await args.calculateAnalysis(params);
-          }
+          calculatedAnalysis = await args.calculateAnalysis(params, context);
 
           res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
         } catch (error) {
