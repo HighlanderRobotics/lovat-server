@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { requireAuth } from "../../lib/middleware/requireAuth";
-import { updateScouterName } from "../../handler/manager/updateScouterName";
-import { deleteScouter } from "../../handler/manager/deleteScouter";
-import { scoutingLeadProgressPage } from "../../handler/manager/scoutingLeadProgressPage";
-import { addScouterDashboard } from "../../handler/manager/addScouterDashboard";
-import { scouterScoutReports } from "../../handler/analysis/scoutingLead/scouterScoutReports";
+import { updateScouterName } from "../../handler/manager/dashboard/updateScouterName";
+import { deleteScouter } from "../../handler/manager/dashboard/deleteScouter";
+import { scoutingLeadProgressPage } from "../../handler/manager/dashboard/scoutingLeadProgressPage";
+import { addScouterDashboard } from "../../handler/manager/dashboard/addScouterDashboard";
+import { scouterScoutReports } from "../../handler/manager/dashboard/scouterScoutReports";
 
 const router = Router();
 

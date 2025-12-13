@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { requireAuth } from "../../lib/middleware/requireAuth";
-import { getTeamCSV } from "../../handler/manager/getTeamCSV";
-import { getTeamMatchCSV } from "../../handler/manager/getTeamMatchCSV";
-import { getReportCSV } from "../../handler/manager/getReportCSV";
+import { getTeamCSV } from "../../handler/manager/teams/getTeamCSV";
+import { getTeamMatchCSV } from "../../handler/manager/teams/getTeamMatchCSV";
+import { getReportCSV } from "../../handler/manager/csv/getReportCSV";
 
 const router = Router();
 

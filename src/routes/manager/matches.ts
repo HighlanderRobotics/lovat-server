@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../../lib/middleware/requireAuth";
-import { getMatches } from "../../handler/manager/getMatchesNew";
+import { getMatches } from "../../handler/manager/tournaments/getMatchesNew";
 
 const router = Router();
 

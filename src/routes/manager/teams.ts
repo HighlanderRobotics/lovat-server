@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { requireAuth } from "../../lib/middleware/requireAuth";
-import { getTeams } from "../../handler/manager/getTeams";
-import { getTeamsInTournament } from "../../handler/manager/getTeamsInTournament";
-import { getTeamRankings } from "../../handler/manager/getTeamRankings";
-import { getTeamTournamentStatus } from "../../handler/manager/getTeamTournamentStatus";
+import { getTeams } from "../../handler/manager/teams/getTeams";
+import { getTeamsInTournament } from "../../handler/manager/teams/getTeamsInTournament";
+import { getTeamRankings } from "../../handler/manager/teams/getTeamRankings";
+import { getTeamTournamentStatus } from "../../handler/manager/teams/getTeamTournamentStatus";
 
 const router = Router();
 

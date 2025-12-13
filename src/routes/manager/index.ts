@@ -1,16 +1,16 @@
 import { Router } from "express";
-import onboarding from "./onboarding.js";
-import picklists from "./picklists.js";
-import scouter from "./scouter.js";
-import teams from "./teams.js";
-import tournaments from "./tournaments.js";
-import matches from "./matches.js";
-import scoutershift from "./scoutershift.js";
-import users from "./users.js";
-import settings from "./settings.js";
-import dashboard from "./dashboard.js";
-import scoutingLead from "./scoutingLead.js";
-import csv from "./csv.js";
+import onboarding from "./onboarding";
+import picklists from "./picklists";
+import scouter from "./scouter";
+import teams from "./teams";
+import tournaments from "./tournaments";
+import matches from "./matches";
+import scoutershift from "./scoutershift";
+import users from "./users";
+import settings from "./settings";
+import dashboard from "./dashboard";
+import scoutingLead from "./scoutingLead";
+import csv from "./csv";
 
 const router = Router();
 

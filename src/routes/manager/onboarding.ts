@@ -1,17 +1,17 @@
 import { Router } from "express";
-import { requireAuth } from "../../lib/middleware/requireAuth";
-import requireLovatSignature from "../../lib/middleware/requireLovatSignature";
-import { addUsername } from "../../handler/manager/addUsername";
-import { checkCode } from "../../handler/manager/checkCode";
-import { addTeamSource } from "../../handler/manager/addTeamSource";
-import { addTournamentSource } from "../../handler/manager/addTournamentSource";
-import { addRegisteredTeam } from "../../handler/manager/addRegisteredTeam";
-import { approveRegisteredTeam } from "../../handler/manager/approveRegisteredTeam";
-import { rejectRegisteredTeam } from "../../handler/manager/rejectRegisteredTeam";
-import { addWebsite } from "../../handler/manager/addWebsite";
-import { resendEmail } from "../../handler/manager/resendEmail";
+import { requireAuth } from "../../lib/middleware/requireAuth.js";
+import requireLovatSignature from "../../lib/middleware/requireLovatSignature.js";
+import { addUsername } from "../../handler/manager/users/addUsername.js";
+import { checkCode } from "../../handler/manager/users/checkCode.js";
+import { addTeamSource } from "../../handler/manager/teams/addTeamSource.js";
+import { addTournamentSource } from "../../handler/manager/tournaments/addTournamentSource.js";
+import { addRegisteredTeam } from "../../handler/manager/onboarding/addRegisteredTeam.js";
+import { approveRegisteredTeam } from "../../handler/manager/onboarding/approveRegisteredTeam.js";
+import { rejectRegisteredTeam } from "../../handler/manager/onboarding/rejectRegisteredTeam.js";
+import { addWebsite } from "../../handler/manager/onboarding/addWebsite.js";
+import { resendEmail } from "../../handler/manager/onboarding/resendEmail.js";
 import rateLimit from "express-rate-limit";
-import { approveTeamEmail } from "../../handler/manager/approveTeamEmail";
+import { approveTeamEmail } from "../../handler/manager/onboarding/approveTeamEmail";
 
 const resendEmailLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,

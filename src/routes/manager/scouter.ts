@@ -1,17 +1,17 @@
 import { Router } from "express";
 import { requireAuth } from "../../lib/middleware/requireAuth";
-import { getScouters } from "../../handler/manager/getScouters";
-import { getScouterSchedule } from "../../handler/manager/getScouterSchedule";
-import { getScoutersOnTeam } from "../../handler/manager/getScoutersOnTeam";
-import { addNewScouter } from "../../handler/manager/addNewScouter";
-import { emailTeamCode } from "../../handler/manager/emailTeamCode";
-import { checkCodeScouter } from "../../handler/manager/checkCodeScouter";
-import { unarchiveScouter } from "../../handler/manager/unarchiveScouter";
-import { archiveScouter } from "../../handler/manager/archiveScouter";
-import { changeNameScouter } from "../../handler/manager/changeNameScouter";
-import { getScouterTournaments } from "../../handler/manager/getScouterTournaments";
-import { getScheduleForScouter } from "../../handler/manager/getScheduleForScouter";
-import { getTournamentForScouterWithSchedule } from "../../handler/manager/getTournamentForScouterWithSchedule";
+import { getScouters } from "../../handler/manager/scouter/getScouters";
+import { getScouterSchedule } from "../../handler/manager/scouter/getScouterSchedule";
+import { getScoutersOnTeam } from "../../handler/manager/scouter/getScoutersOnTeam";
+import { addNewScouter } from "../../handler/manager/scouter/addNewScouter";
+import { emailTeamCode } from "../../handler/manager/onboarding/emailTeamCode";
+import { checkCodeScouter } from "../../handler/manager/scouter/checkCodeScouter";
+import { unarchiveScouter } from "../../handler/manager/scouter/unarchiveScouter";
+import { archiveScouter } from "../../handler/manager/scouter/archiveScouter";
+import { changeNameScouter } from "../../handler/manager/scouter/changeNameScouter";
+import { getScouterTournaments } from "../../handler/manager/scouter/getScouterTournaments";
+import { getScheduleForScouter } from "../../handler/manager/scouter/getScheduleForScouter";
+import { getTournamentForScouterWithSchedule } from "../../handler/manager/scouter/getTournamentForScouterWithSchedule";
 
 const router = Router();
 

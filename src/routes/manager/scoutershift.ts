@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { requireAuth } from "../../lib/middleware/requireAuth";
-import { addScouterShift } from "../../handler/manager/addScouterShift";
-import { deleteScouterShift } from "../../handler/manager/deleteScouterShift";
-import { updateScouterShift } from "../../handler/manager/updateScouterShift";
+import { addScouterShift } from "../../handler/manager/scoutershift/addScouterShift";
+import { deleteScouterShift } from "../../handler/manager/scoutershift/deleteScouterShift";
+import { updateScouterShift } from "../../handler/manager/scoutershift/updateScouterShift";
 
 const router = Router();
 

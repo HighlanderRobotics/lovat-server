@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { pitDisplay } from "../../handler/manager/pitDisplay";
+import { pitDisplay } from "../../handler/manager/teams/pitDisplay";
 
 const router = Router();
 

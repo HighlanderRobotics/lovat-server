@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { requireAuth } from "../../lib/middleware/requireAuth";
-import { addScoutReportDashboard } from "../../handler/manager/addScoutReportDashboard";
+import { requireAuth } from "../../lib/middleware/requireAuth.js";
+import { addScoutReportDashboard } from "../../handler/manager/scouter/addScoutReportDashboard.js";
 
 const router = Router();
 

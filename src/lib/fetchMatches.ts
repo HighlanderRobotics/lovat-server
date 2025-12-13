@@ -1,5 +1,5 @@
-import prisma from "../prismaClient.js";
-import { addTournamentMatches } from "../handler/manager/addTournamentMatches.js";
+import prisma from "../prismaClient";
+import { addTournamentMatches } from "../handler/manager/tournaments/addTournamentMatches";
 
 export default async function fetchMatches(): Promise<void> {
   // upsert current tournaments in the matches table

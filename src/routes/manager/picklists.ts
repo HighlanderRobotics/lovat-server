@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { requireAuth } from "../../lib/middleware/requireAuth";
 
-import { addPicklist } from "../../handler/manager/addPicklist";
-import { getPicklists } from "../../handler/manager/getPicklists";
-import { deletePicklist } from "../../handler/manager/deletePicklist";
-import { getSinglePicklist } from "../../handler/manager/getSinglePicklist";
-import { updatePicklist } from "../../handler/manager/updatePicklist";
+import { addPicklist } from "../../handler/manager/picklists/addPicklist";
+import { getPicklists } from "../../handler/manager/picklists/getPicklists";
+import { deletePicklist } from "../../handler/manager/picklists/deletePicklist";
+import { getSinglePicklist } from "../../handler/manager/picklists/getSinglePicklist";
+import { updatePicklist } from "../../handler/manager/picklists/updatePicklist";
 
 const router = Router();
 

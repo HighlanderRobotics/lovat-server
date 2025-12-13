@@ -1,17 +1,17 @@
 import { Router } from "express";
 import { requireAuth } from "../../lib/middleware/requireAuth";
-import { getProfile } from "../../handler/manager/getProfile";
-import { getUsers } from "../../handler/manager/getUsers";
-import { deleteUser } from "../../handler/manager/deleteUser";
-import { updateRoleToScoutingLead } from "../../handler/manager/updateRoleToScoutingLead";
-import { scoutingLeadProgressPage } from "../../handler/manager/scoutingLeadProgressPage";
-import { deleteScouter } from "../../handler/manager/deleteScouter";
-import { addScouterDashboard } from "../../handler/manager/addScouterDashboard";
-import { scouterScoutReports } from "../../handler/analysis/scoutingLead/scouterScoutReports";
-import { updateScouterName } from "../../handler/manager/updateScouterName";
-import { getTeamCode } from "../../handler/manager/getTeamCode";
-import { getAnalysts } from "../../handler/manager/getAnalysts";
-import { deleteScoutReport } from "../../handler/manager/deleteScoutReport";
+import { getProfile } from "../../handler/manager/users/getProfile";
+import { getUsers } from "../../handler/manager/users/getUsers";
+import { deleteUser } from "../../handler/manager/users/deleteUser";
+import { updateRoleToScoutingLead } from "../../handler/manager/users/updateRoleToScoutingLead";
+import { scoutingLeadProgressPage } from "../../handler/manager/dashboard/scoutingLeadProgressPage";
+import { deleteScouter } from "../../handler/manager/dashboard/deleteScouter";
+import { addScouterDashboard } from "../../handler/manager/dashboard/addScouterDashboard";
+import { scouterScoutReports } from "../../handler/manager/dashboard/scouterScoutReports";
+import { updateScouterName } from "../../handler/manager/dashboard/updateScouterName";
+import { getTeamCode } from "../../handler/manager/onboarding/getTeamCode";
+import { getAnalysts } from "../../handler/manager/users/getAnalysts";
+import { deleteScoutReport } from "../../handler/manager/dashboard/deleteScoutReport";
 
 const router = Router();
 
