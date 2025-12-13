@@ -4,12 +4,13 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "dev": "NODE_ENV=development tsx watch src/server.ts",
+    "build": "tsc --project tsconfig.json",
+    "start": "node dist/server.js",
     "test": "tsc",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "start:prod": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -33,7 +34,8 @@
     "ts-node": "^10.9.2",
     "zod": "^4.1.12"
   },
-  "devDependencies": {
+  "devDependencies": { 
+    "@types/cookie-parser": "^1.4.7",
     "@eslint/js": "^9.8.0",
     "@types/crypto-js": "^4.2.1",
     "@types/express": "^4.17.21",

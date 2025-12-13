@@ -8,7 +8,7 @@
   "deploy": {
     "runtime": "V2",
     "numReplicas": 2,
-    "startCommand": "sleep 3 && export DATABASE_URL=$DATABASE_PRIVATE_URL && npm start",
+      "startCommand": "sleep 3 && export DATABASE_URL=$DATABASE_PRIVATE_URL && npm run start:prod",
     "preDeployCommand": [
       "sleep 3 && DATABASE_URL=$DATABASE_PRIVATE_URL npx prisma db push"
     ],
