@@ -6,14 +6,15 @@ import { updateScouterShift } from "../../handler/manager/updateScouterShift";
 
 const router = Router();
 
+// Router: /v1/manager/scoutershift
 // GET handled in scouter router (/shift, /shift/scouters)
-// POST /v1/manager/scoutershift/scouters
+// POST /scouters → add scouter shift
 router.post("/scouters", requireAuth, addScouterShift);
 
-// POST /v1/manager/scoutershift/scoutershifts/:uuid
+// POST /scoutershifts/:uuid → update scouter shift
 router.post("/scoutershifts/:uuid", requireAuth, updateScouterShift);
 
-// DELETE /v1/manager/scoutershift/scoutershifts/:uuid
+// DELETE /scoutershifts/:uuid → delete scouter shift
 router.delete("/scoutershifts/:uuid", requireAuth, deleteScouterShift);
 
 export default router;

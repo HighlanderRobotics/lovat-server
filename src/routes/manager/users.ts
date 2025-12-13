@@ -15,16 +15,17 @@ import { deleteScoutReport } from "../../handler/manager/deleteScoutReport";
 
 const router = Router();
 
-// GET /v1/manager/profile
+// Router: /v1/manager/* (mounted at root)
+// GET /profile → current user profile
 router.get("/profile", requireAuth, getProfile);
 
-// GET /v1/manager/users
+// GET /users → team users
 router.get("/users", requireAuth, getUsers);
 
-// DELETE /v1/manager/user
+// DELETE /user → delete a user
 router.delete("/user", requireAuth, deleteUser);
 
-// POST /v1/manager/upgradeuser
+// POST /upgradeuser → promote to scouting lead
 router.post("/upgradeuser", requireAuth, updateRoleToScoutingLead);
 
 

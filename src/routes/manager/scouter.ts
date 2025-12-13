@@ -15,17 +15,30 @@ import { getTournamentForScouterWithSchedule } from "../../handler/manager/getTo
 
 const router = Router();
 
+// Router: /v1/manager/scouter
+// GET /shift/scouters → list scouters
 router.get("/shift/scouters", requireAuth, getScouters);
+// GET /shift → scouter schedule
 router.get("/shift", requireAuth, getScouterSchedule);
+// GET /scouters → scouters on team
 router.get("/scouters", getScoutersOnTeam);
+// POST /scouter → add scouter
 router.post("/scouter", addNewScouter);
+// POST /emailTeamCode → send code
 router.post("/emailTeamCode", emailTeamCode);
+// GET /checkcode → verify code
 router.get("/checkcode", checkCodeScouter);
+// POST /unarchive/uuid/:uuid → unarchive
 router.post("/unarchive/uuid/:uuid", requireAuth, unarchiveScouter);
+// POST /archive/uuid/:uuid → archive
 router.post("/archive/uuid/:uuid", requireAuth, archiveScouter);
+// POST /name/uuid/:uuid → change name
 router.post("/name/uuid/:uuid", changeNameScouter);
+// GET /scouters/:uuid/tournaments → list tournaments
 router.get("/scouters/:uuid/tournaments", getScouterTournaments);
+// GET /scouterschedules/:tournament → schedule
 router.get("/scouterschedules/:tournament", getScheduleForScouter);
+// GET /tournaments → scouter tournaments
 router.get("/tournaments", getTournamentForScouterWithSchedule);
 
 export default router;

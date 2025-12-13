@@ -4,7 +4,8 @@ import { getMatches } from "../../handler/manager/getMatchesNew";
 
 const router = Router();
 
-// GET /v1/manager/matches/:tournament
+// Router: /v1/manager/matches
+// GET /:tournament → list matches for tournament
 router.get("/:tournament", requireAuth, getMatches);
 
 export default router;

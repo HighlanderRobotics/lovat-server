@@ -8,16 +8,18 @@ const router = express.Router();
 
 router.use(requireSlackToken)
 
-// add/update slack workspace
+// Router: /v1/slack
+// GET /add-workspace → add or update Slack workspace
 router.get("/add-workspace", addSlackWorkspace);
 
-// process slash commands
+// POST /command → process Slack slash commands
 router.post(
   "/command",
   express.urlencoded({ extended: true }),
   processCommand
 );
 
+// POST /event → process Slack events
 router.post("/event", processEvent);
 
 export default router
