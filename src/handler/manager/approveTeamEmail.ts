@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
 export const approveTeamEmail = async (
   req: Request,
