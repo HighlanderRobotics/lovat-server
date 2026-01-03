@@ -4,4 +4,4 @@ dist
 .DS_Store
 .rdb
 .vscode/
-prisma/generated
+src/generated/
