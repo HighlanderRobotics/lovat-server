@@ -47,7 +47,6 @@ router.post("/teamwebsite", addWebsite);
 router.post(
   "/resendverificationemail",
   resendEmailLimiter,
-  requireAuth,
   resendEmail,
 );
 

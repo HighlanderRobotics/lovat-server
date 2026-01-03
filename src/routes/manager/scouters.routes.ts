@@ -29,8 +29,8 @@ router.get("/scouter/tournaments", getTournamentForScouterWithSchedule);
 
 router.use(requireAuth);
 
-router.post("/unarchive/uuid/:uuid", requireAuth, unarchiveScouter);
-router.post("/archive/uuid/:uuid", requireAuth, archiveScouter);
+router.post("/unarchive/uuid/:uuid", unarchiveScouter);
+router.post("/archive/uuid/:uuid", archiveScouter);
 
 router.put("/scoutername", updateScouterName);
 router.delete("/scouterdashboard", deleteScouter);

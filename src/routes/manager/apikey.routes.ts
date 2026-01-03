@@ -9,9 +9,9 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.post("/", requireAuth, addApiKey);
-router.delete("/", requireAuth, revokeApiKey);
-router.get("/", requireAuth, getApiKeys);
-router.patch("/", requireAuth, renameApiKey);
+router.post("/", addApiKey);
+router.delete("/", revokeApiKey);
+router.get("/", getApiKeys);
+router.patch("/", renameApiKey);
 
 export default router;
