@@ -13,7 +13,7 @@ import {
   KnocksAlgae,
   UnderShallowCage,
   Event,
-}from "@/../prisma/generated/prisma/client";
+}from "@/generated/prisma/client";
 import { autoEnd, endgameToPoints } from "../analysis/analysisConstants.js";
 import { z } from "zod";
 import {

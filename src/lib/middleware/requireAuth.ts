@@ -1,6 +1,6 @@
 import prisma from "../../prismaClient.js";
 import axios from "axios";
-import { User }from "@/../prisma/generated/prisma/client";
+import { User }from "@/generated/prisma/client";
 import { Request as ExpressRequest, Response, NextFunction } from "express";
 import * as jose from "jose";
 import { createHash } from "crypto";

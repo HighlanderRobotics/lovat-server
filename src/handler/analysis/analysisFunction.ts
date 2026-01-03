@@ -3,7 +3,7 @@ import prismaClient from "../../prismaClient.js";
 import { dataSourceRuleSchema } from "./dataSourceRule.js";
 import { kv } from "../../redisClient.js";
 import { AnalysisContext } from "./analysisConstants.js";
-import { User }from "@/../prisma/generated/prisma/client";
+import { User }from "@/generated/prisma/client";
 
 export type CreateKeyResult = {
   key: string[];

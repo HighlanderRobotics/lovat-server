@@ -1,4 +1,4 @@
-import { PrismaClient } from "../prisma/generated/prisma/client";
+import { PrismaClient } from "@/generated/prisma/client";
 const prisma = new PrismaClient({ accelerateUrl: process.env.DATABASE_URL });
 async function main() {
   const featureToggleSlackVerification = await prisma.featureToggle.create({

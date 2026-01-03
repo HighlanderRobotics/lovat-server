@@ -1,7 +1,7 @@
 import axios from "axios";
 import z from "zod";
 import { runAnalysis, AnalysisFunctionConfig } from "./analysisFunction.js";
-import { User }from "@/../prisma/generated/prisma/client";
+import { User }from "@/generated/prisma/client";
 
 export async function computeRankFlag(
   eventKey: string,

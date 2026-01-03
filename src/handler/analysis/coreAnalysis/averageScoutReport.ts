@@ -5,7 +5,7 @@ import {
   Metric,
   metricToEvent,
 } from "../analysisConstants.js";
-import { EventAction, Position, User }from "@/../prisma/generated/prisma/client";
+import { EventAction, Position, User }from "@/generated/prisma/client";
 import z from "zod";
 import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 

@@ -5,7 +5,7 @@ import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam.js";
 import { robotRole } from "../coreAnalysis/robotRole.js";
 import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
-import { RobotRole, User }from "@/../prisma/generated/prisma/client";
+import { RobotRole, User }from "@/generated/prisma/client";
 
 const config = {
   argsSchema: z.object({

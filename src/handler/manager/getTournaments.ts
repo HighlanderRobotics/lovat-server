@@ -214,13 +214,13 @@ export const getTournaments = async (
       count = (await prismaClient.tournament.findMany({})).length;
     }
     if (req.user.teamNumber) {
-      const teamTournaments = await prismaClient.teamMatchData.groupBy({
+      const teamTournaments = (await prismaClient.teamMatchData.groupBy({
         by: ["tournamentKey"],
         where: {
           teamNumber: req.user.teamNumber,
         },
-      });
-      const presentTeamTournaments = [];
+      })) as { tournamentKey: string }[];
+      const presentTeamTournaments: typeof rows = [];
       for (let i = 0; i < rows.length; i++) {
         if (teamTournaments.some((obj) => obj.tournamentKey === rows[i].key)) {
           presentTeamTournaments.push(rows[i]);

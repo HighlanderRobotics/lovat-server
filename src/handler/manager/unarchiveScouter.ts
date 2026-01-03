@@ -1,7 +1,7 @@
 import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
-import { UserRole }from "@/../prisma/generated/prisma/client";
+import { UserRole }from "@/generated/prisma/client";
 import { Response } from "express";
 
 export const unarchiveScouter = async (

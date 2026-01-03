@@ -8,9 +8,9 @@ import {
   ttlConstant,
   allTournaments,
 } from "../analysisConstants.js";
-import { BargeResult, Position, Prisma }from "@/../prisma/generated/prisma/client";
+import { BargeResult, Position, Prisma }from "@/generated/prisma/client";
 import { endgameRuleOfSuccession } from "../picklist/endgamePicklistTeamFast.js";
-import { Event }from "@/../prisma/generated/prisma/client";
+import { Event }from "@/generated/prisma/client";
 import { weightedTourAvgLeft } from "./arrayAndAverageTeams.js";
 import z from "zod";
 import {
@@ -18,7 +18,7 @@ import {
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
 import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
-import { User }from "@/../prisma/generated/prisma/client";
+import { User }from "@/generated/prisma/client";
 
 export interface ArrayFilter<T> {
   notIn?: T[];
