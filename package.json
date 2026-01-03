@@ -4,9 +4,9 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development tsx watch src/start.ts",
+    "dev": "NODE_ENV=development tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/start.js",
+    "start": "node dist/server.js",
     "test": "tsc",
     "lint": "eslint .",
     "format": "prettier --write ."
