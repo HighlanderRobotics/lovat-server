@@ -1,8 +1,8 @@
 import { Response } from "express";
-import prismaClient from "../../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
 import { createHash, randomBytes } from "crypto";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
+import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
 
 export const addApiKey = async (
   req: AuthenticatedRequest,

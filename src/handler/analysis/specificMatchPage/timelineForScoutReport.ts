@@ -1,7 +1,7 @@
-import prismaClient from "../../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
-import { FlippedActionMap, FlippedPositionMap } from "../analysisConstants.js";
-import { createAnalysisHandler } from "../analysisHandler.js";
+import { FlippedActionMap, FlippedPositionMap } from "@/src/handler/analysis/analysisConstants.js";
+import { createAnalysisHandler } from "@/src/handler/analysis/analysisHandler.js";
 
 export const timelineForScoutReport = createAnalysisHandler({
   params: {

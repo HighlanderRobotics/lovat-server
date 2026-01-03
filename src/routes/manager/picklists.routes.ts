@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { requireAuth } from "../../lib/middleware/requireAuth";
-import { addPicklist } from "../../handler/manager/addPicklist";
-import { deletePicklist } from "../../handler/manager/deletePicklist";
-import { getPicklists } from "../../handler/manager/getPicklists";
-import { getSinglePicklist } from "../../handler/manager/getSinglePicklist";
-import { updatePicklist } from "../../handler/manager/updatePicklist";
+import { requireAuth } from "@/src/lib/middleware/requireAuth.js";
+import { addPicklist } from "@/src/handler/manager/picklists/addPicklist.js";
+import { deletePicklist } from "@/src/handler/manager/picklists/deletePicklist.js";
+import { getPicklists } from "@/src/handler/manager/picklists/getPicklists.js";
+import { getSinglePicklist } from "@/src/handler/manager/picklists/getSinglePicklist.js";
+import { updatePicklist } from "@/src/handler/manager/picklists/updatePicklist.js";
 
 /*
 

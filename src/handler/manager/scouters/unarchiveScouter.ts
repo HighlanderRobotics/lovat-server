@@ -1,6 +1,6 @@
-import prismaClient from "../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
 import { UserRole } from "@prisma/client";
 import { Response } from "express";
 

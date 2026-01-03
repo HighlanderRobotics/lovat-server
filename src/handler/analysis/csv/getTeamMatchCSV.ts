@@ -1,6 +1,6 @@
 import { Response } from "express";
-import prismaClient from "../../../prismaClient.js";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
+import prismaClient from "@/src/prismaClient.js";
+import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
 import { stringify } from "csv-stringify/sync";
 import {
   UserRole,
@@ -15,13 +15,13 @@ import {
   Scouter,
   Event,
 } from "@prisma/client";
-import { autoEnd, endgameToPoints } from "../analysisConstants.js";
+import { autoEnd, endgameToPoints } from "@/src/handler/analysis/analysisConstants.js";
 import { z } from "zod";
-import { CondensedReport } from "./getReportCSV.js";
+import { CondensedReport } from "@/src/handler/analysis/csv/getReportCSV.js";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
-} from "../dataSourceRule.js";
+} from "@/src/handler/analysis/dataSourceRule.js";
 
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {

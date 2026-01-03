@@ -1,18 +1,18 @@
-import prismaClient from "../../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import { EventAction, User } from "@prisma/client";
 import {
   breakdownNeg,
   breakdownPos,
   breakdownToEnum,
   MetricsBreakdown,
-} from "../analysisConstants.js";
+} from "@/src/handler/analysis/analysisConstants.js";
 
 import z from "zod";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
-} from "../dataSourceRule.js";
-import { runAnalysis } from "../analysisFunction.js";
+} from "@/src/handler/analysis/dataSourceRule.js";
+import { runAnalysis } from "@/src/handler/analysis/analysisFunction.js";
 
 /**
  * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,

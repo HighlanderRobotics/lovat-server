@@ -1,12 +1,12 @@
 // import { Request, Response } from "express";
-// import prismaClient from '../../../prismaClient'
+// import prismaClient from '@/src/prismaClient.js'
 // import z from 'zod'
-// import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-// import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "../analysisConstants.js";
-// import { autoPathSingleMatchSingleScoutReport } from "../autoPaths/autoPathSingleMatchSingleScoutReport";
-// import { singleMatchSingleScoutReport } from "../coreAnalysis/singleMatchSingleScoutReport";
-// import { cooperationSingleMatch } from "../coreAnalysis/cooperationSingleMatch";
-// // import { cooperationSingleMatch } from "./cooperationSingleMatch.js";
+// import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
+// import { driverAbility, highNoteMap, matchTimeEnd, metricToEvent, stageMap } from "@/src/handler/analysis/analysisConstants.js";
+// import { autoPathSingleMatchSingleScoutReport } from "@/src/handler/analysis/autoPaths/autoPathSingleMatchSingleScoutReport";
+// import { singleMatchSingleScoutReport } from "@/src/handler/analysis/coreAnalysis/singleMatchSingleScoutReport";
+// import { cooperationSingleMatch } from "@/src/handler/analysis/coreAnalysis/cooperationSingleMatch";
+// // import { cooperationSingleMatch } from "@/src/handler/analysis/scoutingLead/cooperationSingleMatch";
 
 // export const scoutingLeadPage = async (req : AuthenticatedRequest, res : Response) => {
 //     try {

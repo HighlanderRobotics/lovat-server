@@ -1,6 +1,6 @@
 import z from "zod";
-import { alliancePage } from "./alliancePage.js";
-import { createAnalysisHandler } from "../analysisHandler.js";
+import { alliancePage } from "@/src/handler/analysis/alliancePredictions/alliancePage.js";
+import { createAnalysisHandler } from "@/src/handler/analysis/analysisHandler.js";
 
 export const alliancePageResponse = createAnalysisHandler({
   params: {

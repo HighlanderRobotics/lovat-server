@@ -1,15 +1,15 @@
-import prismaClient from "../../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
-import { addTournamentMatches } from "../../manager/addTournamentMatches.js";
+import { addTournamentMatches } from "@/src/handler/manager/addTournamentMatches.js";
 import {
   Metric,
   metricsCategory,
   metricToName,
   picklistToMetric,
-} from "../analysisConstants.js";
-import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
-import { zScoreMany } from "./zScoreMany.js";
-import { createAnalysisHandler } from "../analysisHandler.js";
+} from "@/src/handler/analysis/analysisConstants.js";
+import { averageManyFast } from "@/src/handler/analysis/coreAnalysis/averageManyFast.js";
+import { zScoreMany } from "@/src/handler/analysis/picklist/zScoreMany.js";
+import { createAnalysisHandler } from "@/src/handler/analysis/analysisHandler.js";
 
 /**
  * Main picklist endpoint. Note inconsistent strings make it confusing for this season.

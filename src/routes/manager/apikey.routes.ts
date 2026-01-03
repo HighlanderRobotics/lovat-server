@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { requireAuth } from "../../lib/middleware/requireAuth";
-import { addApiKey } from "../../handler/manager/apikeys/addApiKey";
-import { getApiKeys } from "../../handler/manager/apikeys/getApiKeys";
-import { renameApiKey } from "../../handler/manager/apikeys/renameApiKey";
-import { revokeApiKey } from "../../handler/manager/apikeys/revokeApiKey";
+import { requireAuth } from "@/src/lib/middleware/requireAuth.js";
+import { addApiKey } from "@/src/handler/manager/apikey/addApiKey.js";
+import { getApiKeys } from "@/src/handler/manager/apikey/getApiKeys.js";
+import { renameApiKey } from "@/src/handler/manager/apikey/renameApiKey.js";
+import { revokeApiKey } from "@/src/handler/manager/apikey/revokeApiKey.js";
 
 const router = Router();
 

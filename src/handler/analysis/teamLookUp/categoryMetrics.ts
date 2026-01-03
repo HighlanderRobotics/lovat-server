@@ -1,7 +1,7 @@
 import z from "zod";
-import { metricsCategory, metricToName } from "../analysisConstants.js";
-import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
-import { createAnalysisHandler } from "../analysisHandler.js";
+import { metricsCategory, metricToName } from "@/src/handler/analysis/analysisConstants.js";
+import { averageManyFast } from "@/src/handler/analysis/coreAnalysis/averageManyFast.js";
+import { createAnalysisHandler } from "@/src/handler/analysis/analysisHandler.js";
 
 export const categoryMetrics = createAnalysisHandler({
   params: {

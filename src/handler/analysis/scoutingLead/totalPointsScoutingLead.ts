@@ -1,6 +1,6 @@
-import prismaClient from "../../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
-import { runAnalysis } from "../analysisFunction.js";
+import { runAnalysis } from "@/src/handler/analysis/analysisFunction.js";
 
 const config = {
   argsSchema: z.object({ scoutReportUuid: z.string() }),

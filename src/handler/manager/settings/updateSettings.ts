@@ -1,13 +1,13 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
 
-import { arrayToRule } from "../../lib/migrateDataSources.js";
+import { arrayToRule } from "@/src/lib/migrateDataSources.js";
 import {
   allTeamNumbers,
   allTournaments,
-} from "../analysis/analysisConstants.js";
+} from "@/src/handler/analysis/analysisConstants.js";
 
 export const updateSettings = async (
   req: AuthenticatedRequest,

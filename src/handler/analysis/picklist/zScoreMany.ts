@@ -4,8 +4,8 @@ import {
   metricsCategory,
   metricToName,
   picklistToMetric,
-} from "../analysisConstants.js";
-import { computeRankFlag } from "../rankFlag.js";
+} from "@/src/handler/analysis/analysisConstants.js";
+import { computeRankFlag } from "@/src/handler/analysis/rankFlag.js";
 
 /**
  * Take in data for many teams and return z-score values and breakdowns for queried metrics.

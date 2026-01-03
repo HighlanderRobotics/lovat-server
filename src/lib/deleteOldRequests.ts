@@ -1,4 +1,4 @@
-import prisma from "../prismaClient.js";
+import prisma from "@/src/prismaClient.js";
 
 export default async function deleteOldRequests(): Promise<void> {
   await prisma.emailVerificationRequest.deleteMany({

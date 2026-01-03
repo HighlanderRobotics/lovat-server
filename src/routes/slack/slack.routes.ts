@@ -1,10 +1,10 @@
 import { Router } from "express";
 import express from "express";
 
-import { requireSlackToken } from "../../lib/middleware/requireSlackToken.js";
-import { addSlackWorkspace } from "../../handler/slack/addSlackWorkspace.js";
-import { processCommand } from "../../handler/slack/processCommands.js";
-import { processEvent } from "../../handler/slack/processEvents.js";
+import { requireSlackToken } from "@/src/lib/middleware/requireSlackToken.js";
+import { addSlackWorkspace } from "@/src/handler/slack/addSlackWorkspace.js";
+import { processCommand } from "@/src/handler/slack/processCommands.js";
+import { processEvent } from "@/src/handler/slack/processEvents.js";
 
 /*
 

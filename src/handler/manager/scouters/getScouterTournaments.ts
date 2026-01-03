@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import prismaClient from "../../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
 
 export const getScouterTournaments = async (

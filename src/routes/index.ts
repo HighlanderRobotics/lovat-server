@@ -1,9 +1,9 @@
 import { Router } from "express";
 
-import slackRoutes from "./slack/slack.routes.js";
-import managerRoutes from "./manager/manager.routes.js";
-import analysisRoutes from "./analysis/analysis.routes.js";
-import { onboardingRedirect } from "../handler/slack/onboardingRedirect.js";
+import slackRoutes from "@/src/routes/slack/slack.routes.js";
+import managerRoutes from "@/src/routes/manager/manager.routes.js";
+import analysisRoutes from "@/src/routes/analysis/analysis.routes.js";
+import { onboardingRedirect } from "@/src/handler/slack/onboardingRedirect.js";
 
 const router = Router();
 

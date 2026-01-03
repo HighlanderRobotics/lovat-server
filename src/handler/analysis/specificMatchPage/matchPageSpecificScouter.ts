@@ -1,15 +1,15 @@
-import prismaClient from "../../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
 import {
   Metric,
   FlippedRoleMap,
   specificMatchPageMetrics,
   metricToName,
-} from "../analysisConstants.js";
-import { BargeResultReverseMap } from "../../manager/managerConstants.js";
-import { autoPathScouter } from "./autoPathScouter.js";
-import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
-import { createAnalysisHandler } from "../analysisHandler.js";
+} from "@/src/handler/analysis/analysisConstants.js";
+import { BargeResultReverseMap } from "@/src/handler/manager/managerConstants.js";
+import { autoPathScouter } from "@/src/handler/analysis/specificMatchPage/autoPathScouter.js";
+import { averageScoutReport } from "@/src/handler/analysis/coreAnalysis/averageScoutReport.js";
+import { createAnalysisHandler } from "@/src/handler/analysis/analysisHandler.js";
 
 export const matchPageSpecificScouter = createAnalysisHandler({
   params: {

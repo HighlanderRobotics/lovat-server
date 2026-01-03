@@ -1,5 +1,5 @@
 import { PostHog } from "posthog-node";
-import { ENVIRONMENT } from "./lib/environment.js";
+import { ENVIRONMENT } from "@/src/lib/environment.js";
 
 export const posthog = new PostHog(process.env.POSTHOG_PROJECT_API_KEY, {
   disableGeoip: true,

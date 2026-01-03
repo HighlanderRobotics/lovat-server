@@ -1,5 +1,5 @@
 import axios from "axios";
-import prisma from "../prismaClient.js";
+import prisma from "@/src/prismaClient.js";
 
 export default async function fetchTournaments(
   initialYear?: number,

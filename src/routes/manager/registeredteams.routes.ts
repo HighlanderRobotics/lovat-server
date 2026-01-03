@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { requireAuth } from "../../lib/middleware/requireAuth";
-import { rejectRegisteredTeam } from "../../handler/manager/rejectRegisteredTeam";
-import { approveRegisteredTeam } from "../../handler/manager/approveRegisteredTeam";
-import { checkRegisteredTeam } from "../../handler/manager/checkRegisteredTeam";
-import requireLovatSignature from "../../lib/middleware/requireLovatSignature";
+import { requireAuth } from "@/src/lib/middleware/requireAuth.js";
+import { rejectRegisteredTeam } from "@/src/handler/manager/registeredteams/rejectRegisteredTeam.js";
+import { approveRegisteredTeam } from "@/src/handler/manager/registeredteams/approveRegisteredTeam.js";
+import { checkRegisteredTeam } from "@/src/handler/manager/registeredteams/checkRegisteredTeam.js";
+import requireLovatSignature from "@/src/lib/middleware/requireLovatSignature.js";
 
 const router = Router();
 

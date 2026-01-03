@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { requireAuth } from "../../lib/middleware/requireAuth";
-import { updateSettings } from "../../handler/manager/updateSettings";
+import { requireAuth } from "@/src/lib/middleware/requireAuth.js";
+import { updateSettings } from "@/src/handler/manager/settings/updateSettings.js";
 import rateLimit from "express-rate-limit";
-import { updateTeamEmail } from "../../handler/manager/settings/updateTeamEmail";
-import { getTeamSource } from "../../handler/manager/getTeamSource";
-import { addTeamSource } from "../../handler/manager/addTeamSource";
-import { getTournamentSource } from "../../handler/manager/settings/getTournamentSource";
-import { addTournamentSource } from "../../handler/manager/addTournamentSource";
+import { updateTeamEmail } from "@/src/handler/manager/settings/updateTeamEmail.js";
+import { getTeamSource } from "@/src/handler/manager/settings/getTeamSource.js";
+import { addTeamSource } from "@/src/handler/manager/settings/addTeamSource.js";
+import { getTournamentSource } from "@/src/handler/manager/settings/getTournamentSource.js";
+import { addTournamentSource } from "@/src/handler/manager/settings/addTournamentSource.js";
 
 const updateTeamEmails = rateLimit({
   windowMs: 2 * 60 * 1000,

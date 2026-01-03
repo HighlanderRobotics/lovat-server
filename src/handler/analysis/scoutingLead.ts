@@ -1,7 +1,7 @@
 // import { Request, Response } from "express";
-// import prismaClient from '../../prismaClient'
+// import prismaClient from '@/src/prismaClient.js'
 // import z from 'zod'
-// import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+// import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
 
 // export const scoutingLead = async (req: AuthenticatedRequest, res : Response) => {
 //     try {

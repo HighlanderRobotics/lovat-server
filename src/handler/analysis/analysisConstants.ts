@@ -7,8 +7,8 @@ import {
   AlgaePickup,
   User,
 } from "@prisma/client";
-import prismaClient from "../../prismaClient.js";
-import { DataSourceRule } from "./dataSourceRule.js";
+import prismaClient from "@/src/prismaClient.js";
+import { DataSourceRule } from "@/src/handler/analysis/dataSourceRule.js";
 //add cooperation
 
 // Tunable constants

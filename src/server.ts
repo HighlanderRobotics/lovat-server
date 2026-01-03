@@ -1,7 +1,7 @@
-import { app } from "./app.js";
-import scheduleJobs from "./lib/scheduleJobs.js";
-import { migrateDataSources } from "./lib/migrateDataSources.js";
-import { clearCache } from "./lib/clearCache.js";
+import { app } from "@/src/app.js";
+import scheduleJobs from "@/src/lib/scheduleJobs.js";
+import { migrateDataSources } from "@/src/lib/migrateDataSources.js";
+import { clearCache } from "@/src/lib/clearCache.js";
 
 const port = process.env.PORT || 3000;
 

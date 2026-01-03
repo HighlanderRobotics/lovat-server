@@ -4,10 +4,10 @@ import cookieParser from "cookie-parser";
 import "dotenv/config";
 
 import { setupExpressErrorHandler } from "posthog-node";
-import { posthog } from "./posthogClient.js";
-import posthogReporter from "./lib/middleware/posthogMiddleware.js";
+import { posthog } from "@/src/posthogClient.js";
+import posthogReporter from "@/src/lib/middleware/posthogMiddleware.js";
 
-import routes from "./routes/index.js";
+import routes from "@/src/routes/index.js";
 
 export const app = express();
 

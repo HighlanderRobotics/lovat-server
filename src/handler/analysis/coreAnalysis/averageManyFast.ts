@@ -1,4 +1,4 @@
-import prismaClient from "../../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import {
   autoEnd,
   endgameToPoints,
@@ -7,17 +7,17 @@ import {
   swrConstant,
   ttlConstant,
   allTournaments,
-} from "../analysisConstants.js";
+} from "@/src/handler/analysis/analysisConstants.js";
 import { BargeResult, Position, Prisma } from "@prisma/client";
-import { endgameRuleOfSuccession } from "../picklist/endgamePicklistTeamFast.js";
+import { endgameRuleOfSuccession } from "@/src/handler/analysis/picklist/endgamePicklistTeamFast.js";
 import { Event } from "@prisma/client";
-import { weightedTourAvgLeft } from "./arrayAndAverageTeams.js";
+import { weightedTourAvgLeft } from "@/src/handler/analysis/coreAnalysis/arrayAndAverageTeams.js";
 import z from "zod";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
-} from "../dataSourceRule.js";
-import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
+} from "@/src/handler/analysis/dataSourceRule.js";
+import { runAnalysis, AnalysisFunctionConfig } from "@/src/handler/analysis/analysisFunction.js";
 import { User } from "@prisma/client";
 
 export interface ArrayFilter<T> {

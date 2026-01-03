@@ -1,18 +1,18 @@
-import prismaClient from "../../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import {
   autoEnd,
   defaultEndgamePoints,
   endgameToPoints,
   Metric,
   metricToEvent,
-} from "../analysisConstants.js";
+} from "@/src/handler/analysis/analysisConstants.js";
 import { Position, Prisma } from "@prisma/client";
 import z from "zod";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
-} from "../dataSourceRule.js";
-import { runAnalysis } from "../analysisFunction.js";
+} from "@/src/handler/analysis/dataSourceRule.js";
+import { runAnalysis } from "@/src/handler/analysis/analysisFunction.js";
 
 const config = {
   argsSchema: z.object({ metric: z.nativeEnum(Metric) }),

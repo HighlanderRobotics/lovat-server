@@ -1,9 +1,9 @@
 import { Response } from "express";
-import prismaClient from "../../prismaClient.js";
+import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
-import { allTeamNumbers } from "../analysis/analysisConstants.js";
-import { arrayToRule } from "../../lib/migrateDataSources.js";
+import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
+import { allTeamNumbers } from "@/src/handler/analysis/analysisConstants.js";
+import { arrayToRule } from "@/src/lib/migrateDataSources.js";
 
 export const addTeamSource = async (
   req: AuthenticatedRequest,
