@@ -6,14 +6,14 @@ import {
   breakdownPos,
   lowercaseToBreakdown,
   MetricsBreakdown,
-} from "@/src/handler/analysis/analysisConstants.js";
+} from "../analysisConstants.js";
 import { EventAction } from "@prisma/client";
-import { createAnalysisHandler } from "@/src/handler/analysis/analysisHandler.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToArray,
-} from "@/src/handler/analysis/dataSourceRule.js";
-import prismaClient from "@/src/prismaClient.js";
+} from "../dataSourceRule.js";
+import prismaClient from "../../../prismaClient.js";
 
 export const breakdownDetails = createAnalysisHandler({
   params: {

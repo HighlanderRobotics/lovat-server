@@ -1,6 +1,6 @@
 import { Response } from "express";
-import prismaClient from "@/src/prismaClient.js";
-import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
+import prismaClient from "../../prismaClient.js";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 
 export const getUsers = async (
   req: AuthenticatedRequest,

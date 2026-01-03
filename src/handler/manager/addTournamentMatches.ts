@@ -1,4 +1,4 @@
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import axios from "axios";
 

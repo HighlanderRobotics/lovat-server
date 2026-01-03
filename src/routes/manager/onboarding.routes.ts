@@ -1,13 +1,13 @@
 import { Router } from "express";
-import requireLovatSignature from "@/src/lib/middleware/requireLovatSignature.js";
-import { approveTeamEmail } from "@/src/handler/manager/onboarding/approveTeamEmail.js";
-import { addUsername } from "@/src/handler/manager/onboarding/addUsername.js";
-import { checkCode } from "@/src/handler/manager/onboarding/checkCode.js";
-import { requireAuth } from "@/src/lib/middleware/requireAuth.js";
-import { addRegisteredTeam } from "@/src/handler/manager/registeredteams/addRegisteredTeam.js";
+import requireLovatSignature from "../../lib/middleware/requireLovatSignature.js";
+import { approveTeamEmail } from "../../handler/manager/onboarding/approveTeamEmail.js";
+import { addUsername } from "../../handler/manager/onboarding/addUsername.js";
+import { checkCode } from "../../handler/manager/onboarding/checkCode.js";
+import { requireAuth } from "../../lib/middleware/requireAuth.js";
+import { addRegisteredTeam } from "../../handler/manager/registeredteams/addRegisteredTeam.js";
 import rateLimit from "express-rate-limit";
-import { addWebsite } from "@/src/handler/manager/onboarding/addWebsite.js";
-import { resendEmail } from "@/src/handler/manager/onboarding/resendEmail.js";
+import { addWebsite } from "../../handler/manager/onboarding/addWebsite.js";
+import { resendEmail } from "../../handler/manager/onboarding/resendEmail.js";
 
 /*
 

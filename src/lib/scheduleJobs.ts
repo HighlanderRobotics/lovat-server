@@ -1,8 +1,8 @@
-import fetchTournaments from "@/src/lib/fetchTournaments.js";
-import fetchTeams from "@/src/lib/fetchTeams.js";
-import fetchMatches from "@/src/lib/fetchMatches.js";
-import prisma from "@/src/prismaClient.js";
-import deleteOldRequests from "@/src/lib/deleteOldRequests.js";
+import fetchTournaments from "./fetchTournaments.js";
+import fetchTeams from "./fetchTeams.js";
+import fetchMatches from "./fetchMatches.js";
+import prisma from "../prismaClient.js";
+import deleteOldRequests from "./deleteOldRequests.js";
 
 export default async function scheduleJobs(): Promise<void> {
   const year = 2024;

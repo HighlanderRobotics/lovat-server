@@ -1,15 +1,15 @@
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { runAnalysis } from "@/src/handler/analysis/analysisFunction.js";
+import { runAnalysis } from "../analysisFunction.js";
 import {
   autoEnd,
   FlippedActionMap,
   FlippedPositionMap,
-} from "@/src/handler/analysis/analysisConstants.js";
+} from "../analysisConstants.js";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
-} from "@/src/handler/analysis/dataSourceRule.js";
+} from "../dataSourceRule.js";
 import { User } from "@prisma/client";
 
 interface AutoPosition {

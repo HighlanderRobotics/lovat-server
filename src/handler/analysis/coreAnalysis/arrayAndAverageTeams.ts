@@ -1,4 +1,4 @@
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../../prismaClient.js";
 import {
   autoEnd,
   endgameToPoints,
@@ -6,18 +6,18 @@ import {
   metricToEvent,
   swrConstant,
   ttlConstant,
-} from "@/src/handler/analysis/analysisConstants.js";
-import { endgamePicklistTeamFast } from "@/src/handler/analysis/picklist/endgamePicklistTeamFast.js";
+} from "../analysisConstants.js";
+import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast.js";
 import { Event, Position, Prisma, ScoutReport } from "@prisma/client";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
-} from "@/src/handler/analysis/dataSourceRule.js";
+} from "../dataSourceRule.js";
 import z from "zod";
 import {
   runAnalysis,
   AnalysisFunctionConfig,
-} from "@/src/handler/analysis/analysisFunction.js";
+} from "../analysisFunction.js";
 
 // Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
 // Provides a timeline of metric value per match.

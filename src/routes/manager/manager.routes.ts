@@ -1,31 +1,31 @@
 import { Router } from "express";
 
-import onboarding from "@/src/routes/manager/onboarding.routes.js";
-import picklists from "@/src/routes/manager/picklists.routes.js";
-import mutablepicklist from "@/src/routes/manager/mutablepicklists.routes.js";
-import registeredteams from "@/src/routes/manager/registeredteams.routes.js";
-import scouters from "@/src/routes/manager/scouters.routes.js";
-import tournaments from "@/src/routes/manager/tournaments.routes.js";
-import scoutreports from "@/src/routes/manager/scoutreports.routes.js";
-import settings from "@/src/routes/manager/settings.routes.js";
-//import apikey from "@/src/routes/manager/apikey.routes.js";
+import onboarding from "./onboarding.routes.js";
+import picklists from "./picklists.routes.js";
+import mutablepicklist from "./mutablepicklists.routes.js";
+import registeredteams from "./registeredteams.routes.js";
+import scouters from "./scouters.routes.js";
+import tournaments from "./tournaments.routes.js";
+import scoutreports from "./scoutreports.routes.js";
+import settings from "./settings.routes.js";
+//import apikey from "./apikey.routes.js";
 
-import { getTournaments } from "@/src/handler/manager/getTournaments.js";
-import { getTeams } from "@/src/handler/manager/getTeams.js";
-import { requireAuth } from "@/src/lib/middleware/requireAuth.js";
-import { getMatches } from "@/src/handler/manager/getMatches.js";
-import { updateNotes } from "@/src/handler/manager/updateNotes.js";
-import { getScouters } from "@/src/handler/manager/scouters/getScouters.js";
-import { getProfile } from "@/src/handler/manager/getProfile.js";
-import { getUsers } from "@/src/handler/manager/getUsers.js";
-import { deleteUser } from "@/src/handler/manager/deleteUser.js";
-import { updateRoleToScoutingLead } from "@/src/handler/manager/scouters/updateRoleToScoutingLead.js";
-import { getAnalysts } from "@/src/handler/manager/getAnalysts.js";
-import { addNotOnTeam } from "@/src/handler/manager/temp/addNotOnTeam.js";
-import { getTeamCode } from "@/src/handler/manager/getTeamCode.js";
-import { addScoutReportDashboard } from "@/src/handler/manager/scoutreports/addScoutReportDashboard.js";
-import { getTeamTournamentStatus } from "@/src/handler/manager/getTeamTournamentStatus.js";
-import { getMatchResults } from "@/src/handler/manager/getMatchResults.js";
+import { getTournaments } from "../../handler/manager/getTournaments.js";
+import { getTeams } from "../../handler/manager/getTeams.js";
+import { requireAuth } from "../../lib/middleware/requireAuth.js";
+import { getMatches } from "../../handler/manager/getMatches.js";
+import { updateNotes } from "../../handler/manager/updateNotes.js";
+import { getScouters } from "../../handler/manager/scouters/getScouters.js";
+import { getProfile } from "../../handler/manager/getProfile.js";
+import { getUsers } from "../../handler/manager/getUsers.js";
+import { deleteUser } from "../../handler/manager/deleteUser.js";
+import { updateRoleToScoutingLead } from "../../handler/manager/scouters/updateRoleToScoutingLead.js";
+import { getAnalysts } from "../../handler/manager/getAnalysts.js";
+import { addNotOnTeam } from "../../handler/manager/temp/addNotOnTeam.js";
+import { getTeamCode } from "../../handler/manager/getTeamCode.js";
+import { addScoutReportDashboard } from "../../handler/manager/scoutreports/addScoutReportDashboard.js";
+import { getTeamTournamentStatus } from "../../handler/manager/getTeamTournamentStatus.js";
+import { getMatchResults } from "../../handler/manager/getMatchResults.js";
 
 const router = Router();
 

@@ -1,16 +1,16 @@
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../../prismaClient.js";
 import {
   autoEnd,
   endgameToPoints,
   Metric,
   metricToEvent,
-} from "@/src/handler/analysis/analysisConstants.js";
+} from "../analysisConstants.js";
 import { EventAction, Position, User } from "@prisma/client";
 import z from "zod";
 import {
   runAnalysis,
   AnalysisFunctionConfig,
-} from "@/src/handler/analysis/analysisFunction.js";
+} from "../analysisFunction.js";
 
 export async function computeAverageScoutReport(
   scoutReportUuid: string,

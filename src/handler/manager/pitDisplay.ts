@@ -1,11 +1,11 @@
 import { Response } from "express";
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import axios from "axios";
-import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
-import { matchPredictionLogic } from "@/src/handler/analysis/alliancePredictions/matchPredictionLogic.js";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { matchPredictionLogic } from "../analysis/alliancePredictions/matchPredictionLogic.js";
 import { MatchType } from "@prisma/client";
-import { MatchEnumToAbrivation } from "@/src/handler/manager/managerConstants.js";
+import { MatchEnumToAbrivation } from "./managerConstants.js";
 
 export const pitDisplay = async (
   req: AuthenticatedRequest,

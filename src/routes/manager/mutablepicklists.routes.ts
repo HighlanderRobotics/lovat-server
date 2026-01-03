@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { requireAuth } from "@/src/lib/middleware/requireAuth.js";
-import { addMutablePicklist } from "@/src/handler/manager/mutablepicklists/addMutablePicklist.js";
-import { deleteMutablePicklist } from "@/src/handler/manager/mutablepicklists/deleteMutablePicklist.js";
-import { getMutablePicklists } from "@/src/handler/manager/mutablepicklists/getMutablePicklists.js";
-import { getSingleMutablePicklist } from "@/src/handler/manager/mutablepicklists/getSingleMutablePicklist.js";
-import { updateMutablePicklist } from "@/src/handler/manager/mutablepicklists/updateMutablePicklist.js";
+import { requireAuth } from "../../lib/middleware/requireAuth.js";
+import { addMutablePicklist } from "../../handler/manager/mutablepicklists/addMutablePicklist.js";
+import { deleteMutablePicklist } from "../../handler/manager/mutablepicklists/deleteMutablePicklist.js";
+import { getMutablePicklists } from "../../handler/manager/mutablepicklists/getMutablePicklists.js";
+import { getSingleMutablePicklist } from "../../handler/manager/mutablepicklists/getSingleMutablePicklist.js";
+import { updateMutablePicklist } from "../../handler/manager/mutablepicklists/updateMutablePicklist.js";
 
 /*
 

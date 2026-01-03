@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
-import { posthog } from "@/src/posthogClient.js";
-import prisma from "@/src/prismaClient.js";
+import { AuthenticatedRequest } from "./requireAuth.js";
+import { posthog } from "../../posthogClient.js";
+import prisma from "../../prismaClient.js";
 import z from "zod";
 
 const posthogReporter = async (

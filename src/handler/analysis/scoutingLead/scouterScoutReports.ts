@@ -1,6 +1,6 @@
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { createAnalysisHandler } from "@/src/handler/analysis/analysisHandler.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const scouterScoutReports = createAnalysisHandler({
   params: {

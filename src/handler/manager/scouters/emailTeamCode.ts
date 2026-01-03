@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import z from "zod";
 import { Resend } from "resend";
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../../prismaClient.js";
 
 export const emailTeamCode = async (
   req: Request,

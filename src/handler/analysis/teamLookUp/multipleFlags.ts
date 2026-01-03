@@ -1,11 +1,11 @@
 import z from "zod";
-import { rankFlag } from "@/src/handler/analysis/rankFlag.js";
+import { rankFlag } from "../rankFlag.js";
 import {
   metricsCategory,
   metricToName,
-} from "@/src/handler/analysis/analysisConstants.js";
-import { arrayAndAverageTeams } from "@/src/handler/analysis/coreAnalysis/arrayAndAverageTeams.js";
-import { createAnalysisHandler } from "@/src/handler/analysis/analysisHandler.js";
+} from "../analysisConstants.js";
+import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
+import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const multipleFlags = createAnalysisHandler({
   params: {

@@ -1,10 +1,10 @@
 import { Response } from "express";
-import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToArray,
-} from "@/src/handler/analysis/dataSourceRule.js";
-import { allTournaments } from "@/src/handler/analysis/analysisConstants.js";
+} from "../../analysis/dataSourceRule.js";
+import { allTournaments } from "../../analysis/analysisConstants.js";
 import z from "zod";
 
 export const getTournamentSource = async (

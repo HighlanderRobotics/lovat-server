@@ -1,8 +1,8 @@
 import { Response } from "express";
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
-import { sendVerificationEmail } from "@/src/handler/manager/onboarding/resendEmail.js";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
+import { sendVerificationEmail } from "../onboarding/resendEmail.js";
 
 export const updateTeamEmail = async (
   req: AuthenticatedRequest,

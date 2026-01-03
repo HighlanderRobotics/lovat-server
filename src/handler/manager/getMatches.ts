@@ -1,18 +1,18 @@
 import { Response } from "express";
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
-import { addTournamentMatches } from "@/src/handler/manager/addTournamentMatches.js";
-import { ReverseMatchTypeMap } from "@/src/handler/manager/managerConstants.js";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import { addTournamentMatches } from "./addTournamentMatches.js";
+import { ReverseMatchTypeMap } from "./managerConstants.js";
 import { MatchType, Prisma } from "@prisma/client";
 import {
   swrConstant,
   ttlConstant,
-} from "@/src/handler/analysis/analysisConstants.js";
+} from "../analysis/analysisConstants.js";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
-} from "@/src/handler/analysis/dataSourceRule.js";
+} from "../analysis/dataSourceRule.js";
 
 /**
  * @param params.tournament tournament to pull from

@@ -1,10 +1,10 @@
 import { RequestHandler } from "express";
 import z from "zod";
-import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
-import prismaClient from "@/src/prismaClient.js";
-import { dataSourceRuleSchema } from "@/src/handler/analysis/dataSourceRule.js";
-import { kv } from "@/src/redisClient.js";
-import { AnalysisContext } from "@/src/handler/analysis/analysisConstants.js";
+import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
+import prismaClient from "../../prismaClient.js";
+import { dataSourceRuleSchema } from "./dataSourceRule.js";
+import { kv } from "../../redisClient.js";
+import { AnalysisContext } from "./analysisConstants.js";
 
 export type AnalysisHandlerParamsSchema<
   T extends z.ZodObject,

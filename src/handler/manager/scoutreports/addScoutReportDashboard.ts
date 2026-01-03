@@ -1,7 +1,7 @@
 import { Response } from "express";
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import {
   CoralPickupMap,
   AlgaePickupMap,
@@ -12,9 +12,9 @@ import {
   UnderShallowCageMap,
   RobotRoleMap,
   EventActionMap,
-} from "@/src/handler/manager/managerConstants.js";
-import { addTournamentMatches } from "@/src/handler/manager/addTournamentMatches.js";
-import { totalPointsScoutingLead } from "@/src/handler/analysis/scoutingLead/totalPointsScoutingLead.js";
+} from "../managerConstants.js";
+import { addTournamentMatches } from "../addTournamentMatches.js";
+import { totalPointsScoutingLead } from "../../analysis/scoutingLead/totalPointsScoutingLead.js";
 import {
   AlgaePickup,
   BargeResult,
@@ -26,7 +26,7 @@ import {
   RobotRole,
   UnderShallowCage,
 } from "@prisma/client";
-import { invalidateCache } from "@/src/lib/clearCache.js";
+import { invalidateCache } from "../../../lib/clearCache.js";
 
 export const addScoutReportDashboard = async (
   req: AuthenticatedRequest,

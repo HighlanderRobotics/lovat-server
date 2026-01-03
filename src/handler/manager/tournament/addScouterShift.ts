@@ -1,10 +1,10 @@
 import { Response } from "express";
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { UserRole } from "@prisma/client";
-import { checkOnlyOneInstanceOfScouter } from "@/src/handler/manager/checkOnlyInstanceOfScouter.js";
-import { checkScouterShiftMatches } from "@/src/handler/manager/scoutershifts/checkScouterShiftMatches.js";
+import { checkOnlyOneInstanceOfScouter } from "../checkOnlyInstanceOfScouter.js";
+import { checkScouterShiftMatches } from "../scoutershifts/checkScouterShiftMatches.js";
 
 export const addScouterShift = async (
   req: AuthenticatedRequest,

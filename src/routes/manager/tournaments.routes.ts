@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { requireAuth } from "@/src/lib/middleware/requireAuth.js";
-import { getTeamsInTournament } from "@/src/handler/manager/tournament/getTeamsInTournament.js";
-import { getTeamRankings } from "@/src/handler/manager/tournament/getTeamRankings.js";
-import { addScouterShift } from "@/src/handler/manager/tournament/addScouterShift.js";
+import { requireAuth } from "../../lib/middleware/requireAuth.js";
+import { getTeamsInTournament } from "../../handler/manager/tournament/getTeamsInTournament.js";
+import { getTeamRankings } from "../../handler/manager/tournament/getTeamRankings.js";
+import { addScouterShift } from "../../handler/manager/tournament/addScouterShift.js";
 
 /*
 

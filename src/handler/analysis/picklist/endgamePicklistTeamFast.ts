@@ -1,10 +1,10 @@
-import prismaClient from "@/src/prismaClient.js";
+import prismaClient from "../../../prismaClient.js";
 import { BargeResult } from "@prisma/client";
 import {
   defaultEndgamePoints,
   endgameToPoints,
-} from "@/src/handler/analysis/analysisConstants.js";
-import { ArrayFilter } from "@/src/handler/analysis/coreAnalysis/averageManyFast.js";
+} from "../analysisConstants.js";
+import { ArrayFilter } from "../coreAnalysis/averageManyFast.js";
 
 // Number of endgame possibilities that result in points earned (essentially, successes)
 const numPointResults: number = Object.keys(BargeResult).reduce((acc, cur) => {

@@ -1,7 +1,7 @@
 import z from "zod";
-import { Metric } from "@/src/handler/analysis/analysisConstants.js";
-import { arrayAndAverageTeams } from "@/src/handler/analysis/coreAnalysis/arrayAndAverageTeams.js";
-import { runAnalysis } from "@/src/handler/analysis/analysisFunction.js";
+import { Metric } from "../analysisConstants.js";
+import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
+import { runAnalysis } from "../analysisFunction.js";
 import { User } from "@prisma/client";
 
 const config = {
