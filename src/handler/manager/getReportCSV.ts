@@ -15,7 +15,7 @@ import {
   Scouter,
   TeamMatchData,
   Event,
-} from "@prisma/client";
+}from "@/../prisma/generated/prisma/client";
 import { autoEnd, endgameToPoints } from "../analysis/analysisConstants.js";
 import { z } from "zod";
 import {

@@ -1,6 +1,6 @@
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { UserRole } from "@prisma/client";
+import { UserRole }from "@/../prisma/generated/prisma/client";
 import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const scoutReportForMatch = createAnalysisHandler({

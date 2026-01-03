@@ -8,7 +8,7 @@ import {
   CoralPickup,
   KnocksAlgae,
   UnderShallowCage,
-} from "@prisma/client";
+}  from "../../../prisma/generated/prisma/client";
 
 const EventActionMap: Record<number, EventAction> = {
   0: EventAction.PICKUP_CORAL,

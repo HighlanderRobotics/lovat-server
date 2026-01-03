@@ -14,7 +14,7 @@ import {
   UnderShallowCage,
   Scouter,
   Event,
-} from "@prisma/client";
+}from "@/../prisma/generated/prisma/client";
 import { autoEnd, endgameToPoints } from "../analysis/analysisConstants.js";
 import { z } from "zod";
 import { CondensedReport } from "./getReportCSV.js";
@@ -159,8 +159,8 @@ export const getTeamMatchCSV = async (
 
     // Here comes the mouthful
     const aggregatedData: Omit<CondensedReport, "notes">[] = [];
-    for (const [match, teams] of Object.entries(groupedByMatch)) {
-      teams.forEach((reports, teamNumber) => {
+    for (const [match, teams] of Object.entries(groupedByMatch) as [string, PointsReport[][]][]) {
+        teams.forEach((reports, teamNumber) => {
         // Iterate through all TMD
         if (reports.length === 0) {
           // Push empty row if there are no reports available

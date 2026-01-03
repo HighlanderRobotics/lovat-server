@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from "../../prismaClient.js";
 import z from "zod";
-import { TeamMatchData, ScoutReport } from "@prisma/client";
+import { TeamMatchData, ScoutReport }from "@/../prisma/generated/prisma/client";
 import { computeAverageScoutReport } from "../analysis/coreAnalysis/averageScoutReport.js";
 import { Metric } from "../analysis/analysisConstants.js";
 
