@@ -61,7 +61,7 @@ const posthogReporter = async (
           $set: userProps,
           $pathname: req.route?.path,
           method: req.method,
-          cache: res.getHeader('X-Lovat-Cache'),
+          cache: res.getHeader("X-Lovat-Cache"),
           path: req.path,
           query: req.query,
           reqBody: req.body,

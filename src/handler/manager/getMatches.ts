@@ -3,18 +3,20 @@ import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 import { addTournamentMatches } from "./addTournamentMatches.js";
-import {
-  MatchTypeMap,
-  MatchTypeToAbrivation,
-  ReverseMatchTypeMap,
-  ReverseScouterScheduleMap,
-  ScouterScheduleMap,
-} from "./managerConstants.js";
+import { ReverseMatchTypeMap } from "./managerConstants.js";
+import { MatchType, Prisma } from "@prisma/client";
+import { swrConstant, ttlConstant } from "../analysis/analysisConstants.js";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
 } from "../analysis/dataSourceRule.js";
 
+/**
+ * @param params.tournament tournament to pull from
+ * @param query.teams optional - limit to matches containing all these teams
+ *
+ * @returns list of matches organized by number and type, with data for teams/scouts/external reports
+ */
 export const getMatches = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -22,496 +24,409 @@ export const getMatches = async (
   try {
     const user = req.user;
     let teams = null;
-    let isScouted = null;
-    //type check, convert isScouted to a boolean
-    if (req.query.isScouted != undefined) {
-      isScouted = req.query.isScouted === "true";
-    }
     if (req.query.teams != undefined) {
       teams = JSON.parse(req.query.teams as string);
     }
     const params = z
       .object({
         tournamentKey: z.string(),
-        teamNumbers: z.array(z.number()).nullable(),
-        isScouted: z.boolean().nullable(),
+        teamFilter: z.array(z.number()).nullable(),
       })
       .safeParse({
         tournamentKey: req.params.tournament,
-        teamNumbers: teams,
-        isScouted: isScouted,
+        teamFilter: teams,
       });
     if (!params.success) {
       res.status(400).send(params);
       return;
     }
 
-    //get matches from tournament, check that tournament has been inserted. If not add it
-    const matchRows = await prismaClient.teamMatchData.findMany({
+    if (params.data.teamFilter && params.data.teamFilter.length > 6) {
+      res.status(400).send("Too many team filters");
+      return;
+    }
+
+    // Check that matches from a tournament exist; if not, add them
+    const matchRow = await prismaClient.teamMatchData.findFirst({
       where: {
         tournamentKey: params.data.tournamentKey,
       },
     });
-    if (matchRows.length === 0) {
+    if (!matchRow) {
       await addTournamentMatches(params.data.tournamentKey);
     }
 
-    //find scouted matches (using sourceTeam and isScouted )
-    //get all matches regarless for ordinal number calculation later on
-    const qualMatches = await prismaClient.teamMatchData.findMany({
+    // Assuming all elimination matches are not scouted, find the last scouted match (and pretend it is the last completed one)
+    const last = await prismaClient.teamMatchData.findFirst({
       where: {
         tournamentKey: params.data.tournamentKey,
-        matchType: "QUALIFICATION",
-      },
-      orderBy: {
-        teamNumber: "asc",
-      },
-    });
-    if (qualMatches.length === 0) {
-      res
-        .status(404)
-        .send("The match schedule for this tournament hasn't been posted yet.");
-      return;
-    }
-    const lastQualMatch = Number(qualMatches.length / 6);
-
-    //find non scouted matches (not scouted from user.sourceTeam)
-    const notScouted = await prismaClient.teamMatchData.findMany({
-      where: {
-        tournamentKey: params.data.tournamentKey,
+        matchType: MatchType.QUALIFICATION,
         scoutReports: {
-          none: {
-            scouter: {
-              sourceTeamNumber: dataSourceRuleToPrismaFilter(
-                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
-              ),
-            },
-          },
+          some: {},
         },
       },
-
-      orderBy: [{ matchType: "desc" }, { matchNumber: "asc" }],
+      orderBy: [{ matchNumber: "desc" }],
+      select: {
+        matchNumber: true,
+      },
     });
-    //check to make sure each match has 6 rows, if not than 1 + rows have been scouted already
-    const groupedMatches = await notScouted.reduce((acc, match) => {
-      const key = `${match.matchNumber}-${match.matchType}`;
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(match);
-      return acc;
-    }, {});
+    // Default to 0
+    const lastFinishedMatch = last ? last.matchNumber : 0;
 
-    // find matches with less than 6 rows
-    const groupsToKeep = Object.keys(groupedMatches).filter(
-      (key) => groupedMatches[key].length >= 6,
+    // Filter to return a list of user's team's scout reports for each row, only valid if user has a team number
+    let includeTeamReports: Prisma.TeamMatchData$scoutReportsArgs | undefined =
+      undefined;
+
+    const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
+      req.user.teamSourceRule,
     );
 
-    // remove unwanted matches
-    const nonScoutedMatches = notScouted.filter((match) => {
-      const key = `${match.matchNumber}-${match.matchType}`;
-      return groupsToKeep.includes(key);
-    });
-
-    const scoutedMatches = await prismaClient.teamMatchData.findMany({
-      where: {
-        tournamentKey: params.data.tournamentKey,
-        key: {
-          notIn: nonScoutedMatches.map((item) => item.key),
-        },
-      },
-    });
-    //get just the matchNumber + matchType for matches scouted and unscouted speratly
-    let matchKeyAndNumber = [];
-    if (
-      params.data.isScouted === null ||
-      params.data.isScouted === undefined ||
-      params.data.isScouted
-    ) {
-      const matchKeyAndNumberScouted = await prismaClient.teamMatchData.groupBy(
-        {
-          by: ["matchNumber", "matchType"],
-          where: {
-            tournamentKey: params.data.tournamentKey,
-            key: {
-              in: scoutedMatches.map((item) => item.key),
-            },
-          },
-          orderBy: [{ matchType: "desc" }, { matchNumber: "asc" }],
-        },
-      );
-      matchKeyAndNumber = matchKeyAndNumber.concat(
-        matchKeyAndNumberScouted.map((match) => ({ ...match, scouted: true })),
-      );
-    }
-    if (
-      params.data.isScouted === null ||
-      params.data.isScouted === undefined ||
-      !params.data.isScouted
-    ) {
-      const matchKeyAndNumberUnScouted =
-        await prismaClient.teamMatchData.groupBy({
-          by: ["matchNumber", "matchType"],
-          where: {
-            tournamentKey: params.data.tournamentKey,
-            key: {
-              in: nonScoutedMatches.map((item) => item.key),
-            },
-          },
-          _count: {
-            _all: true,
-          },
-          orderBy: [{ matchType: "asc" }, { matchNumber: "asc" }],
-        });
-      matchKeyAndNumber = matchKeyAndNumber.concat(
-        matchKeyAndNumberUnScouted.map((match) => ({
-          ...match,
-          scouted: false,
-        })),
-      );
-    }
-    //assuming scouted matches always come before non scouted, add sort to comfim that
-    let finalMatches = [];
-    if (
-      params.data.teamNumbers &&
-      params.data.teamNumbers.length > 0 &&
-      params.data.teamNumbers.length <= 6
-    ) {
-      for (const currMatchKeyAndNumber of matchKeyAndNumber) {
-        const currMatch = await prismaClient.teamMatchData.findMany({
-          where: {
-            matchNumber: currMatchKeyAndNumber.matchNumber,
-            matchType: currMatchKeyAndNumber.matchType,
-            tournamentKey: params.data.tournamentKey,
-          },
-        });
-        const currMatchTeamNumbers = currMatch.map((match) => match.teamNumber);
-        const allTeamsPresent = params.data.teamNumbers.every((teamNumber) =>
-          currMatchTeamNumbers.includes(teamNumber),
+    if (user.teamNumber) {
+      // make sure the user's teamSourceRule has their own team included
+      if (teamSourceRule.mode === "EXCLUDE") {
+        // if their source rule is exclude, make sure the user's team number isn't in items
+        teamSourceRule.items = teamSourceRule.items.filter(
+          (item) => item !== user.teamNumber,
         );
-        if (allTeamsPresent) {
-          finalMatches.push(currMatchKeyAndNumber);
-        }
+      } else if (
+        // if their mode is include, make sure the user's team number is on their list of items
+        teamSourceRule.mode === "INCLUDE" &&
+        !teamSourceRule.items.includes(user.teamNumber)
+      ) {
+        teamSourceRule.items.push(user.teamNumber);
       }
-    } else if (
-      params.data.teamNumbers === null ||
-      params.data.teamNumbers === undefined ||
-      params.data.teamNumbers.length === 0
-    ) {
-      finalMatches = matchKeyAndNumber;
-    }
-    //sort
-    finalMatches.sort((a, b) => {
-      if (a.matchType < b.matchType) return 1;
-      if (a.matchType > b.matchType) return -1;
-      return a.matchNumber - b.matchNumber;
-    });
 
-    const finalFormatedMatches = [];
-    //change into proper format once we know all the matches we are including
-    for (const element of finalMatches) {
-      let currMatch = await prismaClient.teamMatchData.findMany({
+      includeTeamReports = {
         where: {
-          matchNumber: element.matchNumber,
-          matchType: element.matchType,
-          tournamentKey: params.data.tournamentKey,
+          scouter: {
+            sourceTeamNumber: user.teamNumber,
+          },
         },
-      });
-      if (currMatch.length != 6) {
-        res
-          .status(400)
-          .send(
-            `Matches not added correctly, does not have 6 teams for match ${element.matchNumber} of type ${element.matchType}`,
-          );
-        return;
-      }
-      //sort by 0, 1, 2, 3, 4, 5 in case its out of order
-      currMatch = currMatch.sort((a, b) => {
-        const lastDigitA = parseInt(a.key[a.key.length - 1]);
-        const lastDigitB = parseInt(b.key[b.key.length - 1]);
-        return lastDigitA - lastDigitB;
-      });
-      const currData = {
-        tournamentKey: params.data.tournamentKey,
-        matchNumber: element.matchNumber,
-        matchType: ReverseMatchTypeMap[element.matchType],
-        scouted: element.scouted,
-        team1: {
-          number: currMatch[0].teamNumber,
-          alliance: "red",
-          scouters: [],
-          externalReports: 0,
-        },
-        team2: {
-          number: currMatch[1].teamNumber,
-          alliance: "red",
-          scouters: [],
-          externalReports: 0,
-        },
-        team3: {
-          number: currMatch[2].teamNumber,
-          alliance: "red",
-          scouters: [],
-          externalReports: 0,
-        },
-        team4: {
-          number: currMatch[3].teamNumber,
-          alliance: "blue",
-          scouters: [],
-          externalReports: 0,
-        },
-        team5: {
-          number: currMatch[4].teamNumber,
-          alliance: "blue",
-          scouters: [],
-          externalReports: 0,
-        },
-        team6: {
-          number: currMatch[5].teamNumber,
-          alliance: "blue",
-          scouters: [],
-          externalReports: 0,
+        select: {
+          scouter: {
+            select: {
+              name: true,
+              uuid: true,
+            },
+          },
         },
       };
-      finalFormatedMatches.push(currData);
     }
-    const promises = [];
-    if (user.teamNumber) {
-      const scouterShifts = await prismaClient.scouterScheduleShift.findMany({
-        where: {
-          tournamentKey: params.data.tournamentKey,
-          sourceTeamNumber: user.teamNumber,
+
+    const rawData = await prismaClient.teamMatchData.findMany({
+      cacheStrategy: {
+        swr: swrConstant,
+        ttl: ttlConstant,
+      },
+      where: {
+        tournamentKey: params.data.tournamentKey,
+      },
+      select: {
+        matchNumber: true,
+        matchType: true,
+        teamNumber: true,
+        key: true,
+        _count: {
+          // Represents the total number of valid scout reports for this row
+          select: {
+            scoutReports: {
+              where: {
+                scouter: {
+                  sourceTeamNumber:
+                    dataSourceRuleToPrismaFilter(teamSourceRule),
+                },
+              },
+            },
+          },
         },
-        orderBy: [{ startMatchOrdinalNumber: "asc" }],
-        include: {
-          team1: true,
-          team2: true,
-          team3: true,
-          team4: true,
-          team5: true,
-          team6: true,
-        },
-      });
-      if (scouterShifts.length !== 0) {
-        for (const element of finalFormatedMatches) {
-          let scoutersExist = true;
-          //if its an elimination match get the ordinal number, so that we can compare it to the scouterShift start/end
-          let matchNumber = element.matchNumber;
-          if (element.matchType === 1) {
-            matchNumber += lastQualMatch;
-          }
-          //move onto correct shift
-          let currIndex = 0;
-          while (scouterShifts[currIndex].endMatchOrdinalNumber < matchNumber) {
-            currIndex += 1;
-            if (currIndex >= scouterShifts.length) {
-              scoutersExist = false;
-              break;
+        scoutReports: includeTeamReports,
+      },
+    });
+
+    /*
+     * SELECT matchNumber, matchType, teamNumber, key
+     * (SELECT COUNT(*)
+     *     FROM scoutReports
+     *     WHERE scouter.sourceTeamNumber IN (${[9143, 8033].join(",")})) AS _reports
+     * (SELECT COUNT(*)
+     *     FROM scoutReports
+     *     WHERE (NOT scouter.sourceTeamNumber = (${9143}))
+     *         AND (scouter.sourceTeamNumber IN (${[9143, 8033].join(",")}))) AS _external
+     * FROM TeamMatchData
+     *     WHERE tournamentKey = ${"2024casf"};
+     */
+
+    // Group data by match (first layer, elimination matches are negative indices) and team (second layer, 0-5)
+    // !!!IMPORTANT: the scoutReports property only exists if user.teamNumber exists
+    let groupedData: {
+      matchNumber: number;
+      teamNumber: number;
+      matchType: MatchType;
+      key: string;
+      _count: { scoutReports: number };
+      scoutReports: { scouter: { name: string; uuid: string } }[] | undefined;
+    }[][] = rawData.reduce((acc, curr) => {
+      // Positive indices are quals, negatives are elims
+      const i =
+        curr.matchNumber * (curr.matchType === MatchType.ELIMINATION ? -1 : 1);
+      acc[i] ??= [];
+      // Order match by team index [0-5]
+      acc[i][Number(curr.key.at(-1))] = curr;
+      return acc;
+    }, []);
+
+    const lastQualMatch = groupedData.length - 1;
+
+    // If team filters are set, limit matches to those including all selected teams
+    if (params.data.teamFilter && params.data.teamFilter.length > 0) {
+      const tempArray: typeof groupedData = [];
+
+      // For..in to iterate over positive and negative properties
+      for (const k in groupedData) {
+        const i = parseInt(k);
+        const match = groupedData[i];
+        if (
+          params.data.teamFilter.every((requiredTeam) =>
+            match.find((team) => team.teamNumber === requiredTeam),
+          )
+        ) {
+          // Check that all required teams are included in a match
+          tempArray[i] = match;
+        }
+      }
+
+      groupedData = tempArray;
+    }
+
+    // Fetch data for matches and attach scouted and finished flags
+    const finalFormattedMatches: {
+      matchNumber: number;
+      matchType: number;
+      scouted: boolean;
+      finished: boolean;
+      team1: {
+        number: number;
+        scouters: { name: string; scouted: boolean }[];
+        externalReports: number;
+      };
+      team2: {
+        number: number;
+        scouters: { name: string; scouted: boolean }[];
+        externalReports: number;
+      };
+      team3: {
+        number: number;
+        scouters: { name: string; scouted: boolean }[];
+        externalReports: number;
+      };
+      team4: {
+        number: number;
+        scouters: { name: string; scouted: boolean }[];
+        externalReports: number;
+      };
+      team5: {
+        number: number;
+        scouters: { name: string; scouted: boolean }[];
+        externalReports: number;
+      };
+      team6: {
+        number: number;
+        scouters: { name: string; scouted: boolean }[];
+        externalReports: number;
+      };
+    }[] = [];
+
+    // If no team number is set, there are no scouters and all reports are external
+    if (!user.teamNumber) {
+      for (const k in groupedData) {
+        const i = parseInt(k);
+        const match = groupedData[i];
+        const currData = {
+          matchNumber: match[0].matchNumber,
+          matchType: ReverseMatchTypeMap[match[0].matchType],
+          scouted: match.some((team) => team._count.scoutReports >= 1),
+          finished:
+            match[0].matchType === MatchType.QUALIFICATION &&
+            match[0].matchNumber <= lastFinishedMatch,
+          team1: {
+            number: match[0].teamNumber,
+            scouters: [],
+            externalReports: match[0]._count.scoutReports,
+          },
+          team2: {
+            number: match[1].teamNumber,
+            scouters: [],
+            externalReports: match[1]._count.scoutReports,
+          },
+          team3: {
+            number: match[2].teamNumber,
+            scouters: [],
+            externalReports: match[2]._count.scoutReports,
+          },
+          team4: {
+            number: match[3].teamNumber,
+            scouters: [],
+            externalReports: match[3]._count.scoutReports,
+          },
+          team5: {
+            number: match[4].teamNumber,
+            scouters: [],
+            externalReports: match[4]._count.scoutReports,
+          },
+          team6: {
+            number: match[5].teamNumber,
+            scouters: [],
+            externalReports: match[5]._count.scoutReports,
+          },
+        };
+
+        // Index = ordinal match number, 0 indexed
+        if (i > 0) {
+          finalFormattedMatches[i - 1] = currData;
+        } else {
+          finalFormattedMatches[lastQualMatch - i - 1] = currData;
+        }
+      }
+
+      res.status(200).send(finalFormattedMatches);
+      return;
+    }
+    // Done here if user has no team number
+
+    const scouterShifts = await prismaClient.scouterScheduleShift.findMany({
+      where: {
+        tournamentKey: params.data.tournamentKey,
+        sourceTeamNumber: user.teamNumber,
+      },
+      orderBy: [{ startMatchOrdinalNumber: "asc" }],
+      select: {
+        startMatchOrdinalNumber: true,
+        endMatchOrdinalNumber: true,
+        team1: { select: { name: true, uuid: true } },
+        team2: { select: { name: true, uuid: true } },
+        team3: { select: { name: true, uuid: true } },
+        team4: { select: { name: true, uuid: true } },
+        team5: { select: { name: true, uuid: true } },
+        team6: { select: { name: true, uuid: true } },
+      },
+    });
+
+    let currShiftIndex = 0;
+    // For..in should iterate through array indices first, then other properties by insertion order
+    for (const k in groupedData) {
+      const i = parseInt(k);
+      const match = groupedData[i];
+      const ordinalMatchNumber = i > 0 ? i : lastQualMatch - i;
+
+      // Increment the scouter shift if we passed the upper bound
+      if (
+        scouterShifts[currShiftIndex] &&
+        ordinalMatchNumber > scouterShifts[currShiftIndex].endMatchOrdinalNumber
+      ) {
+        currShiftIndex++;
+      }
+
+      const matchScouters: { name: string; scouted: boolean }[][] = [];
+      for (let j = 0; j < 6; j++) {
+        // Add all complete scout reports from user's team
+        matchScouters[j] = match[j].scoutReports.map((e) => ({
+          name: e.scouter.name,
+          scouted: true,
+        }));
+
+        // If the current match number is within a scouter shift, add incomplete scout reports
+        if (
+          scouterShifts[currShiftIndex] &&
+          ordinalMatchNumber >=
+            scouterShifts[currShiftIndex].startMatchOrdinalNumber
+        ) {
+          // Sketchy but iterates through team1-6, could cause problems if schema is changed
+          for (const currScouter of scouterShifts[currShiftIndex][
+            `team${j + 1}`
+          ]) {
+            // If the sourced scout reports do not include ones from the shift, add those as incomplete
+            if (
+              !match[j].scoutReports.some(
+                (e) => e.scouter.uuid === currScouter.uuid,
+              )
+            ) {
+              matchScouters[j].push({ name: currScouter.name, scouted: false });
             }
           }
-          if (
-            scoutersExist &&
-            scouterShifts[currIndex].startMatchOrdinalNumber > matchNumber
-          ) {
-            scoutersExist = false;
-          }
-          if (scoutersExist) {
-            promises.push(
-              addScoutedTeam(req, scouterShifts, currIndex, "team1", element),
-            );
-            promises.push(
-              addScoutedTeam(req, scouterShifts, currIndex, "team2", element),
-            );
-            promises.push(
-              addScoutedTeam(req, scouterShifts, currIndex, "team3", element),
-            );
-            promises.push(
-              addScoutedTeam(req, scouterShifts, currIndex, "team4", element),
-            );
-            promises.push(
-              addScoutedTeam(req, scouterShifts, currIndex, "team5", element),
-            );
-            promises.push(
-              addScoutedTeam(req, scouterShifts, currIndex, "team6", element),
-            );
-          } else {
-            promises.push(addScoutedTeamNotOnSchedule(req, "team1", element));
-            promises.push(addScoutedTeamNotOnSchedule(req, "team2", element));
-            promises.push(addScoutedTeamNotOnSchedule(req, "team3", element));
-            promises.push(addScoutedTeamNotOnSchedule(req, "team4", element));
-            promises.push(addScoutedTeamNotOnSchedule(req, "team5", element));
-            promises.push(addScoutedTeamNotOnSchedule(req, "team6", element));
-          }
-          if (element.scouted) {
-            promises.push(addExternalReports(req, element));
-          }
-        }
-      } else {
-        for (const match of finalFormatedMatches) {
-          promises.push(addScoutedTeamNotOnSchedule(req, "team1", match));
-          promises.push(addScoutedTeamNotOnSchedule(req, "team2", match));
-          promises.push(addScoutedTeamNotOnSchedule(req, "team3", match));
-          promises.push(addScoutedTeamNotOnSchedule(req, "team4", match));
-          promises.push(addScoutedTeamNotOnSchedule(req, "team5", match));
-          promises.push(addScoutedTeamNotOnSchedule(req, "team6", match));
-          if (match.scouted) {
-            await addExternalReports(req, match);
-          }
         }
       }
-    } else {
-      for (const match of finalFormatedMatches) {
-        promises.push(addExternalReports(req, match));
+
+      // Scouted flag based on if any team in this match has at least 1 sourced scout report
+      // Finished flag is true if the match is a qualification before the last finished match
+      // Scouters array includes all scouters from user's team, and all incomplete reports from assigned scouting shifts
+      // External reports are the number of non-team scout reports, so [other team reports - user team reports]
+      const currData = {
+        matchNumber: match[0].matchNumber,
+        matchType: ReverseMatchTypeMap[match[0].matchType],
+        scouted: match.some((team) => team._count.scoutReports >= 1),
+        finished:
+          match[0].matchType === MatchType.QUALIFICATION &&
+          match[0].matchNumber <= lastFinishedMatch,
+        team1: {
+          number: match[0].teamNumber,
+          scouters: matchScouters[0],
+          externalReports:
+            match[0]._count.scoutReports - match[0].scoutReports.length,
+        },
+        team2: {
+          number: match[1].teamNumber,
+          scouters: matchScouters[1],
+          externalReports:
+            match[1]._count.scoutReports - match[1].scoutReports.length,
+        },
+        team3: {
+          number: match[2].teamNumber,
+          scouters: matchScouters[2],
+          externalReports:
+            match[2]._count.scoutReports - match[2].scoutReports.length,
+        },
+        team4: {
+          number: match[3].teamNumber,
+          scouters: matchScouters[3],
+          externalReports:
+            match[3]._count.scoutReports - match[3].scoutReports.length,
+        },
+        team5: {
+          number: match[4].teamNumber,
+          scouters: matchScouters[4],
+          externalReports:
+            match[4]._count.scoutReports - match[4].scoutReports.length,
+        },
+        team6: {
+          number: match[5].teamNumber,
+          scouters: matchScouters[5],
+          externalReports:
+            match[5]._count.scoutReports - match[5].scoutReports.length,
+        },
+      };
+
+      // Ordered by ordinal match number, 0 indexed
+      finalFormattedMatches[ordinalMatchNumber - 1] = currData;
+    }
+
+    if (!params.data.teamFilter) {
+      res.status(200).send(finalFormattedMatches);
+      return;
+    }
+
+    // If teams are filtered, the array will be sparse and has to be condensed
+    const denseFormattedMatches: typeof finalFormattedMatches = [];
+    if (params.data.teamFilter) {
+      for (const match of finalFormattedMatches) {
+        if (match) {
+          denseFormattedMatches.push(match);
+        }
       }
     }
 
-    await Promise.all(promises);
-
-    res.status(200).send(finalFormatedMatches);
+    res.status(200).send(denseFormattedMatches);
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 };
-//problem: will push to all 6 teams
-async function addScoutedTeamNotOnSchedule(
-  req: AuthenticatedRequest,
-  team: string,
-  match,
-  scouterShifts = null,
-  currIndex = -1,
-) {
-  try {
-    const key =
-      match.tournamentKey +
-      "_" +
-      MatchTypeToAbrivation[match.matchType] +
-      match.matchNumber +
-      "_" +
-      ReverseScouterScheduleMap[team];
-    if (scouterShifts !== null && currIndex !== -1) {
-      const rows = await prismaClient.scoutReport.findMany({
-        where: {
-          teamMatchData: {
-            key: key,
-          },
-          scouterUuid: {
-            notIn: scouterShifts[currIndex][team].map((item) => item.uuid),
-          },
-          scouter: {
-            sourceTeamNumber: req.user.teamNumber,
-          },
-        },
-        include: {
-          scouter: true,
-        },
-      });
-      for (const scoutReport of rows) {
-        await match[team].scouters.push({
-          name: scoutReport.scouter.name,
-          scouted: true,
-        });
-      }
-    } else {
-      const rows = await prismaClient.scoutReport.findMany({
-        where: {
-          teamMatchData: {
-            key: key,
-          },
-          scouter: {
-            sourceTeamNumber: req.user.teamNumber,
-          },
-        },
-        include: {
-          scouter: true,
-        },
-      });
-
-      for (const scoutReport of rows) {
-        await match[team].scouters.push({
-          name: scoutReport.scouter.name,
-          scouted: true,
-        });
-      }
-    }
-    return true;
-  } catch (error) {
-    throw error;
-  }
-}
-
-async function addScoutedTeam(
-  req: AuthenticatedRequest,
-  scouterShifts,
-  currIndex: number,
-  team: string,
-  match,
-) {
-  try {
-    const key =
-      match.tournamentKey +
-      "_" +
-      MatchTypeToAbrivation[match.matchType] +
-      match.matchNumber +
-      "_" +
-      ReverseScouterScheduleMap[team];
-    for (const scouter of scouterShifts[currIndex][team]) {
-      const rows = await prismaClient.scoutReport.findMany({
-        where: {
-          scouterUuid: scouter.uuid,
-          teamMatchKey: key,
-        },
-      });
-      if (rows !== null && rows.length > 0) {
-        for (const element of rows) {
-          await match[team].scouters.push({
-            name: scouter.name,
-            scouted: true,
-          });
-        }
-      } else {
-        await match[team].scouters.push({ name: scouter.name, scouted: false });
-      }
-    }
-    await addScoutedTeamNotOnSchedule(
-      req,
-      team,
-      match,
-      scouterShifts,
-      currIndex,
-    );
-    return true;
-  } catch (error) {
-    throw error;
-  }
-}
-async function addExternalReports(req: AuthenticatedRequest, match) {
-  //don't use null for "not" in prisma below
-  const teamNumber = req.user.teamNumber || 0;
-  const externalReports = await prismaClient.scoutReport.groupBy({
-    by: ["teamMatchKey"],
-    _count: {
-      _all: true,
-    },
-    where: {
-      teamMatchData: {
-        tournamentKey: match.tournamentKey,
-        matchType: MatchTypeMap[match.matchType],
-        matchNumber: match.matchNumber,
-      },
-      scouter: {
-        sourceTeamNumber: dataSourceRuleToPrismaFilter(
-          dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
-        ),
-      },
-    },
-  });
-
-  await externalReports.forEach((externalReport) => {
-    const team =
-      ScouterScheduleMap[
-        externalReport.teamMatchKey[externalReport.teamMatchKey.length - 1]
-      ];
-    match[team].externalReports = externalReport._count._all;
-  });
-  return true;
-}
