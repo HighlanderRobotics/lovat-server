@@ -5,7 +5,10 @@ import { AuthenticatedRequest } from "@/src/lib/middleware/requireAuth.js";
 import { addTournamentMatches } from "@/src/handler/manager/addTournamentMatches.js";
 import { ReverseMatchTypeMap } from "@/src/handler/manager/managerConstants.js";
 import { MatchType, Prisma } from "@prisma/client";
-import { swrConstant, ttlConstant } from "@/src/handler/analysis/analysisConstants.js";
+import {
+  swrConstant,
+  ttlConstant,
+} from "@/src/handler/analysis/analysisConstants.js";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,

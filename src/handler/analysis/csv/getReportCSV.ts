@@ -16,7 +16,10 @@ import {
   TeamMatchData,
   Event,
 } from "@prisma/client";
-import { autoEnd, endgameToPoints } from "@/src/handler/analysis/analysisConstants.js";
+import {
+  autoEnd,
+  endgameToPoints,
+} from "@/src/handler/analysis/analysisConstants.js";
 import { z } from "zod";
 import {
   dataSourceRuleToPrismaFilter,

@@ -14,7 +14,10 @@ import {
   dataSourceRuleToPrismaFilter,
 } from "@/src/handler/analysis/dataSourceRule.js";
 import z from "zod";
-import { runAnalysis, AnalysisFunctionConfig } from "@/src/handler/analysis/analysisFunction.js";
+import {
+  runAnalysis,
+  AnalysisFunctionConfig,
+} from "@/src/handler/analysis/analysisFunction.js";
 
 // Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
 // Provides a timeline of metric value per match.

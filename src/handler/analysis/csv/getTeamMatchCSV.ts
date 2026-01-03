@@ -15,7 +15,10 @@ import {
   Scouter,
   Event,
 } from "@prisma/client";
-import { autoEnd, endgameToPoints } from "@/src/handler/analysis/analysisConstants.js";
+import {
+  autoEnd,
+  endgameToPoints,
+} from "@/src/handler/analysis/analysisConstants.js";
 import { z } from "zod";
 import { CondensedReport } from "@/src/handler/analysis/csv/getReportCSV.js";
 import {

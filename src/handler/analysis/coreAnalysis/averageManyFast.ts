@@ -17,7 +17,10 @@ import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "@/src/handler/analysis/dataSourceRule.js";
-import { runAnalysis, AnalysisFunctionConfig } from "@/src/handler/analysis/analysisFunction.js";
+import {
+  runAnalysis,
+  AnalysisFunctionConfig,
+} from "@/src/handler/analysis/analysisFunction.js";
 import { User } from "@prisma/client";
 
 export interface ArrayFilter<T> {

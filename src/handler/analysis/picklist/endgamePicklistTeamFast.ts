@@ -1,6 +1,9 @@
 import prismaClient from "@/src/prismaClient.js";
 import { BargeResult } from "@prisma/client";
-import { defaultEndgamePoints, endgameToPoints } from "@/src/handler/analysis/analysisConstants.js";
+import {
+  defaultEndgamePoints,
+  endgameToPoints,
+} from "@/src/handler/analysis/analysisConstants.js";
 import { ArrayFilter } from "@/src/handler/analysis/coreAnalysis/averageManyFast.js";
 
 // Number of endgame possibilities that result in points earned (essentially, successes)

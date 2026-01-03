@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import prismaClient from "@/src/prismaClient.js";
 import z from "zod";
-import { MatchTypeMap, ScouterScheduleMap } from "@/src/handler/manager/managerConstants.js";
+import {
+  MatchTypeMap,
+  ScouterScheduleMap,
+} from "@/src/handler/manager/managerConstants.js";
 import SHA256 from "crypto-js/sha256.js";
 import { addTournamentMatches } from "@/src/handler/manager/addTournamentMatches.js";
 

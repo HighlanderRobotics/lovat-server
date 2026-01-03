@@ -307,6 +307,3 @@ export const addScoutReport = async (
     res.status(500).send({ error: error, displayError: "Error" });
   }
 };
-
-
-

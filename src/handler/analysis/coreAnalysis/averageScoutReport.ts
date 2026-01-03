@@ -7,7 +7,10 @@ import {
 } from "@/src/handler/analysis/analysisConstants.js";
 import { EventAction, Position, User } from "@prisma/client";
 import z from "zod";
-import { runAnalysis, AnalysisFunctionConfig } from "@/src/handler/analysis/analysisFunction.js";
+import {
+  runAnalysis,
+  AnalysisFunctionConfig,
+} from "@/src/handler/analysis/analysisFunction.js";
 
 export async function computeAverageScoutReport(
   scoutReportUuid: string,

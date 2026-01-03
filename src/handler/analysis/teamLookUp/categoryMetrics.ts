@@ -1,5 +1,8 @@
 import z from "zod";
-import { metricsCategory, metricToName } from "@/src/handler/analysis/analysisConstants.js";
+import {
+  metricsCategory,
+  metricToName,
+} from "@/src/handler/analysis/analysisConstants.js";
 import { averageManyFast } from "@/src/handler/analysis/coreAnalysis/averageManyFast.js";
 import { createAnalysisHandler } from "@/src/handler/analysis/analysisHandler.js";
 
