@@ -11,6 +11,6 @@ router.use("/slack", slackRouter);
 router.use("/manager", managerRouter);
 router.use("/analysis", analysisRouter);
 
-router.get("/invite", onboardingRedirect);
+router.get("/slack-invite", onboardingRedirect);
 
 export default router;
