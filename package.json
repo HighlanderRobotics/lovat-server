@@ -16,7 +16,6 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^7.2.0",
-    "@prisma/extension-accelerate": "^3.0.1",
     "@slack/web-api": "^7.10.0",
     "axios": "^1.6.2",
     "cookie-parser": "^1.4.7",

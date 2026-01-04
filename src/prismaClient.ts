@@ -1,6 +1,9 @@
 import { PrismaClient } from "@/generated/prisma/client";
-import { withAccelerate } from "@prisma/extension-accelerate";
 
-const prisma = new PrismaClient({accelerateUrl: process.env.DATABASE_URL}).$extends(withAccelerate());
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === 'development' 
+    ? ['query', 'error', 'warn'] 
+    : ['error'],
+});
 
 export default prisma;
