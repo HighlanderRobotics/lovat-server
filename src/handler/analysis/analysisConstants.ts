@@ -6,7 +6,7 @@ import {
   CoralPickup,
   AlgaePickup,
   User,
-}from "@/generated/prisma/client";
+}from "../../generated/prisma/client.js";
 import prismaClient from "../../prismaClient.js";
 import { DataSourceRule } from "./dataSourceRule.js";
 //add cooperation

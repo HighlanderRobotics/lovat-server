@@ -8,7 +8,7 @@ import {
   ttlConstant,
 } from "../analysisConstants.js";
 import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast.js";
-import { Event, Position, Prisma, ScoutReport }  from "@/generated/prisma/client";
+import { Event, Position, Prisma, ScoutReport }  from "../../../generated/prisma/client.js";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
@@ -60,7 +60,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
   },
   calculateAnalysis: async (
     args: z.infer<typeof argsSchema>,
-    ctx: { user: import("@/generated/prisma/client").User },
+    ctx: { user: import("../../../generated/prisma/client.js").User },
   ) => {
     const { teams, metric } = args;
     try {
@@ -335,7 +335,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
 };
 
 export const arrayAndAverageTeams = async (
-  user: import("@/generated/prisma/client").User,
+  user: import("../../../generated/prisma/client.js").User,
   args: z.infer<typeof argsSchema>,
 ) => runAnalysis(config, user, args);
 

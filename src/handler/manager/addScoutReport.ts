@@ -13,7 +13,7 @@ import {
   EventActionMap,
 } from "./managerConstants.js";
 import { addTournamentMatches } from "./addTournamentMatches.js";
-import { EventAction, Position }from "@/generated/prisma/client";
+import { EventAction, Position }from "../../generated/prisma/client.js";
 import {
   AlgaePickup,
   BargeResult,
@@ -22,7 +22,7 @@ import {
   MatchType,
   RobotRole,
   UnderShallowCage,
-}from "@/generated/prisma/client";
+}from "../../generated/prisma/client.js";
 import { sendWarningToSlack } from "../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../lib/clearCache.js";
 

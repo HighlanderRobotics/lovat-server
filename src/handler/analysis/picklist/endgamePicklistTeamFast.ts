@@ -1,5 +1,5 @@
 import prismaClient from "../../../prismaClient.js";
-import { BargeResult }from "@/generated/prisma/client";
+import { BargeResult }from "../../../generated/prisma/client.js";
 import { defaultEndgamePoints, endgameToPoints } from "../analysisConstants.js";
 import { ArrayFilter } from "../coreAnalysis/averageManyFast.js";
 

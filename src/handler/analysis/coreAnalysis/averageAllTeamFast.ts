@@ -6,7 +6,7 @@ import {
   Metric,
   metricToEvent,
 } from "../analysisConstants.js";
-import { Position, Prisma }from "@/generated/prisma/client";
+import { Position, Prisma }from "../../../generated/prisma/client.js";
 import z from "zod";
 import {
   dataSourceRuleToPrismaFilter,

@@ -7,7 +7,7 @@ import {
   lowercaseToBreakdown,
   MetricsBreakdown,
 } from "../analysisConstants.js";
-import { EventAction }from "@/generated/prisma/client";
+import { EventAction }from "../../../generated/prisma/client.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
 import {
   dataSourceRuleSchema,

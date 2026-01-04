@@ -1,4 +1,4 @@
-import { User }from "@/generated/prisma/client";
+import { User }from "../generated/prisma/client.js";
 import { DataSourceRule } from "../handler/analysis/dataSourceRule.js";
 import {
   allTeamNumbers,

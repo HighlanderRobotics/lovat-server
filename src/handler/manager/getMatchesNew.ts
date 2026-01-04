@@ -4,7 +4,7 @@ import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 import { addTournamentMatches } from "./addTournamentMatches.js";
 import { ReverseMatchTypeMap } from "./managerConstants.js";
-import { MatchType, Prisma } from "@/generated/prisma/client";
+import { MatchType, Prisma } from "../../generated/prisma/client.js";
 import { swrConstant, ttlConstant } from "../analysis/analysisConstants.js";
 import {
   dataSourceRuleSchema,

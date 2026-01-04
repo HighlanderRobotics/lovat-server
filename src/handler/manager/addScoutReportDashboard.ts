@@ -25,7 +25,7 @@ import {
   Position,
   RobotRole,
   UnderShallowCage,
-}from "@/generated/prisma/client";
+}from "../../generated/prisma/client.js";
 import { invalidateCache } from "../../lib/clearCache.js";
 
 export const addScoutReportDashboard = async (

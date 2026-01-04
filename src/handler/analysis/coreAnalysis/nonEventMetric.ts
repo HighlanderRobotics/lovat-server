@@ -1,5 +1,5 @@
 import prismaClient from "../../../prismaClient.js";
-import { EventAction, User }from "@/generated/prisma/client";
+import { EventAction, User }from "../../../generated/prisma/client.js";
 import {
   breakdownNeg,
   breakdownPos,

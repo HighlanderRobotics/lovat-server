@@ -14,7 +14,7 @@ import {
   UnderShallowCage,
   Scouter,
   Event,
-}from "@/generated/prisma/client";
+}from "../../generated/prisma/client.js";
 import { autoEnd, endgameToPoints } from "../analysis/analysisConstants.js";
 import { z } from "zod";
 import { CondensedReport } from "./getReportCSV.js";
