@@ -3,6 +3,7 @@ import prismaClient from "../../../prismaClient.js";
 import { metricsCategory, metricToName } from "../analysisConstants.js";
 import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
+import { robotRole } from "../coreAnalysis/robotRole.js";
 
 
 export const categoryMetrics = createAnalysisHandler({
@@ -42,21 +43,21 @@ export const categoryMetrics = createAnalysisHandler({
      metrics: metricsCategory,
    });
 
+    for (const metric of metricsCategory) {
+      result[metricToName[metric]] = data[metric][params.team];
+    }
 
-   let hasAnyData = false;
-   for (const metric of metricsCategory) {
-     const value = data[metric][params.team];
-     result[metricToName[metric]] = value;
-     if (value !== null && value !== undefined && value !== 0) {
-       hasAnyData = true;
-     }
-   }
-
-
-   if (!hasAnyData) {
+   const reportCount = await prismaClient.scoutReport.count({
+     where: {
+       teamMatchData: {
+         teamNumber: params.team,
+       },
+     },
+   });
+   
+   if (reportCount === 0) {
      return { error: "NO_DATA_FOR_TEAM" };
    }
-
 
    return result;
  },

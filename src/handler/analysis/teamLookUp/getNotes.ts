@@ -111,7 +111,14 @@ export const getNotes = createAnalysisHandler({
    }
 
 
-   if (noteData.length === 0) {
+   const reportCount = await prismaClient.scoutReport.count({
+     where: {
+       teamMatchData: {
+         teamNumber: params.team,
+       },
+     },
+   });
+   if (reportCount === 0) {
      return { error: "NO_DATA_FOR_TEAM" };
    }
 
