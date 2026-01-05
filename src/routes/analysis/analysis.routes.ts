@@ -16,6 +16,9 @@ import { multipleFlags } from "../../handler/analysis/teamLookUp/multipleFlags.j
 import { pitDisplay } from "../../handler/manager/pitDisplay.js";
 import { requireAuth } from "../../lib/middleware/requireAuth.js";
 import { Router } from "express";
+import teamLookup from "./teamLookup.routes.js"
+import csv from "./csv.routes.js"
+import scoutReport from "./scoutreport.routes.js"
 
 const router = Router();
 
@@ -23,24 +26,13 @@ router.get("/pitdisplay", pitDisplay);
 
 router.use(requireAuth);
 
-router.get("/metric/:metric/team/:team", detailsPage); //tested, same format
-router.get("/category/team/:team", categoryMetrics); //tested, same format
-router.get("/breakdown/team/:team", breakdownMetrics); //tested, same format
-router.get("/breakdown/team/:team/:breakdown", breakdownDetails);
-router.get("/notes/team/:team", getNotes); //tested
-router.get("/flag/team/:team", multipleFlags); //tested
+router.use(teamLookup);
+router.use(csv);
+router.use(scoutReport);
 
 router.get("/alliance", alliancePageResponse);
 
 router.get("/matchprediction", matchPrediction);
 router.get("/picklist", picklistShell);
-
-router.get("/metrics/scoutreport/:uuid", matchPageSpecificScouter);
-router.get("/scoutreports/match/:match", scoutReportForMatch);
-router.get("/timeline/scoutreport/:uuid", timelineForScoutReport);
-
-router.get("/csvplain", getTeamCSV);
-router.get("/matchcsv", getTeamMatchCSV);
-router.get("/reportcsv", getReportCSV);
 
 export default router;
