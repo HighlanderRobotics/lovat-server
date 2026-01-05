@@ -88,9 +88,6 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
       },
     });
 
-    console.log(result)
-    console.log(rounded)
-
     return rounded as z.infer<R>;
   }
 
