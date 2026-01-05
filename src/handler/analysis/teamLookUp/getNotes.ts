@@ -5,7 +5,6 @@ import {
  dataSourceRuleToPrismaFilter,
 } from "../dataSourceRule.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
-import { error } from "console";
 
 
 export const getNotes = createAnalysisHandler({
@@ -120,8 +119,3 @@ export const getNotes = createAnalysisHandler({
    return notesAndMatches;
  },
 });
-
-
-
-
-
