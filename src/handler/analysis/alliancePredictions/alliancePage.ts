@@ -6,8 +6,9 @@ import { autoPathsTeam } from "../autoPaths/autoPathsTeam.js";
 import { robotRole } from "../coreAnalysis/robotRole.js";
 import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
 import { RobotRole, User }from "../../../generated/prisma/client.js";
+import { AnalysisContext } from "../analysisConstants.js";
 
-const config = {
+const config: any = {
   argsSchema: z.object({
     team1: z.number(),
     team2: z.number(),
@@ -49,7 +50,7 @@ const config = {
   usesDataSource: true,
   shouldCache: true,
 
-  createKey: (args) => {
+  createKey: (args: z.infer<typeof config.argsSchema>) => {
     return {
       key: [
         "alliancePage",
@@ -61,7 +62,7 @@ const config = {
     };
   },
 
-  calculateAnalysis: async (args, ctx) => {
+  calculateAnalysis: async (args: z.infer<typeof config.argsSchema>, ctx: AnalysisContext) => {
     const teamPoints = await arrayAndAverageTeams(ctx.user, {
       teams: [args.team1, args.team2, args.team3],
       metric: Metric.totalPoints,

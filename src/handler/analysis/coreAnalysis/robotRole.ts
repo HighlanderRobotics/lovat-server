@@ -2,7 +2,7 @@ import z from "zod";
 import { MetricsBreakdown } from "../analysisConstants.js";
 import { nonEventMetric, NonEventMetricResult } from "./nonEventMetric.js";
 import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
-import { User }from "../../../generated/prisma/client.js";
+import { RobotRole, User }from "../../../generated/prisma/client.js";
 
 const argsSchema = z.object({ team: z.number() });
 const returnSchema = z.object({ mainRole: z.string().nullable() });
@@ -29,7 +29,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
         metric: MetricsBreakdown.robotRole,
       });
 
-      let eventTypeWithMostOccurrences: string = null;
+      let eventTypeWithMostOccurrences: string | null = null;
       let maxCount = 0;
 
       // Iterate through robot roles
@@ -50,5 +50,5 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
   },
 };
 
-export const robotRole = async (user: User, args: z.infer<typeof argsSchema>) =>
+export const robotRole = async (user: User, args: z.infer<typeof argsSchema>): Promise<{ mainRole: string | null; }> =>
   runAnalysis(config, user, args);

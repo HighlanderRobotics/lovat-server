@@ -18,7 +18,7 @@ import { runAnalysis } from "../analysisFunction.js";
  * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,
  * calculated directly in the database with a single query.
  */
-const config = {
+const config: any = {
   argsSchema: z.object({
     team: z.number(),
     metric: z.nativeEnum(MetricsBreakdown),
