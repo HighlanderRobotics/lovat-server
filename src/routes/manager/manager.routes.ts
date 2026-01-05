@@ -39,35 +39,31 @@ router.use("/scoutreports", scoutreports);
 router.use("/settings", settings);
 //router.use("/apikey", apikey);
 
-router.use(requireAuth);
+router.get("/teams", requireAuth, getTeams);
+router.get("/tournaments", requireAuth, getTournaments);
 
-router.get("/teams", getTeams);
-router.get("/tournaments", getTournaments);
+router.get("/matches/:tournament", requireAuth, getMatches);
 
-router.get("/matches/:tournament", getMatches);
+router.put("/notes/:uuid", requireAuth, updateNotes);
+router.get("/scoutershift/scouters", requireAuth, getScouters);
 
-router.put("/notes/:uuid", updateNotes);
+router.get("/profile", requireAuth, getProfile);
 
-router.get("/scoutershift/scouters", getScouters);
+router.get("/users", requireAuth, getUsers);
 
-router.get("/profile", getProfile);
+router.delete("/user", requireAuth, deleteUser);
 
-router.get("/users", getUsers);
+router.post("/upgradeuser", requireAuth, updateRoleToScoutingLead);
+router.get("/analysts", requireAuth, getAnalysts);
 
-router.delete("/user", deleteUser);
+router.post("/noteam", requireAuth, addNotOnTeam);
 
-router.post("/upgradeuser", updateRoleToScoutingLead);
+router.get("/code", requireAuth, getTeamCode);
 
-router.get("/analysts", getAnalysts);
+router.post("/dashboard/scoutreport", requireAuth, addScoutReportDashboard);
 
-router.post("/noteam", addNotOnTeam);
+router.get("/v1/manager/team-tournament-status", requireAuth, getTeamTournamentStatus);
 
-router.get("/code", getTeamCode);
-
-router.post("/dashboard/scoutreport", addScoutReportDashboard);
-
-router.get("/v1/manager/team-tournament-status", getTeamTournamentStatus);
-
-router.get("/v1/manager/match-results-page", getMatchResults);
+router.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
 
 export default router;

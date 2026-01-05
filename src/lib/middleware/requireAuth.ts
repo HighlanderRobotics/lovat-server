@@ -19,6 +19,7 @@ export const requireAuth = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
+  console.log("Authenticating request");
   try {
     console.log(`${req.method} ${req.path}`);
     // Validate JWT

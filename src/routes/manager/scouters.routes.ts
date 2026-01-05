@@ -27,15 +27,13 @@ router.get("/scouters/:uuid/tournaments", getScouterTournaments);
 router.get("/scouterschedules/:tournament", getScheduleForScouter);
 router.get("/scouter/tournaments", getTournamentForScouterWithSchedule);
 
-router.use(requireAuth);
+router.post("/unarchive/uuid/:uuid", requireAuth, unarchiveScouter);
+router.post("/archive/uuid/:uuid", requireAuth, archiveScouter);
 
-router.post("/unarchive/uuid/:uuid", unarchiveScouter);
-router.post("/archive/uuid/:uuid", archiveScouter);
-
-router.put("/scoutername", updateScouterName);
-router.delete("/scouterdashboard", deleteScouter);
-router.get("/scouterspage", scoutingLeadProgressPage);
-router.post("/scouterdashboard", addScouterDashboard);
-router.get("/scouterreports", scouterScoutReports);
+router.put("/scoutername", requireAuth, updateScouterName);
+router.delete("/scouterdashboard", requireAuth, deleteScouter);
+router.get("/scouterspage", requireAuth, scoutingLeadProgressPage);
+router.post("/scouterdashboard", requireAuth, addScouterDashboard);
+router.get("/scouterreports", requireAuth, scouterScoutReports);
 
 export default router;
