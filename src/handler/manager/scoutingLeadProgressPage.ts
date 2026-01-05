@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 
 export const scoutingLeadProgressPage = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z
@@ -147,7 +147,7 @@ export const scoutingLeadProgressPage = async (
           matchesScouted: matchesScoutedAtTournament.length,
           missedMatches: Math.max(
             0,
-            totalAssignedScouterMatches - matchesScoutedAtTournament.length
+            totalAssignedScouterMatches - matchesScoutedAtTournament.length,
           ),
         };
         result.push(currData);

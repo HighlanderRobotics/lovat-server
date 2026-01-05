@@ -48,7 +48,7 @@ export const addSlackWorkspace = async (
 
     if (!teamRow) {
       res.status(404).send("Team not found");
-      return
+      return;
     }
 
     await prismaClient.slackWorkspace.upsert({

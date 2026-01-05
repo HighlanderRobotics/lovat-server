@@ -5,7 +5,7 @@ import z from "zod";
 
 export const getScouters = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z

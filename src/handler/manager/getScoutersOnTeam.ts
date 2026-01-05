@@ -4,7 +4,7 @@ import z from "zod";
 
 export const getScoutersOnTeam = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     console.log(req.headers);
