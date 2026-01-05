@@ -10,8 +10,6 @@ router.post("/", addScoutReport);
 
 router.get("/:uuid", getScoutReport);
 
-router.use(requireAuth);
-
-router.delete("/:uuid", deleteScoutReport);
+router.delete("/:uuid", requireAuth, deleteScoutReport);
 
 export default router;
