@@ -4,6 +4,7 @@ import { User } from "@prisma/client";
 import { Request as ExpressRequest, Response, NextFunction } from "express";
 import * as jose from "jose";
 import { createHash } from "crypto";
+import { kv } from "../../redisClient.js";
 
 export interface AuthenticatedRequest extends ExpressRequest {
   user: User;
@@ -127,6 +128,12 @@ export const requireAuth = async (
         },
       });
 
+      kv.del(`auth:user:${user.id}`);
+
+      kv.set(`auth:user:${user.id}`, JSON.stringify(user), {
+        ex: 60 * 15, // wait 15 minutes before expiry (we can change this later)
+      });
+
       // Add user to request
       req.user = user;
       req.tokenType = "jwt";
@@ -134,20 +141,34 @@ export const requireAuth = async (
       next();
     } catch (error) {
       console.log("Using existing");
-      const user = await prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
-      });
+      console.error(error);
 
-      if (!user) {
-        res.status(500).send("Internal server error");
-        return;
+      if (kv.get(`auth:user:${userId}`) !== null) {
+        req.user = JSON.parse(
+          (await kv.get(`auth:user:${userId}`)) as string,
+        ) as User;
+
+        next();
+      } else {
+        const user = await prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+        });
+
+        if (!user) {
+          res.status(401).send("User not found");
+          return;
+        }
+
+        kv.set(`auth:user:${user.id}`, JSON.stringify(user), {
+          ex: 60 * 15,
+        });
+
+        req.user = user;
+
+        next();
       }
-
-      req.user = user;
-
-      next();
     }
   } catch (error) {
     console.error(error);
