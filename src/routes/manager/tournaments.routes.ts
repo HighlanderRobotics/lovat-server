@@ -3,6 +3,7 @@ import { requireAuth } from "../../lib/middleware/requireAuth.js";
 import { getTeamsInTournament } from "../../handler/manager/tournament/getTeamsInTournament.js";
 import { getTeamRankings } from "../../handler/manager/tournament/getTeamRankings.js";
 import { addScouterShift } from "../../handler/manager/tournament/addScouterShift.js";
+import { getScouterSchedule } from "../../handler/manager/tournament/getScouterSchedule.js";
 
 /*
 
