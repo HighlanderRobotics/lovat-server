@@ -32,6 +32,17 @@ export const breakdownMetrics = createAnalysisHandler({
       return { error: "TEAM_DOES_NOT_EXIST" };
     }
 
+    const reportCount = await prismaClient.scoutReport.count({
+      where: {
+        teamMatchData: {
+          teamNumber: params.team,
+        },
+      },
+    });
+    if (reportCount === 0) {
+      return { error: "NO_DATA_FOR_TEAM" };
+    }
+
     const result: Record<string, any> = {};
     for (const [key, metric] of Object.entries(lowercaseToBreakdown)) {
       const data = await nonEventMetric(ctx.user, {
@@ -44,17 +55,6 @@ export const breakdownMetrics = createAnalysisHandler({
       if (valid) {
         result[key] = data;
       }
-    }
-
-    const reportCount = await prismaClient.scoutReport.count({
-      where: {
-        teamMatchData: {
-          teamNumber: params.team,
-        },
-      },
-    });
-    if (reportCount === 0) {
-      return { error: "NO_DATA_FOR_TEAM" };
     }
 
     return result;

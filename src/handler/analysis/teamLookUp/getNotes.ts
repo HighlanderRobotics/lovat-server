@@ -31,6 +31,17 @@ export const getNotes = createAnalysisHandler({
       return { error: "TEAM_DOES_NOT_EXIST" };
     }
 
+    const reportCount = await prismaClient.scoutReport.count({
+      where: {
+        teamMatchData: {
+          teamNumber: params.team,
+        },
+      },
+    });
+    if (reportCount === 0) {
+      return { error: "NO_DATA_FOR_TEAM" };
+    }
+
     let notesAndMatches: {
       notes: string;
       match: string;
@@ -103,17 +114,6 @@ export const getNotes = createAnalysisHandler({
         tounramentName: report.teamMatchData.tournament.name,
         sourceTeam: report.scouter.sourceTeamNumber,
       }));
-    }
-
-    const reportCount = await prismaClient.scoutReport.count({
-      where: {
-        teamMatchData: {
-          teamNumber: params.team,
-        },
-      },
-    });
-    if (reportCount === 0) {
-      return { error: "NO_DATA_FOR_TEAM" };
     }
 
     return notesAndMatches;

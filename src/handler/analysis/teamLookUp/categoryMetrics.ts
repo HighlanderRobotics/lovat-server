@@ -30,17 +30,6 @@ export const categoryMetrics = createAnalysisHandler({
       return { error: "TEAM_DOES_NOT_EXIST" };
     }
 
-    const result: Record<string, any> = {};
-
-    const data = await averageManyFast(ctx.user, {
-      teams: [params.team],
-      metrics: metricsCategory,
-    });
-
-    for (const metric of metricsCategory) {
-      result[metricToName[metric]] = data[metric][params.team];
-    }
-
     const reportCount = await prismaClient.scoutReport.count({
       where: {
         teamMatchData: {
@@ -51,6 +40,17 @@ export const categoryMetrics = createAnalysisHandler({
 
     if (reportCount === 0) {
       return { error: "NO_DATA_FOR_TEAM" };
+    }
+
+    const result: Record<string, any> = {};
+
+    const data = await averageManyFast(ctx.user, {
+      teams: [params.team],
+      metrics: metricsCategory,
+    });
+
+    for (const metric of metricsCategory) {
+      result[metricToName[metric]] = data[metric][params.team];
     }
 
     return result;
