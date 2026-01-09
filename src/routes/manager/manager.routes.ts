@@ -62,8 +62,8 @@ router.get("/code", requireAuth, getTeamCode);
 
 router.post("/dashboard/scoutreport", requireAuth, addScoutReportDashboard);
 
-router.get("/v1/manager/team-tournament-status", requireAuth, getTeamTournamentStatus);
+router.get("/team-tournament-status", requireAuth, getTeamTournamentStatus);
 
-router.get("/v1/manager/match-results-page", requireAuth, getMatchResults);
+router.get("/match-results-page", requireAuth, getMatchResults);
 
 export default router;
