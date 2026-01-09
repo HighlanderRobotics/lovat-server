@@ -41,8 +41,24 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
     },
   };
 
+  const roundAllNumbers = <T>(val: T): T => {
+    if (val === null || val === undefined) return val;
+    if (typeof val === "number") return Math.round(val * 100) / 100 as T;
+    if (Array.isArray(val)) return val.map(roundAllNumbers) as T;
+    if (typeof val === "object") {
+      const out: Record<string, unknown> = {};
+      for (const k of Object.keys(val as Record<string, unknown>)) {
+      out[k] = roundAllNumbers((val as Record<string, unknown>)[k]);
+      }
+      return out as T;
+    }
+    return val as T;
+  };
+
   if (!config.shouldCache) {
-    return await config.calculateAnalysis(passedArgs, context);
+    const fresh = await config.calculateAnalysis(passedArgs, context);
+    const rounded = roundAllNumbers(fresh);
+    return rounded;
   }
 
   const {
@@ -63,8 +79,9 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
 
   if (!cacheRow) {
     const result = await config.calculateAnalysis(passedArgs, context);
+    const rounded = roundAllNumbers(result);
 
-    await kv.set(key, JSON.stringify(result));
+    await kv.set(key, JSON.stringify(rounded));
     await prismaClient.cachedAnalysis.create({
       data: {
         key,
@@ -72,7 +89,8 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
         tournamentDependencies: tournamentDependencies ?? [],
       },
     });
-    return result;
+
+    return rounded as z.infer<R>;
   }
 
   const parsed = JSON.parse(cacheRow.toString());
