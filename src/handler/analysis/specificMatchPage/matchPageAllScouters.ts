@@ -1,13 +1,13 @@
 // import { Request, Response } from "express";
-// import prismaClient from '../../../prismaClient'
+// import prismaClient from '../../../prismaClient.js'
 // import z from 'zod'
-// import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
-// import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage";
-// import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam";
+// import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
+// import { singleMatchEventsAverage } from "../coreAnalysis/singleMatchEventsAverage.js";
+// import { arrayAndAverageTeam } from "../coreAnalysis/arrayAndAverageTeam.js";
 // import { specificMatchPageMetrics } from "../analysisConstants.js";
-// import { singleMatchSingleScouter } from "../coreAnalysis/singleMatchSingleScouter";
+// import { singleMatchSingleScouter } from "../coreAnalysis/singleMatchSingleScouter.js";
 // import { match } from "assert";
-// import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter";
+// import { autoPathSingleMatchSingleScouter } from "../autoPaths/autoPathSingleMatchSingleScouter.js";
 
 // export const matchPageAllScouters = async (req: AuthenticatedRequest, res: Response) => {
 //     try {

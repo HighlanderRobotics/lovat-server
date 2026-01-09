@@ -1,6 +1,9 @@
 import z from "zod";
 import { runAnalysis } from "../analysisFunction.js";
-import { FlippedRoleMap, Metric } from "../analysisConstants.js";
+import {
+  FlippedRoleMap,
+  Metric,
+} from "../analysisConstants.js";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam.js";
 import { robotRole } from "../coreAnalysis/robotRole.js";

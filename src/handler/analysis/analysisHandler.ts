@@ -120,7 +120,7 @@ export const createAnalysisHandler: <
             context,
           );
 
-          res.set('X-Lovat-Cache','miss');
+          res.set("X-Lovat-Cache", "miss");
           res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
 
           try {
@@ -143,7 +143,7 @@ export const createAnalysisHandler: <
           return;
         }
       } else {
-        res.set('X-Lovat-Cache','hit');
+        res.set("X-Lovat-Cache", "hit");
         res.status(200).send(JSON.parse(cacheRow.toString()));
       }
     } catch (error) {

@@ -38,6 +38,14 @@ export async function sendWarningToSlack(
           ? report.scouter.name.trim()
           : `A Scouter from team ${report.scouter.sourceTeamNumber}`;
 
+      // Locate the upcoming match number for the workspace's team; fall back to a generic label if missing.
+      const partnerMatch = upcomingAlliancePartners.find(
+        ([partnerTeam]) => partnerTeam === channel.workspace.owner,
+      );
+      const partnerMatchLabel = partnerMatch?.[1]
+        ? `Q${partnerMatch[1]}`
+        : "an upcoming match";
+
       let result;
 
       const thread = await prismaClient.slackNotificationThread.findFirst({
@@ -55,13 +63,13 @@ export async function sendWarningToSlack(
         if (warning == WarningType.AUTO_LEAVE) {
           result = await client.chat.postMessage({
             channel: channel.channelId,
-            text: `Heads up! *${scouterName}* reported your alliance partner in *Q${upcomingAlliancePartners[upcomingAlliancePartners.map((x) => x[0]).findIndex((num) => num === matchNumber)][1]}*, team *${teamNumber}*, didn't leave during auto in *Q${matchNumber}*`,
+            text: `Heads up! *${scouterName}* reported your alliance partner in *${partnerMatchLabel}*, team *${teamNumber}*, didn't leave during auto in *Q${matchNumber}*`,
           });
         } else if (warning == WarningType.BREAK) {
           result = await client.chat.postMessage({
             channel: channel.channelId,
             // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
-            text: `Heads up! *${scouterName}* reported your alliance partner in *Q${upcomingAlliancePartners[upcomingAlliancePartners.map((x) => x[0]).findIndex((num) => num === matchNumber)][1]}*, team *${teamNumber}*, broke in *Q${matchNumber}*.\n${
+            text: `Heads up! *${scouterName}* reported your alliance partner in *${partnerMatchLabel}*, team *${teamNumber}*, broke in *Q${matchNumber}*.\n${
               report.robotBrokeDescription &&
               report.robotBrokeDescription.trim() !== ""
                 ? `> ${report.robotBrokeDescription}`
@@ -139,6 +147,8 @@ async function getUpcomingAlliancePartners(
     tournamentKey,
   );
 
+  const allianceByMatch = new Map<number, boolean>(upcomingAlliances);
+
   const upcomingTeams: TeamMatchData[] =
     await prismaClient.teamMatchData.findMany({
       where: {
@@ -155,11 +165,12 @@ async function getUpcomingAlliancePartners(
   const out: number[][] = [];
 
   for (const data of upcomingTeams) {
-    if (
-      upcomingAlliances[
-        upcomingAlliances.findIndex((x) => x[0] === data.matchNumber)
-      ][1]
-    ) {
+    const allianceIsRed = allianceByMatch.get(data.matchNumber);
+    if (allianceIsRed === undefined) {
+      continue; // skip unexpected data without alliance info
+    }
+
+    if (allianceIsRed) {
       if (parseInt(data.key.at(-1)) >= 3) {
         out.push([data.teamNumber, data.matchNumber]);
       }
