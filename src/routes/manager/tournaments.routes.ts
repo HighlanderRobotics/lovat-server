@@ -25,4 +25,6 @@ router.get("/:tournament/rankedTeams", getTeamRankings);
 
 router.post("/:tournament/scoutershifts", addScouterShift);
 
+router.get("/:tournament/scoutershifts", getScouterSchedule);
+
 export default router;
