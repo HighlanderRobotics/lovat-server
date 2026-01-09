@@ -35,18 +35,23 @@ export const requireAuth = async (
 
       const keyHash = createHash("sha256").update(tokenString).digest("hex");
 
-      const rateLimit = await prisma.apiKey.findUnique({
-        where: {
-          keyHash: keyHash,
-        },
-      });
+      const keyRowValue = await kv.get(`auth:apikey:${keyHash}:lastused`);
 
-      if (Date.now() - rateLimit.lastUsed.getTime() <= 3 * 1000) {
+      let rateLimit =
+        keyRowValue !== null
+          ? (
+              await prisma.apiKey.findUnique({ where: { keyHash: keyHash } })
+            ).lastUsed.getTime()
+          : parseInt(keyRowValue as string);
+
+      if (Date.now() - rateLimit <= 3 * 1000) {
         res.status(429).json({
           message:
             "You have exceeded the rate limit for an API Key. Please wait before making more requests.",
           retryAfterSeconds: 3,
         });
+
+        return;
       }
 
       const apiKey = await prisma.apiKey.update({
@@ -68,6 +73,13 @@ export const requireAuth = async (
         res.status(401).send("Invalid API key");
         return;
       }
+
+      await kv.set(
+        `auth:apikey:${keyHash}:lastused`,
+        apiKey.lastUsed.getTime().toString(), {
+          expiration: {type: "EX", value: 60 * 15},
+        }
+      );
 
       req.user = apiKey.user;
       req.tokenType = "apiKey";
@@ -97,56 +109,58 @@ export const requireAuth = async (
 
     // Get user info from Auth0
     try {
-      const authResponse = await axios.get(
-        `https://${process.env.AUTH0_DOMAIN}/userinfo`,
-        {
-          headers: {
-            Authorization: `Bearer ${tokenString}`,
-            "Content-Type": "application/json",
+      const userRow = await kv.get(`auth:user:${userId}`);
+      if (userRow !== null) {
+        req.user = JSON.parse((await userRow) as string) as User;
+
+        next();
+      } else {
+        const authResponse = await axios.get(
+          `https://${process.env.AUTH0_DOMAIN}/userinfo`,
+          {
+            headers: {
+              Authorization: `Bearer ${tokenString}`,
+              "Content-Type": "application/json",
+            },
           },
-        },
-      );
+        );
 
-      console.log("Updating");
-      // Get JSON
-      const authData = authResponse.data;
+        console.log("Updating");
+        // Get JSON
+        const authData = authResponse.data;
 
-      // Update database
-      const user = await prisma.user.upsert({
-        where: {
-          id: userId,
-        },
-        update: {
-          email: authData.email,
-          emailVerified: authData.email_verified,
-        },
-        create: {
-          id: userId,
-          email: authData.email,
-          emailVerified: authData.email_verified,
-          role: "ANALYST",
-        },
-      });
+        // Update database
+        const user = await prisma.user.upsert({
+          where: {
+            id: userId,
+          },
+          update: {
+            email: authData.email,
+            emailVerified: authData.email_verified,
+          },
+          create: {
+            id: userId,
+            email: authData.email,
+            emailVerified: authData.email_verified,
+            role: "ANALYST",
+          }
+        });
 
-      kv.del(`auth:user:${user.id}`);
+        kv.set(`auth:user:${user.id}`, JSON.stringify(user), {
+          expiration: {type: "EX", value: 60 * 15},
+        });
 
-      kv.set(`auth:user:${user.id}`, JSON.stringify(user), {
-        ex: 60 * 15, // wait 15 minutes before expiry (we can change this later)
-      });
+        req.user = user;
 
-      // Add user to request
-      req.user = user;
-      req.tokenType = "jwt";
-
-      next();
+        next();
+      }
     } catch (error) {
       console.log("Using existing");
       console.error(error);
 
-      if (kv.get(`auth:user:${userId}`) !== null) {
-        req.user = JSON.parse(
-          (await kv.get(`auth:user:${userId}`)) as string,
-        ) as User;
+      const userRow = await kv.get(`auth:user:${userId}`);
+      if (userRow !== null) {
+        req.user = JSON.parse((await userRow) as string) as User;
 
         next();
       } else {
@@ -162,7 +176,7 @@ export const requireAuth = async (
         }
 
         kv.set(`auth:user:${user.id}`, JSON.stringify(user), {
-          ex: 60 * 15,
+          expiration: {type: "EX", value: 60 * 15},
         });
 
         req.user = user;

@@ -4,26 +4,20 @@ const redis = createClient({ url: process.env.REDIS_URL })
   .on("error", (err) => console.log("Redis Client Error", err))
   .connect();
 
-const set = async (
-  key: string,
-  data: string,
-  options?: Record<string, unknown>,
-): ReturnType<Awaited<typeof redis>["set"]> => {
-  return await (await redis).set(key, data, options ?? {}) ;
+const set: Awaited<typeof redis>["set"] = async (...args) => {
+  return await (await redis).set(...args) ;
 };
 
-const get = async (key: string): ReturnType<Awaited<typeof redis>["get"]> => {
-  return await (await redis).get(key);
+const get: Awaited<typeof redis>["get"] = async (...args) => {
+  return await (await redis).get(...args) ;
 };
 
-const del = async (
-  key: string[] | string,
-): ReturnType<Awaited<typeof redis>["del"]> => {
-  return await (await redis).del(key);
+const del: Awaited<typeof redis>["del"] = async (...args) => {
+  return await (await redis).del(...args) ;
 };
 
-const flush = async (): ReturnType<Awaited<typeof redis>["flushDb"]> => {
-  return await (await redis).flushDb();
+const flush: Awaited<typeof redis>["flushDb"] = async (...args) => {
+  return await (await redis).flushDb(...args) ;
 };
 
 export const kv = {
