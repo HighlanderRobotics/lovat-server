@@ -8,9 +8,9 @@ const router = Router();
 
 router.post("/", addScoutReport);
 
-router.get("/:uuid", getScoutReport);
-
 router.use(requireAuth);
+
+router.get("/:uuid", getScoutReport);
 
 router.delete("/:uuid", deleteScoutReport);
 
