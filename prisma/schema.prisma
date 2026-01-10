@@ -52,11 +52,10 @@ model ScoutReport {
   startTime             DateTime
   notes                 String
   robotRole             RobotRole
-  algaePickup           AlgaePickup
-  coralPickup           CoralPickup
-  bargeResult           BargeResult
-  knocksAlgae           KnocksAlgae
-  underShallowCage      UnderShallowCage
+  climbResult           ClimbResult
+  underTrench           UnderTrench
+  overRamp              OverRamp
+  shootingAccuracy      Int
   robotBrokeDescription String?
   driverAbility         Int
   scouterUuid           String
@@ -278,46 +277,33 @@ enum RobotRole {
   IMMOBILE
 }
 
-enum AlgaePickup {
-  NONE
-  GROUND
-  REEF
-  BOTH
-}
-
-enum KnocksAlgae {
+enum UnderTrench {
   NO
   YES
 }
 
-enum AutoLeave {
+enum OverRamp {
   NO
   YES
 }
 
-enum UnderShallowCage {
-  NO
-  YES
-}
-
-enum CoralPickup {
-  NONE
-  GROUND
-  STATION
-  BOTH
-}
-
-enum BargeResult {
+enum ClimbResult {
   NOT_ATTEMPTED
-  PARKED
-  SHALLOW
-  FAILED_SHALLOW
-  DEEP
-  FAILED_DEEP
+  LEFT_ONE
+  LEFT_TWO
+  LEFT_THREE
+  RIGHT_ONE
+  RIGHT_TWO
+  RIGHT_THREE
+  MIDDLE_ONE
+  MIDDLE_TWO
+  MIDDLE_THREE
+  BACK_ONE
+  BACK_TWO
+  BACK_THREE
 }
 
 enum WarningType {
-  AUTO_LEAVE
   BREAK
 }
 
