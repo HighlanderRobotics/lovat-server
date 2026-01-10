@@ -21,7 +21,7 @@ import { getUsers } from "../../handler/manager/getUsers.js";
 import { deleteUser } from "../../handler/manager/deleteUser.js";
 import { updateRoleToScoutingLead } from "../../handler/manager/scouters/updateRoleToScoutingLead.js";
 import { getAnalysts } from "../../handler/manager/getAnalysts.js";
-import { addNotOnTeam } from "../../handler/manager/temp/addNotOnTeam.js";
+import { addNotOnTeam } from "../../handler/manager/addNotOnTeam.js";
 import { getTeamCode } from "../../handler/manager/getTeamCode.js";
 import { addScoutReportDashboard } from "../../handler/manager/scoutreports/addScoutReportDashboard.js";
 import { getTeamTournamentStatus } from "../../handler/manager/getTeamTournamentStatus.js";
