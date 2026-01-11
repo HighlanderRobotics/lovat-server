@@ -10,7 +10,7 @@ import {
   TeamMatchData,
   Event,
   ClimbResult,
-  OverRamp,
+  OverBump,
   RobotRole,
   UnderTrench,
 } from "@prisma/client";
@@ -41,7 +41,7 @@ export interface CondensedReport {
   groundIntakes: number;
   fuelScored: number;
   underTrench: boolean;
-  overRamp: boolean;
+  overBump: boolean;
   endgame: string;
   scouter: string;
   notes: string;
@@ -53,7 +53,7 @@ interface PointsReport {
   robotRole: RobotRole;
   climbResult: ClimbResult;
   underTrench: UnderTrench;
-  overRamp: OverRamp;
+  overBump: OverBump;
   driverAbility: number;
   shootingAccuracy: number;
   events: Partial<Event>[];
@@ -131,7 +131,7 @@ export const getReportCSV = async (
         robotRole: true,
         climbResult: true,
         underTrench: true,
-        overRamp: true,
+        overBump: true,
         driverAbility: true,
         shootingAccuracy: true,
         events: {
@@ -211,7 +211,7 @@ function condenseReport(
     teamNumber: report.teamMatchData.teamNumber,
     role: report.robotRole,
     underTrench: report.underTrench === UnderTrench.YES,
-    overRamp: report.overRamp === OverRamp.YES,
+    overBump: report.overBump === OverBump.YES,
     totalPoints: 0,
     feedsFromNeutral: 0,
     feedsFromOpponent: 0,

@@ -11,7 +11,7 @@ import { addTournamentMatches } from "../addTournamentMatches.js";
 import {
   ClimbResult,
   EventAction,
-  OverRamp,
+  OverBump,
   Position,
   UnderTrench,
 } from "@prisma/client";
@@ -35,7 +35,7 @@ export const addScoutReport = async (
         robotRole: z.nativeEnum(RobotRole),
         climb: z.nativeEnum(ClimbResult),
         underTrench: z.nativeEnum(UnderTrench),
-        overRamp: z.nativeEnum(OverRamp),
+        overBump: z.nativeEnum(OverBump),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
           .optional(),
@@ -119,7 +119,7 @@ export const addScoutReport = async (
         //game specfific
         climbResult: paramsScoutReport.climb,
         underTrench: paramsScoutReport.underTrench,
-        overRamp: paramsScoutReport.overRamp,
+        overBump: paramsScoutReport.overBump,
         shootingAccuracy: paramsScoutReport.shootingAccuracy,
       },
     });

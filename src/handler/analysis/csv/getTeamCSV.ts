@@ -9,7 +9,7 @@ import {
   Position,
   Event,
   ClimbResult,
-  OverRamp,
+  OverBump,
   UnderTrench,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysisConstants.js";
@@ -24,7 +24,7 @@ interface AggregatedTeamData {
   mainRole: string;
   secondaryRole: string;
   underTrench: boolean;
-  overRamp: boolean;
+  overBump: boolean;
   avgFuelScored: number;
   avgFeedsFromNeutral: number;
   avgFeedsFromOpponent: number;
@@ -57,7 +57,7 @@ interface PointsReport {
   robotRole: RobotRole;
   climbResult: ClimbResult;
   underTrench: UnderTrench;
-  overRamp: OverRamp;
+  overBump: OverBump;
   shootingAccuracy: number;
   driverAbility: number;
   events: Partial<Event>[];
@@ -137,7 +137,7 @@ export const getTeamCSV = async (
             robotRole: true,
             shootingAccuracy: true,
             underTrench: true,
-            overRamp: true,
+            overBump: true,
             climbResult: true,
             driverAbility: true,
             events: {
@@ -234,7 +234,7 @@ function aggregateTeamReports(
     mainRole: null,
     secondaryRole: null,
     underTrench: false,
-    overRamp: false,
+    overBump: false,
     avgTeleopPoints: 0,
     avgAutoPoints: 0,
     avgDriverAbility: 0,
@@ -271,7 +271,7 @@ function aggregateTeamReports(
   };
 
   let underTrench: UnderTrench = UnderTrench.NO;
-  let overRamp: OverRamp = OverRamp.NO;
+  let overBump: OverBump = OverBump.NO;
 
   // Main iteration for most aggregation summing
   reports.forEach((report) => {
@@ -282,7 +282,7 @@ function aggregateTeamReports(
     // Set discrete robot capabilities
     // Implement a safety for this? One incorrect report could mess up the data
     data.underTrench ||= report.underTrench === UnderTrench.YES;
-    data.overRamp ||= report.overRamp === OverRamp.YES;
+    data.overBump ||= report.overBump === OverBump.YES;
 
     // Sum endgame results
     switch (report.climbResult) {

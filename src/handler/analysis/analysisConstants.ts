@@ -4,7 +4,7 @@ import {
   RobotRole,
   User,
   ClimbResult,
-  OverRamp,
+  OverBump,
   UnderTrench,
 } from "@prisma/client";
 import prismaClient from "../../prismaClient.js";
@@ -39,13 +39,14 @@ enum Metric {
 enum MetricsBreakdown {
   robotRole = "robotRole",
   underTrench = "underTrench",
-  overRamp = "overRamp",
+  overBump = "overBump",
   climbResult = "climbResult",
 }
 
 // Ranking metrics
 const metricsCategory: Metric[] = [
   Metric.totalPoints,
+  Metric.climbPoints,
   Metric.driverAbility,
   Metric.teleopPoints,
   Metric.autoPoints,
@@ -144,14 +145,14 @@ const breakdownNeg = "False";
 const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
   robotrole: MetricsBreakdown.robotRole,
   undertrench: MetricsBreakdown.underTrench,
-  overramp: MetricsBreakdown.overRamp,
+  overbump: MetricsBreakdown.overBump,
   climbresult: MetricsBreakdown.climbResult,
 };
 
 const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
   [MetricsBreakdown.robotRole]: [...Object.values(RobotRole)],
   [MetricsBreakdown.underTrench]: [...Object.values(UnderTrench)],
-  [MetricsBreakdown.overRamp]: [...Object.values(OverRamp)],
+  [MetricsBreakdown.overBump]: [...Object.values(OverBump)],
   [MetricsBreakdown.climbResult]: [...Object.values(ClimbResult)],
 };
 

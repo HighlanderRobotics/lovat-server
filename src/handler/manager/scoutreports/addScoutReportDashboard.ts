@@ -14,7 +14,7 @@ import {
   ClimbResult,
   EventAction,
   MatchType,
-  OverRamp,
+  OverBump,
   Position,
   RobotRole,
   UnderTrench,
@@ -37,7 +37,7 @@ export const addScoutReportDashboard = async (
         robotRole: z.nativeEnum(RobotRole),
         climb: z.nativeEnum(ClimbResult),
         underTrench: z.nativeEnum(UnderTrench),
-        overRamp: z.nativeEnum(OverRamp),
+        overBump: z.nativeEnum(OverBump),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
           .optional(),
@@ -122,7 +122,7 @@ export const addScoutReportDashboard = async (
         //game specfific
         climbResult: paramsScoutReport.climb,
         underTrench: paramsScoutReport.underTrench,
-        overRamp: paramsScoutReport.overRamp,
+        overBump: paramsScoutReport.overBump,
         robotBrokeDescription: paramsScoutReport.robotBrokeDescription,
         shootingAccuracy: paramsScoutReport.shootingAccuracy,
       },

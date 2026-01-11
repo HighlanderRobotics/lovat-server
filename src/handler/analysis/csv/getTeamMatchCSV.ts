@@ -11,7 +11,7 @@ import {
   Event,
   ClimbResult,
   UnderTrench,
-  OverRamp,
+  OverBump,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
@@ -26,7 +26,7 @@ import { da } from "zod/locales";
 interface PointsReport {
   robotRole: RobotRole;
   underTrench: UnderTrench;
-  overRamp: OverRamp;
+  overBump: OverBump;
   climbResult: ClimbResult;
   driverAbility: number;
   shootingAccuracy: number;
@@ -108,7 +108,7 @@ export const getTeamMatchCSV = async (
           select: {
             robotRole: true,
             underTrench: true,
-            overRamp: true,
+            overBump: true,
             climbResult: true,
             driverAbility: true,
             shootingAccuracy: true,
@@ -237,7 +237,7 @@ function aggregateTeamMatchReports(
     groundIntakes: 0,
     fuelScored: 0,
     underTrench: null,
-    overRamp: null,
+    overBump: null,
     endgame: null,
     scouter: scouters.join(","),
   };
@@ -266,7 +266,7 @@ function aggregateTeamMatchReports(
   };
 
   let trench: boolean = false;
-  let ramp: boolean = false;
+  let bump: boolean = false;
 
   reports.forEach((report) => {
     data.driverAbility += report.driverAbility;
@@ -275,7 +275,7 @@ function aggregateTeamMatchReports(
 
     // Set discrete robot capabilities
     data.underTrench = report.underTrench === UnderTrench.YES;
-    data.overRamp = report.overRamp === OverRamp.YES;
+    data.overBump = report.overBump === OverBump.YES;
 
     // Sum match points and actions
     report.events.forEach((event) => {
@@ -318,7 +318,7 @@ function aggregateTeamMatchReports(
   });
 
   data.underTrench = trench;
-  data.overRamp = ramp;
+  data.overBump = bump;
 
   // Find highest-reported robot role and endgame interaction
   Object.entries(roleCount).reduce((highest, role) => {

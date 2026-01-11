@@ -53,8 +53,9 @@ model ScoutReport {
   notes                 String
   robotRole             RobotRole
   underTrench           UnderTrench
-  overRamp              OverRamp
+  overBump              OverBump
   climbResult           ClimbResult
+  autoClimbResult      AutoClimbResult
   shootingAccuracy      Int
   robotBrokeDescription String?
   driverAbility         Int
@@ -228,6 +229,10 @@ enum Position {
   OUTPOST
   TOWER
   NEUTRAL_ZONE
+  LEFT_TRENCH
+  LEFT_BUMP
+  RIGHT_TRENCH
+  RIGHT_BUMP
   START_A
   START_B
   START_C
@@ -246,6 +251,7 @@ enum EventAction {
   DEFEND_CAMP
   DEFEND_BLOCK
   AUTO_CLIMB
+  CROSS_TERRAIN
   START_POSITION
 }
 
@@ -254,7 +260,7 @@ enum UnderTrench {
   YES
 }
 
-enum OverRamp {
+enum OverBump {
   NO
   YES
 }
@@ -269,6 +275,12 @@ enum RobotRole {
   DEFENSE
   FEEDER
   IMMOBILE
+}
+
+enum AutoClimbResult {
+  NOT_ATTEMPTED
+  SUCCESS
+  FAILED
 }
 
 enum ClimbResult {

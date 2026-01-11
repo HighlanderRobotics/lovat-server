@@ -34,13 +34,6 @@ export async function computeAverageScoutReport(
       case Metric.climbPoints:
         result[metric] = endgameToPoints[report.climbResult];
         break;
-      case Metric.autonLeaves:
-        result[metric] = report.events.some(
-          (e) => e.action === EventAction.AUTO_LEAVE
-        )
-          ? 1
-          : 0;
-        break;
       case Metric.totalPoints:
         result[metric] =
           endgameToPoints[report.climbResult] +
@@ -55,33 +48,6 @@ export async function computeAverageScoutReport(
         result[metric] = report.events
           .filter((e) => e.time <= autoEnd)
           .reduce((acc, cur) => acc + cur.points, 0);
-        break;
-      default:
-        const action = metricToEvent[metric];
-        let position: Position = null;
-        switch (metric) {
-          case Metric.coralL1:
-            position = Position.LEVEL_ONE;
-            break;
-          case Metric.coralL2:
-            position = Position.LEVEL_TWO;
-            break;
-          case Metric.coralL3:
-            position = Position.LEVEL_THREE;
-            break;
-          case Metric.coralL4:
-            position = Position.LEVEL_FOUR;
-            break;
-        }
-        if (position) {
-          result[metric] = report.events.filter(
-            (e) => e.action === action && e.position === position
-          ).length;
-        } else {
-          result[metric] = report.events.filter(
-            (e) => e.action === action
-          ).length;
-        }
         break;
     }
   }
