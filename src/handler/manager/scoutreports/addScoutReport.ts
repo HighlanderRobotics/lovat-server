@@ -9,6 +9,7 @@ import {
 } from "../managerConstants.js";
 import { addTournamentMatches } from "../addTournamentMatches.js";
 import {
+  AutoClimbResult,
   ClimbResult,
   EventAction,
   OverBump,
@@ -34,6 +35,7 @@ export const addScoutReport = async (
         notes: z.string(),
         robotRole: z.nativeEnum(RobotRole),
         climb: z.nativeEnum(ClimbResult),
+        autoClimbResult: z.nativeEnum(AutoClimbResult),
         underTrench: z.nativeEnum(UnderTrench),
         overBump: z.nativeEnum(OverBump),
         robotBrokeDescription: z
@@ -117,6 +119,7 @@ export const addScoutReport = async (
         robotBrokeDescription: paramsScoutReport.robotBrokeDescription ?? null,
 
         //game specfific
+        autoClimbResult: paramsScoutReport.autoClimbResult,
         climbResult: paramsScoutReport.climb,
         underTrench: paramsScoutReport.underTrench,
         overBump: paramsScoutReport.overBump,

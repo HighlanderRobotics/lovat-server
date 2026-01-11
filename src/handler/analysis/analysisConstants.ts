@@ -122,7 +122,8 @@ const FlippedActionMap: Record<EventAction, number> = {
   [EventAction.DEPOT_INTAKE]: 7,
   [EventAction.GROUND_INTAKE]: 8,
   [EventAction.AUTO_CLIMB]: 9,
-  [EventAction.START_POSITION]: 10,
+  [EventAction.CROSS_TERRAIN]: 10,
+  [EventAction.START_POSITION]: 11,
 };
 
 const FlippedPositionMap: Record<Position, number> = {
@@ -132,8 +133,12 @@ const FlippedPositionMap: Record<Position, number> = {
   [Position.OUTPOST]: 3,
   [Position.TOWER]: 4,
   [Position.NEUTRAL_ZONE]: 5,
-  [Position.START_A]: 6,
-  [Position.START_B]: 7,
+  [Position.LEFT_TRENCH]: 6,
+  [Position.LEFT_BUMP]: 7,
+  [Position.RIGHT_TRENCH]: 8,
+  [Position.RIGHT_BUMP]: 9,
+  [Position.START_A]: 10,
+  [Position.START_B]: 11,
   [Position.START_C]: 8,
   [Position.START_D]: 9,
   [Position.START_E]: 10,

@@ -11,6 +11,7 @@ import {
 import { addTournamentMatches } from "../addTournamentMatches.js";
 import { totalPointsScoutingLead } from "../../analysis/scoutingLead/totalPointsScoutingLead.js";
 import {
+  AutoClimbResult,
   ClimbResult,
   EventAction,
   MatchType,
@@ -36,6 +37,7 @@ export const addScoutReportDashboard = async (
         notes: z.string(),
         robotRole: z.nativeEnum(RobotRole),
         climb: z.nativeEnum(ClimbResult),
+        autoClimbResult: z.nativeEnum(AutoClimbResult),
         underTrench: z.nativeEnum(UnderTrench),
         overBump: z.nativeEnum(OverBump),
         robotBrokeDescription: z
@@ -125,6 +127,7 @@ export const addScoutReportDashboard = async (
         overBump: paramsScoutReport.overBump,
         robotBrokeDescription: paramsScoutReport.robotBrokeDescription,
         shootingAccuracy: paramsScoutReport.shootingAccuracy,
+        autoClimbResult: paramsScoutReport.autoClimbResult,
       },
     });
 

@@ -12,18 +12,18 @@ export async function sendWarningToSlack(
   matchNumber: number,
   teamNumber: number,
   tournamentKey: string,
-  reportUuid: string,
+  reportUuid: string
 ): Promise<void> {
   try {
     const upcomingAlliancePartners = await getUpcomingAlliancePartners(
       teamNumber,
       matchNumber,
-      tournamentKey,
+      tournamentKey
     );
 
     const channels = await getSlackChannels(
       upcomingAlliancePartners.map((x) => x[0]),
-      warning,
+      warning
     );
 
     const report = await prismaClient.scoutReport.findUnique({
@@ -40,7 +40,7 @@ export async function sendWarningToSlack(
 
       // Locate the upcoming match number for the workspace's team; fall back to a generic label if missing.
       const partnerMatch = upcomingAlliancePartners.find(
-        ([partnerTeam]) => partnerTeam === channel.workspace.owner,
+        ([partnerTeam]) => partnerTeam === channel.workspace.owner
       );
       const partnerMatchLabel = partnerMatch?.[1]
         ? `Q${partnerMatch[1]}`
@@ -60,12 +60,7 @@ export async function sendWarningToSlack(
 
       // Call the chat.postMessage method using the built-in WebClient
       if (thread == null || thread == undefined) {
-        if (warning == WarningType.AUTO_LEAVE) {
-          result = await client.chat.postMessage({
-            channel: channel.channelId,
-            text: `Heads up! *${scouterName}* reported your alliance partner in *${partnerMatchLabel}*, team *${teamNumber}*, didn't leave during auto in *Q${matchNumber}*`,
-          });
-        } else if (warning == WarningType.BREAK) {
+        if (warning == WarningType.BREAK) {
           result = await client.chat.postMessage({
             channel: channel.channelId,
             // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
@@ -77,7 +72,8 @@ export async function sendWarningToSlack(
             }`,
           });
         }
-        const subscriptionIdent = `${channel.channelId}_${warning == WarningType.AUTO_LEAVE ? "L" : "B"}`;
+        const subscriptionIdent = `${channel.channelId}_B
+        }`;
 
         await prismaClient.slackNotificationThread.create({
           data: {
@@ -90,13 +86,7 @@ export async function sendWarningToSlack(
         });
       } else {
         // when there have already been problems reported about a team, we just send a message to the thread instead of having multiple messages
-        if (warning == WarningType.AUTO_LEAVE) {
-          result = await client.chat.postMessage({
-            channel: channel.channelId,
-            thread_ts: thread.messageId,
-            text: `Also reported by *${scouterName}* in *Q${matchNumber}*`,
-          });
-        } else if (warning == WarningType.BREAK) {
+        if (warning == WarningType.BREAK) {
           result = await client.chat.postMessage({
             channel: channel.channelId,
             thread_ts: thread.messageId,
@@ -120,7 +110,7 @@ export async function sendWarningToSlack(
 async function getUpcomingAlliances(
   team: number,
   match: number,
-  tournamentKey: string,
+  tournamentKey: string
 ) {
   return (
     await prismaClient.teamMatchData.findMany({
@@ -139,12 +129,12 @@ async function getUpcomingAlliances(
 async function getUpcomingAlliancePartners(
   team: number,
   match: number,
-  tournamentKey: string,
+  tournamentKey: string
 ) {
   const upcomingAlliances = await getUpcomingAlliances(
     team,
     match,
-    tournamentKey,
+    tournamentKey
   );
 
   const allianceByMatch = new Map<number, boolean>(upcomingAlliances);
@@ -192,7 +182,7 @@ async function getUpcomingAlliancePartners(
 // finds all slack channels in workspaces owned by teams in upcomingAlliancePartners and that subscribed to warning
 async function getSlackChannels(
   upcomingAlliancePartners: number[],
-  warning: WarningType,
+  warning: WarningType
 ) {
   return prismaClient.slackSubscription.findMany({
     where: {
