@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 
 export const updatePicklist = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const user = req.user;
@@ -16,7 +16,7 @@ export const updatePicklist = async (
         defense: z.number(),
         coralPickups: z.number(),
         algaePickups: z.number(),
-        barge: z.number(),
+        climb: z.number(),
         coralLevel1Scores: z.number(),
         coralLevel2Scores: z.number(),
         coralLevel3Scores: z.number(),
@@ -34,7 +34,7 @@ export const updatePicklist = async (
         autoPoints: req.body.autopoints || 0,
         teleopPoints: req.body.teleoppoints || 0,
         driverAbility: req.body.driverability || 0,
-        barge: req.body.bargeresult || 0,
+        climb: req.body.climbresult || 0,
         coralLevel1Scores: req.body.level1 || 0,
         coralLevel2Scores: req.body.level2 || 0,
         coralLevel3Scores: req.body.level3 || 0,
@@ -67,7 +67,7 @@ export const updatePicklist = async (
         defense: params.data.defense,
         algaePickups: params.data.algaePickups,
         coralPickups: params.data.coralPickups,
-        barge: params.data.barge,
+        climb: params.data.climb,
         autoPoints: params.data.autoPoints,
         driverAbility: params.data.driverAbility,
         coralLevel1Scores: params.data.coralLevel1Scores,

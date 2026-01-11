@@ -56,34 +56,6 @@ export const breakdownDetails = createAnalysisHandler({
         ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
         `;
 
-    if (
-      lowercaseToBreakdown[params.breakdown] === MetricsBreakdown.leavesAuto
-    ) {
-      queryStr = `
-            SELECT
-                s."teamMatchKey" AS key,
-                tmnt."name" AS tournament,
-                sc."sourceTeamNumber" AS sourceteam,
-                teamScouter."name" AS scouter,
-                CASE WHEN e."action" IS NOT NULL THEN '${breakdownPos}' ELSE '${breakdownNeg}' END AS breakdown
-            FROM "ScoutReport" s
-            JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
-            JOIN "TeamMatchData" tmd
-                ON tmd."teamNumber" = ${params.team}
-                AND tmd."key" = s."teamMatchKey"
-                AND sc."sourceTeamNumber" = ANY($1)
-                AND tmd."tournamentKey" = ANY($2)
-            JOIN "Tournament" tmnt ON tmd."tournamentKey" = tmnt."key"
-            LEFT JOIN "Event" e
-                ON e."scoutReportUuid" = s."uuid"
-                AND e."action" = '${EventAction.AUTO_LEAVE}'
-            LEFT JOIN "Scouter" teamScouter
-                ON teamScouter."uuid" = s."scouterUuid"
-                AND teamScouter."sourceTeamNumber" = ${ctx.user.teamNumber}
-            ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
-            `;
-    }
-
     interface QueryRow {
       breakdown: string;
       key: string;
@@ -96,12 +68,12 @@ export const breakdownDetails = createAnalysisHandler({
       queryStr,
       dataSourceRuleToArray(
         dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
-        await allTeamNumbers,
+        await allTeamNumbers
       ),
       dataSourceRuleToArray(
         dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
-        await allTournaments,
-      ),
+        await allTournaments
+      )
     );
 
     // Edit to work with true/false breakdowns

@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 
 export const addPicklist = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const params = z
@@ -20,7 +20,7 @@ export const addPicklist = async (
         feeds: z.number(),
         coralPickups: z.number(),
         algaePickups: z.number(),
-        barge: z.number(),
+        climb: z.number(),
         coralLevel1Scores: z.number(),
         coralLevel2Scores: z.number(),
         coralLevel3Scores: z.number(),
@@ -34,7 +34,7 @@ export const addPicklist = async (
         autoPoints: req.body.autopoints || 0,
         teleopPoints: req.body.teleoppoints || 0,
         driverAbility: req.body.driverability || 0,
-        barge: req.body.bargeresult || 0,
+        climb: req.body.climbresult || 0,
         coralLevel1Scores: req.body.level1 || 0,
         coralLevel2Scores: req.body.level2 || 0,
         coralLevel3Scores: req.body.level3 || 0,
@@ -58,7 +58,7 @@ export const addPicklist = async (
       res
         .status(403)
         .send(
-          "Not authortized to publish a picklist because your not on a team",
+          "Not authortized to publish a picklist because your not on a team"
         );
       return;
     }
@@ -73,7 +73,7 @@ export const addPicklist = async (
         feeds: params.data.feeds,
         algaePickups: params.data.algaePickups,
         coralPickups: params.data.coralPickups,
-        barge: params.data.barge,
+        climb: params.data.climb,
         coralLevel1Scores: params.data.coralLevel1Scores,
         coralLevel2Scores: params.data.coralLevel2Scores,
         coralLevel3Scores: params.data.coralLevel3Scores,

@@ -7,17 +7,12 @@ import {
   RobotRole,
   EventAction,
   Position,
-  AlgaePickup,
-  CoralPickup,
-  BargeResult,
-  KnocksAlgae,
-  UnderShallowCage,
   Event,
+  ClimbResult,
+  OverRamp,
+  UnderTrench,
 } from "@prisma/client";
-import {
-  autoEnd,
-  endgameToPoints,
-} from "../analysisConstants.js";
+import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
 import {
   dataSourceRuleToPrismaFilter,
@@ -28,33 +23,30 @@ interface AggregatedTeamData {
   teamNumber: number;
   mainRole: string;
   secondaryRole: string;
-  coralPickup: string;
-  algaePickup: string;
-  algaeKnocking: boolean;
-  underShallowCage: boolean;
+  underTrench: boolean;
+  overRamp: boolean;
+  avgFuelScored: number;
+  avgFeedsFromNeutral: number;
+  avgFeedsFromOpponent: number;
+  avgBlockDefends: number;
+  avgCampDefends: number;
+  avgDepotIntakes: number;
+  avgGroundIntakes: number;
+  avgOutpostIntakes: number;
+  avgOutpostOuttakes: number;
   avgTeleopPoints: number;
   avgAutoPoints: number;
   avgDriverAbility: number;
-  avgFeeds: number;
-  avgDefends: number;
-  avgCoralPickups: number;
-  avgAlgaePickups: number;
-  avgCoralDrops: number;
-  avgAlgaeDrops: number;
-  avgCoralL1: number;
-  avgCoralL2: number;
-  avgCoralL3: number;
-  avgCoralL4: number;
-  avgProcessorScores: number;
-  avgNetScores: number;
-  avgNetFails: number;
-  // avgOffensePoints: number - idea to calculate avgPoints only during offense matches, breaks down with conflicting role reports
-  percActiveAutons: number;
-  percBargeNone: number;
-  percBargePark: number;
-  percBargeShallow: number;
-  percBargeDeep: number;
-  percBargeFail: number;
+  avgShootingAccuracy: number;
+  percClimbLeft: number;
+  percClimbCenter: number;
+  percClimbRight: number;
+  percClimbBack: number;
+  percClimbOne: number;
+  percClimbTwo: number;
+  percClimbThree: number;
+  percAutoClimb: number;
+  percNoClimb: number;
   matchesImmobile: number;
   numMatches: number;
   numReports: number;
@@ -63,11 +55,10 @@ interface AggregatedTeamData {
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
   robotRole: RobotRole;
-  algaePickup: AlgaePickup;
-  coralPickup: CoralPickup;
-  bargeResult: BargeResult;
-  knocksAlgae: KnocksAlgae;
-  underShallowCage: UnderShallowCage;
+  climbResult: ClimbResult;
+  underTrench: UnderTrench;
+  overRamp: OverRamp;
+  shootingAccuracy: number;
   driverAbility: number;
   events: Partial<Event>[];
   // This property represents the weighting of this report in the final aggregation [0..1]
@@ -81,7 +72,7 @@ interface PointsReport {
  */
 export const getTeamCSV = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     if (req.user.role !== UserRole.SCOUTING_LEAD) {
@@ -138,17 +129,16 @@ export const getTeamCSV = async (
           where: {
             scouter: {
               sourceTeamNumber: dataSourceRuleToPrismaFilter(
-                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule)
               ),
             },
           },
           select: {
             robotRole: true,
-            algaePickup: true,
-            coralPickup: true,
-            bargeResult: true,
-            knocksAlgae: true,
-            underShallowCage: true,
+            shootingAccuracy: true,
+            underTrench: true,
+            overRamp: true,
+            climbResult: true,
             driverAbility: true,
             events: {
               where: eventTimeFilter,
@@ -186,7 +176,7 @@ export const getTeamCSV = async (
       // Push reports for team from match
       cur.scoutReports.forEach((element) => {
         acc[cur.teamNumber].reports.push(
-          Object.assign({ weight: 1 / cur.scoutReports.length }, element),
+          Object.assign({ weight: 1 / cur.scoutReports.length }, element)
         );
       });
 
@@ -202,8 +192,8 @@ export const getTeamCSV = async (
           group.numMatches,
           group.reports,
           includeAuto,
-          includeTeleop,
-        ),
+          includeTeleop
+        )
       );
     });
 
@@ -232,60 +222,41 @@ export const getTeamCSV = async (
   }
 };
 
-// Less verbose and don't want to create new arrays constantly
-const posL1: Position[] = [
-  Position.LEVEL_ONE_A,
-  Position.LEVEL_ONE_B,
-  Position.LEVEL_ONE_C,
-];
-const posL2: Position[] = [
-  Position.LEVEL_TWO_A,
-  Position.LEVEL_TWO_B,
-  Position.LEVEL_TWO_C,
-];
-const posL3: Position[] = [
-  Position.LEVEL_THREE_A,
-  Position.LEVEL_THREE_B,
-  Position.LEVEL_THREE_C,
-];
-
 function aggregateTeamReports(
   teamNum: number,
   numMatches: number,
   reports: PointsReport[],
   includeAuto: boolean,
-  includeTeleop: boolean,
+  includeTeleop: boolean
 ): AggregatedTeamData {
   const data: AggregatedTeamData = {
     teamNumber: teamNum,
     mainRole: null,
     secondaryRole: null,
-    coralPickup: null,
-    algaePickup: null,
-    algaeKnocking: false,
-    underShallowCage: false,
+    underTrench: false,
+    overRamp: false,
     avgTeleopPoints: 0,
     avgAutoPoints: 0,
     avgDriverAbility: 0,
-    avgFeeds: 0,
-    avgDefends: 0,
-    avgCoralPickups: 0,
-    avgAlgaePickups: 0,
-    avgCoralDrops: 0,
-    avgAlgaeDrops: 0,
-    avgCoralL1: 0,
-    avgCoralL2: 0,
-    avgCoralL3: 0,
-    avgCoralL4: 0,
-    avgProcessorScores: 0,
-    avgNetScores: 0,
-    avgNetFails: 0,
-    percActiveAutons: 0,
-    percBargeNone: 0,
-    percBargePark: 0,
-    percBargeShallow: 0,
-    percBargeDeep: 0,
-    percBargeFail: 0,
+    avgShootingAccuracy: 0,
+    avgFuelScored: 0,
+    avgFeedsFromNeutral: 0,
+    avgFeedsFromOpponent: 0,
+    avgBlockDefends: 0,
+    avgCampDefends: 0,
+    avgDepotIntakes: 0,
+    avgGroundIntakes: 0,
+    avgOutpostIntakes: 0,
+    avgOutpostOuttakes: 0,
+    percClimbLeft: 0,
+    percClimbCenter: 0,
+    percClimbRight: 0,
+    percClimbBack: 0,
+    percClimbOne: 0,
+    percClimbTwo: 0,
+    percClimbThree: 0,
+    percAutoClimb: 0,
+    percNoClimb: 0,
     matchesImmobile: 0,
     numMatches: numMatches,
     numReports: reports.length,
@@ -298,8 +269,9 @@ function aggregateTeamReports(
     FEEDER: 0,
     IMMOBILE: 0,
   };
-  let coral: CoralPickup = CoralPickup.NONE;
-  let algae: AlgaePickup = AlgaePickup.NONE;
+
+  let underTrench: UnderTrench = UnderTrench.NO;
+  let overRamp: OverRamp = OverRamp.NO;
 
   // Main iteration for most aggregation summing
   reports.forEach((report) => {
@@ -309,41 +281,57 @@ function aggregateTeamReports(
 
     // Set discrete robot capabilities
     // Implement a safety for this? One incorrect report could mess up the data
-    data.algaeKnocking ||= report.knocksAlgae === KnocksAlgae.YES;
-    data.underShallowCage ||= report.underShallowCage === UnderShallowCage.YES;
-    if (coral === CoralPickup.NONE) {
-      coral = report.coralPickup;
-    } else if (
-      coral !== report.coralPickup &&
-      report.coralPickup !== CoralPickup.NONE
-    ) {
-      coral === CoralPickup.BOTH;
-    }
-    if (algae === AlgaePickup.NONE) {
-      algae = report.algaePickup;
-    } else if (
-      algae !== report.algaePickup &&
-      report.algaePickup !== AlgaePickup.NONE
-    ) {
-      algae === AlgaePickup.BOTH;
-    }
+    data.underTrench ||= report.underTrench === UnderTrench.YES;
+    data.overRamp ||= report.overRamp === OverRamp.YES;
 
     // Sum endgame results
-    switch (report.bargeResult) {
-      case BargeResult.NOT_ATTEMPTED:
-        data.percBargeNone += report.weight;
+    switch (report.climbResult) {
+      case ClimbResult.LEFT_ONE:
+        data.percClimbLeft += report.weight;
+        data.percClimbOne += report.weight;
         break;
-      case BargeResult.PARKED:
-        data.percBargePark += report.weight;
+      case ClimbResult.LEFT_TWO:
+        data.percClimbLeft += report.weight;
+        data.percClimbTwo += report.weight;
         break;
-      case BargeResult.SHALLOW:
-        data.percBargeShallow += report.weight;
+      case ClimbResult.LEFT_THREE:
+        data.percClimbLeft += report.weight;
+        data.percClimbThree += report.weight;
         break;
-      case BargeResult.DEEP:
-        data.percBargeDeep += report.weight;
+      case ClimbResult.MIDDLE_TWO:
+        data.percClimbCenter += report.weight;
+        data.percClimbTwo += report.weight;
         break;
-      default:
-        data.percBargeFail += report.weight;
+      case ClimbResult.MIDDLE_THREE:
+        data.percClimbCenter += report.weight;
+        data.percClimbThree += report.weight;
+        break;
+      case ClimbResult.RIGHT_ONE:
+        data.percClimbRight += report.weight;
+        data.percClimbOne += report.weight;
+        break;
+      case ClimbResult.RIGHT_TWO:
+        data.percClimbRight += report.weight;
+        data.percClimbTwo += report.weight;
+        break;
+      case ClimbResult.RIGHT_THREE:
+        data.percClimbRight += report.weight;
+        data.percClimbThree += report.weight;
+        break;
+      case ClimbResult.BACK_ONE:
+        data.percClimbBack += report.weight;
+        data.percClimbOne += report.weight;
+        break;
+      case ClimbResult.BACK_TWO:
+        data.percClimbBack += report.weight;
+        data.percClimbTwo += report.weight;
+        break;
+      case ClimbResult.BACK_THREE:
+        data.percClimbBack += report.weight;
+        data.percClimbThree += report.weight;
+        break;
+      case ClimbResult.NOT_ATTEMPTED:
+        data.percNoClimb += report.weight;
         break;
     }
 
@@ -356,63 +344,32 @@ function aggregateTeamReports(
       }
 
       switch (event.action) {
-        case EventAction.PICKUP_CORAL:
-          data.avgCoralPickups += report.weight;
+        case EventAction.SCORE_FUEL:
+          data.avgFuelScored += event.points * report.weight;
           break;
-        case EventAction.PICKUP_ALGAE:
-          data.avgAlgaePickups += report.weight;
+        case EventAction.FEED_NEUTRAL:
+          data.avgFeedsFromNeutral += 1 * report.weight;
           break;
-        case EventAction.FEED:
-          data.avgFeeds += report.weight;
+        case EventAction.FEED_OPPONENT:
+          data.avgFeedsFromOpponent += 1 * report.weight;
           break;
-        case EventAction.AUTO_LEAVE:
-          data.percActiveAutons += report.weight;
+        case EventAction.DEFEND_BLOCK:
+          data.avgBlockDefends += 1 * report.weight;
           break;
-        case EventAction.DEFEND:
-          data.avgDefends += report.weight;
+        case EventAction.DEFEND_CAMP:
+          data.avgCampDefends += 1 * report.weight;
           break;
-        case EventAction.SCORE_NET:
-          data.avgNetScores += report.weight;
+        case EventAction.DEPOT_INTAKE:
+          data.avgDepotIntakes += 1 * report.weight;
           break;
-        case EventAction.FAIL_NET:
-          data.avgNetFails += report.weight;
+        case EventAction.GROUND_INTAKE:
+          data.avgGroundIntakes += 1 * report.weight;
           break;
-        case EventAction.SCORE_PROCESSOR:
-          data.avgProcessorScores += report.weight;
+        case EventAction.OUTPOST_INTAKE:
+          data.avgOutpostIntakes += 1 * report.weight;
           break;
-        case EventAction.SCORE_CORAL:
-          switch (event.position) {
-            case Position.LEVEL_ONE:
-              data.avgCoralL1 += report.weight;
-              break;
-            case Position.LEVEL_TWO:
-              data.avgCoralL2 += report.weight;
-              break;
-            case Position.LEVEL_THREE:
-              data.avgCoralL3 += report.weight;
-              break;
-            case Position.LEVEL_FOUR:
-              data.avgCoralL4 += report.weight;
-              break;
-            default:
-              // During auto
-              if (posL1.includes(event.position)) {
-                data.avgCoralL1 += report.weight;
-              } else if (posL2.includes(event.position)) {
-                data.avgCoralL2 += report.weight;
-              } else if (posL3.includes(event.position)) {
-                data.avgCoralL3 += report.weight;
-              } else {
-                data.avgCoralL4 += report.weight;
-              }
-              break;
-          }
-          break;
-        case EventAction.DROP_ALGAE:
-          data.avgAlgaeDrops += report.weight;
-          break;
-        case EventAction.DROP_CORAL:
-          data.avgCoralDrops += report.weight;
+        case EventAction.OUTPOST_OUTTAKE:
+          data.avgOutpostOuttakes += 1 * report.weight;
           break;
       }
 
@@ -422,9 +379,6 @@ function aggregateTeamReports(
       // }
     });
   });
-
-  data.coralPickup = coral;
-  data.algaePickup = algae;
 
   data.matchesImmobile = roles.IMMOBILE || 0;
   // Remove IMMOBILE state from main roles
@@ -452,7 +406,7 @@ function aggregateTeamReports(
 
       return highestOccurences;
     },
-    [0, 0],
+    [0, 0]
   );
 
   // Failsafe if robot lacks reports for enough roles
@@ -470,42 +424,57 @@ function aggregateTeamReports(
   data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints / numMatches);
   data.avgAutoPoints = roundToHundredth(data.avgAutoPoints / numMatches);
   data.avgDriverAbility = roundToHundredth(data.avgDriverAbility / numMatches);
-  data.avgFeeds = roundToHundredth(data.avgFeeds / numMatches);
-  data.avgDefends = roundToHundredth(data.avgDefends / numMatches);
-  data.avgCoralPickups = roundToHundredth(data.avgCoralPickups / numMatches);
-  data.avgAlgaePickups = roundToHundredth(data.avgAlgaePickups / numMatches);
-  data.avgCoralDrops = roundToHundredth(data.avgCoralDrops / numMatches);
-  data.avgAlgaeDrops = roundToHundredth(data.avgAlgaeDrops / numMatches);
-  data.avgCoralL1 = roundToHundredth(data.avgCoralL1 / numMatches);
-  data.avgCoralL2 = roundToHundredth(data.avgCoralL2 / numMatches);
-  data.avgCoralL3 = roundToHundredth(data.avgCoralL3 / numMatches);
-  data.avgCoralL4 = roundToHundredth(data.avgCoralL4 / numMatches);
-  data.avgProcessorScores = roundToHundredth(
-    data.avgProcessorScores / numMatches,
+  data.avgShootingAccuracy = roundToHundredth(
+    data.avgShootingAccuracy / numMatches
   );
-  data.avgNetScores = roundToHundredth(data.avgNetScores / numMatches);
-  data.avgNetFails = roundToHundredth(data.avgNetFails / numMatches);
-  // data.avgOffensePoints = roundToHundredth(data.avgOffensePoints / numMatches);
+  data.avgFuelScored = roundToHundredth(data.avgFuelScored / numMatches);
+  data.avgFeedsFromNeutral = roundToHundredth(
+    data.avgFeedsFromNeutral / numMatches
+  );
+  data.avgFeedsFromOpponent = roundToHundredth(
+    data.avgFeedsFromOpponent / numMatches
+  );
+  data.avgBlockDefends = roundToHundredth(data.avgBlockDefends / numMatches);
+  data.avgCampDefends = roundToHundredth(data.avgCampDefends / numMatches);
+  data.avgDepotIntakes = roundToHundredth(data.avgDepotIntakes / numMatches);
+  data.avgGroundIntakes = roundToHundredth(data.avgGroundIntakes / numMatches);
+  data.avgOutpostIntakes = roundToHundredth(
+    data.avgOutpostIntakes / numMatches
+  );
+  data.avgOutpostOuttakes = roundToHundredth(
+    data.avgOutpostOuttakes / numMatches
+  );
 
-  data.percActiveAutons =
-    Math.round((data.percActiveAutons / numMatches) * 1000) / 10;
-  data.percBargeNone =
-    Math.round((data.percBargeNone / numMatches) * 1000) / 10;
-  data.percBargePark =
-    Math.round((data.percBargePark / numMatches) * 1000) / 10;
-  data.percBargeShallow =
-    Math.round((data.percBargeShallow / numMatches) * 1000) / 10;
-  data.percBargeDeep =
-    Math.round((data.percBargeDeep / numMatches) * 1000) / 10;
-  data.percBargeFail =
-    Math.round((data.percBargeFail / numMatches) * 1000) / 10;
+  // Convert climb counts to percentages
+
+  data.percClimbLeft = roundToHundredth(
+    (data.percClimbLeft / numMatches) * 100
+  );
+  data.percClimbCenter = roundToHundredth(
+    (data.percClimbCenter / numMatches) * 100
+  );
+  data.percClimbRight = roundToHundredth(
+    (data.percClimbRight / numMatches) * 100
+  );
+  data.percClimbBack = roundToHundredth(
+    (data.percClimbBack / numMatches) * 100
+  );
+  data.percClimbOne = roundToHundredth((data.percClimbOne / numMatches) * 100);
+  data.percClimbTwo = roundToHundredth((data.percClimbTwo / numMatches) * 100);
+  data.percClimbThree = roundToHundredth(
+    (data.percClimbThree / numMatches) * 100
+  );
+  data.percAutoClimb = roundToHundredth(
+    (data.percAutoClimb / numMatches) * 100
+  );
+  data.percNoClimb = roundToHundredth((data.percNoClimb / numMatches) * 100);
 
   // Add endgame points to total points
   if (includeTeleop && includeAuto) {
     data.avgTeleopPoints +=
-      (data.percBargePark * endgameToPoints[BargeResult.PARKED] +
-        data.percBargeShallow * endgameToPoints[BargeResult.SHALLOW] +
-        data.percBargeDeep * endgameToPoints[BargeResult.DEEP]) /
+      (data.percClimbOne * endgameToPoints[ClimbResult.LEFT_ONE] +
+        data.percClimbTwo * endgameToPoints[ClimbResult.LEFT_TWO] +
+        data.percClimbThree * endgameToPoints[ClimbResult.LEFT_THREE]) /
       100;
   }
 

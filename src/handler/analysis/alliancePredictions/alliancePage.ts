@@ -1,9 +1,6 @@
 import z from "zod";
 import { runAnalysis } from "../analysisFunction.js";
-import {
-  FlippedRoleMap,
-  Metric,
-} from "../analysisConstants.js";
+import { FlippedRoleMap, Metric } from "../analysisConstants.js";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam.js";
 import { robotRole } from "../coreAnalysis/robotRole.js";
@@ -30,24 +27,23 @@ const config = {
                 location: z.number(),
                 event: z.number(),
                 time: z.number().optional(),
-              }),
+              })
             ),
             matches: z.array(
-              z.object({ matchKey: z.string(), tournamentName: z.string() }),
+              z.object({ matchKey: z.string(), tournamentName: z.string() })
             ),
             score: z.array(z.number()),
             frequency: z.number(),
             maxScore: z.number(),
-          }),
+          })
         ),
-      }),
+      })
     ),
-    coralL1: z.number(),
-    coralL2: z.number(),
-    coralL3: z.number(),
-    coralL4: z.number(),
-    processor: z.number(),
-    net: z.number(),
+    fuelScored: z.number(),
+    feedsFromNeutral: z.number(),
+    feedsFromOpponent: z.number(),
+    campDefends: z.number(),
+    blockDefends: z.number(),
   }),
   usesDataSource: true,
   shouldCache: true,
@@ -99,12 +95,11 @@ const config = {
     const teamData = await averageManyFast(ctx.user, {
       teams: [args.team1, args.team2, args.team3],
       metrics: [
-        Metric.coralL1,
-        Metric.coralL2,
-        Metric.coralL3,
-        Metric.coralL4,
-        Metric.processorScores,
-        Metric.netScores,
+        Metric.fuelScored,
+        Metric.feedsFromNeutral,
+        Metric.feedsFromOpponent,
+        Metric.campDefends,
+        Metric.blockDefends,
       ],
     });
 
@@ -133,30 +128,26 @@ const config = {
           paths: teamThreeAutoPaths,
         },
       ],
-      coralL1:
-        teamData[Metric.coralL1][args.team1] +
-        teamData[Metric.coralL1][args.team2] +
-        teamData[Metric.coralL1][args.team3],
-      coralL2:
-        teamData[Metric.coralL2][args.team1] +
-        teamData[Metric.coralL2][args.team2] +
-        teamData[Metric.coralL2][args.team3],
-      coralL3:
-        teamData[Metric.coralL3][args.team1] +
-        teamData[Metric.coralL3][args.team2] +
-        teamData[Metric.coralL3][args.team3],
-      coralL4:
-        teamData[Metric.coralL4][args.team1] +
-        teamData[Metric.coralL4][args.team2] +
-        teamData[Metric.coralL4][args.team3],
-      processor:
-        teamData[Metric.processorScores][args.team1] +
-        teamData[Metric.processorScores][args.team2] +
-        teamData[Metric.processorScores][args.team3],
-      net:
-        teamData[Metric.netScores][args.team1] +
-        teamData[Metric.netScores][args.team2] +
-        teamData[Metric.netScores][args.team3],
+      fuelScored:
+        (teamData[Metric.fuelScored][args.team1] ?? 0) +
+        (teamData[Metric.fuelScored][args.team2] ?? 0) +
+        (teamData[Metric.fuelScored][args.team3] ?? 0),
+      feedsFromNeutral:
+        (teamData[Metric.feedsFromNeutral][args.team1] ?? 0) +
+        (teamData[Metric.feedsFromNeutral][args.team2] ?? 0) +
+        (teamData[Metric.feedsFromNeutral][args.team3] ?? 0),
+      feedsFromOpponent:
+        (teamData[Metric.feedsFromOpponent][args.team1] ?? 0) +
+        (teamData[Metric.feedsFromOpponent][args.team2] ?? 0) +
+        (teamData[Metric.feedsFromOpponent][args.team3] ?? 0),
+      campDefends:
+        (teamData[Metric.campDefends][args.team1] ?? 0) +
+        (teamData[Metric.campDefends][args.team2] ?? 0) +
+        (teamData[Metric.campDefends][args.team3] ?? 0),
+      blockDefends:
+        (teamData[Metric.blockDefends][args.team1] ?? 0) +
+        (teamData[Metric.blockDefends][args.team2] ?? 0) +
+        (teamData[Metric.blockDefends][args.team3] ?? 0),
     };
   },
 } as const;
@@ -165,7 +156,7 @@ export type AlliancePageArgs = { team1: number; team2: number; team3: number };
 export type AlliancePageResult = z.infer<typeof config.returnSchema>;
 export async function alliancePage(
   user: User,
-  args: AlliancePageArgs,
+  args: AlliancePageArgs
 ): Promise<AlliancePageResult> {
   return runAnalysis(config, user, args);
 }

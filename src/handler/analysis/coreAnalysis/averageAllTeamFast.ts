@@ -28,18 +28,18 @@ const config = {
   },
   calculateAnalysis: async (
     args: { metric: Metric },
-    ctx: { user: { teamSourceRule: unknown; tournamentSourceRule: unknown } },
+    ctx: { user: { teamSourceRule: unknown; tournamentSourceRule: unknown } }
   ) => {
     const metric = args.metric;
-    if (metric === Metric.bargePoints) {
+    if (metric === Metric.climbPoints) {
       return defaultEndgamePoints;
     }
 
     const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
-      dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
+      dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule)
     );
     const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
-      dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
+      dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule)
     );
 
     if (metric === Metric.driverAbility) {
@@ -81,8 +81,8 @@ const config = {
 
       let avgEndgamePoints = 0;
       if (metric === Metric.totalPoints) {
-        const bargeResults = await prismaClient.scoutReport.groupBy({
-          by: "bargeResult",
+        const climbResults = await prismaClient.scoutReport.groupBy({
+          by: "climbResult",
           _count: { _all: true },
           where: {
             teamMatchData: { tournamentKey: sourceTnmtFilter },
@@ -90,13 +90,13 @@ const config = {
           },
         });
 
-        bargeResults.forEach((endgame) => {
+        climbResults.forEach((endgame) => {
           avgEndgamePoints +=
-            endgameToPoints[endgame.bargeResult] * endgame._count._all;
+            endgameToPoints[endgame.climbResult] * endgame._count._all;
         });
-        avgEndgamePoints /= bargeResults.reduce(
+        avgEndgamePoints /= climbResults.reduce(
           (acc, cur) => acc + cur._count._all,
-          0,
+          0
         );
       }
 
@@ -105,20 +105,6 @@ const config = {
 
     const action = metricToEvent[metric];
     let position: Position = undefined;
-    switch (metric) {
-      case Metric.coralL1:
-        position = Position.LEVEL_ONE;
-        break;
-      case Metric.coralL2:
-        position = Position.LEVEL_TWO;
-        break;
-      case Metric.coralL3:
-        position = Position.LEVEL_THREE;
-        break;
-      case Metric.coralL4:
-        position = Position.LEVEL_FOUR;
-        break;
-    }
 
     const data = await prismaClient.event.groupBy({
       by: "scoutReportUuid",

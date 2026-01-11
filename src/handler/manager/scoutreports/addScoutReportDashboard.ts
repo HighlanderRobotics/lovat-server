@@ -3,87 +3,59 @@ import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import {
-  CoralPickupMap,
-  AlgaePickupMap,
   PositionMap,
   MatchTypeMap,
-  BargeResultMap,
-  KnocksAlgaeMap,
-  UnderShallowCageMap,
   RobotRoleMap,
   EventActionMap,
 } from "../managerConstants.js";
 import { addTournamentMatches } from "../addTournamentMatches.js";
 import { totalPointsScoutingLead } from "../../analysis/scoutingLead/totalPointsScoutingLead.js";
 import {
-  AlgaePickup,
-  BargeResult,
-  CoralPickup,
+  ClimbResult,
   EventAction,
-  KnocksAlgae,
   MatchType,
+  OverRamp,
   Position,
   RobotRole,
-  UnderShallowCage,
+  UnderTrench,
 } from "@prisma/client";
 import { invalidateCache } from "../../../lib/clearCache.js";
 
 export const addScoutReportDashboard = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const paramsScoutReport = z
       .object({
         uuid: z.string(),
+        tournamentKey: z.string(),
+        matchType: z.nativeEnum(MatchType),
+        matchNumber: z.number(),
         startTime: z.number(),
         notes: z.string(),
         robotRole: z.nativeEnum(RobotRole),
-        barge: z.nativeEnum(BargeResult),
-        coralPickUp: z.nativeEnum(CoralPickup),
-        algaePickUp: z.nativeEnum(AlgaePickup),
-        knocksAlgae: z.nativeEnum(KnocksAlgae),
-        traversesUnderCage: z.nativeEnum(UnderShallowCage),
+        climb: z.nativeEnum(ClimbResult),
+        underTrench: z.nativeEnum(UnderTrench),
+        overRamp: z.nativeEnum(OverRamp),
+        robotBrokeDescription: z
+          .union([z.string(), z.null(), z.undefined()])
+          .optional(),
         driverAbility: z.number(),
+        shootingAccuracy: z.number(),
         scouterUuid: z.string(),
-        matchType: z.nativeEnum(MatchType),
-        matchNumber: z.number(),
-        tournamentKey: z.string(),
         teamNumber: z.number(),
       })
-      .safeParse({
-        uuid: req.body.uuid,
-        scouterUuid: req.body.scouterUuid,
-        startTime: req.body.startTime,
-        notes: req.body.notes,
-        robotRole: RobotRoleMap[req.body.robotRole],
-        driverAbility: req.body.driverAbility,
-        barge: BargeResultMap[req.body.barge],
-        algaePickUp: AlgaePickupMap[req.body.algaePickUp],
-        coralPickUp: CoralPickupMap[req.body.coralPickUp],
-        knocksAlgae: KnocksAlgaeMap[req.body.knocksAlgae],
-        traversesUnderCage: UnderShallowCageMap[req.body.traversesUnderCage],
-        matchType: MatchTypeMap[req.body.matchType],
-        matchNumber: req.body.matchNumber,
-        teamNumber: req.body.teamNumber,
-        tournamentKey: req.body.tournamentKey,
-      });
-    if (!paramsScoutReport.success) {
-      res.status(400).send({
-        error: paramsScoutReport,
-        displayError:
-          "Invalid input. Make sure you are using the correct input.",
-      });
-      return;
-    }
+      .parse(req.body);
+
     const scouter = await prismaClient.scouter.findUnique({
       where: {
-        uuid: paramsScoutReport.data.scouterUuid,
+        uuid: paramsScoutReport.scouterUuid,
       },
     });
     if (!scouter) {
       res.status(400).send({
-        error: `This ${paramsScoutReport.data.scouterUuid} has been deleted or never existed.`,
+        error: `This ${paramsScoutReport.scouterUuid} has been deleted or never existed.`,
         displayError:
           "This scouter has been deleted. Have the scouter reset their settings and choose a new scouter.",
       });
@@ -101,12 +73,12 @@ export const addScoutReportDashboard = async (
     }
     const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
       where: {
-        uuid: paramsScoutReport.data.uuid,
+        uuid: paramsScoutReport.uuid,
       },
     });
     if (scoutReportUuidRow) {
       res.status(400).send({
-        error: `The scout report uuid ${paramsScoutReport.data.uuid} already exists.`,
+        error: `The scout report uuid ${paramsScoutReport.uuid} already exists.`,
         displayError: "Scout report already uploaded",
       });
       return;
@@ -114,23 +86,23 @@ export const addScoutReportDashboard = async (
 
     const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
       where: {
-        tournamentKey: paramsScoutReport.data.tournamentKey,
+        tournamentKey: paramsScoutReport.tournamentKey,
       },
     });
     if (tournamentMatchRows === null || tournamentMatchRows.length === 0) {
-      await addTournamentMatches(paramsScoutReport.data.tournamentKey);
+      await addTournamentMatches(paramsScoutReport.tournamentKey);
     }
     const matchRow = await prismaClient.teamMatchData.findFirst({
       where: {
-        tournamentKey: paramsScoutReport.data.tournamentKey,
-        matchNumber: paramsScoutReport.data.matchNumber,
-        matchType: paramsScoutReport.data.matchType,
-        teamNumber: paramsScoutReport.data.teamNumber,
+        tournamentKey: paramsScoutReport.tournamentKey,
+        matchNumber: paramsScoutReport.matchNumber,
+        matchType: paramsScoutReport.matchType,
+        teamNumber: paramsScoutReport.teamNumber,
       },
     });
     if (!matchRow) {
       res.status(404).send({
-        error: `There are no matches that meet these requirements. ${paramsScoutReport.data.tournamentKey}, ${paramsScoutReport.data.matchNumber}, ${paramsScoutReport.data.matchType}, ${paramsScoutReport.data.teamNumber}`,
+        error: `There are no matches that meet these requirements. ${paramsScoutReport.tournamentKey}, ${paramsScoutReport.matchNumber}, ${paramsScoutReport.matchType}, ${paramsScoutReport.teamNumber}`,
         displayError: "Match does not exist",
       });
       return;
@@ -140,25 +112,25 @@ export const addScoutReportDashboard = async (
     const row = await prismaClient.scoutReport.create({
       data: {
         //constants
-        uuid: paramsScoutReport.data.uuid,
+        uuid: paramsScoutReport.uuid,
         teamMatchKey: matchKey,
-        startTime: new Date(paramsScoutReport.data.startTime),
-        scouterUuid: paramsScoutReport.data.scouterUuid,
-        notes: paramsScoutReport.data.notes,
-        robotRole: paramsScoutReport.data.robotRole,
-        driverAbility: paramsScoutReport.data.driverAbility,
+        startTime: new Date(paramsScoutReport.startTime),
+        scouterUuid: paramsScoutReport.scouterUuid,
+        notes: paramsScoutReport.notes,
+        robotRole: paramsScoutReport.robotRole,
+        driverAbility: paramsScoutReport.driverAbility,
         //game specfific
-        bargeResult: paramsScoutReport.data.barge,
-        algaePickup: paramsScoutReport.data.algaePickUp,
-        coralPickup: paramsScoutReport.data.coralPickUp,
-        underShallowCage: paramsScoutReport.data.traversesUnderCage,
-        knocksAlgae: paramsScoutReport.data.knocksAlgae,
+        climbResult: paramsScoutReport.climb,
+        underTrench: paramsScoutReport.underTrench,
+        overRamp: paramsScoutReport.overRamp,
+        robotBrokeDescription: paramsScoutReport.robotBrokeDescription,
+        shootingAccuracy: paramsScoutReport.shootingAccuracy,
       },
     });
 
     invalidateCache(
-      paramsScoutReport.data.teamNumber,
-      paramsScoutReport.data.tournamentKey,
+      paramsScoutReport.teamNumber,
+      paramsScoutReport.tournamentKey
     );
 
     const scoutReportUuid = row.uuid;
@@ -171,54 +143,14 @@ export const addScoutReportDashboard = async (
       const position = PositionMap[events[i][2]];
       const action = EventActionMap[events[i][1]];
       if (time <= 18) {
-        if (action === EventAction.SCORE_CORAL) {
-          if (
-            position === Position.LEVEL_ONE_A ||
-            position === Position.LEVEL_ONE_B ||
-            position === Position.LEVEL_ONE_C
-          ) {
-            points = 3;
-          } else if (
-            position === Position.LEVEL_TWO_A ||
-            position === Position.LEVEL_TWO_B ||
-            position === Position.LEVEL_TWO_C
-          ) {
-            points = 4;
-          } else if (
-            position === Position.LEVEL_THREE_A ||
-            position === Position.LEVEL_THREE_B ||
-            position === Position.LEVEL_THREE_C
-          ) {
-            points = 6;
-          } else if (
-            position === Position.LEVEL_FOUR_A ||
-            position === Position.LEVEL_FOUR_B ||
-            position === Position.LEVEL_FOUR_C
-          ) {
-            points = 7;
-          }
-        } else if (action === EventAction.AUTO_LEAVE) {
-          points = 3;
-        } else if (action === EventAction.SCORE_PROCESSOR) {
-          points = 6;
-        } else if (action === EventAction.SCORE_NET) {
-          points = 4;
+        if (action === EventAction.SCORE_FUEL) {
+          points = 1;
+        } else if (action === EventAction.AUTO_CLIMB) {
+          points = 15;
         }
       } else {
-        if (action === EventAction.SCORE_CORAL) {
-          if (position === Position.LEVEL_ONE) {
-            points = 2;
-          } else if (position === Position.LEVEL_TWO) {
-            points = 3;
-          } else if (position === Position.LEVEL_THREE) {
-            points = 4;
-          } else if (position === Position.LEVEL_FOUR) {
-            points = 5;
-          }
-        } else if (action === EventAction.SCORE_PROCESSOR) {
-          points = 6;
-        } else if (action === EventAction.SCORE_NET) {
-          points = 4;
+        if (action === EventAction.SCORE_FUEL) {
+          points = 1;
         }
       }
       const paramsEvents = z
@@ -256,20 +188,15 @@ export const addScoutReportDashboard = async (
       data: eventDataArray,
     });
     await totalPointsScoutingLead(req.user, { scoutReportUuid });
-    //recalibrate the max resonable points for every year
-    //uncomment for scouting lead page
-    // if (totalPoints === 0 || totalPoints > 80) {
-    //     await prismaClient.flaggedScoutReport.create({
-    //         data:
-    //         {
-    //             note: `${totalPoints} recorded, not including endgame`,
-    //             scoutReportUuid: scoutReportUuid
-    //         }
-
-    //     })
-    // }
     res.status(200).send("done adding data");
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).send({
+        displayError:
+          "Invalid input. Make sure you are using the correct input.",
+      });
+      return;
+    }
     console.log(error);
     res.status(500).send({ error: error, displayError: "Error" });
   }

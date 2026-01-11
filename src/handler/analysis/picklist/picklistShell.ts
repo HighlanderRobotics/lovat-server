@@ -10,6 +10,7 @@ import {
 import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
 import { zScoreMany } from "./zScoreMany.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
+import { ClimbResult } from "@prisma/client";
 
 /**
  * Main picklist endpoint. Note inconsistent strings make it confusing for this season.
@@ -36,18 +37,13 @@ export const picklistShell = createAnalysisHandler({
       autopoints: z.coerce.number().optional(),
       teleoppoints: z.coerce.number().optional(),
       driverability: z.coerce.number().optional(),
-      bargeresult: z.coerce.number().optional(),
-      totalcoral: z.coerce.number().optional(),
-      level1: z.coerce.number().optional(),
-      level2: z.coerce.number().optional(),
-      level3: z.coerce.number().optional(),
-      level4: z.coerce.number().optional(),
-      coralpickup: z.coerce.number().optional(),
-      algaeProcessor: z.coerce.number().optional(),
-      algaeNet: z.coerce.number().optional(),
-      algaePickups: z.coerce.number().optional(),
-      feeds: z.coerce.number().optional(),
-      defends: z.coerce.number().optional(),
+      accuracy: z.coerce.number().optional(),
+      climbresult: z.coerce.number().optional(),
+      fuelscored: z.coerce.number().optional(),
+      depotintakes: z.coerce.number().optional(),
+      groundintakes: z.coerce.number().optional(),
+      outpostintakes: z.coerce.number().optional(),
+      outpostouttakes: z.coerce.number().optional(),
     }),
   },
   usesDataSource: true,
@@ -58,18 +54,13 @@ export const picklistShell = createAnalysisHandler({
       autopoints: query.autopoints || 0,
       teleoppoints: query.teleoppoints || 0,
       driverability: query.driverability || 0,
-      bargeresult: query.bargeresult || 0,
-      totalcoral: query.totalcoral || 0,
-      level1: query.level1 || 0,
-      level2: query.level2 || 0,
-      level3: query.level3 || 0,
-      level4: query.level4 || 0,
-      coralpickup: query.coralpickup || 0,
-      algaeProcessor: query.algaeProcessor || 0,
-      algaeNet: query.algaeNet || 0,
-      algaePickups: query.algaePickups || 0,
-      feeds: query.feeds || 0,
-      defends: query.defends || 0,
+      accuracy: query.driverability || 0,
+      climbresult: query.climbresult || 0,
+      fuelscored: query.fuelscored || 0,
+      depotintakes: query.depotintakes || 0,
+      groundintakes: query.groundintakes || 0,
+      outpostintakes: query.outpostintakes || 0,
+      outpostouttakes: query.outpostouttakes || 0,
     };
 
     return {
@@ -99,18 +90,13 @@ export const picklistShell = createAnalysisHandler({
       autopoints: query.autopoints || 0,
       teleoppoints: query.teleoppoints || 0,
       driverability: query.driverability || 0,
-      bargeresult: query.bargeresult || 0,
-      totalCoral: query.totalcoral || 0,
-      level1: query.level1 || 0,
-      level2: query.level2 || 0,
-      level3: query.level3 || 0,
-      level4: query.level4 || 0,
-      coralpickup: query.coralpickup || 0,
-      algaeProcessor: query.algaeProcessor || 0,
-      algaeNet: query.algaeNet || 0,
-      algaePickups: query.algaePickups || 0,
-      feeds: query.feeds || 0,
-      defends: query.defends || 0,
+      accuracy: query.driverability || 0,
+      climbresult: query.climbresult || 0,
+      fuelscored: query.fuelscored || 0,
+      depotintakes: query.depotintakes || 0,
+      groundintakes: query.groundintakes || 0,
+      outpostintakes: query.outpostintakes || 0,
+      outpostouttakes: query.outpostouttakes || 0,
     };
 
     //check for all metrics being 0, if so error
@@ -164,7 +150,7 @@ export const picklistShell = createAnalysisHandler({
       includedTeams,
       query.tournamentKey,
       metrics,
-      query.flags || [],
+      query.flags || []
     );
 
     const resultArr = dataArr.sort((a, b) => b.result - a.result);

@@ -6,7 +6,7 @@ import {
   specificMatchPageMetrics,
   metricToName,
 } from "../analysisConstants.js";
-import { BargeResultReverseMap } from "../../manager/managerConstants.js";
+import { ClimbResultReverseMap } from "../../manager/managerConstants.js";
 import { autoPathScouter } from "./autoPathScouter.js";
 import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
@@ -44,7 +44,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       role: FlippedRoleMap[scoutReport.robotRole],
       // stage : stageMap[scoutReport.stage],
       // highNote : highNoteMap[scoutReport.highNote],
-      barge: BargeResultReverseMap[scoutReport.bargeResult],
+      climb: ClimbResultReverseMap[scoutReport.climbResult],
       autoPath: await autoPathScouter(ctx.user, {
         matchKey: scoutReport.teamMatchKey,
         scoutReportUuid: scoutReport.uuid,

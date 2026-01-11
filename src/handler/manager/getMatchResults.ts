@@ -7,7 +7,7 @@ import { Metric } from "../analysis/analysisConstants.js";
 
 export const getMatchResults = async (
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const params = z
@@ -43,12 +43,11 @@ export const getMatchResults = async (
 
 export const ALLIANCE_METRICS: Metric[] = [
   Metric.totalPoints,
-  Metric.coralL1,
-  Metric.coralL2,
-  Metric.coralL3,
-  Metric.coralL4,
-  Metric.processorScores,
-  Metric.netScores,
+  Metric.fuelScored,
+  Metric.outpostIntakes,
+  Metric.outpostOuttakes,
+  Metric.depot,
+  Metric.groundIntakes,
 ];
 
 interface MatchResultsOutput {
@@ -59,12 +58,11 @@ interface MatchResultsOutput {
 interface AllianceResultsOutput {
   teams: TeamOutput[];
   totalPoints: number;
-  coralL1: number;
-  coralL2: number;
-  coralL3: number;
-  coralL4: number;
-  processor: number;
-  net: number;
+  fuelScored: number;
+  outpostIntakes: number;
+  outpostOuttakes: number;
+  depot: number;
+  groundIntakes: number;
 }
 
 interface TeamOutput {
@@ -75,21 +73,21 @@ interface TeamOutput {
 }
 
 async function getAllianceResults(
-  matchData: (TeamMatchData & { scoutReports: ScoutReport[] })[],
+  matchData: (TeamMatchData & { scoutReports: ScoutReport[] })[]
 ) {
   const totals = Object.fromEntries(
-    ALLIANCE_METRICS.map((metric) => [metric, 0]),
+    ALLIANCE_METRICS.map((metric) => [metric, 0])
   );
 
   for (let i = 0; i < 3; i++) {
     const teamTotals = Object.fromEntries(
-      ALLIANCE_METRICS.map((metric) => [metric, 0]),
+      ALLIANCE_METRICS.map((metric) => [metric, 0])
     );
 
     for (const report of matchData[i].scoutReports) {
       const result = await computeAverageScoutReport(
         report.uuid,
-        ALLIANCE_METRICS,
+        ALLIANCE_METRICS
       );
       for (const stat of ALLIANCE_METRICS) {
         teamTotals[stat] += result[stat];
@@ -109,19 +107,18 @@ async function getAllianceResults(
       await getTeamResults(matchData[2]),
     ],
     totalPoints: totals[Metric.totalPoints],
-    coralL1: totals[Metric.coralL1],
-    coralL2: totals[Metric.coralL2],
-    coralL3: totals[Metric.coralL3],
-    coralL4: totals[Metric.coralL4],
-    processor: totals[Metric.processorScores],
-    net: totals[Metric.netScores],
+    fuelScored: totals[Metric.fuelScored],
+    outpostIntakes: totals[Metric.outpostIntakes],
+    outpostOuttakes: totals[Metric.outpostOuttakes],
+    depot: totals[Metric.depot],
+    groundIntakes: totals[Metric.groundIntakes],
   };
 
   return out;
 }
 
 async function getTeamResults(
-  matchData: TeamMatchData & { scoutReports: ScoutReport[] },
+  matchData: TeamMatchData & { scoutReports: ScoutReport[] }
 ) {
   let total = 0;
 

@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 
 export const getSinglePicklist = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const user = req.user;
@@ -40,7 +40,7 @@ export const getSinglePicklist = async (
       autopoints: row.autoPoints,
       teleoppoints: row.teleopPoints,
       driverability: row.driverAbility,
-      bargeresult: row.barge,
+      climbresult: row.climb,
       level1: row.coralLevel1Scores,
       level2: row.coralLevel2Scores,
       level3: row.coralLevel3Scores,

@@ -8,7 +8,7 @@ import {
   ttlConstant,
   allTournaments,
 } from "../analysisConstants.js";
-import { BargeResult, Position, Prisma } from "@prisma/client";
+import { ClimbResult, Position, Prisma } from "@prisma/client";
 import { endgameRuleOfSuccession } from "../picklist/endgamePicklistTeamFast.js";
 import { Event } from "@prisma/client";
 import { weightedTourAvgLeft } from "./arrayAndAverageTeams.js";
@@ -17,10 +17,7 @@ import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
-import {
-  runAnalysis,
-  AnalysisFunctionConfig,
-} from "../analysisFunction.js";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 import { User } from "@prisma/client";
 
 export interface ArrayFilter<T> {
@@ -51,13 +48,13 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
   },
   calculateAnalysis: async (
     args: z.infer<typeof argsSchema>,
-    ctx: { user: User },
+    ctx: { user: User }
   ) => {
     const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
-      dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
+      dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule)
     );
     const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
-      dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
+      dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule)
     );
 
     const tmdFilter: Prisma.TeamMatchDataWhereInput = {
@@ -91,7 +88,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               },
             },
             driverAbility: true,
-            bargeResult: true,
+            climbResult: true,
           },
         },
       },
@@ -104,7 +101,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
         endgamePoints: number[];
       }[];
       endgame: {
-        resultCount: Partial<Record<BargeResult, number>>;
+        resultCount: Partial<Record<ClimbResult, number>>;
         totalAttempts: number;
       };
     }
@@ -136,15 +133,15 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
         const currRowTournament = currRow.tournamentData[ti];
         currRowTournament.srEvents.push(sr.events);
         currRowTournament.driverAbility.push(sr.driverAbility);
-        currRowTournament.endgamePoints.push(endgameToPoints[sr.bargeResult]);
+        currRowTournament.endgamePoints.push(endgameToPoints[sr.climbResult]);
 
         if (
-          args.metrics.includes(Metric.bargePoints) &&
-          sr.bargeResult !== BargeResult.NOT_ATTEMPTED
+          args.metrics.includes(Metric.climbPoints) &&
+          sr.climbResult !== ClimbResult.NOT_ATTEMPTED
         ) {
           currRow.endgame.totalAttempts++;
-          currRow.endgame.resultCount[sr.bargeResult] ||= 0;
-          currRow.endgame.resultCount[sr.bargeResult]++;
+          currRow.endgame.resultCount[sr.climbResult] ||= 0;
+          currRow.endgame.resultCount[sr.climbResult]++;
         }
       }
     });
@@ -156,12 +153,12 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
     for (const metric of args.metrics) {
       let resultsByTournament: number[][] = [];
 
-      if (metric === Metric.bargePoints) {
+      if (metric === Metric.climbPoints) {
         finalResults[String(metric)] = {};
         for (const team of args.teams) {
           finalResults[String(metric)][String(team)] = endgameRuleOfSuccession(
             rawDataGrouped[team].endgame.resultCount,
-            rawDataGrouped[team].endgame.totalAttempts,
+            rawDataGrouped[team].endgame.totalAttempts
           );
         }
         continue;
@@ -185,10 +182,10 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             teleopPoints[team] = [];
             rawDataGrouped[team].tournamentData.forEach((tournament) => {
               const timedEvents = tournament.srEvents.map((val) =>
-                val.filter((e) => e.time > autoEnd),
+                val.filter((e) => e.time > autoEnd)
               );
               const pointSumsByReport = timedEvents.map((e) =>
-                e.reduce((acc, cur) => acc + cur.points, 0),
+                e.reduce((acc, cur) => acc + cur.points, 0)
               );
               teleopPoints[team].push(avgOrZero(pointSumsByReport));
             });
@@ -202,10 +199,10 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             autoPoints[team] = [];
             rawDataGrouped[team].tournamentData.forEach((tournament) => {
               const timedEvents = tournament.srEvents.map((val) =>
-                val.filter((e) => e.time <= autoEnd),
+                val.filter((e) => e.time <= autoEnd)
               );
               const pointSumsByReport = timedEvents.map((e) =>
-                e.reduce((acc, cur) => acc + cur.points, 0),
+                e.reduce((acc, cur) => acc + cur.points, 0)
               );
               autoPoints[team].push(avgOrZero(pointSumsByReport));
             });
@@ -232,20 +229,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
       } else {
         const action = metricToEvent[metric];
         let position: Position = null;
-        switch (metric) {
-          case Metric.coralL1:
-            position = Position.LEVEL_ONE;
-            break;
-          case Metric.coralL2:
-            position = Position.LEVEL_TWO;
-            break;
-          case Metric.coralL3:
-            position = Position.LEVEL_THREE;
-            break;
-          case Metric.coralL4:
-            position = Position.LEVEL_FOUR;
-            break;
-        }
 
         for (const team of args.teams) {
           resultsByTournament[team] = [];
@@ -262,7 +245,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               });
             });
             resultsByTournament[team].push(
-              countAtTournament / tournament.srEvents.length,
+              countAtTournament / tournament.srEvents.length
             );
           });
         }
@@ -271,7 +254,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
       finalResults[String(metric)] = {};
       for (const team of args.teams) {
         finalResults[String(metric)][String(team)] = weightedTourAvgLeft(
-          resultsByTournament[team],
+          resultsByTournament[team]
         );
       }
     }
@@ -282,19 +265,19 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
 
 export const averageManyFast = async (
   user: User,
-  args: z.infer<typeof argsSchema>,
+  args: z.infer<typeof argsSchema>
 ) => runAnalysis(config, user, args);
 
 export const getSourceFilter = <T>(
   sources: T[],
-  possibleSources: T[],
+  possibleSources: T[]
 ): ArrayFilter<T> | undefined => {
   if (sources.length === possibleSources.length) {
     return undefined;
   }
   if (sources.length >= possibleSources.length * 0.7) {
     const unsourcedTeams = possibleSources.filter(
-      (val) => !sources.includes(val),
+      (val) => !sources.includes(val)
     );
     return { notIn: unsourcedTeams };
   }

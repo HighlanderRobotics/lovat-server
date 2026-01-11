@@ -6,20 +6,15 @@ import {
   UserRole,
   EventAction,
   Position,
-  UnderShallowCage,
-  KnocksAlgae,
-  BargeResult,
-  RobotRole,
-  AlgaePickup,
-  CoralPickup,
   Scouter,
   TeamMatchData,
   Event,
+  ClimbResult,
+  OverRamp,
+  RobotRole,
+  UnderTrench,
 } from "@prisma/client";
-import {
-  autoEnd,
-  endgameToPoints,
-} from "../analysisConstants.js";
+import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
 import {
   dataSourceRuleToPrismaFilter,
@@ -31,27 +26,22 @@ export interface CondensedReport {
   match: string;
   teamNumber: number;
   role: string;
-  coralPickup: string;
-  algaePickup: string;
-  algaeKnocking: boolean;
-  underShallowCage: boolean;
   teleopPoints: number;
   autoPoints: number;
   driverAbility: number;
-  feeds: number;
-  defends: number;
-  coralPickups: number;
-  algaePickups: number;
-  coralDrops: number;
-  algaeDrops: number;
-  coralL1: number;
-  coralL2: number;
-  coralL3: number;
-  coralL4: number;
-  processorScores: number;
-  netScores: number;
-  netFails: number;
-  activeAuton: boolean;
+  feedsFromNeutral: number;
+  feedsFromOpponent: number;
+  totalPoints: number;
+  campDefends: number;
+  blockDefends: number;
+  shootingAccuracy: number;
+  outpostIntakes: number;
+  outpostOuttakes: number;
+  depot: number;
+  groundIntakes: number;
+  fuelScored: number;
+  underTrench: boolean;
+  overRamp: boolean;
   endgame: string;
   scouter: string;
   notes: string;
@@ -61,12 +51,11 @@ export interface CondensedReport {
 interface PointsReport {
   notes: string;
   robotRole: RobotRole;
-  algaePickup: AlgaePickup;
-  coralPickup: CoralPickup;
-  bargeResult: BargeResult;
-  knocksAlgae: KnocksAlgae;
-  underShallowCage: UnderShallowCage;
+  climbResult: ClimbResult;
+  underTrench: UnderTrench;
+  overRamp: OverRamp;
   driverAbility: number;
+  shootingAccuracy: number;
   events: Partial<Event>[];
   scouter: Partial<Scouter>;
   teamMatchData: Partial<TeamMatchData>;
@@ -78,7 +67,7 @@ interface PointsReport {
  */
 export const getReportCSV = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     if (req.user.role !== UserRole.SCOUTING_LEAD) {
@@ -133,19 +122,18 @@ export const getReportCSV = async (
         },
         scouter: {
           sourceTeamNumber: dataSourceRuleToPrismaFilter(
-            dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+            dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule)
           ),
         },
       },
       select: {
         notes: true,
         robotRole: true,
-        algaePickup: true,
-        coralPickup: true,
-        bargeResult: true,
-        knocksAlgae: true,
-        underShallowCage: true,
+        climbResult: true,
+        underTrench: true,
+        overRamp: true,
         driverAbility: true,
+        shootingAccuracy: true,
         events: {
           where: eventTimeFilter,
           select: {
@@ -183,7 +171,7 @@ export const getReportCSV = async (
     }
 
     const condensed = datapoints.map((r) =>
-      condenseReport(r, req.user.teamNumber, includeAuto, includeTeleop),
+      condenseReport(r, req.user.teamNumber, includeAuto, includeTeleop)
     );
 
     // Create and send the csv string through express
@@ -211,56 +199,34 @@ export const getReportCSV = async (
   }
 };
 
-// Less verbose and don't want to create new arrays constantly
-const posL1: Position[] = [
-  Position.LEVEL_ONE_A,
-  Position.LEVEL_ONE_B,
-  Position.LEVEL_ONE_C,
-];
-const posL2: Position[] = [
-  Position.LEVEL_TWO_A,
-  Position.LEVEL_TWO_B,
-  Position.LEVEL_TWO_C,
-];
-const posL3: Position[] = [
-  Position.LEVEL_THREE_A,
-  Position.LEVEL_THREE_B,
-  Position.LEVEL_THREE_C,
-];
-
 function condenseReport(
   report: PointsReport,
   userTeam: number,
   includeAuto: boolean,
-  includeTeleop: boolean,
+  includeTeleop: boolean
 ): CondensedReport {
   const data: CondensedReport = {
     match:
       report.teamMatchData.matchType.at(0) + report.teamMatchData.matchNumber,
     teamNumber: report.teamMatchData.teamNumber,
     role: report.robotRole,
-    coralPickup: report.coralPickup,
-    algaePickup: report.algaePickup,
-    algaeKnocking: report.knocksAlgae === KnocksAlgae.YES,
-    underShallowCage: report.underShallowCage === UnderShallowCage.YES,
+    underTrench: report.underTrench === UnderTrench.YES,
+    overRamp: report.overRamp === OverRamp.YES,
+    totalPoints: 0,
+    feedsFromNeutral: 0,
+    feedsFromOpponent: 0,
+    campDefends: 0,
+    blockDefends: 0,
+    shootingAccuracy: report.shootingAccuracy,
+    outpostIntakes: 0,
+    outpostOuttakes: 0,
+    fuelScored: 0,
+    depot: 0,
+    groundIntakes: 0,
     teleopPoints: 0,
     autoPoints: 0,
     driverAbility: report.driverAbility,
-    feeds: 0,
-    defends: 0,
-    coralPickups: 0,
-    algaePickups: 0,
-    coralDrops: 0,
-    algaeDrops: 0,
-    coralL1: 0,
-    coralL2: 0,
-    coralL3: 0,
-    coralL4: 0,
-    processorScores: 0,
-    netScores: 0,
-    netFails: 0,
-    activeAuton: false,
-    endgame: report.bargeResult,
+    endgame: report.climbResult,
     scouter: "",
     notes: report.notes.replace(/,/g, ";"), // Avoid commas in a csv...
   };
@@ -274,70 +240,39 @@ function condenseReport(
     }
 
     switch (event.action) {
-      case EventAction.PICKUP_CORAL:
-        data.coralPickups++;
+      case EventAction.FEED_NEUTRAL:
+        data.feedsFromNeutral += 1;
         break;
-      case EventAction.PICKUP_ALGAE:
-        data.algaePickups++;
+      case EventAction.FEED_OPPONENT:
+        data.feedsFromOpponent += 1;
         break;
-      case EventAction.FEED:
-        data.feeds++;
+      case EventAction.DEFEND_CAMP:
+        data.campDefends += 1;
         break;
-      case EventAction.AUTO_LEAVE:
-        data.activeAuton = true;
+      case EventAction.DEFEND_BLOCK:
+        data.blockDefends += 1;
         break;
-      case EventAction.DEFEND:
-        data.defends++;
+      case EventAction.OUTPOST_INTAKE:
+        data.outpostIntakes += 1;
         break;
-      case EventAction.SCORE_NET:
-        data.netScores++;
+      case EventAction.OUTPOST_OUTTAKE:
+        data.outpostOuttakes += 1;
         break;
-      case EventAction.FAIL_NET:
-        data.netFails++;
+      case EventAction.DEPOT_INTAKE:
+        data.depot += 1;
         break;
-      case EventAction.SCORE_PROCESSOR:
-        data.processorScores++;
+      case EventAction.GROUND_INTAKE:
+        data.groundIntakes += 1;
         break;
-      case EventAction.SCORE_CORAL:
-        switch (event.position) {
-          case Position.LEVEL_ONE:
-            data.coralL1++;
-            break;
-          case Position.LEVEL_TWO:
-            data.coralL2++;
-            break;
-          case Position.LEVEL_THREE:
-            data.coralL3++;
-            break;
-          case Position.LEVEL_FOUR:
-            data.coralL4++;
-            break;
-          default:
-            // During auto
-            if (posL1.includes(event.position)) {
-              data.coralL1++;
-            } else if (posL2.includes(event.position)) {
-              data.coralL2++;
-            } else if (posL3.includes(event.position)) {
-              data.coralL3++;
-            } else {
-              data.coralL4++;
-            }
-            break;
-        }
-        break;
-      case EventAction.DROP_ALGAE:
-        data.algaeDrops++;
-        break;
-      case EventAction.DROP_CORAL:
-        data.coralDrops++;
+      case EventAction.SCORE_FUEL:
+        data.fuelScored += 1;
         break;
     }
   });
 
   // Add stage points to total points
   if (includeTeleop && includeAuto) {
-    data.teleopPoints += endgameToPoints[data.endgame as BargeResult];
+    data.teleopPoints += endgameToPoints[data.endgame as ClimbResult];
   }
 
   if (report.scouter.sourceTeamNumber === userTeam) {

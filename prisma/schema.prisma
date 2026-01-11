@@ -52,8 +52,8 @@ model ScoutReport {
   startTime             DateTime
   notes                 String
   robotRole             RobotRole
-  underTrench           Boolean
-  overRamp              Boolean
+  underTrench           UnderTrench
+  overRamp              OverRamp
   climbResult           ClimbResult
   shootingAccuracy      Int
   robotBrokeDescription String?
@@ -108,7 +108,7 @@ model SharedPicklist {
   autoPoints        Float
   algaePickups      Float
   coralPickups      Float
-  barge             Float
+  climb             Float
   coralLevel1Scores Float
   coralLevel2Scores Float
   coralLevel3Scores Float
@@ -247,6 +247,16 @@ enum EventAction {
   DEFEND_BLOCK
   AUTO_CLIMB
   START_POSITION
+}
+
+enum UnderTrench {
+  NO
+  YES
+}
+
+enum OverRamp {
+  NO
+  YES
 }
 
 enum MatchType {

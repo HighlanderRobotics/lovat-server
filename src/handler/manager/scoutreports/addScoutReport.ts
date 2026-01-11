@@ -8,7 +8,13 @@ import {
   EventActionMap,
 } from "../managerConstants.js";
 import { addTournamentMatches } from "../addTournamentMatches.js";
-import { ClimbResult, EventAction, Position } from "@prisma/client";
+import {
+  ClimbResult,
+  EventAction,
+  OverRamp,
+  Position,
+  UnderTrench,
+} from "@prisma/client";
 import { MatchType, RobotRole } from "@prisma/client";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../../lib/clearCache.js";
@@ -28,8 +34,8 @@ export const addScoutReport = async (
         notes: z.string(),
         robotRole: z.nativeEnum(RobotRole),
         climb: z.nativeEnum(ClimbResult),
-        underTrench: z.boolean(),
-        overRamp: z.boolean(),
+        underTrench: z.nativeEnum(UnderTrench),
+        overRamp: z.nativeEnum(OverRamp),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
           .optional(),

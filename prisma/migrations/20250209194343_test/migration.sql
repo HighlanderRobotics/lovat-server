@@ -23,7 +23,7 @@ CREATE TYPE "UnderShallowCage" AS ENUM ('NO', 'YES');
 CREATE TYPE "CoralPickup" AS ENUM ('NONE', 'GROUND', 'STATION', 'BOTH');
 
 -- CreateEnum
-CREATE TYPE "BargeResult" AS ENUM ('NOT_ATTEMPTED', 'PARKED', 'SHALLOW', 'FAILED_SHALLOW', 'DEEP', 'FAILED_DEEP');
+CREATE TYPE "climbResult" AS ENUM ('NOT_ATTEMPTED', 'PARKED', 'SHALLOW', 'FAILED_SHALLOW', 'DEEP', 'FAILED_DEEP');
 
 -- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('ANALYST', 'SCOUTING_LEAD');
@@ -79,7 +79,7 @@ CREATE TABLE "ScoutReport" (
     "robotRole" "RobotRole" NOT NULL,
     "algaePickup" "AlgaePickup" NOT NULL,
     "coralPickup" "CoralPickup" NOT NULL,
-    "bargeResult" "BargeResult" NOT NULL,
+    "climbResult" "climbResult" NOT NULL,
     "knocksAlgae" "KnocksAlgae" NOT NULL,
     "underShallowCage" "UnderShallowCage" NOT NULL,
     "driverAbility" INTEGER NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE "SharedPicklist" (
     "autoPoints" DOUBLE PRECISION NOT NULL,
     "algaePickups" DOUBLE PRECISION NOT NULL,
     "coralPickups" DOUBLE PRECISION NOT NULL,
-    "barge" DOUBLE PRECISION NOT NULL,
+    "climb" DOUBLE PRECISION NOT NULL,
     "coralLevel1Scores" DOUBLE PRECISION NOT NULL,
     "coralLevel2Scores" DOUBLE PRECISION NOT NULL,
     "coralLevel3Scores" DOUBLE PRECISION NOT NULL,

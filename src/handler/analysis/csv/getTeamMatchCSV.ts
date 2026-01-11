@@ -7,34 +7,29 @@ import {
   RobotRole,
   EventAction,
   Position,
-  AlgaePickup,
-  CoralPickup,
-  BargeResult,
-  KnocksAlgae,
-  UnderShallowCage,
   Scouter,
   Event,
+  ClimbResult,
+  UnderTrench,
+  OverRamp,
 } from "@prisma/client";
-import {
-  autoEnd,
-  endgameToPoints,
-} from "../analysisConstants.js";
+import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
 import { CondensedReport } from "./getReportCSV.js";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
+import { da } from "zod/locales";
 
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
   robotRole: RobotRole;
-  algaePickup: AlgaePickup;
-  coralPickup: CoralPickup;
-  bargeResult: BargeResult;
-  knocksAlgae: KnocksAlgae;
-  underShallowCage: UnderShallowCage;
+  underTrench: UnderTrench;
+  overRamp: OverRamp;
+  climbResult: ClimbResult;
   driverAbility: number;
+  shootingAccuracy: number;
   events: Partial<Event>[];
   scouter: Partial<Scouter>;
 }
@@ -46,7 +41,7 @@ interface PointsReport {
  */
 export const getTeamMatchCSV = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     if (req.user.role !== UserRole.SCOUTING_LEAD) {
@@ -106,18 +101,17 @@ export const getTeamMatchCSV = async (
           where: {
             scouter: {
               sourceTeamNumber: dataSourceRuleToPrismaFilter(
-                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
+                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule)
               ),
             },
           },
           select: {
             robotRole: true,
-            algaePickup: true,
-            coralPickup: true,
-            bargeResult: true,
-            knocksAlgae: true,
-            underShallowCage: true,
+            underTrench: true,
+            overRamp: true,
+            climbResult: true,
             driverAbility: true,
+            shootingAccuracy: true,
             events: {
               where: eventTimeFilter,
               select: {
@@ -157,7 +151,7 @@ export const getTeamMatchCSV = async (
           cur.scoutReports;
         return acc;
       },
-      {},
+      {}
     );
 
     // Here comes the mouthful
@@ -184,8 +178,8 @@ export const getTeamMatchCSV = async (
               reports,
               scouterNames,
               includeAuto,
-              includeTeleop,
-            ),
+              includeTeleop
+            )
           );
         }
       });
@@ -216,56 +210,34 @@ export const getTeamMatchCSV = async (
   }
 };
 
-// Less verbose and don't want to create new arrays constantly
-const posL1: Position[] = [
-  Position.LEVEL_ONE_A,
-  Position.LEVEL_ONE_B,
-  Position.LEVEL_ONE_C,
-];
-const posL2: Position[] = [
-  Position.LEVEL_TWO_A,
-  Position.LEVEL_TWO_B,
-  Position.LEVEL_TWO_C,
-];
-const posL3: Position[] = [
-  Position.LEVEL_THREE_A,
-  Position.LEVEL_THREE_B,
-  Position.LEVEL_THREE_C,
-];
-
 function aggregateTeamMatchReports(
   match: string,
   teamNumber: number,
   reports: Omit<PointsReport, "scouter">[],
   scouters: string[],
   includeAuto: boolean,
-  includeTeleop: boolean,
+  includeTeleop: boolean
 ): Omit<CondensedReport, "notes"> {
   const data: Omit<CondensedReport, "notes"> = {
     match: match,
     teamNumber: teamNumber,
     role: null,
-    coralPickup: null,
-    algaePickup: null,
-    algaeKnocking: false,
-    underShallowCage: false,
     teleopPoints: 0,
     autoPoints: 0,
     driverAbility: 0,
-    feeds: 0,
-    defends: 0,
-    coralPickups: 0,
-    algaePickups: 0,
-    coralDrops: 0,
-    algaeDrops: 0,
-    coralL1: 0,
-    coralL2: 0,
-    coralL3: 0,
-    coralL4: 0,
-    processorScores: 0,
-    netScores: 0,
-    netFails: 0,
-    activeAuton: false,
+    feedsFromNeutral: 0,
+    feedsFromOpponent: 0,
+    totalPoints: 0,
+    campDefends: 0,
+    blockDefends: 0,
+    shootingAccuracy: 0,
+    outpostIntakes: 0,
+    outpostOuttakes: 0,
+    depot: 0,
+    groundIntakes: 0,
+    fuelScored: 0,
+    underTrench: null,
+    overRamp: null,
     endgame: null,
     scouter: scouters.join(","),
   };
@@ -277,41 +249,33 @@ function aggregateTeamMatchReports(
     FEEDER: 0,
     IMMOBILE: 0,
   };
-  const endgameCount: Record<BargeResult, number> = {
-    DEEP: 0,
-    SHALLOW: 0,
-    FAILED_DEEP: 0,
-    FAILED_SHALLOW: 0,
-    PARKED: 0,
+  const endgameCount: Record<ClimbResult, number> = {
+    LEFT_ONE: 0,
+    LEFT_TWO: 0,
+    LEFT_THREE: 0,
+    RIGHT_ONE: 0,
+    RIGHT_TWO: 0,
+    RIGHT_THREE: 0,
     NOT_ATTEMPTED: 0,
+    MIDDLE_ONE: 0,
+    MIDDLE_TWO: 0,
+    MIDDLE_THREE: 0,
+    BACK_ONE: 0,
+    BACK_TWO: 0,
+    BACK_THREE: 0,
   };
-  let coral: CoralPickup = CoralPickup.NONE;
-  let algae: AlgaePickup = AlgaePickup.NONE;
+
+  let trench: boolean = false;
+  let ramp: boolean = false;
 
   reports.forEach((report) => {
     data.driverAbility += report.driverAbility;
     roleCount[report.robotRole]++;
-    endgameCount[report.bargeResult]++;
+    endgameCount[report.climbResult]++;
 
     // Set discrete robot capabilities
-    data.algaeKnocking ||= report.knocksAlgae === KnocksAlgae.YES;
-    data.underShallowCage ||= report.underShallowCage === UnderShallowCage.YES;
-    if (coral === CoralPickup.NONE) {
-      coral = report.coralPickup;
-    } else if (
-      coral !== report.coralPickup &&
-      report.coralPickup !== CoralPickup.NONE
-    ) {
-      coral === CoralPickup.BOTH;
-    }
-    if (algae === AlgaePickup.NONE) {
-      algae = report.algaePickup;
-    } else if (
-      algae !== report.algaePickup &&
-      report.algaePickup !== AlgaePickup.NONE
-    ) {
-      algae === AlgaePickup.BOTH;
-    }
+    data.underTrench = report.underTrench === UnderTrench.YES;
+    data.overRamp = report.overRamp === OverRamp.YES;
 
     // Sum match points and actions
     report.events.forEach((event) => {
@@ -322,70 +286,39 @@ function aggregateTeamMatchReports(
       }
 
       switch (event.action) {
-        case EventAction.PICKUP_CORAL:
-          data.coralPickups++;
+        case EventAction.FEED_NEUTRAL:
+          data.feedsFromNeutral += 1;
           break;
-        case EventAction.PICKUP_ALGAE:
-          data.algaePickups++;
+        case EventAction.FEED_OPPONENT:
+          data.feedsFromOpponent += 1;
           break;
-        case EventAction.FEED:
-          data.feeds++;
+        case EventAction.DEFEND_CAMP:
+          data.campDefends += 1;
           break;
-        case EventAction.AUTO_LEAVE:
-          data.activeAuton = true;
+        case EventAction.DEFEND_BLOCK:
+          data.blockDefends += 1;
           break;
-        case EventAction.DEFEND:
-          data.defends++;
+        case EventAction.OUTPOST_INTAKE:
+          data.outpostIntakes += 1;
           break;
-        case EventAction.SCORE_NET:
-          data.netScores++;
+        case EventAction.OUTPOST_OUTTAKE:
+          data.outpostOuttakes += 1;
           break;
-        case EventAction.FAIL_NET:
-          data.netFails++;
+        case EventAction.DEPOT_INTAKE:
+          data.depot += 1;
           break;
-        case EventAction.SCORE_PROCESSOR:
-          data.processorScores++;
+        case EventAction.GROUND_INTAKE:
+          data.groundIntakes += 1;
           break;
-        case EventAction.SCORE_CORAL:
-          switch (event.position) {
-            case Position.LEVEL_ONE:
-              data.coralL1++;
-              break;
-            case Position.LEVEL_TWO:
-              data.coralL2++;
-              break;
-            case Position.LEVEL_THREE:
-              data.coralL3++;
-              break;
-            case Position.LEVEL_FOUR:
-              data.coralL4++;
-              break;
-            default:
-              // During auto
-              if (posL1.includes(event.position)) {
-                data.coralL1++;
-              } else if (posL2.includes(event.position)) {
-                data.coralL2++;
-              } else if (posL3.includes(event.position)) {
-                data.coralL3++;
-              } else {
-                data.coralL4++;
-              }
-              break;
-          }
-          break;
-        case EventAction.DROP_ALGAE:
-          data.algaeDrops++;
-          break;
-        case EventAction.DROP_CORAL:
-          data.coralDrops++;
+        case EventAction.SCORE_FUEL:
+          data.fuelScored += 1;
           break;
       }
     });
   });
 
-  data.coralPickup = coral;
-  data.algaePickup = algae;
+  data.underTrench = trench;
+  data.overRamp = ramp;
 
   // Find highest-reported robot role and endgame interaction
   Object.entries(roleCount).reduce((highest, role) => {
@@ -410,21 +343,24 @@ function aggregateTeamMatchReports(
     data.teleopPoints = roundToHundredth(data.teleopPoints / reports.length);
     data.autoPoints = roundToHundredth(data.autoPoints / reports.length);
     data.driverAbility = roundToHundredth(data.driverAbility / reports.length);
-    data.feeds = roundToHundredth(data.feeds / reports.length);
-    data.defends = roundToHundredth(data.defends / reports.length);
-    data.coralPickups = roundToHundredth(data.coralPickups / reports.length);
-    data.algaePickups = roundToHundredth(data.algaePickups / reports.length);
-    data.coralDrops = roundToHundredth(data.coralDrops / reports.length);
-    data.algaeDrops = roundToHundredth(data.algaeDrops / reports.length);
-    data.coralL1 = roundToHundredth(data.coralL1 / reports.length);
-    data.coralL2 = roundToHundredth(data.coralL2 / reports.length);
-    data.coralL3 = roundToHundredth(data.coralL3 / reports.length);
-    data.coralL4 = roundToHundredth(data.coralL4 / reports.length);
-    data.processorScores = roundToHundredth(
-      data.processorScores / reports.length,
+    data.shootingAccuracy = roundToHundredth(
+      data.shootingAccuracy / reports.length
     );
-    data.netScores = roundToHundredth(data.netScores / reports.length);
-    data.netFails = roundToHundredth(data.netFails / reports.length);
+    data.feedsFromNeutral = roundToHundredth(
+      data.feedsFromNeutral / reports.length
+    );
+    data.feedsFromOpponent = roundToHundredth(
+      data.feedsFromOpponent / reports.length
+    );
+    data.outpostIntakes = roundToHundredth(
+      data.outpostIntakes / reports.length
+    );
+    data.outpostOuttakes = roundToHundredth(
+      data.outpostOuttakes / reports.length
+    );
+    data.depot = roundToHundredth(data.depot / reports.length);
+    data.groundIntakes = roundToHundredth(data.groundIntakes / reports.length);
+    data.fuelScored = roundToHundredth(data.fuelScored / reports.length);
   }
 
   // Add endgame points to total points
