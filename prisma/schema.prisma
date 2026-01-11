@@ -52,8 +52,8 @@ model ScoutReport {
   startTime             DateTime
   notes                 String
   robotRole             RobotRole
-  underTrench           UnderTrench
-  overRamp              OverRamp
+  underTrench           Boolean
+  overRamp              Boolean
   climbResult           ClimbResult
   shootingAccuracy      Int
   robotBrokeDescription String?
@@ -227,7 +227,11 @@ enum Position {
   DEPOT
   OUTPOST
   NEUTRAL_ZONE
-  START
+  START_A
+  START_B
+  START_C
+  START_D
+  START_E
 }
 
 enum EventAction {
@@ -236,7 +240,8 @@ enum EventAction {
   OUTPOST_OUTTAKE
   DEPOT_INTAKE
   SCORE_FUEL
-  FEED
+  FEED_OPPONENT
+  FEED_NEUTRAL
   DEFEND_CAMP
   DEFEND_BLOCK
   START_POSITION
@@ -252,18 +257,6 @@ enum RobotRole {
   DEFENSE
   FEEDER
   IMMOBILE
-}
-
-enum UnderTrench {
-  NONE
-  GROUND
-  REEF
-  BOTH
-}
-
-enum OverRamp {
-  NO
-  YES
 }
 
 enum ClimbResult {
