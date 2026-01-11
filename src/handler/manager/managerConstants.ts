@@ -16,19 +16,21 @@ const EventActionMap: Record<number, EventAction> = {
   6: EventAction.FEED_NEUTRAL,
   7: EventAction.DEFEND_CAMP,
   8: EventAction.DEFEND_BLOCK,
-  9: EventAction.START_POSITION,
+  9: EventAction.AUTO_CLIMB,
+  10: EventAction.START_POSITION,
 };
 const PositionMap: Record<number, Position> = {
   0: Position.NONE,
   1: Position.ALLIANCE_ZONE,
   2: Position.DEPOT,
   3: Position.OUTPOST,
-  4: Position.NEUTRAL_ZONE,
-  5: Position.START_A,
-  6: Position.START_B,
-  7: Position.START_C,
-  8: Position.START_D,
-  9: Position.START_E,
+  4: Position.TOWER,
+  5: Position.NEUTRAL_ZONE,
+  6: Position.START_A,
+  7: Position.START_B,
+  8: Position.START_C,
+  9: Position.START_D,
+  10: Position.START_E,
 };
 const RobotRoleMap: Record<number, RobotRole> = {
   0: RobotRole.OFFENSE,
