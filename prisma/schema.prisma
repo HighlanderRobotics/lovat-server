@@ -47,22 +47,21 @@ model MutablePicklist {
 }
 
 model ScoutReport {
-  uuid                  String           @id @default(uuid())
+  uuid                  String        @id @default(uuid())
   teamMatchKey          String
   startTime             DateTime
   notes                 String
   robotRole             RobotRole
-  algaePickup           AlgaePickup
-  coralPickup           CoralPickup
-  bargeResult           BargeResult
-  knocksAlgae           KnocksAlgae
-  underShallowCage      UnderShallowCage
+  underTrench           UnderTrench
+  overRamp              OverRamp
+  climbResult           ClimbResult
+  shootingAccuracy      Int
   robotBrokeDescription String?
   driverAbility         Int
   scouterUuid           String
   events                Event[]
-  scouter               Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
-  teamMatchData         TeamMatchData    @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+  scouter               Scouter       @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
+  teamMatchData         TeamMatchData @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
 }
 
 model ScouterScheduleShift {
@@ -157,7 +156,7 @@ model SlackWorkspace {
   botUserId     String
   authUserId    String
   subscriptions SlackSubscription[]
-  team          RegisteredTeam     @relation(fields: [owner], references: [number], onDelete: Cascade)
+  team          RegisteredTeam      @relation(fields: [owner], references: [number], onDelete: Cascade)
 }
 
 model SlackSubscription {
@@ -224,45 +223,22 @@ model CachedAnalysis {
 
 enum Position {
   NONE
-  START_ONE
-  START_TWO
-  START_THREE
-  START_FOUR
-  LEVEL_ONE
-  LEVEL_TWO
-  LEVEL_THREE
-  LEVEL_FOUR
-  LEVEL_ONE_A
-  LEVEL_ONE_B
-  LEVEL_ONE_C
-  LEVEL_TWO_A
-  LEVEL_TWO_B
-  LEVEL_TWO_C
-  LEVEL_THREE_A
-  LEVEL_THREE_B
-  LEVEL_THREE_C
-  LEVEL_FOUR_A
-  LEVEL_FOUR_B
-  LEVEL_FOUR_C
-  GROUND_PIECE_A
-  GROUND_PIECE_B
-  GROUND_PIECE_C
-  CORAL_STATION_ONE
-  CORAL_STATION_TWO
+  ALLIANCE_ZONE
+  DEPOT
+  OUTPOST
+  NEUTRAL_ZONE
+  START
 }
 
 enum EventAction {
-  PICKUP_CORAL
-  PICKUP_ALGAE
+  GROUND_INTAKE
+  OUTPOST_INTAKE
+  OUTPOST_OUTTAKE
+  DEPOT_INTAKE
+  SCORE_FUEL
   FEED
-  AUTO_LEAVE
-  DEFEND
-  SCORE_NET
-  FAIL_NET
-  SCORE_PROCESSOR
-  SCORE_CORAL
-  DROP_ALGAE
-  DROP_CORAL
+  DEFEND_CAMP
+  DEFEND_BLOCK
   START_POSITION
 }
 
@@ -278,46 +254,35 @@ enum RobotRole {
   IMMOBILE
 }
 
-enum AlgaePickup {
+enum UnderTrench {
   NONE
   GROUND
   REEF
   BOTH
 }
 
-enum KnocksAlgae {
+enum OverRamp {
   NO
   YES
 }
 
-enum AutoLeave {
-  NO
-  YES
-}
-
-enum UnderShallowCage {
-  NO
-  YES
-}
-
-enum CoralPickup {
-  NONE
-  GROUND
-  STATION
-  BOTH
-}
-
-enum BargeResult {
+enum ClimbResult {
   NOT_ATTEMPTED
-  PARKED
-  SHALLOW
-  FAILED_SHALLOW
-  DEEP
-  FAILED_DEEP
+  LEFT_ONE
+  LEFT_TWO
+  LEFT_THREE
+  MIDDLE_ONE
+  MIDDLE_TWO
+  MIDDLE_THREE
+  RIGHT_ONE
+  RIGHT_TWO
+  RIGHT_THREE
+  BACK_ONE
+  BACK_TWO
+  BACK_THREE
 }
 
 enum WarningType {
-  AUTO_LEAVE
   BREAK
 }
 
