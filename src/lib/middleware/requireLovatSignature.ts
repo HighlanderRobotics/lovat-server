@@ -31,7 +31,7 @@ const requireLovatSignature = (
   }
 
   const generatedSignature = createHmac("sha256", LOVAT_SIGNING_KEY)
-    .update(JSON.stringify({ originalUrl, method, body, timestamp }))
+    .update(JSON.stringify({ path: originalUrl, method, body, timestamp }))
     .digest("hex");
 
   if (signature === generatedSignature) {
