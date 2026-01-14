@@ -6,7 +6,7 @@ const LOVAT_SIGNING_KEY = process.env.LOVAT_SIGNING_KEY;
 const requireLovatSignature = (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   const signature = req.headers["x-signature"] as string | undefined;
   const timestamp = parseInt(req.headers["x-timestamp"] as string | undefined);
@@ -26,7 +26,7 @@ const requireLovatSignature = (
   const diff = now.getTime() - timestampDate.getTime();
   const diffMinutes = Math.floor(diff / 1000 / 60);
   if (diffMinutes > 5) {
-    res.status(401).send("Unauthorized");
+    res.status(401).send("Signature expired");
     return;
   }
 
@@ -37,7 +37,7 @@ const requireLovatSignature = (
   if (signature === generatedSignature) {
     next();
   } else {
-    res.status(401).send("Unauthorized");
+    res.status(403).send("Invalid signature");
   }
 };
 
