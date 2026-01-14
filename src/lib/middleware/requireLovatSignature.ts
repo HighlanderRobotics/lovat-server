@@ -10,7 +10,7 @@ const requireLovatSignature = (
 ): Promise<void> => {
   const signature = req.headers["x-signature"] as string | undefined;
   const timestamp = parseInt(req.headers["x-timestamp"] as string | undefined);
-  const { method, path } = req;
+  const { method, originalUrl } = req;
 
   const body =
     JSON.stringify(req.body) === "{}" ? "" : JSON.stringify(req.body);
@@ -31,7 +31,7 @@ const requireLovatSignature = (
   }
 
   const generatedSignature = createHmac("sha256", LOVAT_SIGNING_KEY)
-    .update(JSON.stringify({ path, method, body, timestamp }))
+    .update(JSON.stringify({ originalUrl, method, body, timestamp }))
     .digest("hex");
 
   if (signature === generatedSignature) {
