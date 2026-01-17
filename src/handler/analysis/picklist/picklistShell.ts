@@ -10,8 +10,6 @@ import {
 import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
 import { zScoreMany } from "./zScoreMany.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
-import { ClimbResult } from "@prisma/client";
-
 /**
  * Main picklist endpoint. Note inconsistent strings make it confusing for this season.
  * Normal metrics are sent and received in lettering suggested by query inputs, but FLAGS are sent and received as shown in metricToName.
@@ -150,7 +148,7 @@ export const picklistShell = createAnalysisHandler({
       includedTeams,
       query.tournamentKey,
       metrics,
-      query.flags || []
+      query.flags || [],
     );
 
     const resultArr = dataArr.sort((a, b) => b.result - a.result);
