@@ -10,7 +10,7 @@
     "numReplicas": 2,
     "startCommand": "sleep 3 && export DATABASE_URL=$DATABASE_PRIVATE_URL && npm start",
     "preDeployCommand": [
-      "sleep 3 && DATABASE_URL=$DATABASE_PRIVATE_URL npx prisma db push"
+      "sleep 3 && DATABASE_URL=$DATABASE_PRIVATE_URL npx prisma db push && npx prisma generate"
     ],
     "sleepApplication": false,
     "useLegacyStacker": false,
