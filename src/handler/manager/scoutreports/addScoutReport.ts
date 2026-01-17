@@ -24,7 +24,7 @@ import { invalidateCache } from "../../../lib/clearCache.js";
 
 export const addScoutReport = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const paramsScoutReport = z
@@ -140,7 +140,7 @@ export const addScoutReport = async (
     // Collect all affected cached analyses
     invalidateCache(
       paramsScoutReport.teamNumber,
-      paramsScoutReport.tournamentKey
+      paramsScoutReport.tournamentKey,
     );
 
     const scoutReportUuid = paramsScoutReport.uuid;
@@ -157,13 +157,13 @@ export const addScoutReport = async (
       const position = PositionMap[event[2]];
       if (time <= 18) {
         if (action === EventAction.STOP_SCORING) {
-          points = Number(action[3]);
+          points = Number(event[3]);
         } else if (action === EventAction.CLIMB) {
           points = 15;
         }
       } else {
         if (action === EventAction.STOP_SCORING) {
-          points = Number(action[3]);
+          points = Number(event[3]);
         }
       }
 
@@ -206,7 +206,7 @@ export const addScoutReport = async (
         matchRow.matchNumber,
         matchRow.teamNumber,
         matchRow.tournamentKey,
-        paramsScoutReport.uuid
+        paramsScoutReport.uuid,
       );
     }
 
