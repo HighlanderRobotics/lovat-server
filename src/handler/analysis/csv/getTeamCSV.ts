@@ -8,9 +8,9 @@ import {
   EventAction,
   Position,
   Event,
-  ClimbResult,
-  OverBump,
-  UnderTrench,
+  EndgameClimbResult,
+  AutoClimbResult,
+  FieldTraversal,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
@@ -18,13 +18,13 @@ import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
+import { Field } from "@slack/web-api/dist/types/response/ChannelsHistoryResponse.js";
 
 interface AggregatedTeamData {
   teamNumber: number;
   mainRole: string;
   secondaryRole: string;
-  underTrench: boolean;
-  overBump: boolean;
+  fieldTraversal: string;
   avgFuelScored: number;
   avgFeedsFromNeutral: number;
   avgFeedsFromOpponent: number;
@@ -38,13 +38,10 @@ interface AggregatedTeamData {
   avgAutoPoints: number;
   avgDriverAbility: number;
   avgShootingAccuracy: number;
-  percClimbLeft: number;
-  percClimbCenter: number;
-  percClimbRight: number;
-  percClimbBack: number;
   percClimbOne: number;
   percClimbTwo: number;
   percClimbThree: number;
+  percClimbFailed: number;
   percAutoClimb: number;
   percNoClimb: number;
   matchesImmobile: number;
@@ -55,9 +52,9 @@ interface AggregatedTeamData {
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
   robotRole: RobotRole;
-  climbResult: ClimbResult;
-  underTrench: UnderTrench;
-  overBump: OverBump;
+  endgameClimbResult: EndgameClimbResult;
+  autoClimbResult: AutoClimbResult;
+  fieldTraversal: FieldTraversal;
   shootingAccuracy: number;
   driverAbility: number;
   events: Partial<Event>[];
@@ -136,9 +133,9 @@ export const getTeamCSV = async (
           select: {
             robotRole: true,
             shootingAccuracy: true,
-            underTrench: true,
-            overBump: true,
-            climbResult: true,
+            endgameClimbResult: true,
+            autoClimbResult: true,
+            fieldTraversal: true,
             driverAbility: true,
             events: {
               where: eventTimeFilter,
@@ -233,8 +230,7 @@ function aggregateTeamReports(
     teamNumber: teamNum,
     mainRole: null,
     secondaryRole: null,
-    underTrench: false,
-    overBump: false,
+    fieldTraversal: null,
     avgTeleopPoints: 0,
     avgAutoPoints: 0,
     avgDriverAbility: 0,
@@ -248,13 +244,10 @@ function aggregateTeamReports(
     avgGroundIntakes: 0,
     avgOutpostIntakes: 0,
     avgOutpostOuttakes: 0,
-    percClimbLeft: 0,
-    percClimbCenter: 0,
-    percClimbRight: 0,
-    percClimbBack: 0,
     percClimbOne: 0,
     percClimbTwo: 0,
     percClimbThree: 0,
+    percClimbFailed: 0,
     percAutoClimb: 0,
     percNoClimb: 0,
     matchesImmobile: 0,
@@ -264,14 +257,13 @@ function aggregateTeamReports(
 
   // Out of scope iteration variables
   const roles: Record<RobotRole, number> = {
-    OFFENSE: 0,
-    DEFENSE: 0,
-    FEEDER: 0,
+    FEEDING: 0,
+    STEALING: 0,
+    SCORING: 0,
+    DEFENDING: 0,
+    CYCLING: 0,
     IMMOBILE: 0,
   };
-
-  let underTrench: UnderTrench = UnderTrench.NO;
-  let overBump: OverBump = OverBump.NO;
 
   // Main iteration for most aggregation summing
   reports.forEach((report) => {
@@ -281,56 +273,39 @@ function aggregateTeamReports(
 
     // Set discrete robot capabilities
     // Implement a safety for this? One incorrect report could mess up the data
-    data.underTrench ||= report.underTrench === UnderTrench.YES;
-    data.overBump ||= report.overBump === OverBump.YES;
+    switch (report.fieldTraversal) {
+      case FieldTraversal.TRENCH:
+        data.fieldTraversal =
+          data.fieldTraversal === FieldTraversal.BUMP
+            ? FieldTraversal.BOTH
+            : FieldTraversal.TRENCH;
+        break;
+      case FieldTraversal.BUMP:
+        data.fieldTraversal =
+          data.fieldTraversal === FieldTraversal.TRENCH
+            ? FieldTraversal.BOTH
+            : FieldTraversal.BUMP;
+        break;
+      case FieldTraversal.BOTH:
+        data.fieldTraversal = FieldTraversal.BOTH;
+        break;
+    }
 
     // Sum endgame results
-    switch (report.climbResult) {
-      case ClimbResult.LEFT_ONE:
-        data.percClimbLeft += report.weight;
+    switch (report.endgameClimbResult) {
+      case EndgameClimbResult.LEVEL_ONE:
         data.percClimbOne += report.weight;
         break;
-      case ClimbResult.LEFT_TWO:
-        data.percClimbLeft += report.weight;
+      case EndgameClimbResult.LEVEL_TWO:
         data.percClimbTwo += report.weight;
         break;
-      case ClimbResult.LEFT_THREE:
-        data.percClimbLeft += report.weight;
+      case EndgameClimbResult.LEVEL_THREE:
         data.percClimbThree += report.weight;
         break;
-      case ClimbResult.MIDDLE_TWO:
-        data.percClimbCenter += report.weight;
-        data.percClimbTwo += report.weight;
+      case EndgameClimbResult.FAILED:
+        data.percClimbFailed += report.weight;
         break;
-      case ClimbResult.MIDDLE_THREE:
-        data.percClimbCenter += report.weight;
-        data.percClimbThree += report.weight;
-        break;
-      case ClimbResult.RIGHT_ONE:
-        data.percClimbRight += report.weight;
-        data.percClimbOne += report.weight;
-        break;
-      case ClimbResult.RIGHT_TWO:
-        data.percClimbRight += report.weight;
-        data.percClimbTwo += report.weight;
-        break;
-      case ClimbResult.RIGHT_THREE:
-        data.percClimbRight += report.weight;
-        data.percClimbThree += report.weight;
-        break;
-      case ClimbResult.BACK_ONE:
-        data.percClimbBack += report.weight;
-        data.percClimbOne += report.weight;
-        break;
-      case ClimbResult.BACK_TWO:
-        data.percClimbBack += report.weight;
-        data.percClimbTwo += report.weight;
-        break;
-      case ClimbResult.BACK_THREE:
-        data.percClimbBack += report.weight;
-        data.percClimbThree += report.weight;
-        break;
-      case ClimbResult.NOT_ATTEMPTED:
+      case EndgameClimbResult.NOT_ATTEMPTED:
         data.percNoClimb += report.weight;
         break;
     }
@@ -344,39 +319,14 @@ function aggregateTeamReports(
       }
 
       switch (event.action) {
-        case EventAction.SCORE_FUEL:
-          data.avgFuelScored += event.points * report.weight;
-          break;
-        case EventAction.FEED_NEUTRAL:
-          data.avgFeedsFromNeutral += 1 * report.weight;
-          break;
-        case EventAction.FEED_OPPONENT:
-          data.avgFeedsFromOpponent += 1 * report.weight;
-          break;
-        case EventAction.DEFEND_BLOCK:
-          data.avgBlockDefends += 1 * report.weight;
-          break;
-        case EventAction.DEFEND_CAMP:
-          data.avgCampDefends += 1 * report.weight;
-          break;
-        case EventAction.DEPOT_INTAKE:
-          data.avgDepotIntakes += 1 * report.weight;
-          break;
-        case EventAction.GROUND_INTAKE:
-          data.avgGroundIntakes += 1 * report.weight;
-          break;
-        case EventAction.OUTPOST_INTAKE:
-          data.avgOutpostIntakes += 1 * report.weight;
-          break;
-        case EventAction.OUTPOST_OUTTAKE:
-          data.avgOutpostOuttakes += 1 * report.weight;
+        case EventAction.START_FEEDING:
+          if (event.position === Position.NEUTRAL_ZONE) {
+            data.avgFeedsFromNeutral += 1 * report.weight;
+          } else if (event.position === Position.FIRST_RUNG) {
+            data.avgFeedsFromOpponent += 1 * report.weight;
+          }
           break;
       }
-
-      // FIX: This will only work if all reports for a match mark robot role as offense
-      // if (report.robotRole === RobotRole.OFFENSE) {
-      //     data.avgOffensePoints += event.points * report.weight;
-      // }
     });
   });
 
@@ -446,19 +396,6 @@ function aggregateTeamReports(
   );
 
   // Convert climb counts to percentages
-
-  data.percClimbLeft = roundToHundredth(
-    (data.percClimbLeft / numMatches) * 100
-  );
-  data.percClimbCenter = roundToHundredth(
-    (data.percClimbCenter / numMatches) * 100
-  );
-  data.percClimbRight = roundToHundredth(
-    (data.percClimbRight / numMatches) * 100
-  );
-  data.percClimbBack = roundToHundredth(
-    (data.percClimbBack / numMatches) * 100
-  );
   data.percClimbOne = roundToHundredth((data.percClimbOne / numMatches) * 100);
   data.percClimbTwo = roundToHundredth((data.percClimbTwo / numMatches) * 100);
   data.percClimbThree = roundToHundredth(
@@ -472,9 +409,9 @@ function aggregateTeamReports(
   // Add endgame points to total points
   if (includeTeleop && includeAuto) {
     data.avgTeleopPoints +=
-      (data.percClimbOne * endgameToPoints[ClimbResult.LEFT_ONE] +
-        data.percClimbTwo * endgameToPoints[ClimbResult.LEFT_TWO] +
-        data.percClimbThree * endgameToPoints[ClimbResult.LEFT_THREE]) /
+      (data.percClimbOne * endgameToPoints[EndgameClimbResult.LEVEL_ONE] +
+        data.percClimbTwo * endgameToPoints[EndgameClimbResult.LEVEL_TWO] +
+        data.percClimbThree * endgameToPoints[EndgameClimbResult.LEVEL_THREE]) /
       100;
   }
 

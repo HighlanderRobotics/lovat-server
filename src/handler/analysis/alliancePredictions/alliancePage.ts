@@ -39,11 +39,11 @@ const config = {
         ),
       })
     ),
-    fuelScored: z.number(),
-    feedsFromNeutral: z.number(),
-    feedsFromOpponent: z.number(),
-    campDefends: z.number(),
-    blockDefends: z.number(),
+    outpostIntakes: z.number(),
+    totalDefenseTime: z.number(),
+    totalFuelOutputted: z.number(),
+    feedsPerMatch: z.number(),
+    autoPoints: z.number(),
   }),
   usesDataSource: true,
   shouldCache: true,
@@ -95,11 +95,13 @@ const config = {
     const teamData = await averageManyFast(ctx.user, {
       teams: [args.team1, args.team2, args.team3],
       metrics: [
-        Metric.fuelScored,
-        Metric.feedsFromNeutral,
-        Metric.feedsFromOpponent,
-        Metric.campDefends,
-        Metric.blockDefends,
+        Metric.outpostIntakes,
+        Metric.totalDefenseTime,
+        Metric.totalFuelOutputted,
+        Metric.totalPoints,
+        Metric.feedsPerMatch,
+        Metric.outpostIntakes,
+        Metric.autoPoints,
       ],
     });
 
@@ -128,26 +130,26 @@ const config = {
           paths: teamThreeAutoPaths,
         },
       ],
-      fuelScored:
-        (teamData[Metric.fuelScored][args.team1] ?? 0) +
-        (teamData[Metric.fuelScored][args.team2] ?? 0) +
-        (teamData[Metric.fuelScored][args.team3] ?? 0),
-      feedsFromNeutral:
-        (teamData[Metric.feedsFromNeutral][args.team1] ?? 0) +
-        (teamData[Metric.feedsFromNeutral][args.team2] ?? 0) +
-        (teamData[Metric.feedsFromNeutral][args.team3] ?? 0),
-      feedsFromOpponent:
-        (teamData[Metric.feedsFromOpponent][args.team1] ?? 0) +
-        (teamData[Metric.feedsFromOpponent][args.team2] ?? 0) +
-        (teamData[Metric.feedsFromOpponent][args.team3] ?? 0),
-      campDefends:
-        (teamData[Metric.campDefends][args.team1] ?? 0) +
-        (teamData[Metric.campDefends][args.team2] ?? 0) +
-        (teamData[Metric.campDefends][args.team3] ?? 0),
-      blockDefends:
-        (teamData[Metric.blockDefends][args.team1] ?? 0) +
-        (teamData[Metric.blockDefends][args.team2] ?? 0) +
-        (teamData[Metric.blockDefends][args.team3] ?? 0),
+      outpostIntakes:
+        teamData[args.team1][Metric.outpostIntakes] +
+        teamData[args.team2][Metric.outpostIntakes] +
+        teamData[args.team3][Metric.outpostIntakes],
+      totalDefenseTime:
+        teamData[args.team1][Metric.totalDefenseTime] +
+        teamData[args.team2][Metric.totalDefenseTime] +
+        teamData[args.team3][Metric.totalDefenseTime],
+      totalFuelOutputted:
+        teamData[args.team1][Metric.totalFuelOutputted] +
+        teamData[args.team2][Metric.totalFuelOutputted] +
+        teamData[args.team3][Metric.totalFuelOutputted],
+      feedsPerMatch:
+        teamData[args.team1][Metric.feedsPerMatch] +
+        teamData[args.team2][Metric.feedsPerMatch] +
+        teamData[args.team3][Metric.feedsPerMatch],
+      autoPoints:
+        teamData[args.team1][Metric.autoPoints] +
+        teamData[args.team2][Metric.autoPoints] +
+        teamData[args.team3][Metric.autoPoints],
     };
   },
 } as const;

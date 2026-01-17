@@ -29,7 +29,7 @@ export const breakdownDetails = createAnalysisHandler({
       key: [
         "breakdownDetails",
         params.team.toString(),
-        lowercaseToBreakdown[params.breakdown],
+        lowercaseToBreakdown[params.breakdown] as unknown as string, // extremely sus should fix
       ],
       teamDependencies: [params.team],
       tournamentDependencies: [],

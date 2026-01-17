@@ -5,7 +5,7 @@ import {
   Metric,
   metricToEvent,
 } from "../analysisConstants.js";
-import { EventAction, Position, User } from "@prisma/client";
+import { AutoClimbResult, EventAction, Position, User } from "@prisma/client";
 import z from "zod";
 import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 
@@ -16,8 +16,9 @@ export async function computeAverageScoutReport(
   const report = await prismaClient.scoutReport.findUniqueOrThrow({
     where: { uuid: scoutReportUuid },
     select: {
-      climbResult: true,
+      endgameClimbResult: true,
       driverAbility: true,
+      autoClimbResult: true,
       events: {
         select: { action: true, position: true, points: true, time: true },
       },
@@ -31,12 +32,12 @@ export async function computeAverageScoutReport(
       case Metric.driverAbility:
         result[metric] = report.driverAbility;
         break;
-      case Metric.climbPoints:
-        result[metric] = endgameToPoints[report.climbResult];
+      case Metric.l1StartTime: //fix later
+        result[metric] = endgameToPoints[report.endgameClimbResult];
         break;
       case Metric.totalPoints:
         result[metric] =
-          endgameToPoints[report.climbResult] +
+          endgameToPoints[report.endgameClimbResult] +
           report.events.reduce((acc, cur) => acc + cur.points, 0);
         break;
       case Metric.teleopPoints:
@@ -45,9 +46,11 @@ export async function computeAverageScoutReport(
           .reduce((acc, cur) => acc + cur.points, 0);
         break;
       case Metric.autoPoints:
-        result[metric] = report.events
-          .filter((e) => e.time <= autoEnd)
-          .reduce((acc, cur) => acc + cur.points, 0);
+        result[metric] =
+          report.events
+            .filter((e) => e.time <= autoEnd)
+            .reduce((acc, cur) => acc + cur.points, 0) +
+          (report.autoClimbResult === AutoClimbResult.SUCCEEDED ? 10 : 0);
         break;
     }
   }

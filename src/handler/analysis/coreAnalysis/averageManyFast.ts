@@ -8,7 +8,7 @@ import {
   ttlConstant,
   allTournaments,
 } from "../analysisConstants.js";
-import { ClimbResult, Position, Prisma } from "@prisma/client";
+import { EndgameClimbResult, Position, Prisma } from "@prisma/client";
 import { endgameRuleOfSuccession } from "../picklist/endgamePicklistTeamFast.js";
 import { Event } from "@prisma/client";
 import { weightedTourAvgLeft } from "./arrayAndAverageTeams.js";
@@ -88,7 +88,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               },
             },
             driverAbility: true,
-            climbResult: true,
+            endgameClimbResult: true,
           },
         },
       },
@@ -101,7 +101,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
         endgamePoints: number[];
       }[];
       endgame: {
-        resultCount: Partial<Record<ClimbResult, number>>;
+        resultCount: Partial<Record<EndgameClimbResult, number>>;
         totalAttempts: number;
       };
     }
@@ -133,15 +133,17 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
         const currRowTournament = currRow.tournamentData[ti];
         currRowTournament.srEvents.push(sr.events);
         currRowTournament.driverAbility.push(sr.driverAbility);
-        currRowTournament.endgamePoints.push(endgameToPoints[sr.climbResult]);
+        currRowTournament.endgamePoints.push(
+          endgameToPoints[sr.endgameClimbResult]
+        );
 
         if (
-          args.metrics.includes(Metric.climbPoints) &&
-          sr.climbResult !== ClimbResult.NOT_ATTEMPTED
+          args.metrics.includes(Metric.l1StartTime) && // fix laterrrr
+          sr.endgameClimbResult !== EndgameClimbResult.NOT_ATTEMPTED
         ) {
           currRow.endgame.totalAttempts++;
-          currRow.endgame.resultCount[sr.climbResult] ||= 0;
-          currRow.endgame.resultCount[sr.climbResult]++;
+          currRow.endgame.resultCount[sr.endgameClimbResult] ||= 0;
+          currRow.endgame.resultCount[sr.endgameClimbResult]++;
         }
       }
     });
@@ -153,7 +155,8 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
     for (const metric of args.metrics) {
       let resultsByTournament: number[][] = [];
 
-      if (metric === Metric.climbPoints) {
+      if (metric === Metric.l1StartTime) {
+        // also fix laterrrr
         finalResults[String(metric)] = {};
         for (const team of args.teams) {
           finalResults[String(metric)][String(team)] = endgameRuleOfSuccession(

@@ -72,7 +72,8 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
       );
 
       // Endgame point prediction
-      if (metric === Metric.climbPoints) {
+      if (metric === Metric.l1StartTime) {
+        //fix later
         const result: Record<
           number,
           {
@@ -115,7 +116,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
         case Metric.totalPoints:
           srSelect = {
             events: { select: { points: true } },
-            climbResult: true,
+            endgameClimbResult: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
@@ -123,7 +124,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               sr.events.forEach((e) => {
                 total += e.points;
               });
-              total += endgameToPoints[sr.climbResult];
+              total += endgameToPoints[sr.endgameClimbResult];
             });
             return total / reports.length;
           };
@@ -135,7 +136,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               where: { time: { gt: autoEnd } },
               select: { points: true },
             },
-            climbResult: true,
+            endgameClimbResult: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;

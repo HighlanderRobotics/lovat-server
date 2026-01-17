@@ -9,10 +9,10 @@ import {
   Scouter,
   TeamMatchData,
   Event,
-  ClimbResult,
-  OverBump,
   RobotRole,
-  UnderTrench,
+  AutoClimbResult,
+  EndgameClimbResult,
+  FieldTraversal,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
@@ -40,9 +40,9 @@ export interface CondensedReport {
   depot: number;
   groundIntakes: number;
   fuelScored: number;
-  underTrench: boolean;
-  overBump: boolean;
-  endgame: string;
+  autoClimbResult: string;
+  endgameClimbResult: string;
+  fieldTraversal: string;
   scouter: string;
   notes: string;
 }
@@ -51,9 +51,9 @@ export interface CondensedReport {
 interface PointsReport {
   notes: string;
   robotRole: RobotRole;
-  climbResult: ClimbResult;
-  underTrench: UnderTrench;
-  overBump: OverBump;
+  endgameClimbResult: EndgameClimbResult;
+  autoClimbResult: AutoClimbResult;
+  fieldTraversal: FieldTraversal;
   driverAbility: number;
   shootingAccuracy: number;
   events: Partial<Event>[];
@@ -129,9 +129,9 @@ export const getReportCSV = async (
       select: {
         notes: true,
         robotRole: true,
-        climbResult: true,
-        underTrench: true,
-        overBump: true,
+        endgameClimbResult: true,
+        autoClimbResult: true,
+        fieldTraversal: true,
         driverAbility: true,
         shootingAccuracy: true,
         events: {
@@ -210,14 +210,14 @@ function condenseReport(
       report.teamMatchData.matchType.at(0) + report.teamMatchData.matchNumber,
     teamNumber: report.teamMatchData.teamNumber,
     role: report.robotRole,
-    underTrench: report.underTrench === UnderTrench.YES,
-    overBump: report.overBump === OverBump.YES,
     totalPoints: 0,
     feedsFromNeutral: 0,
     feedsFromOpponent: 0,
     campDefends: 0,
     blockDefends: 0,
     shootingAccuracy: report.shootingAccuracy,
+    autoClimbResult: report.autoClimbResult,
+    fieldTraversal: report.fieldTraversal,
     outpostIntakes: 0,
     outpostOuttakes: 0,
     fuelScored: 0,
@@ -226,7 +226,7 @@ function condenseReport(
     teleopPoints: 0,
     autoPoints: 0,
     driverAbility: report.driverAbility,
-    endgame: report.climbResult,
+    endgameClimbResult: report.endgameClimbResult,
     scouter: "",
     notes: report.notes.replace(/,/g, ";"), // Avoid commas in a csv...
   };
@@ -240,39 +240,20 @@ function condenseReport(
     }
 
     switch (event.action) {
-      case EventAction.FEED_NEUTRAL:
-        data.feedsFromNeutral += 1;
-        break;
-      case EventAction.FEED_OPPONENT:
-        data.feedsFromOpponent += 1;
-        break;
-      case EventAction.DEFEND_CAMP:
-        data.campDefends += 1;
-        break;
-      case EventAction.DEFEND_BLOCK:
-        data.blockDefends += 1;
-        break;
-      case EventAction.OUTPOST_INTAKE:
-        data.outpostIntakes += 1;
-        break;
-      case EventAction.OUTPOST_OUTTAKE:
-        data.outpostOuttakes += 1;
-        break;
-      case EventAction.DEPOT_INTAKE:
-        data.depot += 1;
-        break;
-      case EventAction.GROUND_INTAKE:
-        data.groundIntakes += 1;
-        break;
-      case EventAction.SCORE_FUEL:
-        data.fuelScored += 1;
+      case EventAction.START_FEEDING:
+        if (event.position === Position.NEUTRAL_ZONE) {
+          data.feedsFromNeutral += 1;
+        } else if (event.position === Position.FIRST_RUNG) {
+          data.feedsFromOpponent += 1;
+        }
         break;
     }
   });
 
   // Add stage points to total points
   if (includeTeleop && includeAuto) {
-    data.teleopPoints += endgameToPoints[data.endgame as ClimbResult];
+    data.teleopPoints +=
+      endgameToPoints[data.endgameClimbResult as EndgameClimbResult];
   }
 
   if (report.scouter.sourceTeamNumber === userTeam) {

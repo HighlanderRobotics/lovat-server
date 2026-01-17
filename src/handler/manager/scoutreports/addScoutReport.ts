@@ -10,11 +10,13 @@ import {
 import { addTournamentMatches } from "../addTournamentMatches.js";
 import {
   AutoClimbResult,
-  ClimbResult,
+  BeachedStatus,
+  EndgameClimbResult,
   EventAction,
-  OverBump,
+  FeederType,
+  FieldTraversal,
+  IntakeType,
   Position,
-  UnderTrench,
 } from "@prisma/client";
 import { MatchType, RobotRole } from "@prisma/client";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
@@ -34,15 +36,19 @@ export const addScoutReport = async (
         startTime: z.number(),
         notes: z.string(),
         robotRole: z.nativeEnum(RobotRole),
-        climb: z.nativeEnum(ClimbResult),
         autoClimbResult: z.nativeEnum(AutoClimbResult),
-        underTrench: z.nativeEnum(UnderTrench),
-        overBump: z.nativeEnum(OverBump),
+        endgameClimbResult: z.nativeEnum(EndgameClimbResult),
+        fieldTraversal: z.nativeEnum(FieldTraversal),
+        beachedStatus: z.nativeEnum(BeachedStatus),
+        feederType: z.nativeEnum(FeederType),
+        intakeType: z.nativeEnum(IntakeType),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
           .optional(),
         driverAbility: z.number(),
         shootingAccuracy: z.number(),
+        defenseEffectiveness: z.number(),
+        scoringWhileMoving: z.boolean(),
         scouterUuid: z.string(),
         teamNumber: z.number(),
       })
@@ -120,9 +126,13 @@ export const addScoutReport = async (
 
         //game specfific
         autoClimbResult: paramsScoutReport.autoClimbResult,
-        climbResult: paramsScoutReport.climb,
-        underTrench: paramsScoutReport.underTrench,
-        overBump: paramsScoutReport.overBump,
+        endgameClimbResult: paramsScoutReport.endgameClimbResult,
+        fieldTraversal: paramsScoutReport.fieldTraversal,
+        beachedStatus: paramsScoutReport.beachedStatus,
+        feederType: paramsScoutReport.feederType,
+        intakeType: paramsScoutReport.intakeType,
+        defenseEffectiveness: paramsScoutReport.defenseEffectiveness,
+        scoringWhileMoving: paramsScoutReport.scoringWhileMoving,
         shootingAccuracy: paramsScoutReport.shootingAccuracy,
       },
     });
@@ -146,14 +156,14 @@ export const addScoutReport = async (
       const action = EventActionMap[event[1]];
       const position = PositionMap[event[2]];
       if (time <= 18) {
-        if (action === EventAction.SCORE_FUEL) {
-          points = 1;
-        } else if (action === EventAction.AUTO_CLIMB) {
+        if (action === EventAction.STOP_SCORING) {
+          points = Number(action[3]);
+        } else if (action === EventAction.CLIMB) {
           points = 15;
         }
       } else {
-        if (action === EventAction.SCORE_FUEL) {
-          points = 1;
+        if (action === EventAction.STOP_SCORING) {
+          points = Number(action[3]);
         }
       }
 

@@ -12,13 +12,15 @@ import { addTournamentMatches } from "../addTournamentMatches.js";
 import { totalPointsScoutingLead } from "../../analysis/scoutingLead/totalPointsScoutingLead.js";
 import {
   AutoClimbResult,
-  ClimbResult,
+  BeachedStatus,
+  EndgameClimbResult,
   EventAction,
+  FeederType,
+  FieldTraversal,
+  IntakeType,
   MatchType,
-  OverBump,
   Position,
   RobotRole,
-  UnderTrench,
 } from "@prisma/client";
 import { invalidateCache } from "../../../lib/clearCache.js";
 
@@ -36,15 +38,19 @@ export const addScoutReportDashboard = async (
         startTime: z.number(),
         notes: z.string(),
         robotRole: z.nativeEnum(RobotRole),
-        climb: z.nativeEnum(ClimbResult),
         autoClimbResult: z.nativeEnum(AutoClimbResult),
-        underTrench: z.nativeEnum(UnderTrench),
-        overBump: z.nativeEnum(OverBump),
+        endgameClimbResult: z.nativeEnum(EndgameClimbResult),
+        fieldTraversal: z.nativeEnum(FieldTraversal),
+        beachedStatus: z.nativeEnum(BeachedStatus),
+        feederType: z.nativeEnum(FeederType),
+        intakeType: z.nativeEnum(IntakeType),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
           .optional(),
         driverAbility: z.number(),
         shootingAccuracy: z.number(),
+        defenseEffectiveness: z.number(),
+        scoringWhileMoving: z.boolean(),
         scouterUuid: z.string(),
         teamNumber: z.number(),
       })
@@ -121,10 +127,14 @@ export const addScoutReportDashboard = async (
         notes: paramsScoutReport.notes,
         robotRole: paramsScoutReport.robotRole,
         driverAbility: paramsScoutReport.driverAbility,
-        //game specfific
-        climbResult: paramsScoutReport.climb,
-        underTrench: paramsScoutReport.underTrench,
-        overBump: paramsScoutReport.overBump,
+        //game specific
+        endgameClimbResult: paramsScoutReport.endgameClimbResult,
+        fieldTraversal: paramsScoutReport.fieldTraversal,
+        beachedStatus: paramsScoutReport.beachedStatus,
+        feederType: paramsScoutReport.feederType,
+        intakeType: paramsScoutReport.intakeType,
+        defenseEffectiveness: paramsScoutReport.defenseEffectiveness,
+        scoringWhileMoving: paramsScoutReport.scoringWhileMoving,
         robotBrokeDescription: paramsScoutReport.robotBrokeDescription,
         shootingAccuracy: paramsScoutReport.shootingAccuracy,
         autoClimbResult: paramsScoutReport.autoClimbResult,
@@ -146,14 +156,14 @@ export const addScoutReportDashboard = async (
       const position = PositionMap[events[i][2]];
       const action = EventActionMap[events[i][1]];
       if (time <= 18) {
-        if (action === EventAction.SCORE_FUEL) {
-          points = 1;
-        } else if (action === EventAction.AUTO_CLIMB) {
+        if (action === EventAction.STOP_SCORING) {
+          points = Number(action[3]);
+        } else if (action === EventAction.CLIMB) {
           points = 15;
         }
       } else {
-        if (action === EventAction.SCORE_FUEL) {
-          points = 1;
+        if (action === EventAction.STOP_SCORING) {
+          points = Number(action[3]);
         }
       }
       const paramsEvents = z

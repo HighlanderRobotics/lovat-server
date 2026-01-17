@@ -9,9 +9,9 @@ import {
   Position,
   Scouter,
   Event,
-  ClimbResult,
-  UnderTrench,
-  OverBump,
+  FieldTraversal,
+  AutoClimbResult,
+  EndgameClimbResult,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
@@ -25,9 +25,9 @@ import { da } from "zod/locales";
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
   robotRole: RobotRole;
-  underTrench: UnderTrench;
-  overBump: OverBump;
-  climbResult: ClimbResult;
+  fieldTraversal: FieldTraversal;
+  endgameClimbResult: EndgameClimbResult;
+  autoClimbResult: AutoClimbResult;
   driverAbility: number;
   shootingAccuracy: number;
   events: Partial<Event>[];
@@ -107,9 +107,9 @@ export const getTeamMatchCSV = async (
           },
           select: {
             robotRole: true,
-            underTrench: true,
-            overBump: true,
-            climbResult: true,
+            endgameClimbResult: true,
+            autoClimbResult: true,
+            fieldTraversal: true,
             driverAbility: true,
             shootingAccuracy: true,
             events: {
@@ -236,46 +236,53 @@ function aggregateTeamMatchReports(
     depot: 0,
     groundIntakes: 0,
     fuelScored: 0,
-    underTrench: null,
-    overBump: null,
-    endgame: null,
+    autoClimbResult: null,
+    endgameClimbResult: null,
+    fieldTraversal: null,
     scouter: scouters.join(","),
   };
 
   // Out of scope iteration variables
   const roleCount: Record<RobotRole, number> = {
-    OFFENSE: 0,
-    DEFENSE: 0,
-    FEEDER: 0,
+    FEEDING: 0,
+    DEFENDING: 0,
+    SCORING: 0,
+    CYCLING: 0,
+    STEALING: 0,
     IMMOBILE: 0,
   };
-  const endgameCount: Record<ClimbResult, number> = {
-    LEFT_ONE: 0,
-    LEFT_TWO: 0,
-    LEFT_THREE: 0,
-    RIGHT_ONE: 0,
-    RIGHT_TWO: 0,
-    RIGHT_THREE: 0,
+  const endgameCount: Record<EndgameClimbResult, number> = {
+    LEVEL_ONE: 0,
+    LEVEL_TWO: 0,
+    LEVEL_THREE: 0,
+    FAILED: 0,
     NOT_ATTEMPTED: 0,
-    MIDDLE_ONE: 0,
-    MIDDLE_TWO: 0,
-    MIDDLE_THREE: 0,
-    BACK_ONE: 0,
-    BACK_TWO: 0,
-    BACK_THREE: 0,
   };
-
-  let trench: boolean = false;
-  let bump: boolean = false;
 
   reports.forEach((report) => {
     data.driverAbility += report.driverAbility;
     roleCount[report.robotRole]++;
-    endgameCount[report.climbResult]++;
+    endgameCount[report.endgameClimbResult]++;
 
-    // Set discrete robot capabilities
-    data.underTrench = report.underTrench === UnderTrench.YES;
-    data.overBump = report.overBump === OverBump.YES;
+    switch (report.fieldTraversal) {
+      case FieldTraversal.BUMP:
+        data.fieldTraversal =
+          data.fieldTraversal === FieldTraversal.TRENCH
+            ? FieldTraversal.BOTH
+            : FieldTraversal.BUMP;
+        break;
+      case FieldTraversal.TRENCH:
+        data.fieldTraversal =
+          data.fieldTraversal === FieldTraversal.BUMP
+            ? FieldTraversal.BOTH
+            : FieldTraversal.TRENCH;
+        break;
+      case FieldTraversal.BOTH:
+        data.fieldTraversal = FieldTraversal.BOTH;
+        break;
+    }
+
+    data.shootingAccuracy += report.shootingAccuracy;
 
     // Sum match points and actions
     report.events.forEach((event) => {
@@ -286,39 +293,12 @@ function aggregateTeamMatchReports(
       }
 
       switch (event.action) {
-        case EventAction.FEED_NEUTRAL:
-          data.feedsFromNeutral += 1;
-          break;
-        case EventAction.FEED_OPPONENT:
-          data.feedsFromOpponent += 1;
-          break;
-        case EventAction.DEFEND_CAMP:
-          data.campDefends += 1;
-          break;
-        case EventAction.DEFEND_BLOCK:
-          data.blockDefends += 1;
-          break;
-        case EventAction.OUTPOST_INTAKE:
-          data.outpostIntakes += 1;
-          break;
-        case EventAction.OUTPOST_OUTTAKE:
-          data.outpostOuttakes += 1;
-          break;
-        case EventAction.DEPOT_INTAKE:
-          data.depot += 1;
-          break;
-        case EventAction.GROUND_INTAKE:
-          data.groundIntakes += 1;
-          break;
-        case EventAction.SCORE_FUEL:
+        case EventAction.START_SCORING:
           data.fuelScored += 1;
           break;
       }
     });
   });
-
-  data.underTrench = trench;
-  data.overBump = bump;
 
   // Find highest-reported robot role and endgame interaction
   Object.entries(roleCount).reduce((highest, role) => {
@@ -333,7 +313,7 @@ function aggregateTeamMatchReports(
     // Using > gives precedence to earlier keys
     if (val[1] > most) {
       most = val[1];
-      data.endgame = val[0];
+      data.endgameClimbResult = val[0];
     }
     return most;
   }, 0);
@@ -365,7 +345,7 @@ function aggregateTeamMatchReports(
 
   // Add endgame points to total points
   if (includeTeleop && includeAuto) {
-    data.teleopPoints += endgameToPoints[data.endgame];
+    data.teleopPoints += endgameToPoints[data.endgameClimbResult];
   }
 
   return data;

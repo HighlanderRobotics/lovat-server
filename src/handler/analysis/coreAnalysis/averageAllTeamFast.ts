@@ -31,7 +31,8 @@ const config = {
     ctx: { user: { teamSourceRule: unknown; tournamentSourceRule: unknown } }
   ) => {
     const metric = args.metric;
-    if (metric === Metric.climbPoints) {
+    if (metric === Metric.l1StartTime) {
+      //fix later
       return defaultEndgamePoints;
     }
 
@@ -82,7 +83,7 @@ const config = {
       let avgEndgamePoints = 0;
       if (metric === Metric.totalPoints) {
         const climbResults = await prismaClient.scoutReport.groupBy({
-          by: "climbResult",
+          by: "endgameClimbResult",
           _count: { _all: true },
           where: {
             teamMatchData: { tournamentKey: sourceTnmtFilter },
@@ -92,7 +93,7 @@ const config = {
 
         climbResults.forEach((endgame) => {
           avgEndgamePoints +=
-            endgameToPoints[endgame.climbResult] * endgame._count._all;
+            endgameToPoints[endgame.endgameClimbResult] * endgame._count._all;
         });
         avgEndgamePoints /= climbResults.reduce(
           (acc, cur) => acc + cur._count._all,

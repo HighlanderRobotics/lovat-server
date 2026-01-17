@@ -44,7 +44,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       role: FlippedRoleMap[scoutReport.robotRole],
       // stage : stageMap[scoutReport.stage],
       // highNote : highNoteMap[scoutReport.highNote],
-      climb: ClimbResultReverseMap[scoutReport.climbResult],
+      climb: ClimbResultReverseMap[scoutReport.endgameClimbResult],
       autoPath: await autoPathScouter(ctx.user, {
         matchKey: scoutReport.teamMatchKey,
         scoutReportUuid: scoutReport.uuid,
