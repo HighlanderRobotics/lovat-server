@@ -8,6 +8,4 @@ export default async function deleteOldRequests(): Promise<void> {
       },
     },
   });
-  await prisma.scoutReport.deleteMany();
-  await prisma.slackNotificationThread.deleteMany();
 }
