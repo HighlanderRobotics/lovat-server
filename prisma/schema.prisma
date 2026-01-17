@@ -52,17 +52,23 @@ model ScoutReport {
   startTime             DateTime
   notes                 String
   robotRole             RobotRole
-  underTrench           UnderTrench
-  overBump              OverBump
-  climbResult           ClimbResult
-  autoClimbResult      AutoClimbResult
-  shootingAccuracy      Int
   robotBrokeDescription String?
   driverAbility         Int
   scouterUuid           String
   events                Event[]
   scouter               Scouter       @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
   teamMatchData         TeamMatchData @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+
+  // Year-specific
+  fieldTraversal        FieldTraversal
+  defenseEffectiveness Int
+  shootingAccuracy     Int
+  beachedStatus        BeachedStatus
+  autoClimbResult      AutoClimbResult
+  endgameClimbResult   EndgameClimbResult
+  feederType           FeederType
+  intakeType           IntakeType
+  scoringWhileMoving   Boolean
 }
 
 model ScouterScheduleShift {
@@ -223,16 +229,17 @@ model CachedAnalysis {
 }
 
 enum Position {
-  NONE
-  ALLIANCE_ZONE
-  DEPOT
-  OUTPOST
-  TOWER
-  NEUTRAL_ZONE
   LEFT_TRENCH
   LEFT_BUMP
+  HUB
   RIGHT_TRENCH
   RIGHT_BUMP
+  NEUTRAL_ZONE
+  DEPOT
+  OUTPOST
+  FIRST_RUNG
+  SECOND_RUNG
+  THIRD_RUNG
   START_A
   START_B
   START_C
@@ -241,28 +248,34 @@ enum Position {
 }
 
 enum EventAction {
-  GROUND_INTAKE
-  OUTPOST_INTAKE
-  OUTPOST_OUTTAKE
-  DEPOT_INTAKE
-  SCORE_FUEL
-  FEED_OPPONENT
-  FEED_NEUTRAL
-  DEFEND_CAMP
-  DEFEND_BLOCK
-  AUTO_CLIMB
-  CROSS_TERRAIN
-  START_POSITION
+  START_SCORING
+  STOP_SCORING
+  START_MATCH
+  START_CAMPING
+  STOP_CAMPING
+  START_DEFENDING
+  STOP_DEFENDING
+  INTAKE
+  OUTTAKE
+  DISRUPT
+  CROSS
+  CLIMB
+  START_FEEDING
+  STOP_FEEDING
 }
 
-enum UnderTrench {
-  NO
-  YES
+enum FieldTraversal {
+  TRENCH
+  BUMP
+  BOTH
+  NONE
 }
 
-enum OverBump {
-  NO
-  YES
+enum BeachedStatus {
+  ON_FUEL
+  ON_BUMP
+  BOTH
+  NEITHER
 }
 
 enum MatchType {
@@ -271,32 +284,39 @@ enum MatchType {
 }
 
 enum RobotRole {
-  OFFENSE
-  DEFENSE
-  FEEDER
+  CYCLING
+  STEALING
+  SCORING
+  FEEDING
+  DEFENDING
   IMMOBILE
+}
+
+enum EndgameClimbResult {
+  NOT_ATTEMPTED
+  FAILED
+  LEVEL_ONE
+  LEVEL_TWO
+  LEVEL_THREE
 }
 
 enum AutoClimbResult {
   NOT_ATTEMPTED
-  SUCCESS
   FAILED
+  SUCCEEDED
 }
 
-enum ClimbResult {
-  NOT_ATTEMPTED
-  LEFT_ONE
-  LEFT_TWO
-  LEFT_THREE
-  MIDDLE_ONE
-  MIDDLE_TWO
-  MIDDLE_THREE
-  RIGHT_ONE
-  RIGHT_TWO
-  RIGHT_THREE
-  BACK_ONE
-  BACK_TWO
-  BACK_THREE
+enum FeederType {
+  CONTINUOUS
+  STOP_TO_SHOOT
+  DUMP
+}
+
+enum IntakeType {
+  GROUND
+  OUTPOST
+  BOTH
+  NONE
 }
 
 enum WarningType {

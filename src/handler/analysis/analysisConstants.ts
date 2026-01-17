@@ -1,11 +1,14 @@
 import {
+  AutoClimbResult,
+  BeachedStatus,
+  EndgameClimbResult,
   EventAction,
+  FeederType,
   Position,
+  FieldTraversal,
   RobotRole,
   User,
-  ClimbResult,
-  OverBump,
-  UnderTrench,
+  IntakeType,
 } from "@prisma/client";
 import prismaClient from "../../prismaClient.js";
 import { DataSourceRule } from "./dataSourceRule.js";
@@ -18,130 +21,107 @@ const defaultEndgamePoints = 1.5;
 // General numeric metrics
 enum Metric {
   totalPoints,
-  climbPoints,
   autoPoints,
-  driverAbility,
   teleopPoints,
-  feedsFromNeutral,
-  feedsFromOpponent,
-  campDefends,
-  blockDefends,
-  shootingAccuracy,
+  fuelPerSecond,
+  accuracy,
+  volleysPerMatch,
+  l1StartTime,
+  l2StartTime,
+  l3StartTime,
+  autoClimbStartTime,
+  driverAbility,
+  contactDefenseTime,
+  defenseEffectiveness,
+  campingDefenseTime,
+  totalDefenseTime,
+  timeFeeding,
+  feedingRate,
+  feedsPerMatch,
+  totalFuelOutputted,
   outpostIntakes,
-  outpostOuttakes,
-  depot,
-  groundIntakes,
-  fuelScored,
 }
 
 // !!!IMPORTANT!!! toString() must return a property of ScoutReport
 // Metrics for discrete ScoutReport fields
 enum MetricsBreakdown {
-  robotRole = "robotRole",
-  underTrench = "underTrench",
-  overBump = "overBump",
-  climbResult = "climbResult",
+  robotRole,
+  fieldTraversal,
+  climbResult,
+  beached,
+  scoresWhileMoving,
+  autoClimb,
+  feederType,
+  disrupts,
+  intakeType,
 }
 
 // Ranking metrics
-const metricsCategory: Metric[] = [
-  Metric.totalPoints,
-  Metric.climbPoints,
-  Metric.driverAbility,
-  Metric.teleopPoints,
-  Metric.autoPoints,
-  Metric.feedsFromNeutral,
-  Metric.feedsFromOpponent,
-  Metric.shootingAccuracy,
-  Metric.outpostIntakes,
-  Metric.outpostOuttakes,
-  Metric.depot,
-  Metric.groundIntakes,
-  Metric.fuelScored,
-];
+const metricsCategory: Metric[] = [Metric.totalPoints];
 
 // To differentiate auton and teleop events, benefit of the doubt given to auto
 const autoEnd = 18;
 
-const specificMatchPageMetrics = [
-  Metric.feedsFromNeutral,
-  Metric.feedsFromOpponent,
-  Metric.shootingAccuracy,
-  Metric.outpostIntakes,
-  Metric.outpostOuttakes,
-  Metric.depot,
-  Metric.groundIntakes,
-  Metric.fuelScored,
-];
+const specificMatchPageMetrics = [];
 
 // Easy point calculation
-const endgameToPoints: Record<ClimbResult, number> = {
-  [ClimbResult.NOT_ATTEMPTED]: 0,
-  [ClimbResult.LEFT_ONE]: 10,
-  [ClimbResult.LEFT_TWO]: 20,
-  [ClimbResult.LEFT_THREE]: 30,
-  [ClimbResult.MIDDLE_ONE]: 10,
-  [ClimbResult.MIDDLE_TWO]: 20,
-  [ClimbResult.MIDDLE_THREE]: 30,
-  [ClimbResult.RIGHT_ONE]: 10,
-  [ClimbResult.RIGHT_TWO]: 20,
-  [ClimbResult.RIGHT_THREE]: 30,
-  [ClimbResult.BACK_ONE]: 10,
-  [ClimbResult.BACK_TWO]: 20,
-  [ClimbResult.BACK_THREE]: 30,
+const endgameToPoints: Record<EndgameClimbResult, number> = {
+  [EndgameClimbResult.NOT_ATTEMPTED]: 0,
+  [EndgameClimbResult.FAILED]: 0,
+  [EndgameClimbResult.LEVEL_ONE]: 10,
+  [EndgameClimbResult.LEVEL_TWO]: 20,
+  [EndgameClimbResult.LEVEL_THREE]: 30,
 };
 
 // Metrics that are analyzed by event count
 const metricToEvent: Partial<Record<Metric, EventAction>> = {
-  [Metric.feedsFromNeutral]: EventAction.FEED_NEUTRAL,
-  [Metric.feedsFromOpponent]: EventAction.FEED_OPPONENT,
-  [Metric.campDefends]: EventAction.DEFEND_CAMP,
-  [Metric.blockDefends]: EventAction.DEFEND_BLOCK,
-  [Metric.outpostIntakes]: EventAction.OUTPOST_INTAKE,
-  [Metric.outpostOuttakes]: EventAction.OUTPOST_OUTTAKE,
-  [Metric.depot]: EventAction.DEPOT_INTAKE,
-  [Metric.groundIntakes]: EventAction.GROUND_INTAKE,
-  [Metric.fuelScored]: EventAction.SCORE_FUEL,
+  [Metric.feedsPerMatch]: EventAction.START_FEEDING,
+  [Metric.volleysPerMatch]: EventAction.START_SCORING,
 };
 
 const FlippedRoleMap: Record<RobotRole, number> = {
-  [RobotRole.OFFENSE]: 0,
-  [RobotRole.DEFENSE]: 1,
-  [RobotRole.FEEDER]: 2,
-  [RobotRole.IMMOBILE]: 3,
+  [RobotRole.CYCLING]: 0,
+  [RobotRole.STEALING]: 1,
+  [RobotRole.SCORING]: 2,
+  [RobotRole.FEEDING]: 3,
+  [RobotRole.DEFENDING]: 4,
+  [RobotRole.IMMOBILE]: 5,
 };
 
 const FlippedActionMap: Record<EventAction, number> = {
-  [EventAction.SCORE_FUEL]: 0,
-  [EventAction.FEED_NEUTRAL]: 1,
-  [EventAction.FEED_OPPONENT]: 2,
-  [EventAction.DEFEND_CAMP]: 3,
-  [EventAction.DEFEND_BLOCK]: 4,
-  [EventAction.OUTPOST_INTAKE]: 5,
-  [EventAction.OUTPOST_OUTTAKE]: 6,
-  [EventAction.DEPOT_INTAKE]: 7,
-  [EventAction.GROUND_INTAKE]: 8,
-  [EventAction.AUTO_CLIMB]: 9,
-  [EventAction.CROSS_TERRAIN]: 10,
-  [EventAction.START_POSITION]: 11,
+  [EventAction.START_SCORING]: 0,
+  [EventAction.STOP_SCORING]: 1,
+  [EventAction.START_MATCH]: 2,
+  [EventAction.START_CAMPING]: 3,
+  [EventAction.STOP_CAMPING]: 4,
+  [EventAction.START_DEFENDING]: 5,
+  [EventAction.STOP_DEFENDING]: 6,
+  [EventAction.INTAKE]: 7,
+  [EventAction.OUTTAKE]: 8,
+  [EventAction.DISRUPT]: 9,
+  [EventAction.CROSS]: 10,
+  [EventAction.CLIMB]: 11,
+  [EventAction.START_FEEDING]: 12,
+  [EventAction.STOP_FEEDING]: 13,
 };
 
 const FlippedPositionMap: Record<Position, number> = {
-  [Position.NONE]: 0,
-  [Position.ALLIANCE_ZONE]: 1,
-  [Position.DEPOT]: 2,
-  [Position.OUTPOST]: 3,
-  [Position.TOWER]: 4,
+  [Position.LEFT_TRENCH]: 0,
+  [Position.LEFT_BUMP]: 1,
+  [Position.HUB]: 2,
+  [Position.RIGHT_TRENCH]: 3,
+  [Position.RIGHT_BUMP]: 4,
   [Position.NEUTRAL_ZONE]: 5,
-  [Position.LEFT_TRENCH]: 6,
-  [Position.LEFT_BUMP]: 7,
-  [Position.RIGHT_TRENCH]: 8,
-  [Position.RIGHT_BUMP]: 9,
-  [Position.START_A]: 10,
-  [Position.START_B]: 11,
-  [Position.START_C]: 8,
-  [Position.START_D]: 9,
-  [Position.START_E]: 10,
+  [Position.DEPOT]: 6,
+  [Position.OUTPOST]: 7,
+  [Position.FIRST_RUNG]: 8,
+  [Position.SECOND_RUNG]: 9,
+  [Position.THIRD_RUNG]: 10,
+  [Position.START_A]: 11,
+  [Position.START_B]: 12,
+  [Position.START_C]: 13,
+  [Position.START_D]: 14,
+  [Position.START_E]: 15,
 };
 
 const breakdownPos = "True";
@@ -149,52 +129,53 @@ const breakdownNeg = "False";
 
 const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
   robotrole: MetricsBreakdown.robotRole,
-  undertrench: MetricsBreakdown.underTrench,
-  overbump: MetricsBreakdown.overBump,
+  fieldtraversal: MetricsBreakdown.fieldTraversal,
+  beached: MetricsBreakdown.beached,
+  autoclimb: MetricsBreakdown.autoClimb,
   climbresult: MetricsBreakdown.climbResult,
+  feedertype: MetricsBreakdown.feederType,
+  scoreswhilemoving: MetricsBreakdown.scoresWhileMoving,
+  disrupts: MetricsBreakdown.disrupts,
+  intaketype: MetricsBreakdown.intakeType,
 };
 
 const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
   [MetricsBreakdown.robotRole]: [...Object.values(RobotRole)],
-  [MetricsBreakdown.underTrench]: [...Object.values(UnderTrench)],
-  [MetricsBreakdown.overBump]: [...Object.values(OverBump)],
-  [MetricsBreakdown.climbResult]: [...Object.values(ClimbResult)],
+  [MetricsBreakdown.fieldTraversal]: [...Object.values(FieldTraversal)],
+  [MetricsBreakdown.beached]: [...Object.values(BeachedStatus)],
+  [MetricsBreakdown.autoClimb]: [...Object.values(AutoClimbResult)],
+  [MetricsBreakdown.climbResult]: [...Object.values(EndgameClimbResult)],
+  [MetricsBreakdown.feederType]: [...Object.values(FeederType)],
+  [MetricsBreakdown.scoresWhileMoving]: [breakdownNeg, breakdownPos],
+  [MetricsBreakdown.disrupts]: [breakdownNeg, breakdownPos],
+  [MetricsBreakdown.intakeType]: [...Object.values(IntakeType)],
 };
 
 const metricsToNumber: Record<string, number> = {
   totalPoints: 0,
-  driverAbility: 1,
-  teleopPoints: 2,
-  autoPoints: 3,
-  feedsFromNeutral: 4,
-  feedsFromOpponent: 5,
-  campDefends: 6,
-  blockDefends: 7,
-  shootingAccuracy: 8,
-  outpostIntakes: 9,
-  outpostOuttakes: 10,
-  depot: 11,
-  groundIntakes: 12,
-  climbPoints: 13,
-  fuelScored: 14,
 };
 
 const metricToName: Record<Metric, string> = {
   [Metric.totalPoints]: "totalPoints",
-  [Metric.climbPoints]: "climbPoints",
-  [Metric.driverAbility]: "driverAbility",
-  [Metric.teleopPoints]: "teleopPoints",
   [Metric.autoPoints]: "autoPoints",
-  [Metric.feedsFromNeutral]: "feedsFromNeutral",
-  [Metric.feedsFromOpponent]: "feedsFromOpponent",
-  [Metric.campDefends]: "campDefends",
-  [Metric.blockDefends]: "blockDefends",
-  [Metric.shootingAccuracy]: "shootingAccuracy",
+  [Metric.teleopPoints]: "teleopPoints",
+  [Metric.fuelPerSecond]: "fuelPerSecond",
+  [Metric.accuracy]: "accuracy",
+  [Metric.volleysPerMatch]: "volleysPerMatch",
+  [Metric.l1StartTime]: "l1StartTime",
+  [Metric.l2StartTime]: "l2StartTime",
+  [Metric.l3StartTime]: "l3StartTime",
+  [Metric.autoClimbStartTime]: "autoClimbStartTime",
+  [Metric.driverAbility]: "driverAbility",
+  [Metric.contactDefenseTime]: "contactDefenseTime",
+  [Metric.defenseEffectiveness]: "defenseEffectiveness",
+  [Metric.campingDefenseTime]: "campingDefenseTime",
+  [Metric.totalDefenseTime]: "totalDefenseTime",
+  [Metric.timeFeeding]: "timeFeeding",
+  [Metric.feedingRate]: "feedingRate",
+  [Metric.feedsPerMatch]: "feedsPerMatch",
+  [Metric.totalFuelOutputted]: "totalFuelOutputted",
   [Metric.outpostIntakes]: "outpostIntakes",
-  [Metric.outpostOuttakes]: "outpostOuttakes",
-  [Metric.depot]: "depot",
-  [Metric.groundIntakes]: "groundIntakes",
-  [Metric.fuelScored]: "fuelScored",
 };
 
 // Translates between picklist parameters and metric enum
@@ -203,16 +184,14 @@ const picklistToMetric: Record<string, Metric> = {
   autopoints: Metric.autoPoints,
   teleoppoints: Metric.teleopPoints,
   driverability: Metric.driverAbility,
-  feedsfromneutral: Metric.feedsFromNeutral,
-  feedsfromopponent: Metric.feedsFromOpponent,
-  campdefends: Metric.campDefends,
-  blockdefends: Metric.blockDefends,
-  shootingaccuracy: Metric.shootingAccuracy,
+  defensiveeffectiveness: Metric.defenseEffectiveness,
+  accuracy: Metric.accuracy,
+  fuelpersecond: Metric.fuelPerSecond,
+  volleyspermatch: Metric.volleysPerMatch,
+  feedingrate: Metric.feedingRate,
+  feedspermatch: Metric.feedsPerMatch,
+  totalfueloutputted: Metric.totalFuelOutputted,
   outpostintakes: Metric.outpostIntakes,
-  outpostouttakes: Metric.outpostOuttakes,
-  depot: Metric.depot,
-  groundintakes: Metric.groundIntakes,
-  fuelscored: Metric.fuelScored,
 };
 
 // For occasional query optimizations
