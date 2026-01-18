@@ -152,6 +152,15 @@ const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
   intaketype: MetricsBreakdown.intakeType,
 };
 
+const accuracyToPercentage: Record<number, number> = {
+  0: 0,
+  1: 0.55,
+  2: 0.65,
+  3: 0.75,
+  4: 0.85,
+  5: 0.95,
+};
+
 const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
   [MetricsBreakdown.robotRole]: [...Object.values(RobotRole)],
   [MetricsBreakdown.mobility]: [...Object.values(Mobility)],

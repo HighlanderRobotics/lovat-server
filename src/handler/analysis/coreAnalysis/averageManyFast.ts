@@ -38,7 +38,8 @@ function firstEventTime(
   predicate: (e: Event) => boolean,
 ): number | null {
   const evt = events.filter(predicate).sort((a, b) => a.time - b.time)[0];
-  return evt ? evt.time : null;
+  if (!evt) return null;
+  return evt.time;
 }
 /* ------------------------------------------------------- */
 
@@ -123,7 +124,9 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               if (r.autoClimb !== AutoClimb.SUCCEEDED) return null;
               return firstEventTime(r.events, (e) => e.action === "CLIMB");
             });
-            tournamentValue = avgNonNull(times);
+            const nonNullTimes = times.filter((t): t is number => t !== null);
+            if (nonNullTimes.length === 0) continue;
+            tournamentValue = avg(nonNullTimes);
             break;
           }
 
@@ -145,7 +148,9 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               );
             });
 
-            tournamentValue = avgNonNull(times);
+            const nonNullTimes = times.filter((t): t is number => t !== null);
+            if (nonNullTimes.length === 0) continue;
+            tournamentValue = avg(nonNullTimes);
             break;
           }
 
@@ -279,9 +284,9 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
 
       finalResults[String(metric)] = {};
       for (const team of args.teams) {
-        finalResults[String(metric)][String(team)] = weightedTourAvgLeft(
-          resultsByTeam[team],
-        );
+        const teamResults = resultsByTeam[team];
+        finalResults[String(metric)][String(team)] =
+          teamResults.length > 0 ? weightedTourAvgLeft(teamResults) : NaN;
       }
     }
 
