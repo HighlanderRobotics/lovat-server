@@ -50,6 +50,7 @@ export const addScoutReport = async (
           .optional(),
         driverAbility: z.number(),
         accuracy: z.number(),
+        disrupts: z.boolean(),
         defenseEffectiveness: z.number(),
         scoresWhileMoving: z.boolean(),
         autoClimb: z.nativeEnum(AutoClimb),
@@ -142,6 +143,7 @@ export const addScoutReport = async (
         climbPosition: paramsScoutReport.climbPosition,
         climbSide: paramsScoutReport.climbSide,
         endgameClimb: paramsScoutReport.endgameClimb,
+        disrupts: paramsScoutReport.disrupts,
       },
     });
 
