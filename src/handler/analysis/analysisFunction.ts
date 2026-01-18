@@ -43,12 +43,12 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
 
   const roundAllNumbers = <T>(val: T): T => {
     if (val === null || val === undefined) return val;
-    if (typeof val === "number") return Math.round(val * 100) / 100 as T;
+    if (typeof val === "number") return (Math.round(val * 100) / 100) as T;
     if (Array.isArray(val)) return val.map(roundAllNumbers) as T;
     if (typeof val === "object") {
       const out: Record<string, unknown> = {};
       for (const k of Object.keys(val as Record<string, unknown>)) {
-      out[k] = roundAllNumbers((val as Record<string, unknown>)[k]);
+        out[k] = roundAllNumbers((val as Record<string, unknown>)[k]);
       }
       return out as T;
     }

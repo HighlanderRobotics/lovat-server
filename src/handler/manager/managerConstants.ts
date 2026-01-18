@@ -3,7 +3,7 @@ import {
   Position,
   RobotRole,
   MatchType,
-  EndgameClimbResult,
+  EndgameClimb,
 } from "@prisma/client";
 
 const EventActionMap: Record<number, EventAction> = {
@@ -31,38 +31,30 @@ const PositionMap: Record<number, Position> = {
   5: Position.NEUTRAL_ZONE,
   6: Position.DEPOT,
   7: Position.OUTPOST,
-  8: Position.FIRST_RUNG,
-  9: Position.SECOND_RUNG,
-  10: Position.THIRD_RUNG,
-  11: Position.START_A,
-  12: Position.START_B,
-  13: Position.START_C,
-  14: Position.START_D,
-  15: Position.START_E,
+  8: Position.NONE,
 };
 const RobotRoleMap: Record<number, RobotRole> = {
   0: RobotRole.CYCLING,
-  1: RobotRole.STEALING,
-  2: RobotRole.SCORING,
-  3: RobotRole.FEEDING,
-  4: RobotRole.DEFENDING,
-  5: RobotRole.IMMOBILE,
+  1: RobotRole.SCORING,
+  2: RobotRole.FEEDING,
+  3: RobotRole.DEFENDING,
+  4: RobotRole.IMMOBILE,
 };
 
-const ClimbResultMap: Record<number, EndgameClimbResult> = {
-  0: EndgameClimbResult.NOT_ATTEMPTED,
-  1: EndgameClimbResult.LEVEL_ONE,
-  2: EndgameClimbResult.LEVEL_TWO,
-  3: EndgameClimbResult.LEVEL_THREE,
-  4: EndgameClimbResult.FAILED,
+const EndgameClimbMap: Record<number, EndgameClimb> = {
+  0: EndgameClimb.NOT_ATTEMPTED,
+  1: EndgameClimb.L1,
+  2: EndgameClimb.L2,
+  3: EndgameClimb.L3,
+  4: EndgameClimb.FAILED,
 };
 
-const ClimbResultReverseMap: Record<EndgameClimbResult, number> = {
-  [EndgameClimbResult.NOT_ATTEMPTED]: 0,
-  [EndgameClimbResult.LEVEL_ONE]: 1,
-  [EndgameClimbResult.LEVEL_TWO]: 2,
-  [EndgameClimbResult.LEVEL_THREE]: 3,
-  [EndgameClimbResult.FAILED]: 4,
+const EndgameClimbReverseMap: Record<EndgameClimb, number> = {
+  [EndgameClimb.NOT_ATTEMPTED]: 0,
+  [EndgameClimb.L1]: 1,
+  [EndgameClimb.L2]: 2,
+  [EndgameClimb.L3]: 3,
+  [EndgameClimb.FAILED]: 4,
 };
 
 const MatchTypeMap: Record<number, MatchType> = {
@@ -102,12 +94,12 @@ export {
   EventActionMap,
   PositionMap,
   RobotRoleMap,
-  ClimbResultMap,
+  EndgameClimbMap,
   MatchTypeMap,
   ScouterScheduleMap,
   ReverseMatchTypeMap,
   ReverseScouterScheduleMap,
   MatchTypeToAbrivation,
   MatchEnumToAbrivation,
-  ClimbResultReverseMap,
+  EndgameClimbReverseMap,
 };

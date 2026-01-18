@@ -12,18 +12,18 @@ export async function sendWarningToSlack(
   matchNumber: number,
   teamNumber: number,
   tournamentKey: string,
-  reportUuid: string
+  reportUuid: string,
 ): Promise<void> {
   try {
     const upcomingAlliancePartners = await getUpcomingAlliancePartners(
       teamNumber,
       matchNumber,
-      tournamentKey
+      tournamentKey,
     );
 
     const channels = await getSlackChannels(
       upcomingAlliancePartners.map((x) => x[0]),
-      warning
+      warning,
     );
 
     const report = await prismaClient.scoutReport.findUnique({
@@ -40,7 +40,7 @@ export async function sendWarningToSlack(
 
       // Locate the upcoming match number for the workspace's team; fall back to a generic label if missing.
       const partnerMatch = upcomingAlliancePartners.find(
-        ([partnerTeam]) => partnerTeam === channel.workspace.owner
+        ([partnerTeam]) => partnerTeam === channel.workspace.owner,
       );
       const partnerMatchLabel = partnerMatch?.[1]
         ? `Q${partnerMatch[1]}`
@@ -110,7 +110,7 @@ export async function sendWarningToSlack(
 async function getUpcomingAlliances(
   team: number,
   match: number,
-  tournamentKey: string
+  tournamentKey: string,
 ) {
   return (
     await prismaClient.teamMatchData.findMany({
@@ -129,12 +129,12 @@ async function getUpcomingAlliances(
 async function getUpcomingAlliancePartners(
   team: number,
   match: number,
-  tournamentKey: string
+  tournamentKey: string,
 ) {
   const upcomingAlliances = await getUpcomingAlliances(
     team,
     match,
-    tournamentKey
+    tournamentKey,
   );
 
   const allianceByMatch = new Map<number, boolean>(upcomingAlliances);
@@ -182,7 +182,7 @@ async function getUpcomingAlliancePartners(
 // finds all slack channels in workspaces owned by teams in upcomingAlliancePartners and that subscribed to warning
 async function getSlackChannels(
   upcomingAlliancePartners: number[],
-  warning: WarningType
+  warning: WarningType,
 ) {
   return prismaClient.slackSubscription.findMany({
     where: {

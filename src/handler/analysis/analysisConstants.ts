@@ -1,14 +1,14 @@
 import {
-  AutoClimbResult,
-  BeachedStatus,
-  EndgameClimbResult,
+  AutoClimb,
+  EndgameClimb,
   EventAction,
   FeederType,
   Position,
-  FieldTraversal,
   RobotRole,
   User,
   IntakeType,
+  Mobility,
+  Beached,
 } from "@prisma/client";
 import prismaClient from "../../prismaClient.js";
 import { DataSourceRule } from "./dataSourceRule.js";
@@ -46,8 +46,8 @@ enum Metric {
 // Metrics for discrete ScoutReport fields
 enum MetricsBreakdown {
   robotRole,
-  fieldTraversal,
-  climbResult,
+  mobility,
+  endgameClimb,
   beached,
   scoresWhileMoving,
   autoClimb,
@@ -57,7 +57,28 @@ enum MetricsBreakdown {
 }
 
 // Ranking metrics
-const metricsCategory: Metric[] = [Metric.totalPoints];
+const metricsCategory: Metric[] = [
+  Metric.totalPoints,
+  Metric.autoPoints,
+  Metric.teleopPoints,
+  Metric.fuelPerSecond,
+  Metric.accuracy,
+  Metric.volleysPerMatch,
+  Metric.l1StartTime,
+  Metric.l2StartTime,
+  Metric.l3StartTime,
+  Metric.autoClimbStartTime,
+  Metric.driverAbility,
+  Metric.contactDefenseTime,
+  Metric.defenseEffectiveness,
+  Metric.campingDefenseTime,
+  Metric.totalDefenseTime,
+  Metric.timeFeeding,
+  Metric.feedingRate,
+  Metric.feedsPerMatch,
+  Metric.totalFuelOutputted,
+  Metric.outpostIntakes,
+];
 
 // To differentiate auton and teleop events, benefit of the doubt given to auto
 const autoEnd = 18;
@@ -65,12 +86,12 @@ const autoEnd = 18;
 const specificMatchPageMetrics = [];
 
 // Easy point calculation
-const endgameToPoints: Record<EndgameClimbResult, number> = {
-  [EndgameClimbResult.NOT_ATTEMPTED]: 0,
-  [EndgameClimbResult.FAILED]: 0,
-  [EndgameClimbResult.LEVEL_ONE]: 10,
-  [EndgameClimbResult.LEVEL_TWO]: 20,
-  [EndgameClimbResult.LEVEL_THREE]: 30,
+const endgameToPoints: Record<EndgameClimb, number> = {
+  [EndgameClimb.NOT_ATTEMPTED]: 0,
+  [EndgameClimb.FAILED]: 0,
+  [EndgameClimb.L1]: 10,
+  [EndgameClimb.L2]: 20,
+  [EndgameClimb.L3]: 30,
 };
 
 // Metrics that are analyzed by event count
@@ -81,11 +102,10 @@ const metricToEvent: Partial<Record<Metric, EventAction>> = {
 
 const FlippedRoleMap: Record<RobotRole, number> = {
   [RobotRole.CYCLING]: 0,
-  [RobotRole.STEALING]: 1,
-  [RobotRole.SCORING]: 2,
-  [RobotRole.FEEDING]: 3,
-  [RobotRole.DEFENDING]: 4,
-  [RobotRole.IMMOBILE]: 5,
+  [RobotRole.SCORING]: 1,
+  [RobotRole.FEEDING]: 2,
+  [RobotRole.DEFENDING]: 3,
+  [RobotRole.IMMOBILE]: 4,
 };
 
 const FlippedActionMap: Record<EventAction, number> = {
@@ -114,14 +134,7 @@ const FlippedPositionMap: Record<Position, number> = {
   [Position.NEUTRAL_ZONE]: 5,
   [Position.DEPOT]: 6,
   [Position.OUTPOST]: 7,
-  [Position.FIRST_RUNG]: 8,
-  [Position.SECOND_RUNG]: 9,
-  [Position.THIRD_RUNG]: 10,
-  [Position.START_A]: 11,
-  [Position.START_B]: 12,
-  [Position.START_C]: 13,
-  [Position.START_D]: 14,
-  [Position.START_E]: 15,
+  [Position.NONE]: 8,
 };
 
 const breakdownPos = "True";
@@ -129,10 +142,10 @@ const breakdownNeg = "False";
 
 const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
   robotrole: MetricsBreakdown.robotRole,
-  fieldtraversal: MetricsBreakdown.fieldTraversal,
+  mobility: MetricsBreakdown.mobility,
   beached: MetricsBreakdown.beached,
   autoclimb: MetricsBreakdown.autoClimb,
-  climbresult: MetricsBreakdown.climbResult,
+  climbresult: MetricsBreakdown.endgameClimb,
   feedertype: MetricsBreakdown.feederType,
   scoreswhilemoving: MetricsBreakdown.scoresWhileMoving,
   disrupts: MetricsBreakdown.disrupts,
@@ -141,18 +154,37 @@ const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
 
 const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
   [MetricsBreakdown.robotRole]: [...Object.values(RobotRole)],
-  [MetricsBreakdown.fieldTraversal]: [...Object.values(FieldTraversal)],
-  [MetricsBreakdown.beached]: [...Object.values(BeachedStatus)],
-  [MetricsBreakdown.autoClimb]: [...Object.values(AutoClimbResult)],
-  [MetricsBreakdown.climbResult]: [...Object.values(EndgameClimbResult)],
-  [MetricsBreakdown.feederType]: [...Object.values(FeederType)],
+  [MetricsBreakdown.mobility]: [...Object.values(Mobility)],
+  [MetricsBreakdown.endgameClimb]: [...Object.values(EndgameClimb)],
+  [MetricsBreakdown.beached]: [...Object.values(Beached)],
   [MetricsBreakdown.scoresWhileMoving]: [breakdownNeg, breakdownPos],
+  [MetricsBreakdown.autoClimb]: [...Object.values(AutoClimb)],
+  [MetricsBreakdown.feederType]: [...Object.values(FeederType)],
   [MetricsBreakdown.disrupts]: [breakdownNeg, breakdownPos],
   [MetricsBreakdown.intakeType]: [...Object.values(IntakeType)],
 };
 
 const metricsToNumber: Record<string, number> = {
   totalPoints: 0,
+  autoPoints: 1,
+  teleopPoints: 2,
+  fuelPerSecond: 3,
+  accuracy: 4,
+  volleysPerMatch: 5,
+  l1StartTime: 6,
+  l2StartTime: 7,
+  l3StartTime: 8,
+  autoClimbStartTime: 9,
+  driverAbility: 10,
+  contactDefenseTime: 11,
+  defenseEffectiveness: 12,
+  campingDefenseTime: 13,
+  totalDefenseTime: 14,
+  timeFeeding: 15,
+  feedingRate: 16,
+  feedsPerMatch: 17,
+  totalFuelOutputted: 18,
+  outpostIntakes: 19,
 };
 
 const metricToName: Record<Metric, string> = {
@@ -180,18 +212,17 @@ const metricToName: Record<Metric, string> = {
 
 // Translates between picklist parameters and metric enum
 const picklistToMetric: Record<string, Metric> = {
-  totalpoints: Metric.totalPoints,
-  autopoints: Metric.autoPoints,
-  teleoppoints: Metric.teleopPoints,
-  driverability: Metric.driverAbility,
-  defensiveeffectiveness: Metric.defenseEffectiveness,
-  accuracy: Metric.accuracy,
-  fuelpersecond: Metric.fuelPerSecond,
-  volleyspermatch: Metric.volleysPerMatch,
-  feedingrate: Metric.feedingRate,
-  feedspermatch: Metric.feedsPerMatch,
-  totalfueloutputted: Metric.totalFuelOutputted,
-  outpostintakes: Metric.outpostIntakes,
+  totalPoints: Metric.totalPoints,
+  autoPoints: Metric.autoPoints,
+  teleopPoints: Metric.teleopPoints,
+  autoClimb: Metric.autoClimbStartTime,
+  defenseEffectiveness: Metric.defenseEffectiveness,
+  contactDefenseTime: Metric.contactDefenseTime,
+  campingDefenseTime: Metric.campingDefenseTime,
+  totalDefensiveTime: Metric.totalDefenseTime,
+  totalFuelThroughput: Metric.totalFuelOutputted,
+  feedingRate: Metric.feedingRate,
+  scoringRate: Metric.fuelPerSecond,
 };
 
 // For occasional query optimizations

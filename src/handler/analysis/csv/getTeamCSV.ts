@@ -8,9 +8,9 @@ import {
   EventAction,
   Position,
   Event,
-  EndgameClimbResult,
-  AutoClimbResult,
-  FieldTraversal,
+  AutoClimb,
+  Mobility,
+  EndgameClimb,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
@@ -24,7 +24,7 @@ interface AggregatedTeamData {
   teamNumber: number;
   mainRole: string;
   secondaryRole: string;
-  fieldTraversal: string;
+  mobility: string;
   avgFuelScored: number;
   avgFeedsFromNeutral: number;
   avgFeedsFromOpponent: number;
@@ -52,10 +52,10 @@ interface AggregatedTeamData {
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
   robotRole: RobotRole;
-  endgameClimbResult: EndgameClimbResult;
-  autoClimbResult: AutoClimbResult;
-  fieldTraversal: FieldTraversal;
-  shootingAccuracy: number;
+  endgameClimb: EndgameClimb;
+  autoClimb: AutoClimb;
+  mobility: Mobility;
+  accuracy: number;
   driverAbility: number;
   events: Partial<Event>[];
   // This property represents the weighting of this report in the final aggregation [0..1]
@@ -69,7 +69,7 @@ interface PointsReport {
  */
 export const getTeamCSV = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     if (req.user.role !== UserRole.SCOUTING_LEAD) {
@@ -126,16 +126,16 @@ export const getTeamCSV = async (
           where: {
             scouter: {
               sourceTeamNumber: dataSourceRuleToPrismaFilter(
-                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule)
+                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
               ),
             },
           },
           select: {
             robotRole: true,
-            shootingAccuracy: true,
-            endgameClimbResult: true,
-            autoClimbResult: true,
-            fieldTraversal: true,
+            accuracy: true,
+            endgameClimb: true,
+            autoClimb: true,
+            mobility: true,
             driverAbility: true,
             events: {
               where: eventTimeFilter,
@@ -173,7 +173,7 @@ export const getTeamCSV = async (
       // Push reports for team from match
       cur.scoutReports.forEach((element) => {
         acc[cur.teamNumber].reports.push(
-          Object.assign({ weight: 1 / cur.scoutReports.length }, element)
+          Object.assign({ weight: 1 / cur.scoutReports.length }, element),
         );
       });
 
@@ -189,8 +189,8 @@ export const getTeamCSV = async (
           group.numMatches,
           group.reports,
           includeAuto,
-          includeTeleop
-        )
+          includeTeleop,
+        ),
       );
     });
 
@@ -224,13 +224,13 @@ function aggregateTeamReports(
   numMatches: number,
   reports: PointsReport[],
   includeAuto: boolean,
-  includeTeleop: boolean
+  includeTeleop: boolean,
 ): AggregatedTeamData {
   const data: AggregatedTeamData = {
     teamNumber: teamNum,
     mainRole: null,
     secondaryRole: null,
-    fieldTraversal: null,
+    mobility: null,
     avgTeleopPoints: 0,
     avgAutoPoints: 0,
     avgDriverAbility: 0,
@@ -258,7 +258,6 @@ function aggregateTeamReports(
   // Out of scope iteration variables
   const roles: Record<RobotRole, number> = {
     FEEDING: 0,
-    STEALING: 0,
     SCORING: 0,
     DEFENDING: 0,
     CYCLING: 0,
@@ -273,39 +272,35 @@ function aggregateTeamReports(
 
     // Set discrete robot capabilities
     // Implement a safety for this? One incorrect report could mess up the data
-    switch (report.fieldTraversal) {
-      case FieldTraversal.TRENCH:
-        data.fieldTraversal =
-          data.fieldTraversal === FieldTraversal.BUMP
-            ? FieldTraversal.BOTH
-            : FieldTraversal.TRENCH;
+    switch (report.mobility) {
+      case Mobility.TRENCH:
+        data.mobility =
+          data.mobility === Mobility.BUMP ? Mobility.BOTH : Mobility.TRENCH;
         break;
-      case FieldTraversal.BUMP:
-        data.fieldTraversal =
-          data.fieldTraversal === FieldTraversal.TRENCH
-            ? FieldTraversal.BOTH
-            : FieldTraversal.BUMP;
+      case Mobility.BUMP:
+        data.mobility =
+          data.mobility === Mobility.TRENCH ? Mobility.BOTH : Mobility.BUMP;
         break;
-      case FieldTraversal.BOTH:
-        data.fieldTraversal = FieldTraversal.BOTH;
+      case Mobility.BOTH:
+        data.mobility = Mobility.BOTH;
         break;
     }
 
     // Sum endgame results
-    switch (report.endgameClimbResult) {
-      case EndgameClimbResult.LEVEL_ONE:
+    switch (report.endgameClimb) {
+      case EndgameClimb.L1:
         data.percClimbOne += report.weight;
         break;
-      case EndgameClimbResult.LEVEL_TWO:
+      case EndgameClimb.L2:
         data.percClimbTwo += report.weight;
         break;
-      case EndgameClimbResult.LEVEL_THREE:
+      case EndgameClimb.L3:
         data.percClimbThree += report.weight;
         break;
-      case EndgameClimbResult.FAILED:
+      case EndgameClimb.FAILED:
         data.percClimbFailed += report.weight;
         break;
-      case EndgameClimbResult.NOT_ATTEMPTED:
+      case EndgameClimb.NOT_ATTEMPTED:
         data.percNoClimb += report.weight;
         break;
     }
@@ -322,8 +317,6 @@ function aggregateTeamReports(
         case EventAction.START_FEEDING:
           if (event.position === Position.NEUTRAL_ZONE) {
             data.avgFeedsFromNeutral += 1 * report.weight;
-          } else if (event.position === Position.FIRST_RUNG) {
-            data.avgFeedsFromOpponent += 1 * report.weight;
           }
           break;
       }
@@ -356,7 +349,7 @@ function aggregateTeamReports(
 
       return highestOccurences;
     },
-    [0, 0]
+    [0, 0],
   );
 
   // Failsafe if robot lacks reports for enough roles
@@ -375,43 +368,43 @@ function aggregateTeamReports(
   data.avgAutoPoints = roundToHundredth(data.avgAutoPoints / numMatches);
   data.avgDriverAbility = roundToHundredth(data.avgDriverAbility / numMatches);
   data.avgShootingAccuracy = roundToHundredth(
-    data.avgShootingAccuracy / numMatches
+    data.avgShootingAccuracy / numMatches,
   );
   data.avgFuelScored = roundToHundredth(data.avgFuelScored / numMatches);
   data.avgFeedsFromNeutral = roundToHundredth(
-    data.avgFeedsFromNeutral / numMatches
+    data.avgFeedsFromNeutral / numMatches,
   );
   data.avgFeedsFromOpponent = roundToHundredth(
-    data.avgFeedsFromOpponent / numMatches
+    data.avgFeedsFromOpponent / numMatches,
   );
   data.avgBlockDefends = roundToHundredth(data.avgBlockDefends / numMatches);
   data.avgCampDefends = roundToHundredth(data.avgCampDefends / numMatches);
   data.avgDepotIntakes = roundToHundredth(data.avgDepotIntakes / numMatches);
   data.avgGroundIntakes = roundToHundredth(data.avgGroundIntakes / numMatches);
   data.avgOutpostIntakes = roundToHundredth(
-    data.avgOutpostIntakes / numMatches
+    data.avgOutpostIntakes / numMatches,
   );
   data.avgOutpostOuttakes = roundToHundredth(
-    data.avgOutpostOuttakes / numMatches
+    data.avgOutpostOuttakes / numMatches,
   );
 
   // Convert climb counts to percentages
   data.percClimbOne = roundToHundredth((data.percClimbOne / numMatches) * 100);
   data.percClimbTwo = roundToHundredth((data.percClimbTwo / numMatches) * 100);
   data.percClimbThree = roundToHundredth(
-    (data.percClimbThree / numMatches) * 100
+    (data.percClimbThree / numMatches) * 100,
   );
   data.percAutoClimb = roundToHundredth(
-    (data.percAutoClimb / numMatches) * 100
+    (data.percAutoClimb / numMatches) * 100,
   );
   data.percNoClimb = roundToHundredth((data.percNoClimb / numMatches) * 100);
 
   // Add endgame points to total points
   if (includeTeleop && includeAuto) {
     data.avgTeleopPoints +=
-      (data.percClimbOne * endgameToPoints[EndgameClimbResult.LEVEL_ONE] +
-        data.percClimbTwo * endgameToPoints[EndgameClimbResult.LEVEL_TWO] +
-        data.percClimbThree * endgameToPoints[EndgameClimbResult.LEVEL_THREE]) /
+      (data.percClimbOne * endgameToPoints[EndgameClimb.L1] +
+        data.percClimbTwo * endgameToPoints[EndgameClimb.L2] +
+        data.percClimbThree * endgameToPoints[EndgameClimb.L3]) /
       100;
   }
 

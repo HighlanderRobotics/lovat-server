@@ -11,16 +11,18 @@ import {
 import { addTournamentMatches } from "../addTournamentMatches.js";
 import { totalPointsScoutingLead } from "../../analysis/scoutingLead/totalPointsScoutingLead.js";
 import {
-  AutoClimbResult,
-  BeachedStatus,
-  EndgameClimbResult,
+  AutoClimb,
+  Beached,
+  EndgameClimb,
   EventAction,
   FeederType,
-  FieldTraversal,
   IntakeType,
   MatchType,
   Position,
   RobotRole,
+  Mobility,
+  ClimbPosition,
+  ClimbSide,
 } from "@prisma/client";
 import { invalidateCache } from "../../../lib/clearCache.js";
 
@@ -37,20 +39,22 @@ export const addScoutReportDashboard = async (
         matchNumber: z.number(),
         startTime: z.number(),
         notes: z.string(),
-        robotRole: z.nativeEnum(RobotRole),
-        autoClimbResult: z.nativeEnum(AutoClimbResult),
-        endgameClimbResult: z.nativeEnum(EndgameClimbResult),
-        fieldTraversal: z.nativeEnum(FieldTraversal),
-        beachedStatus: z.nativeEnum(BeachedStatus),
+        robotRoles: z.array(z.nativeEnum(RobotRole)),
+        autoClimb: z.nativeEnum(AutoClimb),
+        endgameClimb: z.nativeEnum(EndgameClimb),
+        beached: z.nativeEnum(Beached),
         feederType: z.nativeEnum(FeederType),
         intakeType: z.nativeEnum(IntakeType),
+        mobility: z.nativeEnum(Mobility),
+        climbPosition: z.nativeEnum(ClimbPosition).optional(),
+        climbSide: z.nativeEnum(ClimbSide).optional(),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
           .optional(),
         driverAbility: z.number(),
-        shootingAccuracy: z.number(),
+        accuracy: z.number(),
         defenseEffectiveness: z.number(),
-        scoringWhileMoving: z.boolean(),
+        scoresWhileMoving: z.boolean(),
         scouterUuid: z.string(),
         teamNumber: z.number(),
       })
@@ -125,19 +129,22 @@ export const addScoutReportDashboard = async (
         startTime: new Date(paramsScoutReport.startTime),
         scouterUuid: paramsScoutReport.scouterUuid,
         notes: paramsScoutReport.notes,
-        robotRole: paramsScoutReport.robotRole,
+        // Store first role for compatibility
+        robotRole: paramsScoutReport.robotRoles[0],
         driverAbility: paramsScoutReport.driverAbility,
         //game specific
-        endgameClimbResult: paramsScoutReport.endgameClimbResult,
-        fieldTraversal: paramsScoutReport.fieldTraversal,
-        beachedStatus: paramsScoutReport.beachedStatus,
+        endgameClimb: paramsScoutReport.endgameClimb,
+        beached: paramsScoutReport.beached,
         feederType: paramsScoutReport.feederType,
         intakeType: paramsScoutReport.intakeType,
+        mobility: paramsScoutReport.mobility,
         defenseEffectiveness: paramsScoutReport.defenseEffectiveness,
-        scoringWhileMoving: paramsScoutReport.scoringWhileMoving,
-        robotBrokeDescription: paramsScoutReport.robotBrokeDescription,
-        shootingAccuracy: paramsScoutReport.shootingAccuracy,
-        autoClimbResult: paramsScoutReport.autoClimbResult,
+        scoresWhileMoving: paramsScoutReport.scoresWhileMoving,
+        robotBrokeDescription: paramsScoutReport.robotBrokeDescription ?? null,
+        accuracy: paramsScoutReport.accuracy,
+        autoClimb: paramsScoutReport.autoClimb,
+        climbPosition: paramsScoutReport.climbPosition,
+        climbSide: paramsScoutReport.climbSide,
       },
     });
 
@@ -147,24 +154,21 @@ export const addScoutReportDashboard = async (
     );
 
     const scoutReportUuid = row.uuid;
-    const eventDataArray = [];
+    const eventDataArray: {
+      time: number;
+      action: EventAction;
+      position: Position;
+      points: number;
+      scoutReportUuid: string;
+    }[] = [];
     const events = req.body.events;
-    // eslint-disable-next-line @typescript-eslint/prefer-for-of
     for (let i = 0; i < events.length; i++) {
-      let points = 0;
       const time = events[i][0];
       const position = PositionMap[events[i][2]];
       const action = EventActionMap[events[i][1]];
-      if (time <= 18) {
-        if (action === EventAction.STOP_SCORING) {
-          points = Number(events[i][3]);
-        } else if (action === EventAction.CLIMB) {
-          points = 15;
-        }
-      } else {
-        if (action === EventAction.STOP_SCORING) {
-          points = Number(events[i][3]);
-        }
+      let points = 0;
+      if (action === EventAction.STOP_SCORING) {
+        points = events[i][3];
       }
       const paramsEvents = z
         .object({

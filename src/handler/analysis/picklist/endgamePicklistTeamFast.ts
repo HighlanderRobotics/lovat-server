@@ -1,22 +1,15 @@
+import { EndgameClimb } from "@prisma/client";
 import prismaClient from "../../../prismaClient.js";
-import { EndgameClimbResult } from "@prisma/client";
 import { defaultEndgamePoints, endgameToPoints } from "../analysisConstants.js";
 import { ArrayFilter } from "../coreAnalysis/averageManyFast.js";
 
 // Number of endgame possibilities that result in points earned (essentially, successes)
-const numPointResults: number = Object.keys(EndgameClimbResult).reduce(
-  (acc, cur) => {
-    if (
-      endgameToPoints[
-        EndgameClimbResult[cur as keyof typeof EndgameClimbResult]
-      ] !== 0
-    ) {
-      acc++;
-    }
-    return acc;
-  },
-  0
-);
+const numPointResults: number = Object.keys(EndgameClimb).reduce((acc, cur) => {
+  if (endgameToPoints[EndgameClimb[cur as keyof typeof EndgameClimb]] !== 0) {
+    acc++;
+  }
+  return acc;
+}, 0);
 
 /**
  * Queries data and uses rule of succession to predict endgame points.
@@ -30,12 +23,12 @@ const numPointResults: number = Object.keys(EndgameClimbResult).reduce(
 export const endgamePicklistTeamFast = async (
   team: number,
   sourceTeamFilter: ArrayFilter<number>,
-  sourceTnmtFilter: ArrayFilter<string>
+  sourceTnmtFilter: ArrayFilter<string>,
 ): Promise<number> => {
   try {
     // Get data
     const endgameRows = await prismaClient.scoutReport.groupBy({
-      by: ["endgameClimbResult"],
+      by: ["endgameClimb"],
       _count: {
         _all: true,
       },
@@ -52,14 +45,17 @@ export const endgamePicklistTeamFast = async (
 
     // Map endgame result to number of occurences and count total attempts
     let totalAttempts = 0;
-    const endgameMap: Partial<Record<EndgameClimbResult, number>> =
-      endgameRows.reduce((map, curr) => {
-        if (curr.endgameClimbResult !== EndgameClimbResult.NOT_ATTEMPTED) {
-          totalAttempts += curr._count._all;
-          map[curr.endgameClimbResult] = curr._count._all;
-        }
-        return map;
-      }, {} as typeof endgameMap);
+    const endgameMap: Partial<Record<EndgameClimb, number>> =
+      endgameRows.reduce(
+        (map, curr) => {
+          if (curr.endgameClimb !== EndgameClimb.NOT_ATTEMPTED) {
+            totalAttempts += curr._count._all;
+            map[curr.endgameClimb] = curr._count._all;
+          }
+          return map;
+        },
+        {} as typeof endgameMap,
+      );
 
     return endgameRuleOfSuccession(endgameMap, totalAttempts);
   } catch (error) {
@@ -77,8 +73,8 @@ export const endgamePicklistTeamFast = async (
  * @returns predicted endgame points
  */
 export const endgameRuleOfSuccession = (
-  data: Partial<Record<EndgameClimbResult, number>>,
-  totalAttempts: number
+  data: Partial<Record<EndgameClimb, number>>,
+  totalAttempts: number,
 ): number => {
   // Return base value (can be tuned)
   if (totalAttempts === 0) {
@@ -86,13 +82,13 @@ export const endgameRuleOfSuccession = (
   }
 
   let avgRuleOfSuccession = 0;
-  for (const element in EndgameClimbResult) {
-    const result: EndgameClimbResult =
-      EndgameClimbResult[element as keyof typeof EndgameClimbResult];
+  for (const element in EndgameClimb) {
+    const result: EndgameClimb =
+      EndgameClimb[element as keyof typeof EndgameClimb];
 
     // Increment rule of succession based on:
     // [{times observed} + 1] / [{total count} + {success possibilities} + {1 failure possibility}]
-    if (data[result] && result !== EndgameClimbResult.NOT_ATTEMPTED) {
+    if (data[result] && result !== EndgameClimb.NOT_ATTEMPTED) {
       avgRuleOfSuccession +=
         (data[result] + 1) / (totalAttempts + numPointResults + 1);
     }

@@ -10,9 +10,8 @@ import {
   TeamMatchData,
   Event,
   RobotRole,
-  AutoClimbResult,
-  EndgameClimbResult,
-  FieldTraversal,
+  AutoClimb,
+  EndgameClimb,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
@@ -34,15 +33,15 @@ export interface CondensedReport {
   totalPoints: number;
   campDefends: number;
   blockDefends: number;
-  shootingAccuracy: number;
+  accuracy: number;
   outpostIntakes: number;
   outpostOuttakes: number;
   depot: number;
   groundIntakes: number;
   fuelScored: number;
-  autoClimbResult: string;
-  endgameClimbResult: string;
-  fieldTraversal: string;
+  autoClimb: string;
+  endgameClimb: string;
+  mobility: string;
   scouter: string;
   notes: string;
 }
@@ -50,12 +49,11 @@ export interface CondensedReport {
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
   notes: string;
-  robotRole: RobotRole;
-  endgameClimbResult: EndgameClimbResult;
-  autoClimbResult: AutoClimbResult;
-  fieldTraversal: FieldTraversal;
+  robotRoles: RobotRole[];
+  endgameClimb: EndgameClimb;
+  autoClimb: AutoClimb;
   driverAbility: number;
-  shootingAccuracy: number;
+  accuracy: number;
   events: Partial<Event>[];
   scouter: Partial<Scouter>;
   teamMatchData: Partial<TeamMatchData>;
@@ -67,7 +65,7 @@ interface PointsReport {
  */
 export const getReportCSV = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     if (req.user.role !== UserRole.SCOUTING_LEAD) {
@@ -122,18 +120,17 @@ export const getReportCSV = async (
         },
         scouter: {
           sourceTeamNumber: dataSourceRuleToPrismaFilter(
-            dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule)
+            dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
           ),
         },
       },
       select: {
         notes: true,
         robotRole: true,
-        endgameClimbResult: true,
-        autoClimbResult: true,
-        fieldTraversal: true,
+        endgameClimb: true,
+        autoClimb: true,
         driverAbility: true,
-        shootingAccuracy: true,
+        accuracy: true,
         events: {
           where: eventTimeFilter,
           select: {
@@ -171,7 +168,22 @@ export const getReportCSV = async (
     }
 
     const condensed = datapoints.map((r) =>
-      condenseReport(r, req.user.teamNumber, includeAuto, includeTeleop)
+      condenseReport(
+        {
+          notes: r.notes,
+          robotRoles: [r.robotRole],
+          endgameClimb: r.endgameClimb,
+          autoClimb: r.autoClimb,
+          driverAbility: r.driverAbility,
+          accuracy: r.accuracy,
+          events: r.events,
+          scouter: r.scouter,
+          teamMatchData: r.teamMatchData,
+        },
+        req.user.teamNumber,
+        includeAuto,
+        includeTeleop,
+      ),
     );
 
     // Create and send the csv string through express
@@ -203,21 +215,21 @@ function condenseReport(
   report: PointsReport,
   userTeam: number,
   includeAuto: boolean,
-  includeTeleop: boolean
+  includeTeleop: boolean,
 ): CondensedReport {
   const data: CondensedReport = {
     match:
       report.teamMatchData.matchType.at(0) + report.teamMatchData.matchNumber,
     teamNumber: report.teamMatchData.teamNumber,
-    role: report.robotRole,
+    role: (report.robotRoles && report.robotRoles[0]) || RobotRole.CYCLING,
     totalPoints: 0,
     feedsFromNeutral: 0,
     feedsFromOpponent: 0,
     campDefends: 0,
     blockDefends: 0,
-    shootingAccuracy: report.shootingAccuracy,
-    autoClimbResult: report.autoClimbResult,
-    fieldTraversal: report.fieldTraversal,
+    accuracy: report.accuracy,
+    autoClimb: report.autoClimb,
+    mobility: "N/A",
     outpostIntakes: 0,
     outpostOuttakes: 0,
     fuelScored: 0,
@@ -226,7 +238,7 @@ function condenseReport(
     teleopPoints: 0,
     autoPoints: 0,
     driverAbility: report.driverAbility,
-    endgameClimbResult: report.endgameClimbResult,
+    endgameClimb: report.endgameClimb,
     scouter: "",
     notes: report.notes.replace(/,/g, ";"), // Avoid commas in a csv...
   };
@@ -243,8 +255,6 @@ function condenseReport(
       case EventAction.START_FEEDING:
         if (event.position === Position.NEUTRAL_ZONE) {
           data.feedsFromNeutral += 1;
-        } else if (event.position === Position.FIRST_RUNG) {
-          data.feedsFromOpponent += 1;
         }
         break;
     }
@@ -252,8 +262,7 @@ function condenseReport(
 
   // Add stage points to total points
   if (includeTeleop && includeAuto) {
-    data.teleopPoints +=
-      endgameToPoints[data.endgameClimbResult as EndgameClimbResult];
+    data.teleopPoints += endgameToPoints[data.endgameClimb as EndgameClimb];
   }
 
   if (report.scouter.sourceTeamNumber === userTeam) {

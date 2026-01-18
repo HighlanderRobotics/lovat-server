@@ -33,14 +33,14 @@ const config = {
   }),
   calculateAnalysis: async (
     args: z.infer<typeof config.argsSchema>,
-    ctx: { user: User }
+    ctx: { user: User },
   ) => {
     try {
       const tnmRule = dataSourceRuleSchema(z.string()).parse(
-        ctx.user.tournamentSourceRule
+        ctx.user.tournamentSourceRule,
       );
       const teamRule = dataSourceRuleSchema(z.number()).parse(
-        ctx.user.teamSourceRule
+        ctx.user.teamSourceRule,
       );
 
       const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(tnmRule);
@@ -80,7 +80,7 @@ const config = {
         query,
         tournamentList,
         teamList,
-        args.team
+        args.team,
       );
 
       const result: Record<string, number> = {};
@@ -104,7 +104,7 @@ export type NonEventMetricArgs = z.infer<typeof config.argsSchema>;
 export type NonEventMetricResult = z.infer<typeof config.returnSchema>;
 export async function nonEventMetric(
   user: User,
-  args: NonEventMetricArgs
+  args: NonEventMetricArgs,
 ): Promise<NonEventMetricResult> {
   return runAnalysis(config, user, args);
 }

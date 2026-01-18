@@ -9,16 +9,19 @@ import {
 } from "../managerConstants.js";
 import { addTournamentMatches } from "../addTournamentMatches.js";
 import {
-  AutoClimbResult,
-  BeachedStatus,
-  EndgameClimbResult,
+  AutoClimb,
+  Beached,
   EventAction,
   FeederType,
-  FieldTraversal,
   IntakeType,
+  Mobility,
   Position,
+  MatchType,
+  RobotRole,
+  ClimbPosition,
+  ClimbSide,
+  EndgameClimb,
 } from "@prisma/client";
-import { MatchType, RobotRole } from "@prisma/client";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../../lib/clearCache.js";
 
@@ -35,20 +38,22 @@ export const addScoutReport = async (
         matchNumber: z.number(),
         startTime: z.number(),
         notes: z.string(),
-        robotRole: z.nativeEnum(RobotRole),
-        autoClimbResult: z.nativeEnum(AutoClimbResult),
-        endgameClimbResult: z.nativeEnum(EndgameClimbResult),
-        fieldTraversal: z.nativeEnum(FieldTraversal),
-        beachedStatus: z.nativeEnum(BeachedStatus),
+        robotRoles: z.array(z.nativeEnum(RobotRole)),
+        mobility: z.nativeEnum(Mobility),
+        climbPosition: z.nativeEnum(ClimbPosition).optional(),
+        climbSide: z.nativeEnum(ClimbSide).optional(),
+        beached: z.nativeEnum(Beached),
         feederType: z.nativeEnum(FeederType),
         intakeType: z.nativeEnum(IntakeType),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
           .optional(),
         driverAbility: z.number(),
-        shootingAccuracy: z.number(),
+        accuracy: z.number(),
         defenseEffectiveness: z.number(),
-        scoringWhileMoving: z.boolean(),
+        scoresWhileMoving: z.boolean(),
+        autoClimb: z.nativeEnum(AutoClimb),
+        endgameClimb: z.nativeEnum(EndgameClimb),
         scouterUuid: z.string(),
         teamNumber: z.number(),
       })
@@ -114,26 +119,29 @@ export const addScoutReport = async (
     // Create scout report in database
     await prismaClient.scoutReport.create({
       data: {
-        //constants
+        // constants
         uuid: paramsScoutReport.uuid,
         startTime: new Date(paramsScoutReport.startTime),
         teamMatchData: { connect: { key: matchKey } },
         scouter: { connect: { uuid: paramsScoutReport.scouterUuid } },
         notes: paramsScoutReport.notes,
-        robotRole: paramsScoutReport.robotRole,
+        // Use singular robotRole for backward compatibility
+        robotRole: paramsScoutReport.robotRoles[0],
         driverAbility: paramsScoutReport.driverAbility,
         robotBrokeDescription: paramsScoutReport.robotBrokeDescription ?? null,
 
-        //game specfific
-        autoClimbResult: paramsScoutReport.autoClimbResult,
-        endgameClimbResult: paramsScoutReport.endgameClimbResult,
-        fieldTraversal: paramsScoutReport.fieldTraversal,
-        beachedStatus: paramsScoutReport.beachedStatus,
+        // game specific
+        autoClimb: paramsScoutReport.autoClimb,
+        beached: paramsScoutReport.beached,
         feederType: paramsScoutReport.feederType,
         intakeType: paramsScoutReport.intakeType,
+        mobility: paramsScoutReport.mobility,
         defenseEffectiveness: paramsScoutReport.defenseEffectiveness,
-        scoringWhileMoving: paramsScoutReport.scoringWhileMoving,
-        shootingAccuracy: paramsScoutReport.shootingAccuracy,
+        scoresWhileMoving: paramsScoutReport.scoresWhileMoving,
+        accuracy: paramsScoutReport.accuracy,
+        climbPosition: paramsScoutReport.climbPosition,
+        climbSide: paramsScoutReport.climbSide,
+        endgameClimb: paramsScoutReport.endgameClimb,
       },
     });
 
@@ -145,7 +153,13 @@ export const addScoutReport = async (
 
     const scoutReportUuid = paramsScoutReport.uuid;
 
-    const eventDataArray = [];
+    const eventDataArray: {
+      time: number;
+      action: EventAction;
+      position: Position;
+      points: number;
+      scoutReportUuid: string;
+    }[] = [];
     const events = req.body.events;
 
     let doesLeave = false;
@@ -155,16 +169,9 @@ export const addScoutReport = async (
       const time = event[0];
       const action = EventActionMap[event[1]];
       const position = PositionMap[event[2]];
-      if (time <= 18) {
-        if (action === EventAction.STOP_SCORING) {
-          points = Number(event[3]);
-        } else if (action === EventAction.CLIMB) {
-          points = 15;
-        }
-      } else {
-        if (action === EventAction.STOP_SCORING) {
-          points = Number(event[3]);
-        }
+
+      if (action === EventAction.STOP_SCORING) {
+        points = event[3];
       }
 
       const paramsEvents = z
@@ -215,19 +222,6 @@ export const addScoutReport = async (
       data: eventDataArray,
     });
 
-    //recalibrate the max reasonable points for every year
-    //uncomment for scouting lead
-
-    // const totalPoints = await totalPointsScoutingLead(scoutReportUuid)
-    // if (totalPoints === 0 || totalPoints > 80) {
-    //     await prismaClient.flaggedScoutReport.create({
-    //         data:
-    //         {
-    //             note: `${totalPoints} recorded, not including endgame`,
-    //             scoutReportUuid: scoutReportUuid
-    //         }
-    //     })
-    // }
     res.status(200).send("done adding data");
   } catch (error) {
     if (error instanceof z.ZodError) {

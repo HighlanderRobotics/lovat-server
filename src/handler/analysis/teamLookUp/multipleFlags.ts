@@ -1,9 +1,6 @@
 import z from "zod";
 import { rankFlag } from "../rankFlag.js";
-import {
-  metricsCategory,
-  metricToName,
-} from "../analysisConstants.js";
+import { metricsCategory, metricToName } from "../analysisConstants.js";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
 

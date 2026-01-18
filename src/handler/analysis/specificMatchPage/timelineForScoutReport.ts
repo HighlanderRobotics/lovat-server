@@ -1,9 +1,6 @@
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import {
-  FlippedActionMap,
-  FlippedPositionMap,
-} from "../analysisConstants.js";
+import { FlippedActionMap, FlippedPositionMap } from "../analysisConstants.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const timelineForScoutReport = createAnalysisHandler({

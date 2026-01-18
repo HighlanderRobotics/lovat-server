@@ -5,20 +5,20 @@ import {
   Metric,
   metricToEvent,
 } from "../analysisConstants.js";
-import { AutoClimbResult, EventAction, Position, User } from "@prisma/client";
+import { AutoClimb, EventAction, Position, User } from "@prisma/client";
 import z from "zod";
 import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 
 export async function computeAverageScoutReport(
   scoutReportUuid: string,
-  metrics: Metric[]
+  metrics: Metric[],
 ): Promise<Partial<Record<Metric, number>>> {
   const report = await prismaClient.scoutReport.findUniqueOrThrow({
     where: { uuid: scoutReportUuid },
     select: {
-      endgameClimbResult: true,
+      endgameClimb: true,
       driverAbility: true,
-      autoClimbResult: true,
+      autoClimb: true,
       events: {
         select: { action: true, position: true, points: true, time: true },
       },
@@ -33,11 +33,11 @@ export async function computeAverageScoutReport(
         result[metric] = report.driverAbility;
         break;
       case Metric.l1StartTime: //fix later
-        result[metric] = endgameToPoints[report.endgameClimbResult];
+        result[metric] = endgameToPoints[report.endgameClimb];
         break;
       case Metric.totalPoints:
         result[metric] =
-          endgameToPoints[report.endgameClimbResult] +
+          endgameToPoints[report.endgameClimb] +
           report.events.reduce((acc, cur) => acc + cur.points, 0);
         break;
       case Metric.teleopPoints:
@@ -50,7 +50,7 @@ export async function computeAverageScoutReport(
           report.events
             .filter((e) => e.time <= autoEnd)
             .reduce((acc, cur) => acc + cur.points, 0) +
-          (report.autoClimbResult === AutoClimbResult.SUCCEEDED ? 10 : 0);
+          (report.autoClimb === AutoClimb.SUCCEEDED ? 10 : 0);
         break;
     }
   }
@@ -77,7 +77,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
   calculateAnalysis: async (args) => {
     const result = await computeAverageScoutReport(
       args.scoutReportUuid,
-      args.metrics
+      args.metrics,
     );
     return result as any;
   },
@@ -85,5 +85,5 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
 
 export const averageScoutReport = async (
   user: User,
-  args: z.infer<typeof argsSchema>
+  args: z.infer<typeof argsSchema>,
 ) => runAnalysis(config, user, args);

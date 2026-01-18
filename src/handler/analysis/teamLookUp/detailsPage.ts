@@ -1,10 +1,7 @@
 import z from "zod";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam.js";
 import { averageAllTeamFast } from "../coreAnalysis/averageAllTeamFast.js";
-import {
-  Metric,
-  metricsToNumber,
-} from "../analysisConstants.js";
+import { Metric, metricsToNumber } from "../analysisConstants.js";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
 

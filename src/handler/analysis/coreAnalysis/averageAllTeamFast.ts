@@ -28,7 +28,7 @@ const config = {
   },
   calculateAnalysis: async (
     args: { metric: Metric },
-    ctx: { user: { teamSourceRule: unknown; tournamentSourceRule: unknown } }
+    ctx: { user: { teamSourceRule: unknown; tournamentSourceRule: unknown } },
   ) => {
     const metric = args.metric;
     if (metric === Metric.l1StartTime) {
@@ -37,10 +37,10 @@ const config = {
     }
 
     const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
-      dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule)
+      dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
     const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
-      dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule)
+      dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 
     if (metric === Metric.driverAbility) {
@@ -82,8 +82,8 @@ const config = {
 
       let avgEndgamePoints = 0;
       if (metric === Metric.totalPoints) {
-        const climbResults = await prismaClient.scoutReport.groupBy({
-          by: "endgameClimbResult",
+        const endgameClimbs = await prismaClient.scoutReport.groupBy({
+          by: "endgameClimb",
           _count: { _all: true },
           where: {
             teamMatchData: { tournamentKey: sourceTnmtFilter },
@@ -91,13 +91,13 @@ const config = {
           },
         });
 
-        climbResults.forEach((endgame) => {
+        endgameClimbs.forEach((endgame) => {
           avgEndgamePoints +=
-            endgameToPoints[endgame.endgameClimbResult] * endgame._count._all;
+            endgameToPoints[endgame.endgameClimb] * endgame._count._all;
         });
-        avgEndgamePoints /= climbResults.reduce(
+        avgEndgamePoints /= endgameClimbs.reduce(
           (acc, cur) => acc + cur._count._all,
-          0
+          0,
         );
       }
 

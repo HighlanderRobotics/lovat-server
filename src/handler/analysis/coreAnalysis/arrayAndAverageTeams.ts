@@ -35,10 +35,10 @@ const returnSchema = z.record(
           match: z.string(),
           dataPoint: z.number(),
           tournamentName: z.string(),
-        })
+        }),
       )
       .nullable(),
-  })
+  }),
 );
 
 const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
@@ -60,15 +60,15 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
   },
   calculateAnalysis: async (
     args: z.infer<typeof argsSchema>,
-    ctx: { user: import("@prisma/client").User }
+    ctx: { user: import("@prisma/client").User },
   ) => {
     const { teams, metric } = args;
     try {
       const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
-        dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule)
+        dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
       );
       const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
-        dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule)
+        dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
       );
 
       // Endgame point prediction
@@ -88,7 +88,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             average: await endgamePicklistTeamFast(
               team,
               sourceTeamFilter,
-              sourceTnmtFilter
+              sourceTnmtFilter,
             ),
             timeLine: null,
           };
@@ -99,7 +99,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
       // Data and aggregation based on metric. Variables determine data requested and aggregation method
       let srSelect: Prisma.ScoutReportSelect = null;
       let matchAggregationFunction: (
-        reports: Partial<ScoutReport & { events: Event[] }>[]
+        reports: Partial<ScoutReport & { events: Event[] }>[],
       ) => number = null;
 
       switch (metric) {
@@ -116,7 +116,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
         case Metric.totalPoints:
           srSelect = {
             events: { select: { points: true } },
-            endgameClimbResult: true,
+            endgameClimb: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
@@ -124,7 +124,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               sr.events.forEach((e) => {
                 total += e.points;
               });
-              total += endgameToPoints[sr.endgameClimbResult];
+              total += endgameToPoints[sr.endgameClimb];
             });
             return total / reports.length;
           };
@@ -136,7 +136,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               where: { time: { gt: autoEnd } },
               select: { points: true },
             },
-            endgameClimbResult: true,
+            endgameClimb: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
@@ -304,7 +304,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             result[team].timeLine.push(...tournament);
             tournamentGroups.push(
               tournament.reduce((acc, cur) => acc + cur.dataPoint, 0) /
-                tournament.length
+                tournament.length,
             );
           }
         });
@@ -323,7 +323,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
 
 export const arrayAndAverageTeams = async (
   user: import("@prisma/client").User,
-  args: z.infer<typeof argsSchema>
+  args: z.infer<typeof argsSchema>,
 ) => runAnalysis(config, user, args);
 
 // Most recent is last

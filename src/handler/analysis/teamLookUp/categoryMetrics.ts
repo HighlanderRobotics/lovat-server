@@ -1,9 +1,6 @@
 import z from "zod";
 import prismaClient from "../../../prismaClient.js";
-import {
-  metricsCategory,
-  metricToName,
-} from "../analysisConstants.js";
+import { metricsCategory, metricToName } from "../analysisConstants.js";
 import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
 

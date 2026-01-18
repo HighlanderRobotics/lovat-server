@@ -68,12 +68,12 @@ export const breakdownDetails = createAnalysisHandler({
       queryStr,
       dataSourceRuleToArray(
         dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
-        await allTeamNumbers
+        await allTeamNumbers,
       ),
       dataSourceRuleToArray(
         dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
-        await allTournaments
-      )
+        await allTournaments,
+      ),
     );
 
     // Edit to work with true/false breakdowns

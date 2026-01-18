@@ -1,13 +1,7 @@
 import z from "zod";
 import { MetricsBreakdown } from "../analysisConstants.js";
-import {
-  nonEventMetric,
-  NonEventMetricResult,
-} from "./nonEventMetric.js";
-import {
-  runAnalysis,
-  AnalysisFunctionConfig,
-} from "../analysisFunction.js";
+import { nonEventMetric, NonEventMetricResult } from "./nonEventMetric.js";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 import { User } from "@prisma/client";
 
 const argsSchema = z.object({ team: z.number() });

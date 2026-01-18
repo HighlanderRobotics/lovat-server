@@ -27,17 +27,17 @@ const config = {
                 location: z.number(),
                 event: z.number(),
                 time: z.number().optional(),
-              })
+              }),
             ),
             matches: z.array(
-              z.object({ matchKey: z.string(), tournamentName: z.string() })
+              z.object({ matchKey: z.string(), tournamentName: z.string() }),
             ),
             score: z.array(z.number()),
             frequency: z.number(),
             maxScore: z.number(),
-          })
+          }),
         ),
-      })
+      }),
     ),
     outpostIntakes: z.number(),
     totalDefenseTime: z.number(),
@@ -158,7 +158,7 @@ export type AlliancePageArgs = { team1: number; team2: number; team3: number };
 export type AlliancePageResult = z.infer<typeof config.returnSchema>;
 export async function alliancePage(
   user: User,
-  args: AlliancePageArgs
+  args: AlliancePageArgs,
 ): Promise<AlliancePageResult> {
   return runAnalysis(config, user, args);
 }

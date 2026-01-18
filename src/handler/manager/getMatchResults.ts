@@ -143,20 +143,17 @@ function getRobotRole(reports: ScoutReport[]) {
     if (report.robotRole === "CYCLING") {
       out[0]++;
     }
-    if (report.robotRole === "STEALING") {
+    if (report.robotRole === "SCORING") {
       out[1]++;
     }
-    if (report.robotRole === "SCORING") {
+    if (report.robotRole === "FEEDING") {
       out[2]++;
     }
-    if (report.robotRole === "FEEDING") {
+    if (report.robotRole === "DEFENDING") {
       out[3]++;
     }
-    if (report.robotRole === "DEFENDING") {
-      out[4]++;
-    }
     if (report.robotRole === "IMMOBILE") {
-      out[5]++;
+      out[4]++;
     }
   }
 

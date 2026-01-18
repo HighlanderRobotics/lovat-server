@@ -7,7 +7,7 @@ import z from "zod";
 const posthogReporter = async (
   req: Request | AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const t0 = performance.now();
 
@@ -77,7 +77,7 @@ const posthogReporter = async (
     if (process.env.NODE_ENV === "development") {
       console.log(
         `${req.method} ${req.originalUrl}: %d ms, HTTP ${res.statusCode}`,
-        Math.round(t1 - t0)
+        Math.round(t1 - t0),
       );
     }
   });

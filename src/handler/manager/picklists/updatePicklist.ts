@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 
 export const updatePicklist = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const user = req.user;
@@ -13,19 +13,20 @@ export const updatePicklist = async (
       .object({
         name: z.string(),
         totalPoints: z.number(),
-        defense: z.number(),
-        coralPickups: z.number(),
-        algaePickups: z.number(),
-        climb: z.number(),
-        coralLevel1Scores: z.number(),
-        coralLevel2Scores: z.number(),
-        coralLevel3Scores: z.number(),
-        coralLevel4Scores: z.number(),
-        algaeProcessor: z.number(),
-        algaeNet: z.number(),
-        autoPoints: z.number(),
-        driverAbility: z.number(),
         teleopPoints: z.number(),
+        autoPoints: z.number(),
+        climbResult: z.number(),
+        autoClimb: z.number(),
+        defenseEffectiveness: z.number(),
+        contactDefenseTime: z.number(),
+        campingDefenseTime: z.number(),
+        totalDefensiveTime: z.number(),
+        totalFuelThroughput: z.number(),
+        totalFuelFed: z.number(),
+        feedingRate: z.number(),
+        scoringRate: z.number(),
+        estimatedSuccessfulFuelRate: z.number(),
+        estimatedTotalFuelScored: z.number(),
         authorId: z.string(),
       })
       .safeParse({
@@ -64,19 +65,19 @@ export const updatePicklist = async (
       data: {
         name: params.data.name,
         totalPoints: params.data.totalPoints,
-        defense: params.data.defense,
-        algaePickups: params.data.algaePickups,
-        coralPickups: params.data.coralPickups,
-        climb: params.data.climb,
         autoPoints: params.data.autoPoints,
-        driverAbility: params.data.driverAbility,
-        coralLevel1Scores: params.data.coralLevel1Scores,
-        coralLevel2Scores: params.data.coralLevel2Scores,
-        coralLevel3Scores: params.data.coralLevel3Scores,
-        coralLevel4Scores: params.data.coralLevel4Scores,
-        algaeNet: params.data.algaeNet,
         teleopPoints: params.data.teleopPoints,
-        algaeProcessor: params.data.algaeProcessor,
+        climbResult: params.data.climbResult,
+        autoClimb: params.data.autoClimb,
+        defenseEffectiveness: params.data.defenseEffectiveness,
+        contactDefenseTime: params.data.contactDefenseTime,
+        campingDefenseTime: params.data.campingDefenseTime,
+        totalDefensiveTime: params.data.totalDefensiveTime,
+        totalFuelThroughput: params.data.totalFuelThroughput,
+        totalFuelFed: params.data.totalFuelFed,
+        feedingRate: params.data.feedingRate,
+        scoringRate: params.data.scoringRate,
+        estimatedSuccessfulFuelRate: params.data.estimatedSuccessfulFuelRate,
         authorId: params.data.authorId,
       },
     });

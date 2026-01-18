@@ -47,28 +47,30 @@ model MutablePicklist {
 }
 
 model ScoutReport {
-  uuid                  String        @id @default(uuid())
+  uuid                  String         @id @default(uuid())
   teamMatchKey          String
   startTime             DateTime
   notes                 String
   robotRole             RobotRole
-  robotBrokeDescription String?
   driverAbility         Int
   scouterUuid           String
+  robotBrokeDescription String?
   events                Event[]
-  scouter               Scouter       @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
-  teamMatchData         TeamMatchData @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+  scouter               Scouter        @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
+  teamMatchData         TeamMatchData  @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
 
-  // Year-specific
-  fieldTraversal        FieldTraversal
-  defenseEffectiveness Int
-  shootingAccuracy     Int
-  beachedStatus        BeachedStatus
-  autoClimbResult      AutoClimbResult
-  endgameClimbResult   EndgameClimbResult
-  feederType           FeederType
-  intakeType           IntakeType
-  scoringWhileMoving   Boolean
+  // year specific fields
+  accuracy              Int
+  beached               Beached
+  climbPosition         ClimbPosition?
+  climbSide             ClimbSide?
+  defenseEffectiveness  Int
+  feederType            FeederType
+  intakeType            IntakeType
+  mobility              Mobility
+  scoresWhileMoving     Boolean
+  endgameClimb          EndgameClimb
+  autoClimb             AutoClimb
 }
 
 model ScouterScheduleShift {
@@ -90,10 +92,10 @@ model ScouterScheduleShift {
 model Scouter {
   uuid               String                 @id @default(uuid())
   name               String?
-  archived           Boolean                @default(false)
   sourceTeamNumber   Int
   strikes            Int                    @default(0)
   scouterReliability Int                    @default(0)
+  archived           Boolean                @default(false)
   scoutReports       ScoutReport[]
   sourceTeam         RegisteredTeam         @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
   team1Shifts        ScouterScheduleShift[] @relation("Team1")
@@ -107,25 +109,25 @@ model Scouter {
 }
 
 model SharedPicklist {
-  uuid              String @id @default(uuid())
-  name              String
-  totalPoints       Float
-  defense           Float
-  driverAbility     Float
-  autoPoints        Float
-  algaePickups      Float
-  coralPickups      Float
-  climb             Float
-  coralLevel1Scores Float
-  coralLevel2Scores Float
-  coralLevel3Scores Float
-  coralLevel4Scores Float
-  algaeProcessor    Float
-  algaeNet          Float
-  teleopPoints      Float
-  feeds             Float
-  authorId          String
-  author            User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  uuid                        String @id @default(uuid())
+  name                        String
+  totalPoints                 Float
+  autoPoints                  Float
+  teleopPoints                Float
+  authorId                    String
+  autoClimb                   Float
+  campingDefenseTime          Float
+  climbResult                 Float
+  contactDefenseTime          Float
+  defenseEffectiveness        Float
+  estimatedSuccessfulFuelRate Float
+  estimatedTotalFuelScored    Float
+  feedingRate                 Float
+  scoringRate                 Float
+  totalDefensiveTime          Float
+  totalFuelFed                Float
+  totalFuelThroughput         Float
+  author                      User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model Team {
@@ -201,10 +203,8 @@ model User {
   emailVerified        Boolean           @default(false)
   username             String?
   role                 UserRole          @default(ANALYST)
-  tournamentSource     String[] /// @deprecated Use tournamentSourceRule instead
-  teamSource           Int[] /// @deprecated Use teamSourceRule instead
-  tournamentSourceRule Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
   teamSourceRule       Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
+  tournamentSourceRule Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
   ApiKeys              ApiKey[]
   mutablePicklists     MutablePicklist[]
   sharedPicklists      SharedPicklist[]
@@ -237,14 +237,7 @@ enum Position {
   NEUTRAL_ZONE
   DEPOT
   OUTPOST
-  FIRST_RUNG
-  SECOND_RUNG
-  THIRD_RUNG
-  START_A
-  START_B
-  START_C
-  START_D
-  START_E
+  NONE
 }
 
 enum EventAction {
@@ -264,43 +257,39 @@ enum EventAction {
   STOP_FEEDING
 }
 
-enum FieldTraversal {
+enum Mobility {
   TRENCH
   BUMP
   BOTH
   NONE
 }
 
-enum BeachedStatus {
+enum Beached {
   ON_FUEL
   ON_BUMP
   BOTH
   NEITHER
 }
 
-enum MatchType {
-  QUALIFICATION
-  ELIMINATION
-}
-
-enum RobotRole {
-  CYCLING
-  STEALING
-  SCORING
-  FEEDING
-  DEFENDING
-  IMMOBILE
-}
-
-enum EndgameClimbResult {
+enum EndgameClimb {
   NOT_ATTEMPTED
   FAILED
-  LEVEL_ONE
-  LEVEL_TWO
-  LEVEL_THREE
+  L1
+  L2
+  L3
 }
 
-enum AutoClimbResult {
+enum ClimbPosition {
+  SIDE
+  MIDDLE
+}
+
+enum ClimbSide {
+  FRONT
+  BACK
+}
+
+enum AutoClimb {
   NOT_ATTEMPTED
   FAILED
   SUCCEEDED
@@ -316,7 +305,15 @@ enum IntakeType {
   GROUND
   OUTPOST
   BOTH
-  NONE
+  NEITHER
+}
+
+enum RobotRole {
+  CYCLING
+  SCORING
+  FEEDING
+  DEFENDING
+  IMMOBILE
 }
 
 enum WarningType {
@@ -326,4 +323,9 @@ enum WarningType {
 enum UserRole {
   ANALYST
   SCOUTING_LEAD
+}
+
+enum MatchType {
+  QUALIFICATION
+  ELIMINATION
 }

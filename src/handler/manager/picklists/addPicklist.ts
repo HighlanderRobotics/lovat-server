@@ -5,47 +5,47 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 
 export const addPicklist = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z
       .object({
+        authorId: z.string(),
         name: z.string(),
         totalPoints: z.number(),
-        defense: z.number(),
         autoPoints: z.number(),
-        driverAbility: z.number(),
         teleopPoints: z.number(),
-        authorId: z.string(),
-        feeds: z.number(),
-        coralPickups: z.number(),
-        algaePickups: z.number(),
-        climb: z.number(),
-        coralLevel1Scores: z.number(),
-        coralLevel2Scores: z.number(),
-        coralLevel3Scores: z.number(),
-        coralLevel4Scores: z.number(),
-        algaeProcessor: z.number(),
-        algaeNet: z.number(),
+        climbResult: z.number(),
+        autoClimb: z.number(),
+        defenseEffectiveness: z.number(),
+        contactDefenseTime: z.number(),
+        campingDefenseTime: z.number(),
+        totalDefensiveTime: z.number(),
+        totalFuelThroughput: z.number(),
+        totalFuelFed: z.number(),
+        feedingRate: z.number(),
+        scoringRate: z.number(),
+        estimatedSuccessfulFuelRate: z.number(),
+        estimatedTotalFuelScored: z.number(),
       })
       .safeParse({
-        name: req.body.name,
-        totalPoints: req.body.totalpoints || 0,
-        autoPoints: req.body.autopoints || 0,
-        teleopPoints: req.body.teleoppoints || 0,
-        driverAbility: req.body.driverability || 0,
-        climb: req.body.climbresult || 0,
-        coralLevel1Scores: req.body.level1 || 0,
-        coralLevel2Scores: req.body.level2 || 0,
-        coralLevel3Scores: req.body.level3 || 0,
-        coralLevel4Scores: req.body.level4 || 0,
-        coralPickups: req.body.coralpickup || 0,
-        algaeProcessor: req.body.algaeProcessor || 0,
-        algaeNet: req.body.algaeNet || 0,
-        algaePickups: req.body.algaePickups || 0,
-        feeds: req.body.feeds || 0,
-        defense: req.body.defends || 0,
         authorId: req.user.id,
+        name: req.body.name,
+        totalPoints: req.body.totalPoints || 0,
+        autoPoints: req.body.autoPoints || 0,
+        teleopPoints: req.body.teleopPoints || 0,
+        climbResult: req.body.climb || 0,
+        autoClimb: req.body.autoClimb || 0,
+        defenseEffectiveness: req.body.defenseEffectiveness || 0,
+        contactDefenseTime: req.body.contactDefenseTime || 0,
+        campingDefenseTime: req.body.campingDefenseTime || 0,
+        totalDefensiveTime: req.body.totalDefensiveTime || 0,
+        totalFuelThroughput: req.body.totalFuelThroughput || 0,
+        totalFuelFed: req.body.totalFuelFed || 0,
+        feedingRate: req.body.feedingRate || 0,
+        scoringRate: req.body.scoringRate || 0,
+        estimatedSuccessfulFuelRate: req.body.estimatedSuccessfulFuelRate || 0,
+        estimatedTotalFuelScored: req.body.estimatedSuccessfulFuelRate || 0,
       });
 
     console.log({ addPicklistQuery: req.query, addPicklistBody: req.body });
@@ -58,29 +58,29 @@ export const addPicklist = async (
       res
         .status(403)
         .send(
-          "Not authortized to publish a picklist because your not on a team"
+          "Not authortized to publish a picklist because your not on a team",
         );
       return;
     }
     await prismaClient.sharedPicklist.create({
       data: {
+        authorId: params.data.authorId,
         name: params.data.name,
         totalPoints: params.data.totalPoints,
-        defense: params.data.defense,
         autoPoints: params.data.autoPoints,
-        driverAbility: params.data.driverAbility,
         teleopPoints: params.data.teleopPoints,
-        feeds: params.data.feeds,
-        algaePickups: params.data.algaePickups,
-        coralPickups: params.data.coralPickups,
-        climb: params.data.climb,
-        coralLevel1Scores: params.data.coralLevel1Scores,
-        coralLevel2Scores: params.data.coralLevel2Scores,
-        coralLevel3Scores: params.data.coralLevel3Scores,
-        coralLevel4Scores: params.data.coralLevel4Scores,
-        algaeNet: params.data.algaeNet,
-        algaeProcessor: params.data.algaeProcessor,
-        authorId: params.data.authorId,
+        climbResult: params.data.climbResult,
+        autoClimb: params.data.autoClimb,
+        defenseEffectiveness: params.data.defenseEffectiveness,
+        contactDefenseTime: params.data.contactDefenseTime,
+        campingDefenseTime: params.data.campingDefenseTime,
+        totalDefensiveTime: params.data.totalDefensiveTime,
+        totalFuelThroughput: params.data.totalFuelThroughput,
+        totalFuelFed: params.data.totalFuelFed,
+        feedingRate: params.data.feedingRate,
+        scoringRate: params.data.scoringRate,
+        estimatedSuccessfulFuelRate: params.data.estimatedSuccessfulFuelRate,
+        estimatedTotalFuelScored: params.data.estimatedTotalFuelScored,
       },
     });
     res.status(200).send("picklist added");

@@ -6,7 +6,7 @@ const LOVAT_SIGNING_KEY = process.env.LOVAT_SIGNING_KEY;
 const requireLovatSignature = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const signature = req.headers["x-signature"] as string | undefined;
   const timestamp = parseInt(req.headers["x-timestamp"] as string | undefined);

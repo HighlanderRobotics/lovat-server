@@ -4,7 +4,7 @@ import z from "zod";
 
 export const processCommand = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z
@@ -25,7 +25,7 @@ export const processCommand = async (
       res
         .status(200)
         .send(
-          "Click <https://lovat-learn.highlanderrobotics.com/guides/slack-notifcations|here> for a list of all commands and a setup guide"
+          "Click <https://lovat-learn.highlanderrobotics.com/guides/slack-notifcations|here> for a list of all commands and a setup guide",
         );
       return;
     } else if (action === "subscribe") {
@@ -39,7 +39,7 @@ export const processCommand = async (
         res
           .status(200)
           .send(
-            `You need to set your team number to use /lovat subscribe. Use /lovat team set [your team code]`
+            `You need to set your team number to use /lovat subscribe. Use /lovat team set [your team code]`,
           );
         return;
       }
@@ -58,7 +58,7 @@ export const processCommand = async (
         res
           .status(200)
           .send(
-            `'${body[1]} 'is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`
+            `'${body[1]} 'is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`,
           );
         return;
       }
@@ -88,7 +88,7 @@ export const processCommand = async (
       res
         .status(200)
         .send(
-          `Successfully subscribed to ${messages.join(" and ")} notifications`
+          `Successfully subscribed to ${messages.join(" and ")} notifications`,
         );
       return;
     } else if (action === "unsubscribe") {
@@ -102,7 +102,7 @@ export const processCommand = async (
         res
           .status(200)
           .send(
-            `You need to set your team number to use /lovat unsubscribe. Use /lovat team set [your team code]`
+            `You need to set your team number to use /lovat unsubscribe. Use /lovat team set [your team code]`,
           );
         return;
       }
@@ -121,7 +121,7 @@ export const processCommand = async (
         res
           .status(200)
           .send(
-            `'${body[1]}' is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`
+            `'${body[1]}' is not a valid argument for '/lovat subscribe'. Acceptable arguments are 'no-leave' and 'break'`,
           );
         return;
       }
@@ -143,15 +143,15 @@ export const processCommand = async (
         .status(200)
         .send(
           `Successfully unsubscribed from ${messages.join(
-            " and "
-          )} notifications`
+            " and ",
+          )} notifications`,
         );
       return;
     } else {
       res
         .status(400)
         .send(
-          `${body[1]} is not a valid argument for '/lovat team'. Try /lovat team set (team code)`
+          `${body[1]} is not a valid argument for '/lovat team'. Try /lovat team set (team code)`,
         );
     }
   } catch (error) {

@@ -44,10 +44,6 @@ router.post("/team", addRegisteredTeam);
 
 router.post("/teamwebsite", addWebsite);
 
-router.post(
-  "/resendverificationemail",
-  resendEmailLimiter,
-  resendEmail,
-);
+router.post("/resendverificationemail", resendEmailLimiter, resendEmail);
 
 export default router;

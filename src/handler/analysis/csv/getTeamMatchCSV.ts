@@ -9,9 +9,9 @@ import {
   Position,
   Scouter,
   Event,
-  FieldTraversal,
-  AutoClimbResult,
-  EndgameClimbResult,
+  Mobility,
+  AutoClimb,
+  EndgameClimb,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints } from "../analysisConstants.js";
 import { z } from "zod";
@@ -20,16 +20,15 @@ import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
-import { da } from "zod/locales";
 
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
   robotRole: RobotRole;
-  fieldTraversal: FieldTraversal;
-  endgameClimbResult: EndgameClimbResult;
-  autoClimbResult: AutoClimbResult;
+  mobility: Mobility;
+  endgameClimb: EndgameClimb;
+  autoClimb: AutoClimb;
   driverAbility: number;
-  shootingAccuracy: number;
+  accuracy: number;
   events: Partial<Event>[];
   scouter: Partial<Scouter>;
 }
@@ -41,7 +40,7 @@ interface PointsReport {
  */
 export const getTeamMatchCSV = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     if (req.user.role !== UserRole.SCOUTING_LEAD) {
@@ -101,17 +100,17 @@ export const getTeamMatchCSV = async (
           where: {
             scouter: {
               sourceTeamNumber: dataSourceRuleToPrismaFilter(
-                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule)
+                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
               ),
             },
           },
           select: {
             robotRole: true,
-            endgameClimbResult: true,
-            autoClimbResult: true,
-            fieldTraversal: true,
+            endgameClimb: true,
+            autoClimb: true,
+            mobility: true,
             driverAbility: true,
-            shootingAccuracy: true,
+            accuracy: true,
             events: {
               where: eventTimeFilter,
               select: {
@@ -151,7 +150,7 @@ export const getTeamMatchCSV = async (
           cur.scoutReports;
         return acc;
       },
-      {}
+      {},
     );
 
     // Here comes the mouthful
@@ -178,8 +177,8 @@ export const getTeamMatchCSV = async (
               reports,
               scouterNames,
               includeAuto,
-              includeTeleop
-            )
+              includeTeleop,
+            ),
           );
         }
       });
@@ -216,7 +215,7 @@ function aggregateTeamMatchReports(
   reports: Omit<PointsReport, "scouter">[],
   scouters: string[],
   includeAuto: boolean,
-  includeTeleop: boolean
+  includeTeleop: boolean,
 ): Omit<CondensedReport, "notes"> {
   const data: Omit<CondensedReport, "notes"> = {
     match: match,
@@ -230,15 +229,15 @@ function aggregateTeamMatchReports(
     totalPoints: 0,
     campDefends: 0,
     blockDefends: 0,
-    shootingAccuracy: 0,
+    accuracy: 0,
     outpostIntakes: 0,
     outpostOuttakes: 0,
     depot: 0,
     groundIntakes: 0,
     fuelScored: 0,
-    autoClimbResult: null,
-    endgameClimbResult: null,
-    fieldTraversal: null,
+    autoClimb: null,
+    endgameClimb: null,
+    mobility: null,
     scouter: scouters.join(","),
   };
 
@@ -248,13 +247,12 @@ function aggregateTeamMatchReports(
     DEFENDING: 0,
     SCORING: 0,
     CYCLING: 0,
-    STEALING: 0,
     IMMOBILE: 0,
   };
-  const endgameCount: Record<EndgameClimbResult, number> = {
-    LEVEL_ONE: 0,
-    LEVEL_TWO: 0,
-    LEVEL_THREE: 0,
+  const endgameCount: Record<EndgameClimb, number> = {
+    L1: 0,
+    L2: 0,
+    L3: 0,
     FAILED: 0,
     NOT_ATTEMPTED: 0,
   };
@@ -262,27 +260,23 @@ function aggregateTeamMatchReports(
   reports.forEach((report) => {
     data.driverAbility += report.driverAbility;
     roleCount[report.robotRole]++;
-    endgameCount[report.endgameClimbResult]++;
+    endgameCount[report.endgameClimb]++;
 
-    switch (report.fieldTraversal) {
-      case FieldTraversal.BUMP:
-        data.fieldTraversal =
-          data.fieldTraversal === FieldTraversal.TRENCH
-            ? FieldTraversal.BOTH
-            : FieldTraversal.BUMP;
+    switch (report.mobility) {
+      case Mobility.BUMP:
+        data.mobility =
+          data.mobility === Mobility.TRENCH ? Mobility.BOTH : Mobility.BUMP;
         break;
-      case FieldTraversal.TRENCH:
-        data.fieldTraversal =
-          data.fieldTraversal === FieldTraversal.BUMP
-            ? FieldTraversal.BOTH
-            : FieldTraversal.TRENCH;
+      case Mobility.TRENCH:
+        data.mobility =
+          data.mobility === Mobility.BUMP ? Mobility.BOTH : Mobility.TRENCH;
         break;
-      case FieldTraversal.BOTH:
-        data.fieldTraversal = FieldTraversal.BOTH;
+      case Mobility.BOTH:
+        data.mobility = Mobility.BOTH;
         break;
     }
 
-    data.shootingAccuracy += report.shootingAccuracy;
+    data.accuracy += report.accuracy;
 
     // Sum match points and actions
     report.events.forEach((event) => {
@@ -313,7 +307,7 @@ function aggregateTeamMatchReports(
     // Using > gives precedence to earlier keys
     if (val[1] > most) {
       most = val[1];
-      data.endgameClimbResult = val[0];
+      data.endgameClimb = val[0];
     }
     return most;
   }, 0);
@@ -323,20 +317,18 @@ function aggregateTeamMatchReports(
     data.teleopPoints = roundToHundredth(data.teleopPoints / reports.length);
     data.autoPoints = roundToHundredth(data.autoPoints / reports.length);
     data.driverAbility = roundToHundredth(data.driverAbility / reports.length);
-    data.shootingAccuracy = roundToHundredth(
-      data.shootingAccuracy / reports.length
-    );
+    data.accuracy = roundToHundredth(data.accuracy / reports.length);
     data.feedsFromNeutral = roundToHundredth(
-      data.feedsFromNeutral / reports.length
+      data.feedsFromNeutral / reports.length,
     );
     data.feedsFromOpponent = roundToHundredth(
-      data.feedsFromOpponent / reports.length
+      data.feedsFromOpponent / reports.length,
     );
     data.outpostIntakes = roundToHundredth(
-      data.outpostIntakes / reports.length
+      data.outpostIntakes / reports.length,
     );
     data.outpostOuttakes = roundToHundredth(
-      data.outpostOuttakes / reports.length
+      data.outpostOuttakes / reports.length,
     );
     data.depot = roundToHundredth(data.depot / reports.length);
     data.groundIntakes = roundToHundredth(data.groundIntakes / reports.length);
@@ -345,7 +337,7 @@ function aggregateTeamMatchReports(
 
   // Add endgame points to total points
   if (includeTeleop && includeAuto) {
-    data.teleopPoints += endgameToPoints[data.endgameClimbResult];
+    data.teleopPoints += endgameToPoints[data.endgameClimb];
   }
 
   return data;
