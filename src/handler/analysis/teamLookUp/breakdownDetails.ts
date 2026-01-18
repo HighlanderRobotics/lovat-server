@@ -7,7 +7,6 @@ import {
   lowercaseToBreakdown,
   MetricsBreakdown,
 } from "../analysisConstants.js";
-import { EventAction } from "@prisma/client";
 import { createAnalysisHandler } from "../analysisHandler.js";
 import {
   dataSourceRuleSchema,
@@ -29,7 +28,7 @@ export const breakdownDetails = createAnalysisHandler({
       key: [
         "breakdownDetails",
         params.team.toString(),
-        lowercaseToBreakdown[params.breakdown] as unknown as string, // extremely sus should fix
+        lowercaseToBreakdown[params.breakdown].toString(),
       ],
       teamDependencies: [params.team],
       tournamentDependencies: [],
@@ -37,7 +36,7 @@ export const breakdownDetails = createAnalysisHandler({
   },
   calculateAnalysis: async ({ params }, ctx) => {
     let queryStr = `
-        SELECT "${lowercaseToBreakdown[params.breakdown]}" AS breakdown,
+        SELECT "${lowercaseToBreakdown[params.breakdown].toString()}" AS breakdown,
             "teamMatchKey" AS key,
             tmnt."name" AS tournament,
             sc."sourceTeamNumber" AS sourceteam,
@@ -55,7 +54,6 @@ export const breakdownDetails = createAnalysisHandler({
             AND teamScouter."sourceTeamNumber" = ${ctx.user.teamNumber}
         ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
         `;
-
     interface QueryRow {
       breakdown: string;
       key: string;

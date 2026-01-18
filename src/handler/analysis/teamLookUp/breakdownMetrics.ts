@@ -47,7 +47,7 @@ export const breakdownMetrics = createAnalysisHandler({
     for (const [key, metric] of Object.entries(lowercaseToBreakdown)) {
       const data = await nonEventMetric(ctx.user, {
         team: params.team,
-        metric: MetricsBreakdown[metric], // also very sus
+        metric: metric,
       });
 
       const valid = Object.values(data).some((val) => Boolean(val));

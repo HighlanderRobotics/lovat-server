@@ -45,15 +45,15 @@ enum Metric {
 // !!!IMPORTANT!!! toString() must return a property of ScoutReport
 // Metrics for discrete ScoutReport fields
 enum MetricsBreakdown {
-  robotRole,
-  mobility,
-  endgameClimb,
-  beached,
-  scoresWhileMoving,
-  autoClimb,
-  feederType,
-  disrupts,
-  intakeType,
+  robotRole = "robotRole",
+  mobility = "mobility",
+  endgameClimb = "endgameClimb",
+  beached = "beached",
+  scoresWhileMoving = "scoresWhileMoving",
+  disrupts = "disrupts",
+  autoClimb = "autoClimb",
+  feederType = "feederType",
+  intakeType = "intakeType",
 }
 
 // Ranking metrics
@@ -137,8 +137,8 @@ const FlippedPositionMap: Record<Position, number> = {
   [Position.NONE]: 8,
 };
 
-const breakdownPos = "True";
-const breakdownNeg = "False";
+const breakdownPos = "true";
+const breakdownNeg = "false";
 
 const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
   robotrole: MetricsBreakdown.robotRole,
@@ -160,8 +160,8 @@ const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
   [MetricsBreakdown.scoresWhileMoving]: [breakdownNeg, breakdownPos],
   [MetricsBreakdown.autoClimb]: [...Object.values(AutoClimb)],
   [MetricsBreakdown.feederType]: [...Object.values(FeederType)],
-  [MetricsBreakdown.disrupts]: [breakdownNeg, breakdownPos],
   [MetricsBreakdown.intakeType]: [...Object.values(IntakeType)],
+  [MetricsBreakdown.disrupts]: [breakdownNeg, breakdownPos],
 };
 
 const metricsToNumber: Record<string, number> = {

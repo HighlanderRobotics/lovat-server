@@ -69,6 +69,7 @@ model ScoutReport {
   intakeType            IntakeType
   mobility              Mobility
   scoresWhileMoving     Boolean
+  disrupts              Boolean
   endgameClimb          EndgameClimb
   autoClimb             AutoClimb
 }
