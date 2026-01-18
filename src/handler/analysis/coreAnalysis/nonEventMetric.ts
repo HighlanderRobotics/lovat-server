@@ -110,11 +110,11 @@ export async function nonEventMetric(
 }
 
 // Edit to work with true/false breakdowns
-export const transformBreakdown = (input: string): string => {
+export const transformBreakdown = (input: any): string => {
   switch (input) {
-    case "YES":
+    case true:
       return breakdownPos;
-    case "NO":
+    case false:
       return breakdownNeg;
     default:
       return input;

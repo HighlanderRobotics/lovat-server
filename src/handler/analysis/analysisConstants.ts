@@ -137,8 +137,8 @@ const FlippedPositionMap: Record<Position, number> = {
   [Position.NONE]: 8,
 };
 
-const breakdownPos = "true";
-const breakdownNeg = "false";
+const breakdownPos = "TRUE";
+const breakdownNeg = "FALSE";
 
 const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
   robotrole: MetricsBreakdown.robotRole,
