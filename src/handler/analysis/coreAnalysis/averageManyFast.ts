@@ -19,6 +19,10 @@ import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 import { User } from "@prisma/client";
 import { ca } from "zod/locales";
 
+export interface ArrayFilter<T> {
+  notIn?: T[];
+  in?: T[];
+}
 /* ----------------------- helpers ----------------------- */
 function avg(values: number[]): number {
   return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
