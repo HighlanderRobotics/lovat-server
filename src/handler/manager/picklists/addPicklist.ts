@@ -27,6 +27,7 @@ export const addPicklist = async (
         scoringRate: z.number(),
         estimatedSuccessfulFuelRate: z.number(),
         estimatedTotalFuelScored: z.number(),
+        driverAbility: z.number(),
       })
       .safeParse({
         authorId: req.user.id,
@@ -34,9 +35,10 @@ export const addPicklist = async (
         totalPoints: req.body.totalPoints || 0,
         autoPoints: req.body.autoPoints || 0,
         teleopPoints: req.body.teleopPoints || 0,
-        climbResult: req.body.climb || 0,
+        climbResult: req.body.climbResult || 0,
         autoClimb: req.body.autoClimb || 0,
         defenseEffectiveness: req.body.defenseEffectiveness || 0,
+        driverAbility: req.body.driverAbility || 0,
         contactDefenseTime: req.body.contactDefenseTime || 0,
         campingDefenseTime: req.body.campingDefenseTime || 0,
         totalDefensiveTime: req.body.totalDefensiveTime || 0,
@@ -45,7 +47,7 @@ export const addPicklist = async (
         feedingRate: req.body.feedingRate || 0,
         scoringRate: req.body.scoringRate || 0,
         estimatedSuccessfulFuelRate: req.body.estimatedSuccessfulFuelRate || 0,
-        estimatedTotalFuelScored: req.body.estimatedSuccessfulFuelRate || 0,
+        estimatedTotalFuelScored: req.body.estimatedTotalFuelScored || 0,
       });
 
     console.log({ addPicklistQuery: req.query, addPicklistBody: req.body });
@@ -58,7 +60,7 @@ export const addPicklist = async (
       res
         .status(403)
         .send(
-          "Not authortized to publish a picklist because your not on a team",
+          "Not authorized to publish a picklist because you're not on a team",
         );
       return;
     }
@@ -72,6 +74,7 @@ export const addPicklist = async (
         climbResult: params.data.climbResult,
         autoClimb: params.data.autoClimb,
         defenseEffectiveness: params.data.defenseEffectiveness,
+        driverAbility: params.data.driverAbility,
         contactDefenseTime: params.data.contactDefenseTime,
         campingDefenseTime: params.data.campingDefenseTime,
         totalDefensiveTime: params.data.totalDefensiveTime,
