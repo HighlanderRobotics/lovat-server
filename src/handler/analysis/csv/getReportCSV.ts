@@ -13,12 +13,13 @@ import {
   AutoClimb,
   EndgameClimb,
 } from "@prisma/client";
-import { autoEnd, endgameToPoints } from "../analysisConstants.js";
+import { autoEnd, endgameToPoints, Metric } from "../analysisConstants.js";
 import { z } from "zod";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
+import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
 export interface CondensedReport {
@@ -57,6 +58,7 @@ interface PointsReport {
   events: Partial<Event>[];
   scouter: Partial<Scouter>;
   teamMatchData: Partial<TeamMatchData>;
+  uuid?: string;
 }
 
 /**
@@ -125,8 +127,9 @@ export const getReportCSV = async (
         },
       },
       select: {
+        uuid: true,
         notes: true,
-        robotRole: true,
+        robotRoles: true,
         endgameClimb: true,
         autoClimb: true,
         driverAbility: true,
@@ -167,22 +170,25 @@ export const getReportCSV = async (
       return;
     }
 
-    const condensed = datapoints.map((r) =>
-      condenseReport(
-        {
-          notes: r.notes,
-          robotRoles: [r.robotRole],
-          endgameClimb: r.endgameClimb,
-          autoClimb: r.autoClimb,
-          driverAbility: r.driverAbility,
-          accuracy: r.accuracy,
-          events: r.events,
-          scouter: r.scouter,
-          teamMatchData: r.teamMatchData,
-        },
-        req.user.teamNumber,
-        includeAuto,
-        includeTeleop,
+    const condensed = await Promise.all(
+      datapoints.map(async (r) =>
+        condenseReport(
+          {
+            uuid: r.uuid,
+            notes: r.notes,
+             robotRoles: r.robotRoles,
+            endgameClimb: r.endgameClimb,
+            autoClimb: r.autoClimb,
+            driverAbility: r.driverAbility,
+            accuracy: r.accuracy,
+            events: r.events,
+            scouter: r.scouter,
+            teamMatchData: r.teamMatchData,
+          },
+          req.user.teamNumber,
+          includeAuto,
+          includeTeleop,
+        ),
       ),
     );
 
@@ -211,12 +217,12 @@ export const getReportCSV = async (
   }
 };
 
-function condenseReport(
+async function condenseReport(
   report: PointsReport,
   userTeam: number,
   includeAuto: boolean,
   includeTeleop: boolean,
-): CondensedReport {
+): Promise<CondensedReport> {
   const data: CondensedReport = {
     match:
       report.teamMatchData.matchType.at(0) + report.teamMatchData.matchNumber,
@@ -240,23 +246,18 @@ function condenseReport(
     driverAbility: report.driverAbility,
     endgameClimb: report.endgameClimb,
     scouter: "",
-    notes: report.notes.replace(/,/g, ";"), // Avoid commas in a csv...
+    notes: report.notes.replace(/,/g, ";"),
   };
 
-  // Sum match points and actions
+  // Compute points using events
   report.events.forEach((event) => {
     if (event.time <= autoEnd) {
       data.autoPoints += event.points;
     } else {
       data.teleopPoints += event.points;
     }
-
-    switch (event.action) {
-      case EventAction.START_FEEDING:
-        if (event.position === Position.NEUTRAL_ZONE) {
-          data.feedsFromNeutral += 1;
-        }
-        break;
+    if (event.action === EventAction.START_FEEDING && event.position === Position.NEUTRAL_ZONE) {
+      data.feedsFromNeutral += 1;
     }
   });
 
@@ -265,8 +266,32 @@ function condenseReport(
     data.teleopPoints += endgameToPoints[data.endgameClimb as EndgameClimb];
   }
 
+  // Use averageScoutReport for single-report metrics
+  if (report.uuid) {
+    const metrics = [
+      Metric.totalPoints,
+      Metric.contactDefenseTime,
+      Metric.campingDefenseTime,
+      Metric.totalDefenseTime,
+      Metric.fuelPerSecond,
+      Metric.feedingRate,
+      Metric.feedsPerMatch,
+      Metric.outpostIntakes,
+    ];
+    const agg = await averageScoutReport({} as any, {
+      scoutReportUuid: report.uuid,
+      metrics,
+    });
+    data.totalPoints = agg[Metric.totalPoints] ?? data.teleopPoints + data.autoPoints;
+    // Map some derived counts
+    data.blockDefends = Math.round((agg[Metric.contactDefenseTime] ?? 0) / 1); // seconds proxy
+    data.campDefends = Math.round((agg[Metric.campingDefenseTime] ?? 0) / 1);
+    data.outpostIntakes = Math.round(agg[Metric.outpostIntakes] ?? 0);
+    data.fuelScored = Math.round((agg[Metric.fuelPerSecond] ?? 0) * 150);
+  }
+
   if (report.scouter.sourceTeamNumber === userTeam) {
-    data.scouter = report.scouter.name.replace(/,/g, ";"); // Avoid commas in a csv...
+    data.scouter = report.scouter.name.replace(/,/g, ";");
   }
 
   return data;
