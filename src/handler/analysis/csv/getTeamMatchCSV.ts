@@ -23,7 +23,7 @@ import {
 
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
-  robotRole: RobotRole;
+  robotRoles: RobotRole[];
   mobility: Mobility;
   endgameClimb: EndgameClimb;
   autoClimb: AutoClimb;
@@ -104,8 +104,8 @@ export const getTeamMatchCSV = async (
               ),
             },
           },
-          select: {
-            robotRole: true,
+           select: {
+            robotRoles: true,
             endgameClimb: true,
             autoClimb: true,
             mobility: true,
@@ -220,7 +220,7 @@ function aggregateTeamMatchReports(
   const data: Omit<CondensedReport, "notes"> = {
     match: match,
     teamNumber: teamNumber,
-    role: null,
+    roles: "",
     teleopPoints: 0,
     autoPoints: 0,
     driverAbility: 0,
@@ -259,7 +259,9 @@ function aggregateTeamMatchReports(
 
   reports.forEach((report) => {
     data.driverAbility += report.driverAbility;
-    roleCount[report.robotRole]++;
+    for (const role of report.robotRoles || []) {
+      roleCount[role]++;
+    }
     endgameCount[report.endgameClimb]++;
 
     switch (report.mobility) {
@@ -295,14 +297,12 @@ function aggregateTeamMatchReports(
   });
 
   // Find highest-reported robot role and endgame interaction
-  Object.entries(roleCount).reduce((highest, role) => {
-    // Using >= gives precedence to later keys
-    if (role[1] >= highest) {
-      highest = role[1];
-      data.role = role[0];
-    }
-    return highest;
-  }, 0);
+  // Create comma-separated list of roles by descending frequency
+  const sortedRoles = Object.entries(roleCount)
+    .sort((a, b) => b[1] - a[1])
+    .map(([r]) => r)
+    .filter((r) => roleCount[r as RobotRole] > 0);
+  data.roles = sortedRoles.join(",");
   Object.entries(endgameCount).reduce((most, val) => {
     // Using > gives precedence to earlier keys
     if (val[1] > most) {

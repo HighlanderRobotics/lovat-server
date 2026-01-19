@@ -22,30 +22,31 @@ import {
 import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
-export interface CondensedReport {
-  match: string;
-  teamNumber: number;
-  role: string;
-  teleopPoints: number;
-  autoPoints: number;
-  driverAbility: number;
-  feedsFromNeutral: number;
-  feedsFromOpponent: number;
-  totalPoints: number;
-  campDefends: number;
-  blockDefends: number;
-  accuracy: number;
-  outpostIntakes: number;
-  outpostOuttakes: number;
-  depot: number;
-  groundIntakes: number;
-  fuelScored: number;
-  autoClimb: string;
-  endgameClimb: string;
-  mobility: string;
-  scouter: string;
-  notes: string;
-}
+ export interface CondensedReport {
+   match: string;
+   teamNumber: number;
+   roles: string;
+   teleopPoints: number;
+   autoPoints: number;
+   driverAbility: number;
+   feedsFromNeutral: number;
+   feedsFromOpponent: number;
+   totalPoints: number;
+   campDefends: number;
+   blockDefends: number;
+   accuracy: number;
+   outpostIntakes: number;
+   outpostOuttakes: number;
+   depot: number;
+   groundIntakes: number;
+   fuelScored: number;
+   autoClimb: string;
+   endgameClimb: string;
+   mobility: string;
+   scouter: string;
+   notes: string;
+ }
+
 
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
@@ -227,7 +228,7 @@ async function condenseReport(
     match:
       report.teamMatchData.matchType.at(0) + report.teamMatchData.matchNumber,
     teamNumber: report.teamMatchData.teamNumber,
-    role: (report.robotRoles && report.robotRoles[0]) || RobotRole.CYCLING,
+    roles: (report.robotRoles || []).join(","),
     totalPoints: 0,
     feedsFromNeutral: 0,
     feedsFromOpponent: 0,

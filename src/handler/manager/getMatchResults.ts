@@ -140,20 +140,12 @@ function getRobotRole(reports: ScoutReport[]) {
   const out: number[] = [0, 0, 0, 0, 0, 0];
 
   for (const report of reports) {
-    if (report.robotRole === "CYCLING") {
-      out[0]++;
-    }
-    if (report.robotRole === "SCORING") {
-      out[1]++;
-    }
-    if (report.robotRole === "FEEDING") {
-      out[2]++;
-    }
-    if (report.robotRole === "DEFENDING") {
-      out[3]++;
-    }
-    if (report.robotRole === "IMMOBILE") {
-      out[4]++;
+    for (const role of report.robotRoles || []) {
+      if (role === "CYCLING") out[0]++;
+      if (role === "SCORING") out[1]++;
+      if (role === "FEEDING") out[2]++;
+      if (role === "DEFENDING") out[3]++;
+      if (role === "IMMOBILE") out[4]++;
     }
   }
 

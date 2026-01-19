@@ -45,14 +45,14 @@ enum Metric {
 // !!!IMPORTANT!!! toString() must return a property of ScoutReport
 // Metrics for discrete ScoutReport fields
 enum MetricsBreakdown {
-  robotRole = "robotRole",
+  robotRole = "robotRoles",
   mobility = "mobility",
   endgameClimb = "endgameClimb",
   beached = "beached",
   scoresWhileMoving = "scoresWhileMoving",
   disrupts = "disrupts",
   autoClimb = "autoClimb",
-  feederType = "feederType",
+  feederType = "feederTypes",
   intakeType = "intakeType",
 }
 

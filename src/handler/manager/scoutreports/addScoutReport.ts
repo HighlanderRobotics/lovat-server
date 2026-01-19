@@ -43,7 +43,7 @@ export const addScoutReport = async (
         climbPosition: z.nativeEnum(ClimbPosition).optional(),
         climbSide: z.nativeEnum(ClimbSide).optional(),
         beached: z.nativeEnum(Beached),
-        feederType: z.nativeEnum(FeederType),
+         feederTypes: z.array(z.nativeEnum(FeederType)),
         intakeType: z.nativeEnum(IntakeType),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
@@ -126,15 +126,14 @@ export const addScoutReport = async (
         teamMatchData: { connect: { key: matchKey } },
         scouter: { connect: { uuid: paramsScoutReport.scouterUuid } },
         notes: paramsScoutReport.notes,
-        // Use singular robotRole for backward compatibility
-        robotRole: paramsScoutReport.robotRoles[0],
+        robotRoles: paramsScoutReport.robotRoles,
         driverAbility: paramsScoutReport.driverAbility,
         robotBrokeDescription: paramsScoutReport.robotBrokeDescription ?? null,
 
         // game specific
         autoClimb: paramsScoutReport.autoClimb,
         beached: paramsScoutReport.beached,
-        feederType: paramsScoutReport.feederType,
+        feederTypes: paramsScoutReport.feederTypes,
         intakeType: paramsScoutReport.intakeType,
         mobility: paramsScoutReport.mobility,
         defenseEffectiveness: paramsScoutReport.defenseEffectiveness,

@@ -68,17 +68,17 @@ const config = {
 
     const teamOneMainRole =
       FlippedRoleMap[
-        (await robotRole(ctx.user, { team: args.team1 })).mainRole ??
+        (await robotRole(ctx.user, { team: args.team1 })).mainRoles[0] ??
           RobotRole.IMMOBILE
       ];
     const teamTwoMainRole =
       FlippedRoleMap[
-        (await robotRole(ctx.user, { team: args.team2 })).mainRole ??
+        (await robotRole(ctx.user, { team: args.team2 })).mainRoles[0] ??
           RobotRole.IMMOBILE
       ];
     const teamThreeMainRole =
       FlippedRoleMap[
-        (await robotRole(ctx.user, { team: args.team3 })).mainRole ??
+        (await robotRole(ctx.user, { team: args.team3 })).mainRoles[0] ??
           RobotRole.IMMOBILE
       ];
 

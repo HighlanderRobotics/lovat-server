@@ -51,7 +51,7 @@ interface AggregatedTeamData {
 
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
-  robotRole: RobotRole;
+  robotRoles: RobotRole[];
   endgameClimb: EndgameClimb;
   autoClimb: AutoClimb;
   mobility: Mobility;
@@ -131,7 +131,7 @@ export const getTeamCSV = async (
             },
           },
           select: {
-            robotRole: true,
+            robotRoles: true,
             accuracy: true,
             endgameClimb: true,
             autoClimb: true,
@@ -268,7 +268,9 @@ function aggregateTeamReports(
   reports.forEach((report) => {
     // Sum driver ability and robot role
     data.avgDriverAbility += report.driverAbility * report.weight;
-    roles[report.robotRole] += report.weight;
+    for (const role of report.robotRoles || []) {
+      roles[role] += report.weight / (report.robotRoles.length || 1);
+    }
 
     // Set discrete robot capabilities
     // Implement a safety for this? One incorrect report could mess up the data
