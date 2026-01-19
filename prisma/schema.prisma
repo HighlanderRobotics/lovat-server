@@ -51,7 +51,7 @@ model ScoutReport {
   teamMatchKey          String
   startTime             DateTime
   notes                 String
-  robotRole             RobotRole
+  robotRoles            RobotRole[]
   driverAbility         Int
   scouterUuid           String
   robotBrokeDescription String?
@@ -65,7 +65,7 @@ model ScoutReport {
   climbPosition         ClimbPosition?
   climbSide             ClimbSide?
   defenseEffectiveness  Int
-  feederType            FeederType
+  feederTypes           FeederType[]
   intakeType            IntakeType
   mobility              Mobility
   scoresWhileMoving     Boolean

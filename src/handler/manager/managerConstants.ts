@@ -4,6 +4,8 @@ import {
   RobotRole,
   MatchType,
   EndgameClimb,
+  AutoClimb,
+  FeederType,
 } from "@prisma/client";
 
 const EventActionMap: Record<number, EventAction> = {
@@ -57,6 +59,18 @@ const EndgameClimbReverseMap: Record<EndgameClimb, number> = {
   [EndgameClimb.FAILED]: 4,
 };
 
+const AutoClimbReverseMap: Record<AutoClimb, number> = {
+  [AutoClimb.NOT_ATTEMPTED]: 0,
+  [AutoClimb.SUCCEEDED]: 1,
+  [AutoClimb.FAILED]: 2,
+};
+
+const FeederTypeReverseMap: Record<FeederType, number> = {
+  [FeederType.CONTINUOUS]: 0,
+  [FeederType.STOP_TO_SHOOT]: 1,
+  [FeederType.DUMP]: 2,
+};
+
 const MatchTypeMap: Record<number, MatchType> = {
   0: MatchType.QUALIFICATION,
   1: MatchType.ELIMINATION,
@@ -102,4 +116,6 @@ export {
   MatchTypeToAbrivation,
   MatchEnumToAbrivation,
   EndgameClimbReverseMap,
+  AutoClimbReverseMap,
+  FeederTypeReverseMap,
 };

@@ -6,6 +6,7 @@ import {
 } from "../analysisConstants.js";
 import z from "zod";
 import { runAnalysis } from "../analysisFunction.js";
+import { AutoClimbReverseMap } from "../../manager/managerConstants.js";
 
 const config = {
   argsSchema: z.object({ matchKey: z.string(), scoutReportUuid: z.string() }),
@@ -66,6 +67,7 @@ const config = {
       positions: positions,
       match: args.matchKey,
       tournamentName: match.tournament.name,
+      climb: AutoClimbReverseMap[scoutReport.autoClimb],
     };
   },
 } as const;
