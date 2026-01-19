@@ -120,6 +120,7 @@ model SharedPicklist {
   campingDefenseTime          Float
   climbResult                 Float
   contactDefenseTime          Float
+  driverAbility               Float
   defenseEffectiveness        Float
   estimatedSuccessfulFuelRate Float
   estimatedTotalFuelScored    Float

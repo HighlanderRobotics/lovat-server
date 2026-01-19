@@ -45,14 +45,14 @@ enum Metric {
 // !!!IMPORTANT!!! toString() must return a property of ScoutReport
 // Metrics for discrete ScoutReport fields
 enum MetricsBreakdown {
-  robotRole = "robotRoles",
+  robotRoles = "robotRoles",
   mobility = "mobility",
   endgameClimb = "endgameClimb",
   beached = "beached",
   scoresWhileMoving = "scoresWhileMoving",
   disrupts = "disrupts",
   autoClimb = "autoClimb",
-  feederType = "feederTypes",
+  feederTypes = "feederTypes",
   intakeType = "intakeType",
 }
 
@@ -141,12 +141,12 @@ const breakdownPos = "TRUE";
 const breakdownNeg = "FALSE";
 
 const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
-  robotrole: MetricsBreakdown.robotRole,
+  robotrole: MetricsBreakdown.robotRoles,
   mobility: MetricsBreakdown.mobility,
   beached: MetricsBreakdown.beached,
   autoclimb: MetricsBreakdown.autoClimb,
   climbresult: MetricsBreakdown.endgameClimb,
-  feedertype: MetricsBreakdown.feederType,
+  feedertype: MetricsBreakdown.feederTypes,
   scoreswhilemoving: MetricsBreakdown.scoresWhileMoving,
   disrupts: MetricsBreakdown.disrupts,
   intaketype: MetricsBreakdown.intakeType,
@@ -162,13 +162,13 @@ const accuracyToPercentage: Record<number, number> = {
 };
 
 const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
-  [MetricsBreakdown.robotRole]: [...Object.values(RobotRole)],
+  [MetricsBreakdown.robotRoles]: [...Object.values(RobotRole)],
   [MetricsBreakdown.mobility]: [...Object.values(Mobility)],
   [MetricsBreakdown.endgameClimb]: [...Object.values(EndgameClimb)],
   [MetricsBreakdown.beached]: [...Object.values(Beached)],
   [MetricsBreakdown.scoresWhileMoving]: [breakdownNeg, breakdownPos],
   [MetricsBreakdown.autoClimb]: [...Object.values(AutoClimb)],
-  [MetricsBreakdown.feederType]: [...Object.values(FeederType)],
+  [MetricsBreakdown.feederTypes]: [...Object.values(FeederType)],
   [MetricsBreakdown.intakeType]: [...Object.values(IntakeType)],
   [MetricsBreakdown.disrupts]: [breakdownNeg, breakdownPos],
 };

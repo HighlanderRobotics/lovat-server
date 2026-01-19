@@ -31,34 +31,44 @@ export const picklistShell = createAnalysisHandler({
         })
         .optional(),
       stage: z.string().optional(),
-      totalpoints: z.coerce.number().optional(),
-      autopoints: z.coerce.number().optional(),
-      teleoppoints: z.coerce.number().optional(),
-      driverability: z.coerce.number().optional(),
-      accuracy: z.coerce.number().optional(),
-      climbresult: z.coerce.number().optional(),
-      fuelscored: z.coerce.number().optional(),
-      depotintakes: z.coerce.number().optional(),
-      groundintakes: z.coerce.number().optional(),
-      outpostintakes: z.coerce.number().optional(),
-      outpostouttakes: z.coerce.number().optional(),
+      totalPoints: z.coerce.number().optional(),
+      autoPoints: z.coerce.number().optional(),
+      teleopPoints: z.coerce.number().optional(),
+      driverAbility: z.coerce.number().optional(),
+      climbResult: z.coerce.number().optional(),
+      autoClimb: z.coerce.number().optional(),
+      defenseEffectiveness: z.coerce.number().optional(),
+      contactDefenseTime: z.coerce.number().optional(),
+      campingDefenseTime: z.coerce.number().optional(),
+      totalDefensiveTime: z.coerce.number().optional(),
+      totalFuelThroughput: z.coerce.number().optional(),
+      totalFuelFed: z.coerce.number().optional(),
+      feedingRate: z.coerce.number().optional(),
+      scoringRate: z.coerce.number().optional(),
+      estimatedSuccessfulFuelRate: z.coerce.number().optional(),
+      estimatedTotalFuelScored: z.coerce.number().optional(),
     }),
   },
   usesDataSource: true,
   shouldCache: true,
   createKey: ({ query }) => {
     const metricsKey = {
-      totalpoints: query.totalpoints || 0,
-      autopoints: query.autopoints || 0,
-      teleoppoints: query.teleoppoints || 0,
-      driverability: query.driverability || 0,
-      accuracy: query.driverability || 0,
-      climbresult: query.climbresult || 0,
-      fuelscored: query.fuelscored || 0,
-      depotintakes: query.depotintakes || 0,
-      groundintakes: query.groundintakes || 0,
-      outpostintakes: query.outpostintakes || 0,
-      outpostouttakes: query.outpostouttakes || 0,
+      totalPoints: query.totalPoints || 0,
+      autoPoints: query.autoPoints || 0,
+      teleopPoints: query.teleopPoints || 0,
+      driverAbility: query.driverAbility || 0,
+      climbResult: query.climbResult || 0,
+      autoClimb: query.autoClimb || 0,
+      defenseEffectiveness: query.defenseEffectiveness || 0,
+      contactDefenseTime: query.contactDefenseTime || 0,
+      campingDefenseTime: query.campingDefenseTime || 0,
+      totalDefensiveTime: query.totalDefensiveTime || 0,
+      totalFuelThroughput: query.totalFuelThroughput || 0,
+      totalFuelFed: query.totalFuelFed || 0,
+      feedingRate: query.feedingRate || 0,
+      scoringRate: query.scoringRate || 0,
+      estimatedSuccessfulFuelRate: query.estimatedSuccessfulFuelRate || 0,
+      estimatedTotalFuelScored: query.estimatedTotalFuelScored || 0,
     };
 
     return {
@@ -69,32 +79,34 @@ export const picklistShell = createAnalysisHandler({
         JSON.stringify(metricsKey),
       ],
       teamDependencies: [],
-      tournamentDependencies: [query.tournamentKey],
+      tournamentDependencies: query.tournamentKey ? [query.tournamentKey] : [],
     };
   },
   calculateAnalysis: async ({ query }, ctx) => {
-    // Stopgap to error out 2024 picklists
-    if (query.stage) {
-      throw new Error("OUTDATED_PICKLIST");
-    }
+    // Accept legacy 'stage' param but ignore it
 
     // No data without a tournament key (should make this an impossible request from frontend)
     if (!query.tournamentKey) {
-      return [];
+      return { teams: [] };
     }
 
     const metrics = {
-      totalpoints: query.totalpoints || 0,
-      autopoints: query.autopoints || 0,
-      teleoppoints: query.teleoppoints || 0,
-      driverability: query.driverability || 0,
-      accuracy: query.driverability || 0,
-      climbresult: query.climbresult || 0,
-      fuelscored: query.fuelscored || 0,
-      depotintakes: query.depotintakes || 0,
-      groundintakes: query.groundintakes || 0,
-      outpostintakes: query.outpostintakes || 0,
-      outpostouttakes: query.outpostouttakes || 0,
+      totalPoints: query.totalPoints || 0,
+      autoPoints: query.autoPoints || 0,
+      teleopPoints: query.teleopPoints || 0,
+      driverAbility: query.driverAbility || 0,
+      climbResult: query.climbResult || 0,
+      autoClimb: query.autoClimb || 0,
+      defenseEffectiveness: query.defenseEffectiveness || 0,
+      contactDefenseTime: query.contactDefenseTime || 0,
+      campingDefenseTime: query.campingDefenseTime || 0,
+      totalDefensiveTime: query.totalDefensiveTime || 0,
+      totalFuelThroughput: query.totalFuelThroughput || 0,
+      totalFuelFed: query.totalFuelFed || 0,
+      feedingRate: query.feedingRate || 0,
+      scoringRate: query.scoringRate || 0,
+      estimatedSuccessfulFuelRate: query.estimatedSuccessfulFuelRate || 0,
+      estimatedTotalFuelScored: query.estimatedTotalFuelScored || 0,
     };
 
     //check for all metrics being 0, if so error
