@@ -39,6 +39,7 @@ enum Metric {
   feedingRate,
   feedsPerMatch,
   totalFuelOutputted,
+  totalBallsFed,
   outpostIntakes,
 }
 
@@ -77,6 +78,7 @@ const metricsCategory: Metric[] = [
   Metric.feedingRate,
   Metric.feedsPerMatch,
   Metric.totalFuelOutputted,
+  Metric.totalBallsFed,
   Metric.outpostIntakes,
 ];
 
@@ -216,6 +218,7 @@ const metricToName: Record<Metric, string> = {
   [Metric.feedingRate]: "feedingRate",
   [Metric.feedsPerMatch]: "feedsPerMatch",
   [Metric.totalFuelOutputted]: "totalFuelOutputted",
+  [Metric.totalBallsFed]: "totalBallsFed",
   [Metric.outpostIntakes]: "outpostIntakes",
 };
 

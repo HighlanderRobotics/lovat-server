@@ -17,6 +17,7 @@ const config = {
         location: z.number(),
         event: z.number(),
         time: z.number(),
+        quantity: z.number().optional(),
       }),
     ),
     match: z.string(),
@@ -60,6 +61,7 @@ const config = {
       location: FlippedPositionMap[event.position],
       event: FlippedActionMap[event.action],
       time: event.time,
+      quantity: event.points,
     }));
 
     return {

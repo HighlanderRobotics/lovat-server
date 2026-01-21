@@ -16,6 +16,7 @@ interface AutoPosition {
   location: number;
   event: number;
   time?: number;
+  quantity?: number;
 }
 
 interface AutoData {
@@ -49,6 +50,7 @@ const config = {
           location: z.number(),
           event: z.number(),
           time: z.number().optional(),
+          quantity: z.number().optional(),
         }),
       ),
       matches: z.array(
@@ -122,6 +124,7 @@ const config = {
         location: FlippedPositionMap[e.position],
         event: FlippedActionMap[e.action],
         time: e.time,
+        quantity: e.points,
       }));
 
       if (positions.length > 0) {

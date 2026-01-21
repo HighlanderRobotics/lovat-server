@@ -149,8 +149,9 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             });
 
             const nonNullTimes = times.filter((t): t is number => t !== null);
+            const adjustedTimes = nonNullTimes.map((t) => 2 * 60 + 33 - t);
             if (nonNullTimes.length === 0) continue;
-            tournamentValue = avg(nonNullTimes);
+            tournamentValue = avg(adjustedTimes);
             break;
           }
 

@@ -15,7 +15,9 @@ function firstEventTime(
   predicate?: (t: number) => boolean,
 ): number | null {
   const evt = events
-    .filter((e) => e.action === action && (predicate ? predicate(e.time) : true))
+    .filter(
+      (e) => e.action === action && (predicate ? predicate(e.time) : true),
+    )
     .sort((a, b) => a.time - b.time)[0];
   return evt ? evt.time : null;
 }
@@ -32,7 +34,12 @@ function pairedDuration(
   for (let i = 0; i < relevant.length; i += 2) {
     const start = relevant[i];
     const stop = relevant[i + 1];
-    if (start && stop && start.action === startAction && stop.action === stopAction) {
+    if (
+      start &&
+      stop &&
+      start.action === startAction &&
+      stop.action === stopAction
+    ) {
       total += stop.time - start.time;
     }
   }
@@ -109,16 +116,28 @@ export async function computeAverageScoutReport(
         break;
       }
       case Metric.totalDefenseTime: {
-        const contact = pairedDuration(report.events, "START_DEFENDING", "STOP_DEFENDING");
-        const camping = pairedDuration(report.events, "START_CAMPING", "STOP_CAMPING");
+        const contact = pairedDuration(
+          report.events,
+          "START_DEFENDING",
+          "STOP_DEFENDING",
+        );
+        const camping = pairedDuration(
+          report.events,
+          "START_CAMPING",
+          "STOP_CAMPING",
+        );
         result[metric] = contact + camping;
         break;
       }
       case Metric.fuelPerSecond: {
-        const scoringStops = report.events.filter((e) => e.action === "STOP_SCORING");
+        const scoringStops = report.events.filter(
+          (e) => e.action === "STOP_SCORING",
+        );
         const totalPoints = scoringStops.reduce((a, b) => a + b.points, 0);
         const firstStop = scoringStops.sort((a, b) => a.time - b.time)[0]?.time;
-        const duration = firstStop ? firstStop - (report.events[0]?.time ?? 0) : 150;
+        const duration = firstStop
+          ? firstStop - (report.events[0]?.time ?? 0)
+          : 150;
         result[metric] = duration > 0 ? totalPoints / duration : 0;
         break;
       }
@@ -131,7 +150,8 @@ export async function computeAverageScoutReport(
           "START_FEEDING",
           "STOP_FEEDING",
         );
-        result[metric] = totalFeedingTime > 0 ? totalFeedPoints / totalFeedingTime : 0;
+        result[metric] =
+          totalFeedingTime > 0 ? totalFeedPoints / totalFeedingTime : 0;
         break;
       }
       case Metric.timeFeeding: {
@@ -143,7 +163,9 @@ export async function computeAverageScoutReport(
         break;
       }
       case Metric.feedsPerMatch: {
-        result[metric] = report.events.filter((e) => e.action === "STOP_FEEDING").length;
+        result[metric] = report.events.filter(
+          (e) => e.action === "STOP_FEEDING",
+        ).length;
         break;
       }
       case Metric.totalFuelOutputted: {
@@ -152,10 +174,18 @@ export async function computeAverageScoutReport(
           .reduce((acc, cur) => acc + cur.points, 0);
         break;
       }
+      case Metric.totalBallsFed: {
+        result[metric] = report.events
+          .filter((e) => e.action === "STOP_FEEDING")
+          .reduce((acc, cur) => acc + cur.points, 0);
+        break;
+      }
       default: {
         const action = metricToEvent[metric];
         if (action) {
-          result[metric] = report.events.filter((e) => e.action === action).length;
+          result[metric] = report.events.filter(
+            (e) => e.action === action,
+          ).length;
         }
       }
     }

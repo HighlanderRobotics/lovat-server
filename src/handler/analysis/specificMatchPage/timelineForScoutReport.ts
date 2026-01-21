@@ -26,11 +26,20 @@ export const timelineForScoutReport = createAnalysisHandler({
     });
     const timelineArray = [];
     for (const element of events) {
-      timelineArray.push([
-        element.time,
-        FlippedActionMap[element.action],
-        FlippedPositionMap[element.position],
-      ]);
+      if (element.points !== 0) {
+        timelineArray.push([
+          element.time,
+          FlippedActionMap[element.action],
+          FlippedPositionMap[element.position],
+          element.points,
+        ]);
+      } else {
+        timelineArray.push([
+          element.time,
+          FlippedActionMap[element.action],
+          FlippedPositionMap[element.position],
+        ]);
+      }
     }
 
     return timelineArray;

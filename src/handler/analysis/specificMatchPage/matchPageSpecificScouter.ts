@@ -47,6 +47,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
         endgameClimb: true,
         autoClimb: true,
         feederTypes: true,
+        accuracy: true,
       },
     });
 
@@ -62,6 +63,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       Metric.feedingRate,
       Metric.feedsPerMatch,
       Metric.l1StartTime,
+      Metric.volleysPerMatch,
     ];
 
     const agg = await averageScoutReport(ctx.user, {
@@ -72,6 +74,9 @@ export const matchPageSpecificScouter = createAnalysisHandler({
     const output: any = {
       totalPoints: agg[Metric.totalPoints],
       driverAbility: scoutReport.driverAbility,
+      accuracy: scoutReport.accuracy,
+      ballsFed: agg[Metric.totalBallsFed],
+      volleys: agg[Metric.volleysPerMatch],
       defenseEffectiveness: scoutReport.defenseEffectiveness,
       robotRoles: scoutReport.robotRoles.map((role) => FlippedRoleMap[role]),
       climb: EndgameClimbReverseMap[scoutReport.endgameClimb],
@@ -83,7 +88,9 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       scoringRate: agg[Metric.fuelPerSecond] ?? 0,
       feedingRate: agg[Metric.feedingRate] ?? 0,
       feeds: agg[Metric.feedsPerMatch] ?? 0,
-      feederType: (scoutReport.feederTypes || []).map((f) => FeederTypeReverseMap[f]),
+      feederType: (scoutReport.feederTypes || []).map(
+        (f) => FeederTypeReverseMap[f],
+      ),
       climbResult: EndgameClimbReverseMap[scoutReport.endgameClimb],
       climbStartTime: agg[Metric.l1StartTime] ?? 0,
       autoPath: await autoPathScouter(ctx.user, {
