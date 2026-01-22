@@ -64,6 +64,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       Metric.feedsPerMatch,
       Metric.l1StartTime,
       Metric.volleysPerMatch,
+      Metric.totalBallsFed,
     ];
 
     const agg = await averageScoutReport(ctx.user, {
@@ -75,7 +76,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       totalPoints: agg[Metric.totalPoints],
       driverAbility: scoutReport.driverAbility,
       accuracy: scoutReport.accuracy,
-      ballsFed: agg[Metric.totalBallsFed],
+      totalBallsFed: agg[Metric.totalBallsFed],
       volleys: agg[Metric.volleysPerMatch],
       defenseEffectiveness: scoutReport.defenseEffectiveness,
       robotRoles: scoutReport.robotRoles.map((role) => FlippedRoleMap[role]),

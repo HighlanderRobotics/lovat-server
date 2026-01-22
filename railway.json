@@ -21,7 +21,8 @@
     },
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 20,
-    "healthcheckPath": "/status"
+    "healthcheckPath": "/status",
+    "healthcheckTimeout": 1000
   },
 
   "environments": {

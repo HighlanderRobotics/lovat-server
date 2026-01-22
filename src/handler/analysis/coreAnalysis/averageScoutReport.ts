@@ -89,14 +89,14 @@ export async function computeAverageScoutReport(
         break;
       case Metric.autoClimbStartTime: {
         const t = firstEventTime(report.events, "CLIMB", (t) => t <= autoEnd);
-        if (t !== null) result[metric] = t;
+        if (t !== null) result[metric] = 2 * 60 + 33 - t;
         break;
       }
       case Metric.l1StartTime:
       case Metric.l2StartTime:
       case Metric.l3StartTime: {
         const t = firstEventTime(report.events, "CLIMB", (t) => t > autoEnd);
-        if (t !== null) result[metric] = t;
+        if (t !== null) result[metric] = 2 * 60 + 33 - t;
         break;
       }
       case Metric.contactDefenseTime: {
