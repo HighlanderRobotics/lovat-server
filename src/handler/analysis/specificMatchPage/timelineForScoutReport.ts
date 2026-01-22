@@ -23,6 +23,7 @@ export const timelineForScoutReport = createAnalysisHandler({
       where: {
         scoutReportUuid: params.uuid,
       },
+      orderBy: { time: "asc" },
     });
     const timelineArray = [];
     for (const element of events) {

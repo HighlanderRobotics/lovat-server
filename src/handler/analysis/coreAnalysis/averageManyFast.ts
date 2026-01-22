@@ -7,6 +7,7 @@ import {
   swrConstant,
   ttlConstant,
   allTournaments,
+  accuracyToPercentage,
 } from "../analysisConstants.js";
 import { EndgameClimb, AutoClimb, Prisma, Event, $Enums } from "@prisma/client";
 import { weightedTourAvgLeft } from "./arrayAndAverageTeams.js";
@@ -182,7 +183,9 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             tournamentValue = avg(sr.map((r) => r.defenseEffectiveness));
             break;
           case Metric.accuracy:
-            tournamentValue = avg(sr.map((r) => r.accuracy));
+            tournamentValue = avg(
+              sr.map((r) => accuracyToPercentage[r.accuracy]),
+            );
             break;
 
           /* ---------- POINT METRICS ---------- */
@@ -245,7 +248,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             break;
           }
           case Metric.feedingRate: {
-            const feedTime = calculateTimeMetric(sr, "STOP_FEEDING");
+            const feedTime = calculateTimeMetric(sr, "FEEDING");
             const feeds = sr.flatMap((r) =>
               r.events.filter((e) => e.action === "STOP_FEEDING"),
             );
@@ -255,7 +258,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             break;
           }
           case Metric.timeFeeding: {
-            tournamentValue = avg(calculateTimeMetric(sr, "STOP_FEEDING"));
+            tournamentValue = avg(calculateTimeMetric(sr, "FEEDING"));
             break;
           }
 
@@ -316,11 +319,11 @@ function calculateTimeMetric(
     accuracy: number;
     defenseEffectiveness: number;
   }[],
-  arg1: string,
+  event: string,
 ): number[] {
   const perMatch = sr.map((r) => {
     const feedingEvents = r.events.filter(
-      (e) => e.action === "STOP_FEEDING" || e.action === "START_FEEDING",
+      (e) => e.action === `STOP_${event}` || e.action === `START_${event}`,
     );
     const feedingEventsSorted = feedingEvents.sort((a, b) => a.time - b.time);
     let totalTime = 0;

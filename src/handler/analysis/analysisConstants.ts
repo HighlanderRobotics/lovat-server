@@ -287,6 +287,7 @@ export {
   breakdownPos,
   breakdownNeg,
   breakdownToEnum,
+  accuracyToPercentage,
 };
 
 export type AnalysisContext = {

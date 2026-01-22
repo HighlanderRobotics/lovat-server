@@ -39,11 +39,6 @@ const config = {
         ),
       }),
     ),
-    outpostIntakes: z.number(),
-    totalDefenseTime: z.number(),
-    totalFuelOutputted: z.number(),
-    feedsPerMatch: z.number(),
-    autoPoints: z.number(),
   }),
   usesDataSource: true,
   shouldCache: true,
@@ -95,13 +90,10 @@ const config = {
     const teamData = await averageManyFast(ctx.user, {
       teams: [args.team1, args.team2, args.team3],
       metrics: [
-        Metric.outpostIntakes,
-        Metric.totalDefenseTime,
+        Metric.l1StartTime,
+        Metric.l2StartTime,
+        Metric.l3StartTime,
         Metric.totalFuelOutputted,
-        Metric.totalPoints,
-        Metric.feedsPerMatch,
-        Metric.outpostIntakes,
-        Metric.autoPoints,
       ],
     });
 
@@ -130,26 +122,6 @@ const config = {
           paths: teamThreeAutoPaths,
         },
       ],
-      outpostIntakes:
-        teamData[args.team1][Metric.outpostIntakes] +
-        teamData[args.team2][Metric.outpostIntakes] +
-        teamData[args.team3][Metric.outpostIntakes],
-      totalDefenseTime:
-        teamData[args.team1][Metric.totalDefenseTime] +
-        teamData[args.team2][Metric.totalDefenseTime] +
-        teamData[args.team3][Metric.totalDefenseTime],
-      totalFuelOutputted:
-        teamData[args.team1][Metric.totalFuelOutputted] +
-        teamData[args.team2][Metric.totalFuelOutputted] +
-        teamData[args.team3][Metric.totalFuelOutputted],
-      feedsPerMatch:
-        teamData[args.team1][Metric.feedsPerMatch] +
-        teamData[args.team2][Metric.feedsPerMatch] +
-        teamData[args.team3][Metric.feedsPerMatch],
-      autoPoints:
-        teamData[args.team1][Metric.autoPoints] +
-        teamData[args.team2][Metric.autoPoints] +
-        teamData[args.team3][Metric.autoPoints],
     };
   },
 } as const;
