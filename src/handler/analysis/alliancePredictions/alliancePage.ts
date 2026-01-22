@@ -94,6 +94,7 @@ const config = {
         Metric.l2StartTime,
         Metric.l3StartTime,
         Metric.totalFuelOutputted,
+        Metric.totalBallThroughput,
       ],
     });
 
@@ -122,6 +123,29 @@ const config = {
           paths: teamThreeAutoPaths,
         },
       ],
+      l1StartTime: [
+        teamData[Metric.l1StartTime][args.team1] ?? null,
+        teamData[Metric.l1StartTime][args.team2] ?? null,
+        teamData[Metric.l1StartTime][args.team3] ?? null,
+      ],
+      l2StartTime: [
+        teamData[Metric.l2StartTime][args.team1] ?? null,
+        teamData[Metric.l2StartTime][args.team2] ?? null,
+        teamData[Metric.l2StartTime][args.team3] ?? null,
+      ],
+      l3StartTime: [
+        teamData[Metric.l3StartTime][args.team1] ?? null,
+        teamData[Metric.l3StartTime][args.team2] ?? null,
+        teamData[Metric.l3StartTime][args.team3] ?? null,
+      ],
+      totalFuelOutputted:
+        teamData[Metric.totalFuelOutputted][args.team1] +
+        teamData[Metric.totalFuelOutputted][args.team2] +
+        teamData[Metric.totalFuelOutputted][args.team3],
+      totalBallThroughput:
+        teamData[Metric.totalBallThroughput][args.team1] +
+        teamData[Metric.totalBallThroughput][args.team2] +
+        teamData[Metric.totalBallThroughput][args.team3],
     };
   },
 } as const;

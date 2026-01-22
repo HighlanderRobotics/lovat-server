@@ -40,6 +40,7 @@ enum Metric {
   feedsPerMatch,
   totalFuelOutputted,
   totalBallsFed,
+  totalBallThroughput,
   outpostIntakes,
 }
 
@@ -219,6 +220,7 @@ const metricToName: Record<Metric, string> = {
   [Metric.feedsPerMatch]: "feedsPerMatch",
   [Metric.totalFuelOutputted]: "totalFuelOutputted",
   [Metric.totalBallsFed]: "totalBallsFed",
+  [Metric.totalBallThroughput]: "totalBallThroughput",
   [Metric.outpostIntakes]: "outpostIntakes",
 };
 

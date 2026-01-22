@@ -180,6 +180,14 @@ export async function computeAverageScoutReport(
           .reduce((acc, cur) => acc + cur.points, 0);
         break;
       }
+      case Metric.totalBallThroughput: {
+        result[metric] = report.events
+          .filter(
+            (e) => e.action === "STOP_FEEDING" || e.action === "STOP_SCORING",
+          )
+          .reduce((acc, cur) => acc + cur.points, 0);
+        break;
+      }
       default: {
         const action = metricToEvent[metric];
         if (action) {

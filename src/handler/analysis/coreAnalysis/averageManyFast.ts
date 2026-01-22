@@ -119,7 +119,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
         let tournamentValue = 0;
 
         switch (metric) {
-          /* ---------- CLIMB METRICS ---------- */
           case Metric.autoClimbStartTime: {
             const times = sr.map((r) => {
               if (r.autoClimb !== AutoClimb.SUCCEEDED) return null;
@@ -155,8 +154,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             tournamentValue = avg(adjustedTimes);
             break;
           }
-
-          /* ---------- DEFENSE METRICS ---------- */
           case Metric.contactDefenseTime:
           case Metric.campingDefenseTime:
           case Metric.totalDefenseTime: {
@@ -187,8 +184,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               sr.map((r) => accuracyToPercentage[r.accuracy]),
             );
             break;
-
-          /* ---------- POINT METRICS ---------- */
           case Metric.autoPoints:
           case Metric.teleopPoints:
           case Metric.totalPoints: {
@@ -212,8 +207,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             tournamentValue = avg(perMatch);
             break;
           }
-
-          /* ---------- FUEL/FEEDING METRICS ---------- */
           case Metric.fuelPerSecond: {
             const perMatch = sr.map((r) => {
               const totalFuel = r.events
@@ -249,6 +242,18 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             tournamentValue = avg(perMatch);
             break;
           }
+          case Metric.totalBallThroughput: {
+            const perMatch = sr.map((r) => {
+              return r.events
+                .filter(
+                  (e) =>
+                    e.action === "STOP_FEEDING" || e.action === "STOP_SCORING",
+                )
+                .reduce((acc, cur) => acc + cur.points, 0);
+            });
+            tournamentValue = avg(perMatch);
+            break;
+          }
           case Metric.feedsPerMatch: {
             const perMatch = sr.map(
               (r) => r.events.filter((e) => e.action === "STOP_FEEDING").length,
@@ -271,7 +276,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             break;
           }
 
-          /* ---------- OTHER COUNT / RATE METRICS ---------- */
           case Metric.outpostIntakes: {
             const perMatch = sr.map(
               (r) =>
