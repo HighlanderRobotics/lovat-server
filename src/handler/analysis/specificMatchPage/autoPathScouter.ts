@@ -41,6 +41,9 @@ const config = {
           lte: autoEnd,
         },
       },
+      orderBy: {
+        time: "asc",
+      },
     });
     const scoutReport = await prismaClient.scoutReport.findUnique({
       where: {
