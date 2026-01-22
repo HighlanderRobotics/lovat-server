@@ -240,6 +240,15 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             tournamentValue = avg(perMatch);
             break;
           }
+          case Metric.totalBallsFed: {
+            const perMatch = sr.map((r) => {
+              return r.events
+                .filter((e) => e.action === "STOP_FEEDING")
+                .reduce((acc, cur) => acc + cur.points, 0);
+            });
+            tournamentValue = avg(perMatch);
+            break;
+          }
           case Metric.feedsPerMatch: {
             const perMatch = sr.map(
               (r) => r.events.filter((e) => e.action === "STOP_FEEDING").length,
