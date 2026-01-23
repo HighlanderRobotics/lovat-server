@@ -31,13 +31,21 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
   user: User,
   passedArgs: z.infer<T>,
 ): Promise<z.infer<R>> {
+  const teamsRuleResult = dataSourceRuleSchema(z.number()).safeParse(
+    user?.teamSourceRule,
+  );
+  const tournamentsRuleResult = dataSourceRuleSchema(z.string()).safeParse(
+    user?.tournamentSourceRule,
+  );
   const context: AnalysisContext = {
     user,
     dataSource: {
-      teams: dataSourceRuleSchema(z.number()).parse(user.teamSourceRule),
-      tournaments: dataSourceRuleSchema(z.string()).parse(
-        user.tournamentSourceRule,
-      ),
+      teams: teamsRuleResult.success
+        ? teamsRuleResult.data
+        : { mode: "INCLUDE", items: [] },
+      tournaments: tournamentsRuleResult.success
+        ? tournamentsRuleResult.data
+        : { mode: "INCLUDE", items: [] },
     },
   };
 
