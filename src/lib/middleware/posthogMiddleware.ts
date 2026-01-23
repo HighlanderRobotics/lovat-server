@@ -7,7 +7,7 @@ import z from "zod";
 const posthogReporter = async (
   req: Request | AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   const t0 = performance.now();
 
@@ -62,6 +62,9 @@ const posthogReporter = async (
           $pathname: req.route?.path,
           method: req.method,
           cache: res.getHeader("X-Lovat-Cache"),
+          operatingSystem: req.headers["X-Operating-System"],
+          appVersion: req.headers["X-App-Version"],
+          buildNumber: req.headers["X-Build-Number"],
           path: req.originalUrl,
           query: req.query,
           reqBody: req.body,
@@ -77,7 +80,7 @@ const posthogReporter = async (
     if (process.env.NODE_ENV === "development") {
       console.log(
         `${req.method} ${req.originalUrl}: %d ms, HTTP ${res.statusCode}`,
-        Math.round(t1 - t0),
+        Math.round(t1 - t0)
       );
     }
   });
