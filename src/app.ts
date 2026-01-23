@@ -8,6 +8,8 @@ import { posthog } from "./posthogClient.js";
 import posthogReporter from "./lib/middleware/posthogMiddleware.js";
 
 import routes from "./routes/index.js";
+import swaggerUi from "swagger-ui-express";
+import { generateOpenApiDocument } from "./lib/openapi.js";
 
 export const app = express();
 
@@ -26,3 +28,11 @@ app.use("/v1", routes);
 app.get("/status", (req, res) => {
   res.status(200).send("Server running");
 });
+
+// OpenAPI docs
+const openApiDocument = generateOpenApiDocument();
+app.get("/doc.json", (_req, res) => {
+  res.json(openApiDocument);
+});
+
+app.use("/doc", swaggerUi.serve, swaggerUi.setup(openApiDocument));

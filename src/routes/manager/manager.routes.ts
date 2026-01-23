@@ -26,8 +26,97 @@ import { getTeamCode } from "../../handler/manager/getTeamCode.js";
 import { addScoutReportDashboard } from "../../handler/manager/scoutreports/addScoutReportDashboard.js";
 import { getTeamTournamentStatus } from "../../handler/manager/getTeamTournamentStatus.js";
 import { getMatchResults } from "../../handler/manager/getMatchResults.js";
+import { registry } from "../../lib/openapi.js";
+import { z } from "zod";
+import { TeamSchema, TournamentSchema } from "../../lib/prisma-zod.js";
 
 const router = Router();
+
+// OpenAPI documentation for selected manager endpoints
+const PaginationQuery = z.object({
+  take: z.coerce.number().int().optional(),
+  skip: z.coerce.number().int().optional(),
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/teams",
+  tags: ["Manager - Teams"],
+  summary: "List teams with optional pagination and filter",
+  request: {
+    query: PaginationQuery.extend({ filter: z.string().optional() }),
+  },
+  responses: {
+    200: {
+      description: "Teams and total count",
+      content: {
+        "application/json": {
+          schema: z.object({ teams: z.array(TeamSchema), count: z.number() }),
+        },
+      },
+    },
+    401: { description: "Unauthorized" },
+  },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/tournaments",
+  tags: ["Manager - Tournaments"],
+  summary: "List tournaments with optional pagination and filter",
+  request: {
+    query: PaginationQuery.extend({ filter: z.string().optional() }),
+  },
+  responses: {
+    200: {
+      description: "Tournaments and total count",
+      content: {
+        "application/json": {
+          schema: z.object({ tournaments: z.array(TournamentSchema), count: z.number() }),
+        },
+      },
+    },
+    401: { description: "Unauthorized" },
+  },
+});
+
+const MatchTeamSchema = z.object({
+  number: z.number().int(),
+  scouters: z.array(z.object({ name: z.string(), scouted: z.boolean() })),
+  externalReports: z.number().int(),
+});
+
+const MatchSchema = z.object({
+  matchNumber: z.number().int(),
+  matchType: z.number().int(),
+  scouted: z.boolean(),
+  finished: z.boolean(),
+  team1: MatchTeamSchema,
+  team2: MatchTeamSchema,
+  team3: MatchTeamSchema,
+  team4: MatchTeamSchema,
+  team5: MatchTeamSchema,
+  team6: MatchTeamSchema,
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/matches/{tournament}",
+  tags: ["Manager - Matches"],
+  summary: "List matches for a tournament",
+  request: {
+    params: z.object({ tournament: z.string() }),
+    query: z.object({ teams: z.string().optional() }),
+  },
+  responses: {
+    200: {
+      description: "Formatted match list",
+      content: { "application/json": { schema: z.array(MatchSchema) } },
+    },
+    400: { description: "Invalid parameters" },
+    401: { description: "Unauthorized" },
+  },
+});
 
 router.use("/onboarding", onboarding);
 router.use("/picklists", picklists);
