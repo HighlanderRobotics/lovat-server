@@ -147,12 +147,10 @@ export const getTeamCSV = async (
                 const parsed = dataSourceRuleSchema(z.number()).safeParse(
                   req.user?.teamSourceRule,
                 );
-                return parsed.success
-                  ? {
-                      scouter: {
-                        sourceTeamNumber: dataSourceRuleToPrismaFilter(parsed.data),
-                      },
-                    }
+                if (!parsed.success) return {};
+                const filter = dataSourceRuleToPrismaFilter(parsed.data);
+                return filter
+                  ? { scouter: { sourceTeamNumber: filter } }
                   : {};
               })(),
               select: {
