@@ -1,4 +1,8 @@
-import { OpenAPIRegistry, OpenApiGeneratorV31, extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+import {
+  OpenAPIRegistry,
+  OpenApiGeneratorV31,
+  extendZodWithOpenApi,
+} from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 
 // Enable .openapi() on Zod types
@@ -10,6 +14,25 @@ export const registry = new OpenAPIRegistry();
 // Import and register Prisma-derived schemas
 import { registerPrismaSchemas } from "./prisma-zod.js";
 registerPrismaSchemas(registry);
+
+// Register security schemes
+registry.registerComponent("securitySchemes", "bearerAuth", {
+  type: "http",
+  scheme: "bearer",
+  bearerFormat: "JWT",
+});
+registry.registerComponent("securitySchemes", "slackToken", {
+  type: "apiKey",
+  in: "header",
+  name: "x-slack-token",
+  description: "Slack verification token header",
+});
+registry.registerComponent("securitySchemes", "lovatSignature", {
+  type: "apiKey",
+  in: "header",
+  name: "x-signature",
+  description: "HMAC signature header (requires accompanying x-timestamp)",
+});
 
 // Minimal example: document the /status health check route
 registry.registerPath({
@@ -37,7 +60,7 @@ export function generateOpenApiDocument() {
       title: "Lovat API",
       version: "1.0.0",
       description:
-        "Bare-bones OpenAPI spec generated from Zod schemas using zod-to-openapi.",
+        "API Documentation for Lovat, a scouting system used to scout teams and matches in the First Robotics Competition",
     },
     servers: [{ url: "/" }],
   });

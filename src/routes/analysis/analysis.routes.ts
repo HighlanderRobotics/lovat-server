@@ -80,6 +80,7 @@ registry.registerPath({
     },
     400: { description: "Invalid parameters" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 const MatchPredictionResponseSchema = z.union([
@@ -117,7 +118,9 @@ registry.registerPath({
   responses: {
     200: { description: "Prediction and alliance details", content: { "application/json": { schema: MatchPredictionResponseSchema } } },
     400: { description: "Invalid parameters" },
+    401: { description: "Unauthorized" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 const PicklistEntrySchema = z.object({
@@ -160,6 +163,7 @@ registry.registerPath({
     200: { description: "Picklist ranking results", content: { "application/json": { schema: z.object({ teams: z.array(PicklistEntrySchema) }) } } },
     400: { description: "Invalid parameters" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 router.get("/pitdisplay", pitDisplay);

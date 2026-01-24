@@ -10,6 +10,7 @@ import posthogReporter from "./lib/middleware/posthogMiddleware.js";
 import routes from "./routes/index.js";
 import swaggerUi from "swagger-ui-express";
 import { generateOpenApiDocument } from "./lib/openapi.js";
+import path from "path";
 
 export const app = express();
 
@@ -18,6 +19,8 @@ app.set("trust proxy", true);
 
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+app.use(express.static(path.resolve("public")));
 
 // Logs requests using posthog
 app.use(posthogReporter);
@@ -35,4 +38,10 @@ app.get("/doc.json", (_req, res) => {
   res.json(openApiDocument);
 });
 
-app.use("/doc", swaggerUi.serve, swaggerUi.setup(openApiDocument));
+app.use(
+  "/doc",
+  swaggerUi.serve,
+  swaggerUi.setup(openApiDocument, {
+    customCssUrl: "/swaggerTheme.css",
+  }),
+);

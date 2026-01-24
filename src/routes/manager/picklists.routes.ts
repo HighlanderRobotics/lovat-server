@@ -90,6 +90,7 @@ registry.registerPath({
     401: { description: "Unauthorized" },
     403: { description: "Forbidden" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 registry.registerPath({
@@ -105,6 +106,7 @@ registry.registerPath({
     401: { description: "Unauthorized" },
     403: { description: "Forbidden" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 registry.registerPath({
@@ -122,6 +124,7 @@ registry.registerPath({
     403: { description: "Forbidden" },
     404: { description: "Not found" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 registry.registerPath({
@@ -139,6 +142,7 @@ registry.registerPath({
     401: { description: "Unauthorized" },
     403: { description: "Forbidden" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 registry.registerPath({
@@ -154,6 +158,7 @@ registry.registerPath({
     403: { description: "Forbidden" },
     404: { description: "Not found" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 const router = Router();

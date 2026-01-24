@@ -57,6 +57,7 @@ registry.registerPath({
     },
     401: { description: "Unauthorized" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 registry.registerPath({
@@ -78,6 +79,7 @@ registry.registerPath({
     },
     401: { description: "Unauthorized" },
   },
+  security: [{ bearerAuth: [] }],
 });
 
 const MatchTeamSchema = z.object({
@@ -116,6 +118,193 @@ registry.registerPath({
     400: { description: "Invalid parameters" },
     401: { description: "Unauthorized" },
   },
+  security: [{ bearerAuth: [] }],
+});
+
+// Profile
+const ProfileSchema = z.object({
+  id: z.string(),
+  username: z.string().nullable(),
+  email: z.string().email(),
+  role: z.string(),
+  team: z
+    .object({
+      team: z.object({ number: z.number().int(), name: z.string().nullable() }),
+    })
+    .nullable(),
+});
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/profile",
+  tags: ["Manager - Account"],
+  summary: "Get current user profile",
+  responses: {
+    200: { description: "Profile", content: { "application/json": { schema: ProfileSchema.nullable() } } },
+    401: { description: "Unauthorized" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Users list
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/users",
+  tags: ["Manager - Users"],
+  summary: "List users",
+  responses: {
+    200: { description: "Users", content: { "application/json": { schema: z.array(z.object({ id: z.string(), email: z.string().email(), username: z.string().nullable(), role: z.string() })) } } },
+    401: { description: "Unauthorized" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Delete user
+registry.registerPath({
+  method: "delete",
+  path: "/v1/manager/user",
+  tags: ["Manager - Users"],
+  summary: "Delete the current user",
+  responses: {
+    200: { description: "Deleted" },
+    401: { description: "Unauthorized" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Upgrade user role to scouting lead
+registry.registerPath({
+  method: "post",
+  path: "/v1/manager/upgradeuser",
+  tags: ["Manager - Users"],
+  summary: "Upgrade current user to Scouting Lead",
+  responses: {
+    200: { description: "Upgraded" },
+    401: { description: "Unauthorized" },
+    400: { description: "Invalid request" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Analysts
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/analysts",
+  tags: ["Manager - Users"],
+  summary: "List analysts",
+  responses: {
+    200: { description: "Analysts", content: { "application/json": { schema: z.array(z.object({ id: z.string(), username: z.string().nullable() })) } } },
+    401: { description: "Unauthorized" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Team code
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/code",
+  tags: ["Manager - Teams"],
+  summary: "Get team code for current user",
+  responses: {
+    200: { description: "Team code", content: { "application/json": { schema: z.object({ code: z.string() }) } } },
+    401: { description: "Unauthorized" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Dashboard scoutreport creation
+registry.registerPath({
+  method: "post",
+  path: "/v1/manager/dashboard/scoutreport",
+  tags: ["Manager - Scout Reports"],
+  summary: "Create scout report from dashboard",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ match: z.number().int(), team: z.number().int(), notes: z.string().optional() }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: { description: "Created", content: { "application/json": { schema: z.object({ uuid: z.string() }) } } },
+    401: { description: "Unauthorized" },
+    400: { description: "Invalid request" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Team tournament status
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/team-tournament-status",
+  tags: ["Manager - Tournaments"],
+  summary: "Get status of current team in tournaments",
+  responses: {
+    200: { description: "Status", content: { "application/json": { schema: z.object({ tournaments: z.array(z.object({ id: z.string(), code: z.string(), status: z.string() })) }) } } },
+    401: { description: "Unauthorized" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Match results page
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/match-results-page",
+  tags: ["Manager - Matches"],
+  summary: "Get match results page data",
+  responses: {
+    200: { description: "Results", content: { "application/json": { schema: z.object({ matches: z.array(MatchSchema) }) } } },
+    401: { description: "Unauthorized" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Update notes (Scouting Lead only)
+registry.registerPath({
+  method: "put",
+  path: "/v1/manager/notes/{uuid}",
+  tags: ["Manager - Notes"],
+  summary: "Update scout report notes (SCOUTING_LEAD)",
+  request: {
+    params: z.object({ uuid: z.string() }),
+    body: { content: { "application/json": { schema: z.object({ note: z.string() }) } } },
+  },
+  responses: {
+    200: { description: "Note updated" },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
+    403: { description: "Not authorized" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Scoutershift scouters
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/scoutershift/scouters",
+  tags: ["Manager - Scouters"],
+  summary: "List scouters for current team",
+  request: { query: z.object({ archived: z.string().optional() }) },
+  responses: {
+    200: { description: "Scouters", content: { "application/json": { schema: z.array(z.object({ uuid: z.string(), name: z.string().nullable() })) } } },
+    401: { description: "Unauthorized" },
+    403: { description: "User not affiliated with a team" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+// Set user as not on a team
+registry.registerPath({
+  method: "post",
+  path: "/v1/manager/noteam",
+  tags: ["Manager - Users"],
+  summary: "Set current user to ANALYST and remove team",
+  responses: {
+    200: { description: "Updated", content: { "application/json": { schema: z.object({ id: z.string(), role: z.string(), teamNumber: z.number().nullable() }) } } },
+    401: { description: "Unauthorized" },
+  },
+  security: [{ bearerAuth: [] }],
 });
 
 router.use("/onboarding", onboarding);
