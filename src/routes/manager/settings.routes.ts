@@ -9,6 +9,7 @@ import { getTournamentSource } from "../../handler/manager/settings/getTournamen
 import { addTournamentSource } from "../../handler/manager/settings/addTournamentSource.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
+import { getTeamEmail } from "../../handler/manager/settings/getTeamEmail.js";
 
 const updateTeamEmails = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -38,7 +39,10 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: "Updated", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Updated",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
     500: { description: "Server error" },
@@ -89,7 +93,10 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: "Added", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Added",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
     403: { description: "Not affiliated with a team" },
@@ -104,7 +111,10 @@ registry.registerPath({
   tags: ["Manager - Settings"],
   summary: "Get tournament source",
   responses: {
-    200: { description: "Tournament source", content: { "application/json": { schema: z.array(z.string()) } } },
+    200: {
+      description: "Tournament source",
+      content: { "application/json": { schema: z.array(z.string()) } },
+    },
     401: { description: "Unauthorized" },
     500: { description: "Server error" },
   },
@@ -116,9 +126,20 @@ registry.registerPath({
   path: "/v1/manager/settings/tournamentsource",
   tags: ["Manager - Settings"],
   summary: "Add tournament source",
-  request: { body: { content: { "application/json": { schema: z.object({ tournaments: z.array(z.string()) }) } } } },
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ tournaments: z.array(z.string()) }),
+        },
+      },
+    },
+  },
   responses: {
-    200: { description: "Added", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Added",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
     500: { description: "Server error" },
@@ -133,7 +154,10 @@ registry.registerPath({
   summary: "Update team email",
   request: { query: z.object({ email: z.string().email() }) },
   responses: {
-    200: { description: "Verification sent", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Verification sent",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
     404: { description: "Team not found" },
@@ -153,6 +177,7 @@ router.post("/teamsource", addTeamSource);
 router.get("/tournamentsource", getTournamentSource);
 router.post("/tournamentsource", addTournamentSource);
 
+router.get("/teamemail", getTeamEmail);
 router.put("/teamemail", updateTeamEmails, updateTeamEmail);
 
 export default router;
