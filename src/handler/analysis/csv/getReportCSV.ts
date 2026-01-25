@@ -3,9 +3,6 @@ import prismaClient from "../../../prismaClient.js";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { stringify } from "csv-stringify/sync";
 import {
-  UserRole,
-  EventAction,
-  Position,
   Scouter,
   TeamMatchData,
   Event,
@@ -147,9 +144,10 @@ export const getReportCSV = async (
       req.user?.teamSourceRule,
     );
     if (parsedRule.success) {
-      where.scouter = {
-        sourceTeamNumber: dataSourceRuleToPrismaFilter(parsedRule.data),
-      };
+      const filter = dataSourceRuleToPrismaFilter(parsedRule.data);
+      if (filter) {
+        where.scouter = { sourceTeamNumber: filter };
+      }
     }
 
     const datapoints = await prismaClient.scoutReport.findMany({
@@ -301,14 +299,14 @@ async function condenseReport(
     endgameClimb: String(report.endgameClimb ?? ""),
     feederTypes: (report.feederTypes || []).join(","),
     intakeType: String(report.intakeType ?? ""),
-    mobility: "N/A",
+    mobility: String(report.mobility ?? "N/A"),
     teleopPoints: 0,
     autoPoints: 0,
     scouter: "",
     notes: String(report.notes ?? "").replace(/,/g, ";"),
   };
 
-  // Compute points using events
+  // Compute points using events (respects includeAuto/includeTeleop time filter)
   (report.events || []).forEach((event) => {
     const t = Number(event.time ?? 0);
     const pts = Number(event.points ?? 0);
@@ -319,20 +317,19 @@ async function condenseReport(
     }
   });
 
-  // Add stage points to total points
+  // Add stage points to total points when exporting full match
   if (includeTeleop && includeAuto) {
     const climb = report.endgameClimb;
     data.teleopPoints += climb ? endgameToPoints[climb] : 0;
   }
 
-  // Use averageScoutReport for single-report metrics
+  // Use averageScoutReport to populate computed metrics for this single report
   if (report.uuid) {
     const metrics = [
       Metric.totalPoints,
       Metric.autoPoints,
       Metric.teleopPoints,
       Metric.fuelPerSecond,
-      Metric.accuracy,
       Metric.volleysPerMatch,
       Metric.l1StartTime,
       Metric.l2StartTime,
@@ -355,8 +352,43 @@ async function condenseReport(
       scoutReportUuid: report.uuid,
       metrics,
     });
+
+    const val = (m: Metric) => (agg as Record<string, number>)[m];
+
+    // Populate numeric metrics if available
+    const maybeSet = (m: Metric, setter: (n: number) => void) => {
+      const n = val(m);
+      if (typeof n === "number" && Number.isFinite(n)) setter(n);
+    };
+
+    // totalPoints from analysis, otherwise derived from segment sums
+    const total = val(Metric.totalPoints);
     data.totalPoints =
-      (agg as Record<string, number>)[Metric.totalPoints] ?? data.teleopPoints + data.autoPoints;
+      typeof total === "number" && Number.isFinite(total)
+        ? total
+        : data.teleopPoints + data.autoPoints;
+
+    maybeSet(Metric.fuelPerSecond, (n) => (data.fuelPerSecond = n));
+    maybeSet(Metric.volleysPerMatch, (n) => (data.volleysPerMatch = n));
+    maybeSet(Metric.l1StartTime, (n) => (data.l1StartTime = n));
+    maybeSet(Metric.l2StartTime, (n) => (data.l2StartTime = n));
+    maybeSet(Metric.l3StartTime, (n) => (data.l3StartTime = n));
+    maybeSet(Metric.autoClimbStartTime, (n) => (data.autoClimbStartTime = n));
+    maybeSet(Metric.driverAbility, (n) => (data.driverAbility = n));
+    maybeSet(Metric.contactDefenseTime, (n) => (data.contactDefenseTime = n));
+    maybeSet(Metric.defenseEffectiveness, (n) => (data.defenseEffectiveness = n));
+    maybeSet(Metric.campingDefenseTime, (n) => (data.campingDefenseTime = n));
+    maybeSet(Metric.totalDefenseTime, (n) => (data.totalDefenseTime = n));
+    maybeSet(Metric.timeFeeding, (n) => (data.timeFeeding = n));
+    maybeSet(Metric.feedingRate, (n) => (data.feedingRate = n));
+    maybeSet(Metric.feedsPerMatch, (n) => (data.feedsPerMatch = n));
+    maybeSet(Metric.totalFuelOutputted, (n) => (data.totalFuelOutputted = n));
+    maybeSet(Metric.totalBallsFed, (n) => (data.totalBallsFed = n));
+    maybeSet(Metric.totalBallThroughput, (n) => (data.totalBallThroughput = n));
+    maybeSet(Metric.outpostIntakes, (n) => (data.outpostIntakes = n));
+
+    // Keep per-segment points computed from filtered events
+    // Do not overwrite autoPoints/teleopPoints to respect includeAuto/includeTeleop
   }
 
   if (report.scouter?.sourceTeamNumber === userTeam && report.scouter?.name) {

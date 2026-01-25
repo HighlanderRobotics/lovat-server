@@ -15,7 +15,8 @@ export type DataSourceRule<T extends number | string> = {
 
 export const dataSourceRuleToPrismaFilter = <T extends number | string>(
   rule: DataSourceRule<T>,
-) => {
+): ({ in: T[] } | { notIn: T[] } | undefined) => {
+  if (!rule || rule.items.length === 0) return undefined;
   return rule.mode === "EXCLUDE" ? { notIn: rule.items } : { in: rule.items };
 };
 

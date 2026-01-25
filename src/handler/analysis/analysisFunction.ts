@@ -51,7 +51,11 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
 
   const roundAllNumbers = <T>(val: T): T => {
     if (val === null || val === undefined) return val;
-    if (typeof val === "number") return (Math.round(val * 100) / 100) as T;
+    if (typeof val === "number") {
+      const n = val as unknown as number;
+      if (!Number.isFinite(n)) return 0 as T;
+      return (Math.round(n * 100) / 100) as T;
+    }
     if (Array.isArray(val)) return val.map(roundAllNumbers) as T;
     if (typeof val === "object") {
       const out: Record<string, unknown> = {};
@@ -102,9 +106,17 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
   }
 
   const parsed = JSON.parse(cacheRow.toString());
-  return config.returnSchema
-    ? config.returnSchema.parse(parsed)
-    : (parsed as z.infer<R>);
+  if (config.returnSchema) {
+    try {
+      return config.returnSchema.parse(parsed);
+    } catch (e) {
+      const fresh = await config.calculateAnalysis(passedArgs, context);
+      const rounded = roundAllNumbers(fresh);
+      await kv.set(key, JSON.stringify(rounded));
+      return rounded as z.infer<R>;
+    }
+  }
+  return parsed as z.infer<R>;
 }
 
 export const createAnalysisFunction =

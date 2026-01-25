@@ -2,7 +2,6 @@ import { Router } from "express";
 import { requireAuth } from "../../lib/middleware/requireAuth.js";
 import { getReportCSV } from "../../handler/analysis/csv/getReportCSV.js";
 import { getTeamCSV } from "../../handler/analysis/csv/getTeamCSV.js";
-import { getTeamMatchCSV } from "../../handler/analysis/csv/getTeamMatchCSV.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 
@@ -13,8 +12,18 @@ registry.registerPath({
   path: "/v1/analysis/csvplain",
   tags: ["Analysis - CSV"],
   summary: "Team CSV",
-  request: { query: z.object({ team: z.coerce.number().int(), tournamentKey: z.string().optional() }) },
-  responses: { 200: { description: "CSV", content: { "text/csv": { schema: z.string() } } } },
+  request: {
+    query: z.object({
+      team: z.coerce.number().int(),
+      tournamentKey: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "CSV",
+      content: { "text/csv": { schema: z.string() } },
+    },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -22,8 +31,18 @@ registry.registerPath({
   path: "/v1/analysis/matchcsv",
   tags: ["Analysis - CSV"],
   summary: "Team match CSV",
-  request: { query: z.object({ team: z.coerce.number().int(), tournamentKey: z.string().optional() }) },
-  responses: { 200: { description: "CSV", content: { "text/csv": { schema: z.string() } } } },
+  request: {
+    query: z.object({
+      team: z.coerce.number().int(),
+      tournamentKey: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "CSV",
+      content: { "text/csv": { schema: z.string() } },
+    },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -32,14 +51,18 @@ registry.registerPath({
   tags: ["Analysis - CSV"],
   summary: "Report CSV",
   request: { query: z.object({ tournamentKey: z.string() }) },
-  responses: { 200: { description: "CSV", content: { "text/csv": { schema: z.string() } } } },
+  responses: {
+    200: {
+      description: "CSV",
+      content: { "text/csv": { schema: z.string() } },
+    },
+  },
   security: [{ bearerAuth: [] }],
 });
 
 router.use(requireAuth);
 
 router.get("/csvplain", getTeamCSV);
-router.get("/matchcsv", getTeamMatchCSV);
 router.get("/reportcsv", getReportCSV);
 
 export default router;
