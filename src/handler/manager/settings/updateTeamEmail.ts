@@ -23,6 +23,7 @@ export const updateTeamEmail = async (
 
     if (teamRow === null) {
       res.status(404).send("team not found");
+      return;
     }
 
     sendVerificationEmail(params.email, req.user.teamNumber);
@@ -31,8 +32,10 @@ export const updateTeamEmail = async (
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: "Invalid request parameters" });
+      return;
     }
     console.error(error);
     res.status(500).send("Error in deleting data");
+    return;
   }
 };
