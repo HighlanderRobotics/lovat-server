@@ -7,6 +7,7 @@ import { getTeamSource } from "../../handler/manager/settings/getTeamSource.js";
 import { addTeamSource } from "../../handler/manager/settings/addTeamSource.js";
 import { getTournamentSource } from "../../handler/manager/settings/getTournamentSource.js";
 import { addTournamentSource } from "../../handler/manager/settings/addTournamentSource.js";
+import { getTeamEmail } from "../../handler/manager/settings/getTeamEmail.js";
 
 const updateTeamEmails = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -28,6 +29,7 @@ router.post("/teamsource", addTeamSource);
 router.get("/tournamentsource", getTournamentSource);
 router.post("/tournamentsource", addTournamentSource);
 
+router.get("/teamemail", getTeamEmail);
 router.put("/teamemail", updateTeamEmails, updateTeamEmail);
 
 export default router;
