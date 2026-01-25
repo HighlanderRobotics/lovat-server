@@ -64,8 +64,6 @@ export function generateOpenApiDocument() {
       description:
         "API Documentation for Lovat, a scouting system used to scout teams and matches in the First Robotics Competition",
     },
-    servers: [
-      { url: `${process.env.BASE_URL || "https://api.lovat.app"}/v1/` },
-    ],
+    servers: [{ url: `${process.env.BASE_URL || "https://api.lovat.app"}` }],
   });
 }
