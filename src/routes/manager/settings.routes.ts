@@ -148,6 +148,25 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method: "get",
+  path: "/v1/manager/settings/teamemail",
+  tags: ["Manager - Settings"],
+  summary: "Get team email",
+  responses: {
+    200: {
+      description: "Team email",
+      content: { "text/plain": { schema: z.string() } },
+    },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
+    404: { description: "Team not found" },
+    429: { description: "Rate limited" },
+    500: { description: "Server error" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+registry.registerPath({
   method: "put",
   path: "/v1/manager/settings/teamemail",
   tags: ["Manager - Settings"],
