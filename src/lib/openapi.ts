@@ -4,6 +4,7 @@ import {
   extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
+import { version } from "../../package.json";
 
 // Enable .openapi() on Zod types
 extendZodWithOpenApi(z);
@@ -24,8 +25,9 @@ registry.registerComponent("securitySchemes", "bearerAuth", {
 registry.registerComponent("securitySchemes", "slackToken", {
   type: "apiKey",
   in: "header",
-  name: "x-slack-token",
-  description: "Slack verification token header",
+  name: "x-slack-signature",
+  description:
+    "Slack signature header (requires accompanying x-slack-request-timestamp)",
 });
 registry.registerComponent("securitySchemes", "lovatSignature", {
   type: "apiKey",
@@ -58,7 +60,7 @@ export function generateOpenApiDocument() {
     openapi: "3.1.0",
     info: {
       title: "Lovat API",
-      version: "1.0.0",
+      version: version,
       description:
         "API Documentation for Lovat, a scouting system used to scout teams and matches in the First Robotics Competition",
     },

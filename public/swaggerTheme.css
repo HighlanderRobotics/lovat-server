@@ -25,12 +25,16 @@ body,
   filter: brightness(0) invert(1);
 }
 
+.swagger-ui pre.version {
+  background-color: rgba(0, 0, 0, 0) !important;
+  color: #e5e7eb !important;
+}
 /* =========================================================
    AUTHORIZE BUTTON
    ========================================================= */
 .swagger-ui .authorize {
   background-color: #1e1a2e !important;
-  border: 1px solid #6f7cfc !important;
+  border: 1px solid #ffffff !important;
   color: #e6e8ff !important;
   border-radius: 8px !important;
 }
@@ -41,12 +45,12 @@ body,
 
 /* Lock icon (closed) */
 .swagger-ui .authorize svg path {
-  fill: #6f7cfc !important;
+  fill: #ffffff !important;
 }
 
 /* Lock icon (authorized) */
 .swagger-ui .authorize.authorized svg path {
-  fill: #22c55e !important;
+  fill: #ffffff !important;
 }
 
 /* =========================================================

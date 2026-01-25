@@ -7,6 +7,7 @@ import { getSingleMutablePicklist } from "../../handler/manager/mutablepicklists
 import { updateMutablePicklist } from "../../handler/manager/mutablepicklists/updateMutablePicklist.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
+import { MutablePicklistSchema } from "../../lib/prisma-zod.js";
 
 /*
 
@@ -20,9 +21,18 @@ DELETE /manager/mutablepicklists/:uuid
 
 */
 
-const MutablePicklistCreateSchema = z.object({ name: z.string() });
-const MutablePicklistSummarySchema = z.object({ uuid: z.string(), name: z.string() });
-const MutablePicklistDetailSchema = z.object({ uuid: z.string(), name: z.string(), authorId: z.string() });
+const MutablePicklistCreateSchema = z.object({
+  name: z.string(),
+  teams: z.array(z.number().int()),
+  tournamentKey: z.string().optional(),
+});
+
+const MutablePicklistListItemSchema = z.object({
+  uuid: z.string(),
+  name: z.string(),
+  tournamentKey: z.string().nullable().optional(),
+  author: z.object({ username: z.string().nullable().optional() }),
+});
 
 registry.registerPath({
   method: "post",
@@ -30,42 +40,77 @@ registry.registerPath({
   tags: ["Manager - Mutable Picklists"],
   summary: "Create mutable picklist",
   request: { body: { content: { "application/json": { schema: MutablePicklistCreateSchema } } } },
-  responses: { 200: { description: "Created" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" } },
+  responses: {
+    200: { description: "Created", content: { "text/plain": { schema: z.string() } } },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
+    403: { description: "Not on a team" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
+
 registry.registerPath({
   method: "get",
   path: "/v1/manager/mutablepicklists",
   tags: ["Manager - Mutable Picklists"],
   summary: "List mutable picklists",
-  responses: { 200: { description: "List", content: { "application/json": { schema: z.array(MutablePicklistSummarySchema) } } }, 401: { description: "Unauthorized" } },
+  responses: {
+    200: { description: "List", content: { "application/json": { schema: z.array(MutablePicklistListItemSchema) } } },
+    401: { description: "Unauthorized" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
+
 registry.registerPath({
   method: "get",
   path: "/v1/manager/mutablepicklists/{uuid}",
   tags: ["Manager - Mutable Picklists"],
   summary: "Get mutable picklist",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Detail", content: { "application/json": { schema: MutablePicklistDetailSchema } } }, 404: { description: "Not found" } },
+  responses: {
+    200: { description: "Detail", content: { "application/json": { schema: MutablePicklistSchema.nullable() } } },
+    400: { description: "Invalid request" },
+    404: { description: "Not found" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
+
 registry.registerPath({
   method: "put",
   path: "/v1/manager/mutablepicklists/{uuid}",
   tags: ["Manager - Mutable Picklists"],
   summary: "Update mutable picklist",
-  request: { params: z.object({ uuid: z.string() }), body: { content: { "application/json": { schema: MutablePicklistCreateSchema.partial() } } } },
-  responses: { 200: { description: "Updated" }, 400: { description: "Invalid request" } },
+  request: {
+    params: z.object({ uuid: z.string() }),
+    body: { content: { "application/json": { schema: z.object({ name: z.string(), teams: z.array(z.number().int()) }) } } },
+  },
+  responses: {
+    200: { description: "Updated", content: { "text/plain": { schema: z.string() } } },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
+    403: { description: "Not authorized" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
+
 registry.registerPath({
   method: "delete",
   path: "/v1/manager/mutablepicklists/{uuid}",
   tags: ["Manager - Mutable Picklists"],
   summary: "Delete mutable picklist",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Deleted" }, 404: { description: "Not found" } },
+  responses: {
+    200: { description: "Deleted", content: { "text/plain": { schema: z.string() } } },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
+    403: { description: "Unauthorized" },
+    404: { description: "Not found" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 

@@ -13,7 +13,7 @@ registry.registerPath({
   tags: ["Manager - Scouter Shifts"],
   summary: "Update scouter shift",
   request: { params: z.object({ uuid: z.string() }), body: { content: { "application/json": { schema: z.object({ scouterId: z.string(), matchNumber: z.number().int() }) } } } },
-  responses: { 200: { description: "Updated" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" } },
+  responses: { 200: { description: "Updated" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" }, 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -22,7 +22,7 @@ registry.registerPath({
   tags: ["Manager - Scouter Shifts"],
   summary: "Delete scouter shift",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Deleted" }, 401: { description: "Unauthorized" }, 404: { description: "Not found" } },
+  responses: { 200: { description: "Deleted" }, 401: { description: "Unauthorized" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 

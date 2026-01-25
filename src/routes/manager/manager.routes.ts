@@ -8,7 +8,7 @@ import scouters from "./scouters.routes.js";
 import tournaments from "./tournaments.routes.js";
 import scoutreports from "./scoutreports.routes.js";
 import settings from "./settings.routes.js";
-//import apikey from "./apikey.routes.js";
+import apikey from "./apikey.routes.js";
 
 import { getTournaments } from "../../handler/manager/getTournaments.js";
 import { getTeams } from "../../handler/manager/getTeams.js";
@@ -315,7 +315,7 @@ router.use("/", scouters);
 router.use("/tournament", tournaments);
 router.use("/scoutreports", scoutreports);
 router.use("/settings", settings);
-//router.use("/apikey", apikey);
+router.use("/apikey", apikey);
 
 router.get("/teams", requireAuth, getTeams);
 router.get("/tournaments", requireAuth, getTournaments);

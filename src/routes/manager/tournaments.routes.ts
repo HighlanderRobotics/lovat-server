@@ -6,6 +6,7 @@ import { addScouterShift } from "../../handler/manager/tournament/addScouterShif
 import { getScouterSchedule } from "../../handler/manager/tournament/getScouterSchedule.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
+import { TeamSchema, TournamentSchema, ScouterScheduleShiftSchema } from "../../lib/prisma-zod.js";
 
 /*
 
@@ -26,7 +27,7 @@ registry.registerPath({
   tags: ["Manager - Tournaments"],
   summary: "List teams in tournament",
   request: { params: TournamentParamSchema },
-  responses: { 200: { description: "Teams", content: { "application/json": { schema: z.array(z.object({ number: z.number().int(), name: z.string().nullable() })) } } }, 401: { description: "Unauthorized" } },
+  responses: { 200: { description: "Teams", content: { "application/json": { schema: z.array(TeamSchema) } } }, 401: { description: "Unauthorized" }, 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -35,7 +36,7 @@ registry.registerPath({
   tags: ["Manager - Tournaments"],
   summary: "Ranked teams",
   request: { params: TournamentParamSchema },
-  responses: { 200: { description: "Rankings", content: { "application/json": { schema: z.array(z.object({ number: z.number().int(), rank: z.number().int() })) } } } },
+  responses: { 200: { description: "Rankings", content: { "application/json": { schema: z.array(z.object({ number: z.number().int(), name: z.string(), rank: z.number().int().nullable(), rankingPoints: z.number().int().nullable(), matchesPlayed: z.number().int().nullable() })) } } } , 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -44,7 +45,7 @@ registry.registerPath({
   tags: ["Manager - Tournaments"],
   summary: "Create scouter shift",
   request: { params: TournamentParamSchema, body: { content: { "application/json": { schema: z.object({ uuid: z.string().optional(), scouterId: z.string(), matchNumber: z.number().int() }) } } } },
-  responses: { 200: { description: "Created" }, 400: { description: "Invalid request" } },
+  responses: { 200: { description: "Created" }, 400: { description: "Invalid request" }, 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -53,7 +54,7 @@ registry.registerPath({
   tags: ["Manager - Tournaments"],
   summary: "List scouter shifts",
   request: { params: TournamentParamSchema },
-  responses: { 200: { description: "Shifts", content: { "application/json": { schema: z.array(z.object({ scouterId: z.string(), matchNumber: z.number().int() })) } } } },
+  responses: { 200: { description: "Shifts", content: { "application/json": { schema: z.object({ hash: z.string(), data: z.array(ScouterScheduleShiftSchema) }) } } } , 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 

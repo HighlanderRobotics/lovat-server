@@ -20,6 +20,7 @@ registry.registerPath({
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden for API key auth" },
+    500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -35,6 +36,7 @@ registry.registerPath({
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden for API key auth" },
+    500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -50,6 +52,7 @@ registry.registerPath({
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden for API key auth" },
+    500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -60,8 +63,27 @@ registry.registerPath({
   summary: "List API keys",
   description: "Returns current user's API keys. Accepts JWT or API keys.",
   responses: {
-    200: { description: "Keys", content: { "application/json": { schema: z.array(z.object({ uuid: z.string(), name: z.string(), requests: z.number().int() })) } } },
+    200: {
+      description: "Keys",
+      content: {
+        "application/json": {
+          schema: z.object({
+            apiKeys: z.array(
+              z.object({
+                uuid: z.string(),
+                name: z.string(),
+                createdAt: z.string().datetime(),
+                lastUsed: z.string().datetime().nullable(),
+                requests: z.number().int(),
+                user: z.object({ username: z.string() }),
+              })
+            ),
+          }),
+        },
+      },
+    },
     401: { description: "Unauthorized" },
+    500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
 });

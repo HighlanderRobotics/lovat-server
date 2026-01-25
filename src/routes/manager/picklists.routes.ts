@@ -89,6 +89,7 @@ registry.registerPath({
     400: { description: "Invalid body" },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden" },
+    500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -105,6 +106,7 @@ registry.registerPath({
     },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden" },
+    500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -122,7 +124,7 @@ registry.registerPath({
     400: { description: "Invalid UUID" },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden" },
-    404: { description: "Not found" },
+    500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -141,6 +143,7 @@ registry.registerPath({
     400: { description: "Invalid input" },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden" },
+    500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -157,6 +160,7 @@ registry.registerPath({
     401: { description: "Unauthorized" },
     403: { description: "Forbidden" },
     404: { description: "Not found" },
+    500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
 });
