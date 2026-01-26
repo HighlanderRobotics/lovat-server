@@ -31,7 +31,7 @@ export const updateTeamEmail = async (
     res.status(200).send("verification email sent");
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: "Invalid request parameters" });
+      res.status(400).json({ displayError: "Bad email" });
       return;
     }
     console.error(error);
