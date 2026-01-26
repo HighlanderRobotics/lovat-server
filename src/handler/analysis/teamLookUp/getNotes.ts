@@ -5,6 +5,7 @@ import {
   dataSourceRuleToPrismaFilter,
 } from "../dataSourceRule.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
+import getNoteSummary from "../../../lib/gemini.js";
 
 export const getNotes = createAnalysisHandler({
   params: {
@@ -116,6 +117,34 @@ export const getNotes = createAnalysisHandler({
       }));
     }
 
-    return notesAndMatches;
+    const notesAndMatch = notesAndMatches.map(
+      (entry) => `${entry.match}: ${entry.notes}`,
+    );
+    // const notesAndMatch = [
+    //   "2023miket_qm1: Great autonomous mode.",
+    //   "2023miket_qm2: Needs improvement in defense.",
+    //   "2023miket_qm3: Excellent teamwork.",
+    //   "2023miket_qm4: Struggles with climbing.",
+    //   "2023miket_qm5: Consistent scoring ability.",
+    //   "2023miket_qm6: Good communication on the field.",
+    //   "2023miket_qm7: Fast and agile robot.",
+    //   "2023miket_qm8: Issues with ball handling.",
+    //   "2023miket_qm9: Strong alliance partner.",
+    //   "2023miket_qm10: Innovative design features.",
+    //   "2023miket_qm11: Reliable performance under pressure.",
+    //   "2023miket_qm12: Needs better strategy execution.",
+    //   "2023miket_qm13: Excellent driver skills.",
+    //   "2023miket_qm14: Mechanical issues during match.",
+    //   "2023miket_qm15: Great defense against opponents.",
+    //   "2023miket_qm16: High scoring potential.",
+    //   "2023miket_qm17: Insane autonomous performance.",
+    //   "2023miket_qm18: Strong endgame performance.",
+    //   "2023miket_qm19: Good adaptability to different strategies.",
+    //   "2023miket_qm20: Robot broke and was immobile",
+    // ].map((entry) => entry);
+
+    const aiSummary = await getNoteSummary(params.team, notesAndMatch);
+
+    return { notesAndMatches, aiSummary };
   },
 });
