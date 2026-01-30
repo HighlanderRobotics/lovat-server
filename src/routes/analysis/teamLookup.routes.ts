@@ -9,8 +9,6 @@ import { multipleFlags } from "../../handler/analysis/teamLookUp/multipleFlags.j
 
 const router = Router();
 
-router.use(requireAuth);
-
 router.get("/metric/:metric/team/:team", detailsPage);
 router.get("/category/team/:team", categoryMetrics);
 router.get("/breakdown/team/:team", breakdownMetrics);

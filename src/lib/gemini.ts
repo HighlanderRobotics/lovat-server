@@ -11,7 +11,7 @@ const getNoteSummary = async (
 
   const genAI = new GoogleGenAI({ apiKey });
   const prompt = `
-Summarize the following scouting notes for Team ${teamNumber} in 2-4 sharp, to-the-point overview that highlight the team's strengths and weaknesses in recent matches. Do not be verbose and avoid filler words. There should be no mardown in the response, and do not prefix the team's number with "Team".
+Summarize the following scouting notes for Team ${teamNumber} in a 2-4 sentence sharp, to-the-point overview that highlight the team's strengths and weaknesses in recent matches. Be terse and unbiased. Do not be verbose and avoid filler words. There should be no markdown in the response, and do not prefix the team's number with "Team".
 DO NOT USE ANY WORDS THAT YOU DON'T NEED TO.
 
 Notes:
