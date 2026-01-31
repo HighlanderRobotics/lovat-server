@@ -1,12 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import {
-  PositionMap,
-  MatchTypeMap,
-  RobotRoleMap,
-  EventActionMap,
-} from "../managerConstants.js";
+import { PositionMap, EventActionMap } from "../managerConstants.js";
 import { addTournamentMatches } from "../addTournamentMatches.js";
 import {
   AutoClimb,
@@ -27,7 +22,7 @@ import { invalidateCache } from "../../../lib/clearCache.js";
 
 export const addScoutReport = async (
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const paramsScoutReport = z
@@ -43,7 +38,7 @@ export const addScoutReport = async (
         climbPosition: z.nativeEnum(ClimbPosition).optional(),
         climbSide: z.nativeEnum(ClimbSide).optional(),
         beached: z.nativeEnum(Beached),
-         feederTypes: z.array(z.nativeEnum(FeederType)),
+        feederTypes: z.array(z.nativeEnum(FeederType)),
         intakeType: z.nativeEnum(IntakeType),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
@@ -149,7 +144,7 @@ export const addScoutReport = async (
     // Collect all affected cached analyses
     invalidateCache(
       paramsScoutReport.teamNumber,
-      paramsScoutReport.tournamentKey,
+      paramsScoutReport.tournamentKey
     );
 
     const scoutReportUuid = paramsScoutReport.uuid;
@@ -162,8 +157,6 @@ export const addScoutReport = async (
       scoutReportUuid: string;
     }[] = [];
     const events = req.body.events;
-
-    let doesLeave = false;
 
     for (const event of events) {
       let points = 0;
@@ -214,7 +207,7 @@ export const addScoutReport = async (
         matchRow.matchNumber,
         matchRow.teamNumber,
         matchRow.tournamentKey,
-        paramsScoutReport.uuid,
+        paramsScoutReport.uuid
       );
     }
 
@@ -227,6 +220,7 @@ export const addScoutReport = async (
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).send({
+        error: z.prettifyError(error),
         displayError:
           "Invalid input. Make sure you are using the correct input.",
       });

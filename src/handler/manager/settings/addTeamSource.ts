@@ -7,10 +7,11 @@ import { arrayToRule } from "../../../lib/migrateDataSources.js";
 
 export const addTeamSource = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const user = req.user;
+    console.log(req.body);
     if (req.body.mode === "ALL_TEAMS") {
       await prismaClient.user.update({
         where: {
@@ -58,7 +59,7 @@ export const addTeamSource = async (
         data: {
           teamSourceRule: arrayToRule<number>(
             params.data.teamSource,
-            await allTeamNumbers,
+            await allTeamNumbers
           ),
         },
       });
