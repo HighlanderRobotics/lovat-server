@@ -25,6 +25,7 @@ import {
   ClimbSide,
 } from "@prisma/client";
 import { invalidateCache } from "../../../lib/clearCache.js";
+import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 
 export const addScoutReportDashboard = async (
   req: AuthenticatedRequest,
@@ -163,6 +164,45 @@ export const addScoutReportDashboard = async (
       scoutReportUuid: string;
     }[] = [];
     const events = req.body.events;
+
+    // Validate event start/stop sequence
+    let inEvent: boolean = false;
+    let invalidEventSequence: boolean = false;
+    events.map((event: number[]) => {
+      const eventType = EventActionMap[event[1]].toString().split("_")[0];
+      switch (eventType) {
+        case "START":
+          if (inEvent) {
+            res.status(400).send({
+              error: `Invalid event sequence. Received ${eventType} event while already in an event.`,
+              displayError: "Invalid event sequence",
+            });
+            invalidEventSequence = true;
+            return;
+          } else {
+            inEvent = true;
+          }
+          break;
+        case "STOP":
+          if (!inEvent) {
+            res.status(400).send({
+              error: `Invalid event sequence. Received ${eventType} event while not in an event.`,
+              displayError: "Invalid event sequence",
+            });
+            invalidEventSequence = true;
+            return;
+          } else {
+            inEvent = false;
+          }
+          break;
+        default:
+          break;
+      }
+    });
+    if (invalidEventSequence) {
+      return;
+    }
+
     for (let i = 0; i < events.length; i++) {
       const time = events[i][0];
       const position = PositionMap[events[i][2]];
@@ -202,6 +242,18 @@ export const addScoutReportDashboard = async (
         scoutReportUuid: scoutReportUuid,
       });
     }
+    // Send Slack warning if robot broke description is present
+    const broke = paramsScoutReport.robotBrokeDescription?.trim();
+    if (broke) {
+      sendWarningToSlack(
+        "BREAK",
+        matchRow.matchNumber,
+        matchRow.teamNumber,
+        matchRow.tournamentKey,
+        paramsScoutReport.uuid,
+      );
+    }
+
     await prismaClient.event.createMany({
       data: eventDataArray,
     });

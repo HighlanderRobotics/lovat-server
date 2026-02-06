@@ -22,7 +22,7 @@ import { invalidateCache } from "../../../lib/clearCache.js";
 
 export const addScoutReport = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const paramsScoutReport = z
@@ -144,7 +144,7 @@ export const addScoutReport = async (
     // Collect all affected cached analyses
     invalidateCache(
       paramsScoutReport.teamNumber,
-      paramsScoutReport.tournamentKey
+      paramsScoutReport.tournamentKey,
     );
 
     const scoutReportUuid = paramsScoutReport.uuid;
@@ -157,6 +157,44 @@ export const addScoutReport = async (
       scoutReportUuid: string;
     }[] = [];
     const events = req.body.events;
+
+    let inEvent: boolean = false;
+    let invalidEventSequence: boolean = false;
+
+    events.map((event: number[]) => {
+      const eventType = EventActionMap[event[1]].toString().split("_")[0];
+      switch (eventType) {
+        case "START":
+          if (inEvent) {
+            res.status(400).send({
+              error: `Invalid event sequence. Received ${eventType} event while already in an event.`,
+              displayError: "Invalid event sequence",
+            });
+            invalidEventSequence = true;
+            return;
+          } else {
+            inEvent = true;
+          }
+          break;
+        case "STOP":
+          if (!inEvent) {
+            res.status(400).send({
+              error: `Invalid event sequence. Received ${eventType} event while not in an event.`,
+              displayError: "Invalid event sequence",
+            });
+            invalidEventSequence = true;
+            return;
+          } else {
+            inEvent = false;
+          }
+          break;
+        default:
+          break;
+      }
+    });
+    if (invalidEventSequence) {
+      return;
+    }
 
     for (const event of events) {
       let points = 0;
@@ -201,13 +239,14 @@ export const addScoutReport = async (
       });
     }
 
-    if (paramsScoutReport.robotBrokeDescription != null || undefined) {
+    const broke = paramsScoutReport.robotBrokeDescription?.trim();
+    if (broke) {
       sendWarningToSlack(
         "BREAK",
         matchRow.matchNumber,
         matchRow.teamNumber,
         matchRow.tournamentKey,
-        paramsScoutReport.uuid
+        paramsScoutReport.uuid,
       );
     }
 
