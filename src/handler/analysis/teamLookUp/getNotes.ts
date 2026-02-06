@@ -45,7 +45,7 @@ export const getNotes = createAnalysisHandler({
     let notesAndMatches: {
       notes: string;
       match: string;
-      tounramentName: string; // Typo for backwards compatibility
+      tournamentName: string; // Typo for backwards compatibility
       sourceTeam: number;
       scouterName?: string;
     }[];
@@ -100,7 +100,7 @@ export const getNotes = createAnalysisHandler({
       notesAndMatches = noteData.map((report) => ({
         notes: report.notes,
         match: report.teamMatchKey,
-        tounramentName: report.teamMatchData.tournament.name,
+        tournamentName: report.teamMatchData.tournament.name,
         sourceTeam: report.scouter.sourceTeamNumber,
         scouterName:
           report.scouter.sourceTeamNumber === ctx.user.teamNumber
@@ -111,7 +111,7 @@ export const getNotes = createAnalysisHandler({
       notesAndMatches = noteData.map((report) => ({
         notes: report.notes,
         match: report.teamMatchKey,
-        tounramentName: report.teamMatchData.tournament.name,
+        tournamentName: report.teamMatchData.tournament.name,
         sourceTeam: report.scouter.sourceTeamNumber,
       }));
     }
