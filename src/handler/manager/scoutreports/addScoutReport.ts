@@ -84,7 +84,8 @@ export const addScoutReport = async (
       switch (eventType[0]) {
         case "START":
           if (eventType[1] === "MATCH") {
-            return;
+            // Ignore START_MATCH marker and continue processing
+            break;
           } else if (inEvent !== null) {
             res.status(400).send({
               error: `Invalid input. Cannot start ${eventType[1]} event while already in ${inEvent} event.`,

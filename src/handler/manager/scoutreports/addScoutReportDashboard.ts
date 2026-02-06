@@ -157,7 +157,7 @@ export const addScoutReportDashboard = async (
       switch (eventType[0]) {
         case "START":
           if (eventType[1] === "MATCH") {
-            // ignore match start
+            // Ignore START_MATCH marker consistently with API handler
             break;
           } else if (inEvent !== null) {
             res.status(400).send({
