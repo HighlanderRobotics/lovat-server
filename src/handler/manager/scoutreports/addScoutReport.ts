@@ -19,6 +19,11 @@ import {
 } from "@prisma/client";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../../lib/clearCache.js";
+import { PrismaClient } from "@prisma/client/extension";
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientUnknownRequestError,
+} from "@prisma/client/runtime/library";
 
 export const addScoutReport = async (
   req: Request,
@@ -55,35 +60,67 @@ export const addScoutReport = async (
       })
       .parse(req.body);
 
-    // Make sure UUID does not already exist in database
-    const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
-      where: {
-        uuid: paramsScoutReport.uuid,
-      },
-    });
-    if (scoutReportUuidRow) {
-      res.status(400).send({
-        error: `The scout report uuid ${paramsScoutReport.uuid} already exists.`,
-        displayError: "Scout report already uploaded",
-      });
-      return;
-    }
-
     // Check that scouter exists
-    const scouter = await prismaClient.scouter.findFirst({
+    await prismaClient.scouter.findFirstOrThrow({
       where: {
         uuid: paramsScoutReport.scouterUuid,
       },
     });
-    if (!scouter) {
+
+    const eventDataArray: {
+      time: number;
+      action: EventAction;
+      position: Position;
+      points: number;
+      scoutReportUuid: string;
+    }[] = [];
+    const events = req.body.events;
+
+    let inEvent: string | null = null;
+
+    for (const event of events) {
+      const eventType = EventActionMap[event[1]].toString().split("_");
+
+      switch (eventType[0]) {
+        case "START":
+          if (eventType[1] === "MATCH") {
+            return;
+          } else if (inEvent !== null) {
+            res.status(400).send({
+              error: `Invalid input. Cannot start ${eventType[1]} event while already in ${inEvent} event.`,
+              displayError: `Invalid input. Cannot start ${eventType[1]} event while already in ${inEvent} event.`,
+            });
+            return;
+          }
+          inEvent = eventType[1];
+          break;
+        case "STOP":
+          if (inEvent === null) {
+            res.status(400).send({
+              error: `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`,
+              displayError: `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`,
+            });
+            return;
+          } else if (inEvent !== eventType[1]) {
+            res.status(400).send({
+              error: `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`,
+              displayError: `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`,
+            });
+            return;
+          }
+          inEvent = null;
+          break;
+        default:
+          break;
+      }
+    }
+    if (inEvent !== null) {
       res.status(400).send({
-        error: `This ${paramsScoutReport.scouterUuid} has been deleted or never existed.`,
-        displayError:
-          "This scouter has been deleted. Reset your settings and choose a new scouter.",
+        error: `Invalid input. Event ${inEvent} was not stopped.`,
+        displayError: `Invalid input. Event ${inEvent} was not stopped.`,
       });
       return;
     }
-
     // Add tournament matches if they dont exist
     const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
       where: {
@@ -148,53 +185,6 @@ export const addScoutReport = async (
     );
 
     const scoutReportUuid = paramsScoutReport.uuid;
-
-    const eventDataArray: {
-      time: number;
-      action: EventAction;
-      position: Position;
-      points: number;
-      scoutReportUuid: string;
-    }[] = [];
-    const events = req.body.events;
-
-    let inEvent: boolean = false;
-    let invalidEventSequence: boolean = false;
-
-    events.map((event: number[]) => {
-      const eventType = EventActionMap[event[1]].toString().split("_")[0];
-      switch (eventType) {
-        case "START":
-          if (inEvent) {
-            res.status(400).send({
-              error: `Invalid event sequence. Received ${eventType} event while already in an event.`,
-              displayError: "Invalid event sequence",
-            });
-            invalidEventSequence = true;
-            return;
-          } else {
-            inEvent = true;
-          }
-          break;
-        case "STOP":
-          if (!inEvent) {
-            res.status(400).send({
-              error: `Invalid event sequence. Received ${eventType} event while not in an event.`,
-              displayError: "Invalid event sequence",
-            });
-            invalidEventSequence = true;
-            return;
-          } else {
-            inEvent = false;
-          }
-          break;
-        default:
-          break;
-      }
-    });
-    if (invalidEventSequence) {
-      return;
-    }
 
     for (const event of events) {
       let points = 0;
@@ -262,6 +252,19 @@ export const addScoutReport = async (
         error: z.prettifyError(error),
         displayError:
           "Invalid input. Make sure you are using the correct input.",
+      });
+      return;
+    } else if (error instanceof PrismaClientKnownRequestError) {
+      res.status(400).send({
+        error: `The scout report with the same uuid already exists.`,
+        displayError: "Scout report already uploaded",
+      });
+      return;
+    } else if (error instanceof PrismaClient.NotFoundError) {
+      res.status(400).send({
+        error: `This scouter has been deleted or never existed.`,
+        displayError:
+          "This scouter has been deleted. Reset your settings and choose a new scouter.",
       });
       return;
     }
