@@ -25,6 +25,55 @@ import {
   PrismaClientUnknownRequestError,
 } from "@prisma/client/runtime/library";
 
+export const checkForInvalidEvents = (events: any[][]): string[] | null => {
+  let inEvent: string | null = null;
+  const errors: string[] = [];
+
+  for (const event of events) {
+    const eventType = EventActionMap[event[1]].toString().split("_");
+
+    switch (eventType[0]) {
+      case "START":
+        if (eventType[1] === "MATCH") {
+          // Ignore START_MATCH marker and continue processing
+          break;
+        } else if (inEvent !== null) {
+          errors.push(
+            `Invalid input. Cannot start ${eventType[1]} event while in ${inEvent} event.`,
+          );
+          break;
+        }
+        inEvent = eventType[1];
+        break;
+      case "STOP":
+        if (inEvent === null) {
+          errors.push(
+            `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`,
+          );
+          break;
+        } else if (inEvent !== eventType[1]) {
+          errors.push(
+            `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`,
+          );
+          break;
+        }
+        inEvent = null;
+        break;
+      default:
+        break;
+    }
+  }
+  if (inEvent !== null) {
+    errors.push(`Invalid input. Missing stop event for ${inEvent} event.`);
+  }
+
+  if (errors.length > 0) {
+    return errors;
+  } else {
+    return null;
+  }
+};
+
 export const addScoutReport = async (
   req: Request,
   res: Response,
@@ -76,49 +125,11 @@ export const addScoutReport = async (
     }[] = [];
     const events = req.body.events;
 
-    let inEvent: string | null = null;
-
-    for (const event of events) {
-      const eventType = EventActionMap[event[1]].toString().split("_");
-
-      switch (eventType[0]) {
-        case "START":
-          if (eventType[1] === "MATCH") {
-            // Ignore START_MATCH marker and continue processing
-            break;
-          } else if (inEvent !== null) {
-            res.status(400).send({
-              error: `Invalid input. Cannot start ${eventType[1]} event while already in ${inEvent} event.`,
-              displayError: `Invalid input. Cannot start ${eventType[1]} event while already in ${inEvent} event.`,
-            });
-            return;
-          }
-          inEvent = eventType[1];
-          break;
-        case "STOP":
-          if (inEvent === null) {
-            res.status(400).send({
-              error: `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`,
-              displayError: `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`,
-            });
-            return;
-          } else if (inEvent !== eventType[1]) {
-            res.status(400).send({
-              error: `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`,
-              displayError: `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`,
-            });
-            return;
-          }
-          inEvent = null;
-          break;
-        default:
-          break;
-      }
-    }
-    if (inEvent !== null) {
+    const invalidEventErrors = checkForInvalidEvents(events);
+    if (invalidEventErrors) {
       res.status(400).send({
-        error: `Invalid input. Event ${inEvent} was not stopped.`,
-        displayError: `Invalid input. Event ${inEvent} was not stopped.`,
+        error: invalidEventErrors,
+        displayError: invalidEventErrors.join(" "),
       });
       return;
     }
