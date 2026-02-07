@@ -4,7 +4,6 @@ import { User } from "@prisma/client";
 import { Request as ExpressRequest, Response, NextFunction } from "express";
 import * as jose from "jose";
 import { createHash } from "crypto";
-import rateLimit from "express-rate-limit";
 import { kv } from "../../redisClient.js";
 
 export interface AuthenticatedRequest extends ExpressRequest {
