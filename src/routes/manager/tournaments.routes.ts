@@ -6,7 +6,7 @@ import { addScouterShift } from "../../handler/manager/tournament/addScouterShif
 import { getScouterSchedule } from "../../handler/manager/tournament/getScouterSchedule.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
-import { TeamSchema, TournamentSchema, ScouterScheduleShiftSchema } from "../../lib/prisma-zod.js";
+import { TeamSchema, ScouterScheduleShiftSchema } from "../../lib/prisma-zod.js";
 
 /*
 
