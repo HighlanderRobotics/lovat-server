@@ -25,7 +25,7 @@ export interface ArrayFilter<T> {
   in?: T[];
 }
 /* ----------------------- helpers ----------------------- */
-function avg(values: number[]): number {
+export function avg(values: number[]): number {
   return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 }
 
@@ -209,39 +209,36 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
           }
           case Metric.fuelPerSecond: {
             const perMatch = sr.map((r) => {
-               const totalFuel = r.events
-                 .filter((e) => e.action === "STOP_SCORING")
-                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-              const firstStopTime = firstEventTime(
-                r.events,
-                (e) => e.action === "STOP_SCORING",
+              const totalFuel = r.events
+                .filter((e) => e.action === "STOP_SCORING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              const duration = calculateTimeMetric(sr, "SCORING").reduce(
+                (a, b) => a + b,
+                0,
               );
-              const duration = firstStopTime
-                ? firstStopTime - (r.events[0]?.time ?? 0)
-                : 150; // assume full match if no stop event
               return duration > 0 ? totalFuel / duration : 0;
             });
             tournamentValue = avg(perMatch);
             break;
           }
-           case Metric.totalFuelOutputted: {
-             const perMatch = sr.map((r) => {
-               const shotQty = r.events
-                 .filter((e) => e.action === "STOP_SCORING")
-                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-               const feedQty = r.events
-                 .filter((e) => e.action === "STOP_FEEDING")
-                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-               return shotQty + feedQty;
-             });
-             tournamentValue = avg(perMatch);
-             break;
-           }
+          case Metric.totalFuelOutputted: {
+            const perMatch = sr.map((r) => {
+              const shotQty = r.events
+                .filter((e) => e.action === "STOP_SCORING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              const feedQty = r.events
+                .filter((e) => e.action === "STOP_FEEDING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              return shotQty + feedQty;
+            });
+            tournamentValue = avg(perMatch);
+            break;
+          }
           case Metric.totalBallsFed: {
             const perMatch = sr.map((r) => {
               return r.events
                 .filter((e) => e.action === "STOP_FEEDING")
-                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
             });
             tournamentValue = avg(perMatch);
             break;
@@ -253,7 +250,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
                   (e) =>
                     e.action === "STOP_FEEDING" || e.action === "STOP_SCORING",
                 )
-                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
             });
             tournamentValue = avg(perMatch);
             break;
@@ -268,11 +265,14 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
           case Metric.feedingRate: {
             const feedTime = calculateTimeMetric(sr, "FEEDING");
             const feeds = sr.flatMap((r) =>
-               r.events.filter((e) => e.action === "STOP_FEEDING"),
-             );
-             const totalFeedQuantity = feeds.reduce((acc, f) => acc + (f.quantity ?? 0), 0);
-             tournamentValue =
-               totalFeedQuantity > 0 ? totalFeedQuantity / avg(feedTime) : 0;
+              r.events.filter((e) => e.action === "STOP_FEEDING"),
+            );
+            const totalFeedQuantity = feeds.reduce(
+              (acc, f) => acc + (f.quantity ?? 0),
+              0,
+            );
+            tournamentValue =
+              totalFeedQuantity > 0 ? totalFeedQuantity / avg(feedTime) : 0;
             break;
           }
           case Metric.timeFeeding: {
@@ -320,9 +320,9 @@ export const averageManyFast = async (
   args: z.infer<typeof argsSchema>,
 ) => runAnalysis(config, user, args);
 
-function calculateTimeMetric(
+export function calculateTimeMetric(
   sr: {
-    events: {
+    events?: {
       eventUuid: string;
       time: number;
       action: $Enums.EventAction;
@@ -330,11 +330,6 @@ function calculateTimeMetric(
       points: number;
       scoutReportUuid: string;
     }[];
-    driverAbility: number;
-    endgameClimb: $Enums.EndgameClimb;
-    autoClimb: $Enums.AutoClimb;
-    accuracy: number;
-    defenseEffectiveness: number;
   }[],
   event: string,
 ): number[] {

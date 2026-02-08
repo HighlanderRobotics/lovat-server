@@ -65,6 +65,18 @@ const config = {
       });
       return accuracyToPercentageInterpolated(data._avg.accuracy);
     }
+
+    if (metric === Metric.fuelPerSecond) {
+      const data = await prismaClient.scoutReport.aggregate({
+        _avg: { accuracy: true },
+        where: {
+          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          scouter: { sourceTeamNumber: sourceTeamFilter },
+        },
+      });
+      return data._avg.accuracy;
+    }
+
     if (metric === Metric.defenseEffectiveness) {
       const data = await prismaClient.scoutReport.aggregate({
         _avg: { defenseEffectiveness: true },
