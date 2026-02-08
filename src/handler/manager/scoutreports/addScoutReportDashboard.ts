@@ -170,7 +170,7 @@ export const addScoutReportDashboard = async (
       const time = event[0];
       const action = EventActionMap[event[1]];
       const position = PositionMap[event[2]];
-      if (action === EventAction.STOP_SCORING) {
+      if (action === EventAction.STOP_SCORING || action === EventAction.STOP_FEEDING) {
         points = event[3];
       }
       const paramsEvents = z
