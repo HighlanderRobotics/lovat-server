@@ -204,7 +204,7 @@ export const addScoutReport = async (
       const action = EventActionMap[event[1]];
       const position = PositionMap[event[2]];
 
-      if (action === EventAction.STOP_SCORING) {
+      if (action === EventAction.STOP_SCORING || action === EventAction.STOP_FEEDING) {
         points = event[3];
       }
 
