@@ -68,7 +68,7 @@ model ScoutReport {
   defenseEffectiveness Int
   feederTypes          FeederType[]
   intakeType           IntakeType
-  mobility             Mobility
+  fieldTraversal       FieldTraversal
   scoresWhileMoving    Boolean
   disrupts             Boolean
   endgameClimb         EndgameClimb
@@ -260,7 +260,7 @@ enum EventAction {
   STOP_FEEDING
 }
 
-enum Mobility {
+enum FieldTraversal {
   TRENCH
   BUMP
   BOTH

@@ -10,7 +10,7 @@ import {
   AutoClimb,
   EndgameClimb,
   Beached,
-  Mobility,
+  FieldTraversal,
   ClimbPosition,
   ClimbSide,
   FeederType,
@@ -51,7 +51,7 @@ export interface CondensedReport {
   totalBallsFed: number;
   outpostIntakes: number;
   robotRoles: string;
-  mobility: string;
+  fieldTraversal: string;
   endgameClimb: string;
   beached: string;
   scoresWhileMoving: boolean;
@@ -69,7 +69,7 @@ interface PointsReport {
   robotRoles: RobotRole[];
   autoClimb: AutoClimb;
   endgameClimb: EndgameClimb;
-  mobility: Mobility;
+  fieldTraversal: FieldTraversal;
   beached: Beached;
   climbSide: ClimbSide;
   climbPosition: ClimbPosition;
@@ -118,7 +118,8 @@ export const getReportCSV = async (
     const includeTeleop = teleop || !(auto || teleop);
 
     // Time filter for event counting
-    let eventTimeFilter: { time: { lte?: number; gt?: number } } | undefined = undefined;
+    let eventTimeFilter: { time: { lte?: number; gt?: number } } | undefined =
+      undefined;
     if (includeAuto && !includeTeleop) {
       eventTimeFilter = {
         time: {
@@ -163,7 +164,7 @@ export const getReportCSV = async (
         defenseEffectiveness: true,
         climbPosition: true,
         climbSide: true,
-        mobility: true,
+        fieldTraversal: true,
         beached: true,
         scoresWhileMoving: true,
         disrupts: true,
@@ -171,13 +172,13 @@ export const getReportCSV = async (
         intakeType: true,
         events: {
           where: eventTimeFilter,
-            select: {
-              time: true,
-              action: true,
-              position: true,
-              points: true,
-              quantity: true,
-            },
+          select: {
+            time: true,
+            action: true,
+            position: true,
+            points: true,
+            quantity: true,
+          },
         },
         scouter: {
           select: {
@@ -223,7 +224,7 @@ export const getReportCSV = async (
             teamMatchData: r.teamMatchData,
             climbPosition: r.climbPosition,
             climbSide: r.climbSide,
-            mobility: r.mobility,
+            fieldTraversal: r.fieldTraversal,
             beached: r.beached,
             scoresWhileMoving: r.scoresWhileMoving,
             disrupts: r.disrupts,
@@ -270,7 +271,8 @@ async function condenseReport(
 ): Promise<CondensedReport> {
   const data: CondensedReport = {
     match:
-      String(report.teamMatchData.matchType?.at(0) ?? "") + String(report.teamMatchData.matchNumber ?? ""),
+      String(report.teamMatchData.matchType?.at(0) ?? "") +
+      String(report.teamMatchData.matchNumber ?? ""),
     teamNumber: report.teamMatchData.teamNumber ?? 0,
     totalPoints: 0,
     accuracy: report.accuracy ?? 0,
@@ -300,7 +302,7 @@ async function condenseReport(
     endgameClimb: String(report.endgameClimb ?? ""),
     feederTypes: (report.feederTypes || []).join(","),
     intakeType: String(report.intakeType ?? ""),
-    mobility: String(report.mobility ?? "N/A"),
+    fieldTraversal: String(report.fieldTraversal ?? "N/A"),
     teleopPoints: 0,
     autoPoints: 0,
     scouter: "",
@@ -377,7 +379,10 @@ async function condenseReport(
     maybeSet(Metric.autoClimbStartTime, (n) => (data.autoClimbStartTime = n));
     maybeSet(Metric.driverAbility, (n) => (data.driverAbility = n));
     maybeSet(Metric.contactDefenseTime, (n) => (data.contactDefenseTime = n));
-    maybeSet(Metric.defenseEffectiveness, (n) => (data.defenseEffectiveness = n));
+    maybeSet(
+      Metric.defenseEffectiveness,
+      (n) => (data.defenseEffectiveness = n),
+    );
     maybeSet(Metric.campingDefenseTime, (n) => (data.campingDefenseTime = n));
     maybeSet(Metric.totalDefenseTime, (n) => (data.totalDefenseTime = n));
     maybeSet(Metric.timeFeeding, (n) => (data.timeFeeding = n));

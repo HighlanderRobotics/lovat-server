@@ -7,8 +7,8 @@ import {
   RobotRole,
   User,
   IntakeType,
-  Mobility,
   Beached,
+  FieldTraversal,
 } from "@prisma/client";
 import prismaClient from "../../prismaClient.js";
 import { DataSourceRule } from "./dataSourceRule.js";
@@ -48,7 +48,7 @@ enum Metric {
 // Metrics for discrete ScoutReport fields
 enum MetricsBreakdown {
   robotRoles = "robotRoles",
-  mobility = "mobility",
+  fieldTraversal = "fieldTraversal",
   endgameClimb = "endgameClimb",
   beached = "beached",
   scoresWhileMoving = "scoresWhileMoving",
@@ -145,7 +145,7 @@ const breakdownNeg = "FALSE";
 
 const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
   robotrole: MetricsBreakdown.robotRoles,
-  mobility: MetricsBreakdown.mobility,
+  fieldTraversal: MetricsBreakdown.fieldTraversal,
   beached: MetricsBreakdown.beached,
   autoclimb: MetricsBreakdown.autoClimb,
   climbresult: MetricsBreakdown.endgameClimb,
@@ -156,17 +156,32 @@ const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
 };
 
 const accuracyToPercentage: Record<number, number> = {
-  0: 0,
-  1: 0.55,
-  2: 0.65,
-  3: 0.75,
-  4: 0.85,
-  5: 0.95,
+  0: 25,
+  1: 55,
+  2: 65,
+  3: 75,
+  4: 85,
+  5: 95,
+};
+
+export const accuracyToPercentageInterpolated = (avg: number): number => {
+  avg = Math.max(0, Math.min(5, avg));
+
+  const lower = Math.floor(avg);
+  const upper = Math.ceil(avg);
+
+  if (lower === upper) return accuracyToPercentage[lower];
+
+  const fraction = avg - lower;
+  return (
+    accuracyToPercentage[lower] +
+    fraction * (accuracyToPercentage[upper] - accuracyToPercentage[lower])
+  );
 };
 
 const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
   [MetricsBreakdown.robotRoles]: [...Object.values(RobotRole)],
-  [MetricsBreakdown.mobility]: [...Object.values(Mobility)],
+  [MetricsBreakdown.fieldTraversal]: [...Object.values(FieldTraversal)],
   [MetricsBreakdown.endgameClimb]: [...Object.values(EndgameClimb)],
   [MetricsBreakdown.beached]: [...Object.values(Beached)],
   [MetricsBreakdown.scoresWhileMoving]: [breakdownNeg, breakdownPos],

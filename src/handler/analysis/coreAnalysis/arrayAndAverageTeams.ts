@@ -1,5 +1,6 @@
 import prismaClient from "../../../prismaClient.js";
 import {
+  accuracyToPercentage,
   autoEnd,
   endgameToPoints,
   Metric,
@@ -108,6 +109,28 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           matchAggregationFunction = (reports) => {
             return (
               reports.reduce((acc, cur) => acc + cur.driverAbility, 0) /
+              reports.length
+            );
+          };
+          break;
+        case Metric.accuracy:
+          srSelect = { accuracy: true };
+          console.log("accuracy selected");
+          matchAggregationFunction = (reports) => {
+            return (
+              reports.reduce(
+                (acc, cur) => acc + accuracyToPercentage[cur.accuracy],
+                0,
+              ) / reports.length
+            );
+          };
+          break;
+
+        case Metric.defenseEffectiveness:
+          srSelect = { defenseEffectiveness: true };
+          matchAggregationFunction = (reports) => {
+            return (
+              reports.reduce((acc, cur) => acc + cur.defenseEffectiveness, 0) /
               reports.length
             );
           };

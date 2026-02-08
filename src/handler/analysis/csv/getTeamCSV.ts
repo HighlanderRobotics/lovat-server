@@ -9,7 +9,7 @@ import {
   Position,
   Event,
   AutoClimb,
-  Mobility,
+  FieldTraversal,
   EndgameClimb,
   Beached,
   ClimbPosition,
@@ -31,7 +31,7 @@ interface AggregatedTeamData {
   teamNumber: number;
   mainRole: string;
   secondaryRole: string;
-  mobility: string;
+  fieldTraversal: string;
   avgTotalPoints: number;
   avgAutoPoints: number;
   avgTeleopPoints: number;
@@ -72,7 +72,7 @@ interface PointsReport {
   robotRoles: RobotRole[];
   autoClimb: AutoClimb;
   endgameClimb: EndgameClimb;
-  mobility: Mobility;
+  fieldTraversal: FieldTraversal;
   beached: Beached;
   climbSide: ClimbSide;
   climbPosition: ClimbPosition;
@@ -120,7 +120,8 @@ export const getTeamCSV = async (
     const includeTeleop = teleop || !(auto || teleop);
 
     // Time filter for event counting
-    let eventTimeFilter: { time: { lte?: number; gt?: number } } | undefined = undefined;
+    let eventTimeFilter: { time: { lte?: number; gt?: number } } | undefined =
+      undefined;
     if (includeAuto && !includeTeleop) {
       eventTimeFilter = {
         time: {
@@ -142,44 +143,42 @@ export const getTeamCSV = async (
       },
       select: {
         teamNumber: true,
-            scoutReports: {
-              where: (() => {
-                const parsed = dataSourceRuleSchema(z.number()).safeParse(
-                  req.user?.teamSourceRule,
-                );
-                if (!parsed.success) return {};
-                const filter = dataSourceRuleToPrismaFilter(parsed.data);
-                return filter
-                  ? { scouter: { sourceTeamNumber: filter } }
-                  : {};
-              })(),
+        scoutReports: {
+          where: (() => {
+            const parsed = dataSourceRuleSchema(z.number()).safeParse(
+              req.user?.teamSourceRule,
+            );
+            if (!parsed.success) return {};
+            const filter = dataSourceRuleToPrismaFilter(parsed.data);
+            return filter ? { scouter: { sourceTeamNumber: filter } } : {};
+          })(),
+          select: {
+            uuid: true,
+            robotRoles: true,
+            accuracy: true,
+            endgameClimb: true,
+            autoClimb: true,
+            fieldTraversal: true,
+            driverAbility: true,
+            defenseEffectiveness: true,
+            beached: true,
+            climbSide: true,
+            climbPosition: true,
+            scoresWhileMoving: true,
+            disrupts: true,
+            feederTypes: true,
+            intakeType: true,
+            events: {
+              where: eventTimeFilter,
               select: {
-                uuid: true,
-                robotRoles: true,
-                accuracy: true,
-                endgameClimb: true,
-                autoClimb: true,
-                mobility: true,
-                driverAbility: true,
-                defenseEffectiveness: true,
-                beached: true,
-                climbSide: true,
-                climbPosition: true,
-                scoresWhileMoving: true,
-                disrupts: true,
-                feederTypes: true,
-                intakeType: true,
-                events: {
-                  where: eventTimeFilter,
-                  select: {
-                    time: true,
-                    action: true,
-                    position: true,
-                    points: true,
-                  },
-                },
+                time: true,
+                action: true,
+                position: true,
+                points: true,
               },
             },
+          },
+        },
       },
       orderBy: {
         teamNumber: "asc",
@@ -296,7 +295,7 @@ async function aggregateTeamReports(
     teamNumber: teamNum,
     mainRole: null,
     secondaryRole: null,
-    mobility: null,
+    fieldTraversal: null,
     avgTotalPoints: 0,
     avgAutoPoints: 0,
     avgTeleopPoints: 0,
@@ -340,23 +339,27 @@ async function aggregateTeamReports(
     IMMOBILE: 0,
   };
 
-  // Main iteration for most aggregation summing (roles, mobility, perc flags)
+  // Main iteration for most aggregation summing (roles, fieldTraversal, perc flags)
   reports.forEach((report) => {
     for (const role of report.robotRoles || []) {
       roles[role] += report.weight / (report.robotRoles.length || 1);
     }
 
-    switch (report.mobility) {
-      case Mobility.TRENCH:
-        data.mobility =
-          data.mobility === Mobility.BUMP ? Mobility.BOTH : Mobility.TRENCH;
+    switch (report.fieldTraversal) {
+      case FieldTraversal.TRENCH:
+        data.fieldTraversal =
+          data.fieldTraversal === FieldTraversal.BUMP
+            ? FieldTraversal.BOTH
+            : FieldTraversal.TRENCH;
         break;
-      case Mobility.BUMP:
-        data.mobility =
-          data.mobility === Mobility.TRENCH ? Mobility.BOTH : Mobility.BUMP;
+      case FieldTraversal.BUMP:
+        data.fieldTraversal =
+          data.fieldTraversal === FieldTraversal.TRENCH
+            ? FieldTraversal.BOTH
+            : FieldTraversal.BUMP;
         break;
-      case Mobility.BOTH:
-        data.mobility = Mobility.BOTH;
+      case FieldTraversal.BOTH:
+        data.fieldTraversal = FieldTraversal.BOTH;
         break;
     }
 

@@ -9,7 +9,7 @@ import {
   EventAction,
   FeederType,
   IntakeType,
-  Mobility,
+  FieldTraversal,
   Position,
   MatchType,
   RobotRole,
@@ -20,10 +20,7 @@ import {
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../../lib/clearCache.js";
 import { PrismaClient } from "@prisma/client/extension";
-import {
-  PrismaClientKnownRequestError,
-  PrismaClientUnknownRequestError,
-} from "@prisma/client/runtime/library";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export const checkForInvalidEvents = (events: any[][]): string[] | null => {
   let inEvent: string | null = null;
@@ -79,6 +76,7 @@ export const addScoutReport = async (
   res: Response,
 ): Promise<void> => {
   try {
+    console.log("Adding scout report with params: ", req.body);
     const paramsScoutReport = z
       .object({
         uuid: z.string(),
@@ -88,7 +86,7 @@ export const addScoutReport = async (
         startTime: z.number(),
         notes: z.string(),
         robotRoles: z.array(z.nativeEnum(RobotRole)),
-        mobility: z.nativeEnum(Mobility),
+        mobility: z.nativeEnum(FieldTraversal),
         climbPosition: z.nativeEnum(ClimbPosition).optional(),
         climbSide: z.nativeEnum(ClimbSide).optional(),
         beached: z.nativeEnum(Beached),
@@ -180,7 +178,7 @@ export const addScoutReport = async (
         beached: paramsScoutReport.beached,
         feederTypes: paramsScoutReport.feederTypes,
         intakeType: paramsScoutReport.intakeType,
-        mobility: paramsScoutReport.mobility,
+        fieldTraversal: paramsScoutReport.mobility,
         defenseEffectiveness: paramsScoutReport.defenseEffectiveness,
         scoresWhileMoving: paramsScoutReport.scoresWhileMoving,
         accuracy: paramsScoutReport.accuracy,
