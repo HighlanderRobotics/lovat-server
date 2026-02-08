@@ -209,9 +209,9 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
           }
           case Metric.fuelPerSecond: {
             const perMatch = sr.map((r) => {
-              const totalFuel = r.events
-                .filter((e) => e.action === "STOP_SCORING")
-                .reduce((acc, cur) => acc + cur.points, 0);
+               const totalFuel = r.events
+                 .filter((e) => e.action === "STOP_SCORING")
+                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
               const firstStopTime = firstEventTime(
                 r.events,
                 (e) => e.action === "STOP_SCORING",
@@ -224,20 +224,24 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             tournamentValue = avg(perMatch);
             break;
           }
-          case Metric.totalFuelOutputted: {
-            const perMatch = sr.map((r) => {
-              return r.events
-                .filter((e) => e.action === "STOP_SCORING")
-                .reduce((acc, cur) => acc + cur.points, 0);
-            });
-            tournamentValue = avg(perMatch);
-            break;
-          }
+           case Metric.totalFuelOutputted: {
+             const perMatch = sr.map((r) => {
+               const shotQty = r.events
+                 .filter((e) => e.action === "STOP_SCORING")
+                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+               const feedQty = r.events
+                 .filter((e) => e.action === "STOP_FEEDING")
+                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+               return shotQty + feedQty;
+             });
+             tournamentValue = avg(perMatch);
+             break;
+           }
           case Metric.totalBallsFed: {
             const perMatch = sr.map((r) => {
               return r.events
                 .filter((e) => e.action === "STOP_FEEDING")
-                .reduce((acc, cur) => acc + cur.points, 0);
+                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
             });
             tournamentValue = avg(perMatch);
             break;
@@ -249,7 +253,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
                   (e) =>
                     e.action === "STOP_FEEDING" || e.action === "STOP_SCORING",
                 )
-                .reduce((acc, cur) => acc + cur.points, 0);
+                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
             });
             tournamentValue = avg(perMatch);
             break;
@@ -264,11 +268,11 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
           case Metric.feedingRate: {
             const feedTime = calculateTimeMetric(sr, "FEEDING");
             const feeds = sr.flatMap((r) =>
-              r.events.filter((e) => e.action === "STOP_FEEDING"),
-            );
-            const totalFeedPoints = feeds.reduce((acc, f) => acc + f.points, 0);
-            tournamentValue =
-              totalFeedPoints > 0 ? totalFeedPoints / avg(feedTime) : 0;
+               r.events.filter((e) => e.action === "STOP_FEEDING"),
+             );
+             const totalFeedQuantity = feeds.reduce((acc, f) => acc + (f.quantity ?? 0), 0);
+             tournamentValue =
+               totalFeedQuantity > 0 ? totalFeedQuantity / avg(feedTime) : 0;
             break;
           }
           case Metric.timeFeeding: {

@@ -171,12 +171,13 @@ export const getReportCSV = async (
         intakeType: true,
         events: {
           where: eventTimeFilter,
-          select: {
-            time: true,
-            action: true,
-            position: true,
-            points: true,
-          },
+            select: {
+              time: true,
+              action: true,
+              position: true,
+              points: true,
+              quantity: true,
+            },
         },
         scouter: {
           select: {

@@ -162,6 +162,7 @@ export const addScoutReportDashboard = async (
       action: EventAction;
       position: Position;
       points: number;
+      quantity: number | null;
       scoutReportUuid: string;
     }[] = [];
 
@@ -170,8 +171,13 @@ export const addScoutReportDashboard = async (
       const time = event[0];
       const action = EventActionMap[event[1]];
       const position = PositionMap[event[2]];
-      if (action === EventAction.STOP_SCORING || action === EventAction.STOP_FEEDING) {
+      let quantity = 0;
+      if (action === EventAction.STOP_SCORING) {
         points = event[3];
+        quantity = event[3];
+      }
+      if (action === EventAction.STOP_FEEDING) {
+        quantity = event[3];
       }
       const paramsEvents = z
         .object({
@@ -179,6 +185,7 @@ export const addScoutReportDashboard = async (
           action: z.nativeEnum(EventAction),
           position: z.nativeEnum(Position),
           points: z.number(),
+          quantity: z.number().optional(),
           scoutReportUuid: z.string(),
         })
         .safeParse({
@@ -187,6 +194,7 @@ export const addScoutReportDashboard = async (
           action: action,
           position: position,
           points: points,
+          quantity: quantity,
         });
       if (!paramsEvents.success) {
         res.status(400).send({
@@ -201,6 +209,7 @@ export const addScoutReportDashboard = async (
         action: paramsEvents.data.action,
         position: paramsEvents.data.position,
         points: paramsEvents.data.points,
+        quantity: paramsEvents.data.quantity ?? null,
         scoutReportUuid: scoutReportUuid,
       });
     }

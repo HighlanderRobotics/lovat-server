@@ -13,6 +13,7 @@ model Event {
   action          EventAction
   position        Position
   points          Int
+  quantity        Int?        
   scoutReportUuid String
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
 
