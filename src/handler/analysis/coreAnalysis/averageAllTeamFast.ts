@@ -1,5 +1,6 @@
 import prismaClient from "../../../prismaClient.js";
 import {
+  accuracyToPercentageInterpolated,
   autoEnd,
   defaultEndgamePoints,
   endgameToPoints,
@@ -52,6 +53,39 @@ const config = {
         },
       });
       return data._avg.driverAbility;
+    }
+
+    if (metric === Metric.accuracy) {
+      const data = await prismaClient.scoutReport.aggregate({
+        _avg: { accuracy: true },
+        where: {
+          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          scouter: { sourceTeamNumber: sourceTeamFilter },
+        },
+      });
+      return accuracyToPercentageInterpolated(data._avg.accuracy);
+    }
+
+    if (metric === Metric.fuelPerSecond) {
+      const data = await prismaClient.scoutReport.aggregate({
+        _avg: { accuracy: true },
+        where: {
+          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          scouter: { sourceTeamNumber: sourceTeamFilter },
+        },
+      });
+      return data._avg.accuracy;
+    }
+
+    if (metric === Metric.defenseEffectiveness) {
+      const data = await prismaClient.scoutReport.aggregate({
+        _avg: { defenseEffectiveness: true },
+        where: {
+          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          scouter: { sourceTeamNumber: sourceTeamFilter },
+        },
+      });
+      return data._avg.defenseEffectiveness;
     }
 
     if (

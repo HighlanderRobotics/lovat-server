@@ -1,5 +1,6 @@
 import prismaClient from "../../../prismaClient.js";
 import {
+  accuracyToPercentage,
   autoEnd,
   endgameToPoints,
   Metric,
@@ -15,6 +16,11 @@ import {
 } from "../dataSourceRule.js";
 import z from "zod";
 import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
+import {
+  averageManyFast,
+  avg,
+  calculateTimeMetric,
+} from "./averageManyFast.js";
 
 // Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
 // Provides a timeline of metric value per match.
@@ -112,6 +118,27 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             );
           };
           break;
+        case Metric.accuracy:
+          srSelect = { accuracy: true };
+          matchAggregationFunction = (reports) => {
+            return (
+              reports.reduce(
+                (acc, cur) => acc + accuracyToPercentage[cur.accuracy],
+                0,
+              ) / reports.length
+            );
+          };
+          break;
+
+        case Metric.defenseEffectiveness:
+          srSelect = { defenseEffectiveness: true };
+          matchAggregationFunction = (reports) => {
+            return (
+              reports.reduce((acc, cur) => acc + cur.defenseEffectiveness, 0) /
+              reports.length
+            );
+          };
+          break;
 
         case Metric.totalPoints:
           srSelect = {
@@ -166,7 +193,45 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             return total / reports.length;
           };
           break;
-
+        case Metric.fuelPerSecond:
+          srSelect = {
+            events: {
+              select: { action: true, quantity: true, time: true },
+            },
+          };
+          matchAggregationFunction = (reports) => {
+            const totalFuel = reports
+              .flatMap((r) => r.events || [])
+              .filter((e) => e.action === "STOP_SCORING")
+              .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+            const duration = calculateTimeMetric(
+              reports as any,
+              "SCORING",
+            ).reduce((a, b) => a + b, 0);
+            return duration > 0 ? totalFuel / duration : 0;
+          };
+          break;
+        case Metric.feedingRate:
+          srSelect = {
+            events: {
+              select: { action: true, quantity: true, time: true },
+            },
+          };
+          matchAggregationFunction = (reports) => {
+            const feedTime = calculateTimeMetric(reports as any, "FEEDING");
+            const feeds = reports.flatMap((r) =>
+              (r.events || []).filter((e) => e.action === "STOP_FEEDING"),
+            );
+            const totalFeedQuantity = feeds.reduce(
+              (acc, f) => acc + (f.quantity ?? 0),
+              0,
+            );
+            const avgFeedTime = avg(feedTime);
+            return totalFeedQuantity > 0 && avgFeedTime > 0
+              ? totalFeedQuantity / avgFeedTime
+              : 0;
+          };
+          break;
         default:
           // Generic event count
           const action = metricToEvent[metric];

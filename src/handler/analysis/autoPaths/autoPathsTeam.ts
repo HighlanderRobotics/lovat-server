@@ -124,7 +124,7 @@ const config = {
         location: FlippedPositionMap[e.position],
         event: FlippedActionMap[e.action],
         time: e.time,
-        quantity: e.points,
+        quantity: e.quantity ?? undefined,
       }));
 
       if (positions.length > 0) {

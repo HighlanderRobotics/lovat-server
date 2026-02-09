@@ -26,7 +26,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
     try {
       const roles: NonEventMetricResult = await nonEventMetric(ctx.user, {
         team: args.team,
-        metric: MetricsBreakdown.robotRoles,
+        metric: MetricsBreakdown.robotRole,
       });
 
       let eventTypeWithMostOccurrences: string = null;

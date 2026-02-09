@@ -4,8 +4,7 @@ import {
   allTournaments,
   breakdownNeg,
   breakdownPos,
-  lowercaseToBreakdown,
-  MetricsBreakdown,
+  dashboardToServer,
 } from "../analysisConstants.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
 import {
@@ -28,7 +27,7 @@ export const breakdownDetails = createAnalysisHandler({
       key: [
         "breakdownDetails",
         params.team.toString(),
-        lowercaseToBreakdown[params.breakdown].toString(),
+        params.breakdown.toString(),
       ],
       teamDependencies: [params.team],
       tournamentDependencies: [],
@@ -36,7 +35,7 @@ export const breakdownDetails = createAnalysisHandler({
   },
   calculateAnalysis: async ({ params }, ctx) => {
     let queryStr = `
-        SELECT "${lowercaseToBreakdown[params.breakdown].toString()}" AS breakdown,
+        SELECT "${dashboardToServer[params.breakdown]}" AS breakdown,
             "teamMatchKey" AS key,
             tmnt."name" AS tournament,
             sc."sourceTeamNumber" AS sourceteam,
@@ -75,16 +74,35 @@ export const breakdownDetails = createAnalysisHandler({
     );
 
     // Edit to work with true/false breakdowns
-    const transformBreakdown = (input: string): string => {
+    const transformBreakdown = (input): string => {
       switch (input) {
-        case "YES":
+        case true:
           return breakdownPos;
-        case "NO":
+        case false:
           return breakdownNeg;
         default:
           return input;
       }
     };
+
+    const parsePgArray = (input: unknown): string[] => {
+      if (input == null) return [];
+      if (Array.isArray(input)) return input.map(String);
+      const str = String(input);
+      const trimmed = str.trim();
+      if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+        const inner = trimmed.slice(1, -1);
+        return inner
+          .split(",")
+          .map((s) => s.trim().replace(/^"|"$/g, ""))
+          .filter((s) => s.length > 0);
+      }
+      return trimmed.length ? [trimmed] : [];
+    };
+
+    const breakdownField = dashboardToServer[params.breakdown];
+    const isArrayBreakdown =
+      breakdownField === "robotRoles" || breakdownField === "feederTypes";
 
     const result: {
       key: string;
@@ -93,14 +111,28 @@ export const breakdownDetails = createAnalysisHandler({
       sourceTeam: string;
       scouter?: string;
     }[] = [];
+
     for (const match of data) {
-      result.push({
-        key: match.key,
-        tournamentName: match.tournament,
-        breakdown: transformBreakdown(match.breakdown),
-        sourceTeam: match.sourceteam,
-        scouter: match.scouter ?? undefined,
-      });
+      if (isArrayBreakdown) {
+        const items = parsePgArray(match.breakdown);
+        for (const item of items) {
+          result.push({
+            key: match.key,
+            tournamentName: match.tournament,
+            breakdown: item,
+            sourceTeam: match.sourceteam,
+            scouter: match.scouter ?? undefined,
+          });
+        }
+      } else {
+        result.push({
+          key: match.key,
+          tournamentName: match.tournament,
+          breakdown: transformBreakdown(match.breakdown),
+          sourceTeam: match.sourceteam,
+          scouter: match.scouter ?? undefined,
+        });
+      }
     }
 
     return result;

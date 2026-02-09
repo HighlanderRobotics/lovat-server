@@ -1,12 +1,7 @@
 import { Request, Response } from "express";
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import {
-  PositionMap,
-  MatchTypeMap,
-  RobotRoleMap,
-  EventActionMap,
-} from "../managerConstants.js";
+import { PositionMap, EventActionMap } from "../managerConstants.js";
 import { addTournamentMatches } from "../addTournamentMatches.js";
 import {
   AutoClimb,
@@ -14,7 +9,7 @@ import {
   EventAction,
   FeederType,
   IntakeType,
-  Mobility,
+  FieldTraversal,
   Position,
   MatchType,
   RobotRole,
@@ -24,12 +19,64 @@ import {
 } from "@prisma/client";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../../lib/clearCache.js";
+import { PrismaClient } from "@prisma/client/extension";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+
+export const checkForInvalidEvents = (events: any[][]): string[] | null => {
+  let inEvent: string | null = null;
+  const errors: string[] = [];
+
+  for (const event of events) {
+    const eventType = EventActionMap[event[1]].toString().split("_");
+
+    switch (eventType[0]) {
+      case "START":
+        if (eventType[1] === "MATCH") {
+          // Ignore START_MATCH marker and continue processing
+          break;
+        } else if (inEvent !== null) {
+          errors.push(
+            `Invalid input. Cannot start ${eventType[1]} event while in ${inEvent} event.`,
+          );
+          break;
+        }
+        inEvent = eventType[1];
+        break;
+      case "STOP":
+        if (inEvent === null) {
+          errors.push(
+            `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`,
+          );
+          break;
+        } else if (inEvent !== eventType[1]) {
+          errors.push(
+            `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`,
+          );
+          break;
+        }
+        inEvent = null;
+        break;
+      default:
+        break;
+    }
+  }
+  if (inEvent !== null) {
+    errors.push(`Invalid input. Missing stop event for ${inEvent} event.`);
+  }
+
+  if (errors.length > 0) {
+    return errors;
+  } else {
+    return null;
+  }
+};
 
 export const addScoutReport = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
+    console.log("Adding scout report with params: ", req.body);
     const paramsScoutReport = z
       .object({
         uuid: z.string(),
@@ -39,11 +86,11 @@ export const addScoutReport = async (
         startTime: z.number(),
         notes: z.string(),
         robotRoles: z.array(z.nativeEnum(RobotRole)),
-        mobility: z.nativeEnum(Mobility),
+        mobility: z.nativeEnum(FieldTraversal),
         climbPosition: z.nativeEnum(ClimbPosition).optional(),
         climbSide: z.nativeEnum(ClimbSide).optional(),
         beached: z.nativeEnum(Beached),
-         feederTypes: z.array(z.nativeEnum(FeederType)),
+        feederTypes: z.array(z.nativeEnum(FeederType)),
         intakeType: z.nativeEnum(IntakeType),
         robotBrokeDescription: z
           .union([z.string(), z.null(), z.undefined()])
@@ -60,35 +107,31 @@ export const addScoutReport = async (
       })
       .parse(req.body);
 
-    // Make sure UUID does not already exist in database
-    const scoutReportUuidRow = await prismaClient.scoutReport.findUnique({
-      where: {
-        uuid: paramsScoutReport.uuid,
-      },
-    });
-    if (scoutReportUuidRow) {
-      res.status(400).send({
-        error: `The scout report uuid ${paramsScoutReport.uuid} already exists.`,
-        displayError: "Scout report already uploaded",
-      });
-      return;
-    }
-
     // Check that scouter exists
-    const scouter = await prismaClient.scouter.findFirst({
+    await prismaClient.scouter.findFirstOrThrow({
       where: {
         uuid: paramsScoutReport.scouterUuid,
       },
     });
-    if (!scouter) {
+
+    const eventDataArray: {
+      time: number;
+      action: EventAction;
+      position: Position;
+      points: number;
+      quantity: number | null;
+      scoutReportUuid: string;
+    }[] = [];
+    const events = req.body.events;
+
+    const invalidEventErrors = checkForInvalidEvents(events);
+    if (invalidEventErrors) {
       res.status(400).send({
-        error: `This ${paramsScoutReport.scouterUuid} has been deleted or never existed.`,
-        displayError:
-          "This scouter has been deleted. Reset your settings and choose a new scouter.",
+        error: invalidEventErrors,
+        displayError: invalidEventErrors.join(" "),
       });
       return;
     }
-
     // Add tournament matches if they dont exist
     const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
       where: {
@@ -135,7 +178,7 @@ export const addScoutReport = async (
         beached: paramsScoutReport.beached,
         feederTypes: paramsScoutReport.feederTypes,
         intakeType: paramsScoutReport.intakeType,
-        mobility: paramsScoutReport.mobility,
+        fieldTraversal: paramsScoutReport.mobility,
         defenseEffectiveness: paramsScoutReport.defenseEffectiveness,
         scoresWhileMoving: paramsScoutReport.scoresWhileMoving,
         accuracy: paramsScoutReport.accuracy,
@@ -154,25 +197,20 @@ export const addScoutReport = async (
 
     const scoutReportUuid = paramsScoutReport.uuid;
 
-    const eventDataArray: {
-      time: number;
-      action: EventAction;
-      position: Position;
-      points: number;
-      scoutReportUuid: string;
-    }[] = [];
-    const events = req.body.events;
-
-    let doesLeave = false;
-
     for (const event of events) {
       let points = 0;
       const time = event[0];
       const action = EventActionMap[event[1]];
       const position = PositionMap[event[2]];
+      let quantity = 0;
 
       if (action === EventAction.STOP_SCORING) {
         points = event[3];
+        quantity = event[3];
+      }
+
+      if (action === EventAction.STOP_FEEDING) {
+        quantity = event[3];
       }
 
       const paramsEvents = z
@@ -181,6 +219,7 @@ export const addScoutReport = async (
           action: z.nativeEnum(EventAction),
           position: z.nativeEnum(Position),
           points: z.number(),
+          quantity: z.number().optional(),
           scoutReportUuid: z.string(),
         })
         .safeParse({
@@ -189,6 +228,7 @@ export const addScoutReport = async (
           action: action,
           position: position,
           points: points,
+          quantity: quantity,
         });
 
       if (!paramsEvents.success) {
@@ -204,11 +244,13 @@ export const addScoutReport = async (
         action: paramsEvents.data.action,
         position: paramsEvents.data.position,
         points: paramsEvents.data.points,
+        quantity: paramsEvents.data.quantity ?? null,
         scoutReportUuid: scoutReportUuid,
       });
     }
 
-    if (paramsScoutReport.robotBrokeDescription != null || undefined) {
+    const broke = paramsScoutReport.robotBrokeDescription?.trim();
+    if (broke) {
       sendWarningToSlack(
         "BREAK",
         matchRow.matchNumber,
@@ -227,8 +269,22 @@ export const addScoutReport = async (
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).send({
+        error: z.prettifyError(error),
         displayError:
           "Invalid input. Make sure you are using the correct input.",
+      });
+      return;
+    } else if (error instanceof PrismaClientKnownRequestError) {
+      res.status(400).send({
+        error: `The scout report with the same uuid already exists.`,
+        displayError: "Scout report already uploaded",
+      });
+      return;
+    } else if (error instanceof PrismaClient.NotFoundError) {
+      res.status(400).send({
+        error: `This scouter has been deleted or never existed.`,
+        displayError:
+          "This scouter has been deleted. Reset your settings and choose a new scouter.",
       });
       return;
     }

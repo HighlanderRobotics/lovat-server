@@ -13,6 +13,7 @@ model Event {
   action          EventAction
   position        Position
   points          Int
+  quantity        Int?
   scoutReportUuid String
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
 
@@ -47,7 +48,7 @@ model MutablePicklist {
 }
 
 model ScoutReport {
-  uuid                  String         @id @default(uuid())
+  uuid                  String        @id @default(uuid())
   teamMatchKey          String
   startTime             DateTime
   notes                 String
@@ -56,22 +57,22 @@ model ScoutReport {
   scouterUuid           String
   robotBrokeDescription String?
   events                Event[]
-  scouter               Scouter        @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
-  teamMatchData         TeamMatchData  @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+  scouter               Scouter       @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
+  teamMatchData         TeamMatchData @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
 
   // year specific fields
-  accuracy              Int
-  beached               Beached
-  climbPosition         ClimbPosition?
-  climbSide             ClimbSide?
-  defenseEffectiveness  Int
-  feederTypes           FeederType[]
-  intakeType            IntakeType
-  mobility              Mobility
-  scoresWhileMoving     Boolean
-  disrupts              Boolean
-  endgameClimb          EndgameClimb
-  autoClimb             AutoClimb
+  accuracy             Int
+  beached              Beached
+  climbPosition        ClimbPosition?
+  climbSide            ClimbSide?
+  defenseEffectiveness Int
+  feederTypes          FeederType[]
+  intakeType           IntakeType
+  fieldTraversal       FieldTraversal
+  scoresWhileMoving    Boolean
+  disrupts             Boolean
+  endgameClimb         EndgameClimb
+  autoClimb            AutoClimb
 }
 
 model ScouterScheduleShift {
@@ -259,7 +260,7 @@ enum EventAction {
   STOP_FEEDING
 }
 
-enum Mobility {
+enum FieldTraversal {
   TRENCH
   BUMP
   BOTH
