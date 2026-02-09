@@ -7,6 +7,7 @@ import registeredteams from "./registeredteams.routes.js";
 import scouters from "./scouters.routes.js";
 import tournaments from "./tournaments.routes.js";
 import scoutreports from "./scoutreports.routes.js";
+import scoutershifts from "./scoutershifts.routes.js";
 import settings from "./settings.routes.js";
 import apikey from "./apikey.routes.js";
 
@@ -73,7 +74,10 @@ registry.registerPath({
       description: "Tournaments and total count",
       content: {
         "application/json": {
-          schema: z.object({ tournaments: z.array(TournamentSchema), count: z.number() }),
+          schema: z.object({
+            tournaments: z.array(TournamentSchema),
+            count: z.number(),
+          }),
         },
       },
     },
@@ -139,7 +143,10 @@ registry.registerPath({
   tags: ["Manager - Account"],
   summary: "Get current user profile",
   responses: {
-    200: { description: "Profile", content: { "application/json": { schema: ProfileSchema.nullable() } } },
+    200: {
+      description: "Profile",
+      content: { "application/json": { schema: ProfileSchema.nullable() } },
+    },
     401: { description: "Unauthorized" },
   },
   security: [{ bearerAuth: [] }],
@@ -152,7 +159,21 @@ registry.registerPath({
   tags: ["Manager - Users"],
   summary: "List users",
   responses: {
-    200: { description: "Users", content: { "application/json": { schema: z.array(z.object({ id: z.string(), email: z.string().email(), username: z.string().nullable(), role: z.string() })) } } },
+    200: {
+      description: "Users",
+      content: {
+        "application/json": {
+          schema: z.array(
+            z.object({
+              id: z.string(),
+              email: z.string().email(),
+              username: z.string().nullable(),
+              role: z.string(),
+            }),
+          ),
+        },
+      },
+    },
     401: { description: "Unauthorized" },
   },
   security: [{ bearerAuth: [] }],
@@ -192,7 +213,16 @@ registry.registerPath({
   tags: ["Manager - Users"],
   summary: "List analysts",
   responses: {
-    200: { description: "Analysts", content: { "application/json": { schema: z.array(z.object({ id: z.string(), username: z.string().nullable() })) } } },
+    200: {
+      description: "Analysts",
+      content: {
+        "application/json": {
+          schema: z.array(
+            z.object({ id: z.string(), username: z.string().nullable() }),
+          ),
+        },
+      },
+    },
     401: { description: "Unauthorized" },
   },
   security: [{ bearerAuth: [] }],
@@ -205,7 +235,12 @@ registry.registerPath({
   tags: ["Manager - Teams"],
   summary: "Get team code for current user",
   responses: {
-    200: { description: "Team code", content: { "application/json": { schema: z.object({ code: z.string() }) } } },
+    200: {
+      description: "Team code",
+      content: {
+        "application/json": { schema: z.object({ code: z.string() }) },
+      },
+    },
     401: { description: "Unauthorized" },
   },
   security: [{ bearerAuth: [] }],
@@ -221,13 +256,22 @@ registry.registerPath({
     body: {
       content: {
         "application/json": {
-          schema: z.object({ match: z.number().int(), team: z.number().int(), notes: z.string().optional() }),
+          schema: z.object({
+            match: z.number().int(),
+            team: z.number().int(),
+            notes: z.string().optional(),
+          }),
         },
       },
     },
   },
   responses: {
-    200: { description: "Created", content: { "application/json": { schema: z.object({ uuid: z.string() }) } } },
+    200: {
+      description: "Created",
+      content: {
+        "application/json": { schema: z.object({ uuid: z.string() }) },
+      },
+    },
     401: { description: "Unauthorized" },
     400: { description: "Invalid request" },
   },
@@ -241,7 +285,22 @@ registry.registerPath({
   tags: ["Manager - Tournaments"],
   summary: "Get status of current team in tournaments",
   responses: {
-    200: { description: "Status", content: { "application/json": { schema: z.object({ tournaments: z.array(z.object({ id: z.string(), code: z.string(), status: z.string() })) }) } } },
+    200: {
+      description: "Status",
+      content: {
+        "application/json": {
+          schema: z.object({
+            tournaments: z.array(
+              z.object({
+                id: z.string(),
+                code: z.string(),
+                status: z.string(),
+              }),
+            ),
+          }),
+        },
+      },
+    },
     401: { description: "Unauthorized" },
   },
   security: [{ bearerAuth: [] }],
@@ -254,7 +313,14 @@ registry.registerPath({
   tags: ["Manager - Matches"],
   summary: "Get match results page data",
   responses: {
-    200: { description: "Results", content: { "application/json": { schema: z.object({ matches: z.array(MatchSchema) }) } } },
+    200: {
+      description: "Results",
+      content: {
+        "application/json": {
+          schema: z.object({ matches: z.array(MatchSchema) }),
+        },
+      },
+    },
     401: { description: "Unauthorized" },
   },
   security: [{ bearerAuth: [] }],
@@ -268,7 +334,11 @@ registry.registerPath({
   summary: "Update scout report notes (SCOUTING_LEAD)",
   request: {
     params: z.object({ uuid: z.string() }),
-    body: { content: { "application/json": { schema: z.object({ note: z.string() }) } } },
+    body: {
+      content: {
+        "application/json": { schema: z.object({ note: z.string() }) },
+      },
+    },
   },
   responses: {
     200: { description: "Note updated" },
@@ -287,7 +357,16 @@ registry.registerPath({
   summary: "List scouters for current team",
   request: { query: z.object({ archived: z.string().optional() }) },
   responses: {
-    200: { description: "Scouters", content: { "application/json": { schema: z.array(z.object({ uuid: z.string(), name: z.string().nullable() })) } } },
+    200: {
+      description: "Scouters",
+      content: {
+        "application/json": {
+          schema: z.array(
+            z.object({ uuid: z.string(), name: z.string().nullable() }),
+          ),
+        },
+      },
+    },
     401: { description: "Unauthorized" },
     403: { description: "User not affiliated with a team" },
   },
@@ -301,7 +380,18 @@ registry.registerPath({
   tags: ["Manager - Users"],
   summary: "Set current user to ANALYST and remove team",
   responses: {
-    200: { description: "Updated", content: { "application/json": { schema: z.object({ id: z.string(), role: z.string(), teamNumber: z.number().nullable() }) } } },
+    200: {
+      description: "Updated",
+      content: {
+        "application/json": {
+          schema: z.object({
+            id: z.string(),
+            role: z.string(),
+            teamNumber: z.number().nullable(),
+          }),
+        },
+      },
+    },
     401: { description: "Unauthorized" },
   },
   security: [{ bearerAuth: [] }],
@@ -312,6 +402,7 @@ router.use("/picklists", picklists);
 router.use("/mutablepicklists", mutablepicklist);
 router.use("/registeredteams", registeredteams);
 router.use("/", scouters);
+router.use("/scoutershifts", scoutershifts);
 router.use("/tournament", tournaments);
 router.use("/scoutreports", scoutreports);
 router.use("/settings", settings);
