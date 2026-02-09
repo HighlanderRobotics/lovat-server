@@ -54,8 +54,8 @@ const config = {
           : `sc."sourceTeamNumber" != ALL($2)`;
 
       const ARRAY_METRICS = new Set<MetricsBreakdown>([
-        MetricsBreakdown.robotRoles,
-        MetricsBreakdown.feederTypes,
+        MetricsBreakdown.robotRole,
+        MetricsBreakdown.feederType,
       ]);
 
       const isArrayMetric = ARRAY_METRICS.has(args.metric);

@@ -47,14 +47,14 @@ enum Metric {
 // !!!IMPORTANT!!! toString() must return a property of ScoutReport
 // Metrics for discrete ScoutReport fields
 enum MetricsBreakdown {
-  robotRoles = "robotRoles",
+  robotRole = "robotRoles",
   fieldTraversal = "fieldTraversal",
-  endgameClimb = "endgameClimb",
+  climbResult = "endgameClimb",
   beached = "beached",
   scoresWhileMoving = "scoresWhileMoving",
   disrupts = "disrupts",
   autoClimb = "autoClimb",
-  feederTypes = "feederTypes",
+  feederType = "feederTypes",
   intakeType = "intakeType",
 }
 
@@ -143,18 +143,6 @@ const FlippedPositionMap: Record<Position, number> = {
 const breakdownPos = "TRUE";
 const breakdownNeg = "FALSE";
 
-const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
-  robotrole: MetricsBreakdown.robotRoles,
-  fieldTraversal: MetricsBreakdown.fieldTraversal,
-  beached: MetricsBreakdown.beached,
-  autoclimb: MetricsBreakdown.autoClimb,
-  climbresult: MetricsBreakdown.endgameClimb,
-  feedertype: MetricsBreakdown.feederTypes,
-  scoreswhilemoving: MetricsBreakdown.scoresWhileMoving,
-  disrupts: MetricsBreakdown.disrupts,
-  intaketype: MetricsBreakdown.intakeType,
-};
-
 const accuracyToPercentage: Record<number, number> = {
   0: 25,
   1: 55,
@@ -179,14 +167,26 @@ export const accuracyToPercentageInterpolated = (avg: number): number => {
   );
 };
 
+export const dashboardToServer: Record<string, string> = {
+  robotRole: "robotRoles",
+  fieldTraversal: "fieldTraversal",
+  climbResult: "endgameClimb",
+  beached: "beached",
+  scoresWhileMoving: "scoresWhileMoving",
+  disrupts: "disrupts",
+  autoClimb: "autoClimb",
+  feederType: "feederTypes",
+  intakeType: "intakeType",
+};
+
 const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
-  [MetricsBreakdown.robotRoles]: [...Object.values(RobotRole)],
+  [MetricsBreakdown.robotRole]: [...Object.values(RobotRole)],
   [MetricsBreakdown.fieldTraversal]: [...Object.values(FieldTraversal)],
-  [MetricsBreakdown.endgameClimb]: [...Object.values(EndgameClimb)],
+  [MetricsBreakdown.climbResult]: [...Object.values(EndgameClimb)],
   [MetricsBreakdown.beached]: [...Object.values(Beached)],
   [MetricsBreakdown.scoresWhileMoving]: [breakdownNeg, breakdownPos],
   [MetricsBreakdown.autoClimb]: [...Object.values(AutoClimb)],
-  [MetricsBreakdown.feederTypes]: [...Object.values(FeederType)],
+  [MetricsBreakdown.feederType]: [...Object.values(FeederType)],
   [MetricsBreakdown.intakeType]: [...Object.values(IntakeType)],
   [MetricsBreakdown.disrupts]: [breakdownNeg, breakdownPos],
 };
@@ -300,7 +300,6 @@ export {
   metricsToNumber,
   allTeamNumbers,
   allTournaments,
-  lowercaseToBreakdown,
   breakdownPos,
   breakdownNeg,
   breakdownToEnum,

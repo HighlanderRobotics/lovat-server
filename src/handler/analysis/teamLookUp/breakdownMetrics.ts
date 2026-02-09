@@ -1,10 +1,7 @@
 import z from "zod";
 import prismaClient from "../../../prismaClient.js";
 import { nonEventMetric } from "../coreAnalysis/nonEventMetric.js";
-import {
-  lowercaseToBreakdown,
-  MetricsBreakdown,
-} from "../analysisConstants.js";
+import { MetricsBreakdown } from "../analysisConstants.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const breakdownMetrics = createAnalysisHandler({
@@ -44,7 +41,7 @@ export const breakdownMetrics = createAnalysisHandler({
     }
 
     const result: Record<string, any> = {};
-    for (const [key, metric] of Object.entries(lowercaseToBreakdown)) {
+    for (const [key, metric] of Object.entries(MetricsBreakdown)) {
       const data = await nonEventMetric(ctx.user, {
         team: params.team,
         metric: metric,
