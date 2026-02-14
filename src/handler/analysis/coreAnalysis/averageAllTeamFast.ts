@@ -43,25 +43,51 @@ const config = {
     );
 
     if (metric === Metric.driverAbility) {
-      const data = await prismaClient.scoutReport.aggregate({
-        _avg: { driverAbility: true },
-        where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
+      const tmd = await prismaClient.teamMatchData.findMany({
+        where: { tournamentKey: sourceTnmtFilter },
+        select: {
+          tournamentKey: true,
+          scoutReports: {
+            where: { scouter: { sourceTeamNumber: sourceTeamFilter } },
+            select: { driverAbility: true },
+          },
         },
       });
-      return data._avg.driverAbility ?? 0;
+      if (tmd.length === 0) return 0;
+      const perTournamentAvg: number[] = [];
+      for (const row of tmd) {
+        const vals = row.scoutReports.map((r) => r.driverAbility ?? 0);
+        if (vals.length > 0) perTournamentAvg.push(vals.reduce((a,b)=>a+b,0)/vals.length);
+      }
+      return perTournamentAvg.length ? weightedTourAvgLeft(perTournamentAvg) : 0;
     }
 
     if (metric === Metric.accuracy) {
-      const data = await prismaClient.scoutReport.aggregate({
-        _avg: { accuracy: true },
-        where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
+      const tmd = await prismaClient.teamMatchData.findMany({
+        where: { tournamentKey: sourceTnmtFilter },
+        select: {
+          tournamentKey: true,
+          scoutReports: {
+            where: { scouter: { sourceTeamNumber: sourceTeamFilter } },
+            select: { accuracy: true },
+          },
         },
       });
-      return accuracyToPercentageInterpolated(data._avg.accuracy ?? 0);
+      if (tmd.length === 0) return 0;
+      const perTournamentAvg: number[] = [];
+      for (const row of tmd) {
+        const vals = row.scoutReports.map((r) => r.accuracy).filter((v)=>v!==null && v!==undefined) as any[];
+        if (vals.length > 0) {
+          const avgAccEnum = vals.reduce((acc, cur)=> acc + 1, 0) / vals.length; // placeholder
+        }
+      }
+      // Interpolate by averaging enum percentages per report
+      const perTournamentPercents: number[] = [];
+      for (const row of tmd) {
+        const percents = row.scoutReports.map((r)=> accuracyToPercentageInterpolated(r.accuracy as any ?? 0));
+        if (percents.length>0) perTournamentPercents.push(percents.reduce((a,b)=>a+b,0)/percents.length);
+      }
+      return perTournamentPercents.length ? weightedTourAvgLeft(perTournamentPercents) : 0;
     }
 
     if (metric === Metric.fuelPerSecond) {
@@ -328,71 +354,54 @@ const config = {
       metric === Metric.autoPoints ||
       metric === Metric.totalPoints
     ) {
-      let timeFilter: Prisma.IntFilter | undefined = undefined;
-      if (metric === Metric.autoPoints) timeFilter = { lte: autoEnd } as any;
-      else if (metric === Metric.teleopPoints) timeFilter = { gt: autoEnd } as any;
-
-      const where: Prisma.EventWhereInput = {
-        scoutReport: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
+      const tmd = await prismaClient.teamMatchData.findMany({
+        where: { tournamentKey: sourceTnmtFilter },
+        select: {
+          tournamentKey: true,
+          scoutReports: {
+            where: { scouter: { sourceTeamNumber: sourceTeamFilter } },
+            select: {
+              events: {
+                where:
+                  metric === Metric.teleopPoints
+                    ? ({ time: { gt: autoEnd }, action: "STOP_SCORING" } as any)
+                    : metric === Metric.autoPoints
+                      ? ({ time: { lte: autoEnd }, action: "STOP_SCORING" } as any)
+                      : ({ action: "STOP_SCORING" } as any),
+                select: { points: true, time: true },
+              },
+              endgameClimb: metric === Metric.totalPoints ? true : false,
+              autoClimb: metric === Metric.totalPoints ? true : false,
+            } as any,
+          },
         },
-        action: "STOP_SCORING",
-      };
-      if (timeFilter) where.time = timeFilter as any;
-
-      const data = await prismaClient.event.groupBy({
-        by: "scoutReportUuid",
-        _sum: { points: true },
-        where,
       });
-
-      if (data.length === 0) return 0;
-
-      const avgMatchPoints =
-        data.reduce((acc, cur) => acc + (cur._sum.points ?? 0), 0) / data.length;
-
-      let avgEndgameAndAutoClimbPoints = 0;
-      if (metric === Metric.totalPoints) {
-        const endgameClimbs = await prismaClient.scoutReport.groupBy({
-          by: "endgameClimb",
-          _count: { _all: true },
-          where: {
-            teamMatchData: { tournamentKey: sourceTnmtFilter },
-            scouter: { sourceTeamNumber: sourceTeamFilter },
-          },
-        });
-
-        const totalEndgameReports = endgameClimbs.reduce(
-          (acc, cur) => acc + cur._count._all,
-          0,
-        );
-        if (totalEndgameReports > 0) {
-          endgameClimbs.forEach((endgame) => {
-            avgEndgameAndAutoClimbPoints +=
-              endgameToPoints[endgame.endgameClimb] * endgame._count._all;
+      if (tmd.length === 0) return 0;
+      const perTournamentValues: Record<string, number[]> = {};
+      for (const row of tmd) {
+        const tnmt = row.tournamentKey as string;
+        if (!perTournamentValues[tnmt]) perTournamentValues[tnmt] = [];
+        if (!row.scoutReports.length) continue;
+        let matchTotal = 0;
+        row.scoutReports.forEach((sr: any) => {
+          (sr.events ?? []).forEach((e: any) => {
+            matchTotal += e.points ?? 0;
           });
-          avgEndgameAndAutoClimbPoints /= totalEndgameReports;
-        }
-
-        const autoClimbSuccess = await prismaClient.scoutReport.count({
-          where: {
-            teamMatchData: { tournamentKey: sourceTnmtFilter },
-            scouter: { sourceTeamNumber: sourceTeamFilter },
-            autoClimb: "SUCCEEDED",
-          },
+          if (metric === Metric.totalPoints) {
+            // include endgame and auto climb points
+            const endgame = sr.endgameClimb as keyof typeof endgameToPoints;
+            matchTotal += endgame ? (endgameToPoints[endgame] ?? 0) : 0;
+            if (sr.autoClimb === "SUCCEEDED") matchTotal += 15;
+          }
         });
-        const totalReports = await prismaClient.scoutReport.count({
-          where: {
-            teamMatchData: { tournamentKey: sourceTnmtFilter },
-            scouter: { sourceTeamNumber: sourceTeamFilter },
-          },
-        });
-        const avgAutoClimbPoints = totalReports > 0 ? (autoClimbSuccess * 15) / totalReports : 0;
-        avgEndgameAndAutoClimbPoints += avgAutoClimbPoints;
+        perTournamentValues[tnmt].push(matchTotal / row.scoutReports.length);
       }
-
-      return avgMatchPoints + avgEndgameAndAutoClimbPoints;
+      const perTournamentAverages = Object.values(perTournamentValues).map(
+        (arr) => (arr.reduce((a, b) => a + b, 0) / arr.length) || 0,
+      );
+      return perTournamentAverages.length
+        ? weightedTourAvgLeft(perTournamentAverages)
+        : 0;
     }
 
     const action = metricToEvent[metric];
