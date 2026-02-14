@@ -12,7 +12,7 @@ export const breakdownMetrics = createAnalysisHandler({
   },
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ params }) => {
+  createKey: async ({ params }) => {
     return {
       key: ["breakdownMetrics", params.team.toString()],
       teamDependencies: [params.team],

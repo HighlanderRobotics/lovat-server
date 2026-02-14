@@ -23,7 +23,7 @@ const config = {
   returnSchema: z.object({}).catchall(z.number()),
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args) => ({
+  createKey: async (args) => ({
     key: ["nonEventMetric", args.team.toString(), String(args.metric)],
     teamDependencies: [args.team],
     tournamentDependencies: [],

@@ -195,6 +195,8 @@ export const addScoutReport = async (
       paramsScoutReport.tournamentKey,
     );
 
+    console.log(paramsScoutReport.teamNumber);
+
     const scoutReportUuid = paramsScoutReport.uuid;
 
     for (const event of events) {

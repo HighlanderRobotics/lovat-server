@@ -22,7 +22,7 @@ export const multipleFlags = createAnalysisHandler({
   },
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ params, query }) => {
+  createKey: async ({ params, query }) => {
     return {
       key: [
         "multipleFlags",

@@ -16,7 +16,7 @@ export const matchPrediction = createAnalysisHandler({
   },
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ query }) => {
+  createKey: async ({ query }) => {
     const red = [
       query.red1.toString(),
       query.red2.toString(),

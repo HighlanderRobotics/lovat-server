@@ -101,6 +101,7 @@ const endgameToPoints: Record<EndgameClimb, number> = {
 const metricToEvent: Partial<Record<Metric, EventAction>> = {
   [Metric.feedsPerMatch]: EventAction.START_FEEDING,
   [Metric.volleysPerMatch]: EventAction.START_SCORING,
+  [Metric.outpostIntakes]: EventAction.INTAKE,
 };
 
 const FlippedRoleMap: Record<RobotRole, number> = {
@@ -196,6 +197,7 @@ const metricsToNumber: Record<string, number> = {
   autoPoints: 1,
   teleopPoints: 2,
   fuelPerSecond: 3,
+  scoringRate: 3, // alias used by UI for balls per second
   accuracy: 4,
   volleysPerMatch: 5,
   l1StartTime: 6,
@@ -211,7 +213,10 @@ const metricsToNumber: Record<string, number> = {
   feedingRate: 16,
   feedsPerMatch: 17,
   totalFuelOutputted: 18,
-  outpostIntakes: 19,
+  totalBallsFed: 19,
+  totalBallThroughput: 20,
+  totalBallThroughPut: 20, // UI alias with capital P
+  outpostIntakes: 21,
 };
 
 const metricToName: Record<Metric, string> = {

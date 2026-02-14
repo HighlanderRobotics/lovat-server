@@ -39,7 +39,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
   returnSchema,
   usesDataSource: false,
   shouldCache: true,
-  createKey: (args) => ({
+  createKey: async (args) => ({
     key: [
       "rankFlag",
       args.eventKey,

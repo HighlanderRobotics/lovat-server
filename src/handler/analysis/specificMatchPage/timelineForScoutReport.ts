@@ -11,7 +11,7 @@ export const timelineForScoutReport = createAnalysisHandler({
   },
   usesDataSource: false,
   shouldCache: false,
-  createKey: ({ params }) => {
+  createKey: async ({ params }) => {
     return {
       key: ["timelineForScoutReport", params.uuid],
       teamDependencies: [],

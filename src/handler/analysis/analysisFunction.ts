@@ -17,7 +17,7 @@ export type AnalysisFunctionConfig<
 > = {
   argsSchema: T;
   returnSchema?: R;
-  createKey: (params: z.infer<T>) => CreateKeyResult;
+  createKey: (params: z.infer<T>) => Promise<CreateKeyResult> | CreateKeyResult;
   calculateAnalysis: (
     params: z.infer<T>,
     ctx: AnalysisContext,
@@ -77,7 +77,7 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
     key: keyFragments,
     teamDependencies,
     tournamentDependencies,
-  } = config.createKey(passedArgs);
+  } = await config.createKey(passedArgs);
 
   if (config.usesDataSource) {
     const teamSource = context.dataSource.teams;

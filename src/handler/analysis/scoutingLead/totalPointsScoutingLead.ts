@@ -7,7 +7,7 @@ const config = {
   returnSchema: z.number(),
   usesDataSource: false,
   shouldCache: true,
-  createKey: (args: { scoutReportUuid: string }) => ({
+  createKey: async (args: { scoutReportUuid: string }) => ({
     key: ["totalPointsScoutingLead", args.scoutReportUuid],
   }),
   calculateAnalysis: async (args: { scoutReportUuid: string }) => {

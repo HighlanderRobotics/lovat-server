@@ -48,7 +48,7 @@ const config = {
   usesDataSource: true,
   shouldCache: true,
 
-  createKey: (args) => {
+  createKey: async (args) => {
     return {
       key: [
         "alliancePage",

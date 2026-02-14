@@ -11,7 +11,7 @@ export const scoutReportForMatch = createAnalysisHandler({
   },
   usesDataSource: false,
   shouldCache: false,
-  createKey: ({ params }) => {
+  createKey: async ({ params }) => {
     return {
       key: ["scoutReportForMatch", params.match],
       teamDependencies: [],

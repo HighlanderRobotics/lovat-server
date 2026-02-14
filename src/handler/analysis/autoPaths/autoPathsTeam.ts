@@ -63,7 +63,7 @@ const config = {
   ),
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args: { team: number }) => {
+  createKey: async (args: { team: number }) => {
     const teamNumber = args.team;
     return {
       key: ["autoPathsTeam", teamNumber.toString()],

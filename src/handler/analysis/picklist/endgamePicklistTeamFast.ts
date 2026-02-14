@@ -1,7 +1,6 @@
-import { EndgameClimb } from "@prisma/client";
+import { EndgameClimb, Prisma } from "@prisma/client";
 import prismaClient from "../../../prismaClient.js";
 import { defaultEndgamePoints, endgameToPoints } from "../analysisConstants.js";
-import { ArrayFilter } from "../coreAnalysis/averageManyFast.js";
 
 // Number of endgame possibilities that result in points earned (essentially, successes)
 const numPointResults: number = Object.keys(EndgameClimb).reduce((acc, cur) => {
@@ -16,14 +15,14 @@ const numPointResults: number = Object.keys(EndgameClimb).reduce((acc, cur) => {
  * Used in place of a straight average.
  *
  * @param team team number
- * @param sourceTeamFilter team filter to use
- * @param sourceTnmtFilter tournament filter to use
+ * @param sourceTeamFilter Prisma scalar filter or undefined
+ * @param sourceTnmtFilter Prisma scalar filter or undefined
  * @returns predicted points for future endgame actions
  */
 export const endgamePicklistTeamFast = async (
   team: number,
-  sourceTeamFilter: ArrayFilter<number>,
-  sourceTnmtFilter: ArrayFilter<string>,
+  sourceTeamFilter: { in?: number[]; notIn?: number[] } | undefined,
+  sourceTnmtFilter: { in?: string[]; notIn?: string[] } | undefined,
 ): Promise<number> => {
   try {
     // Get data
@@ -35,11 +34,11 @@ export const endgamePicklistTeamFast = async (
       where: {
         teamMatchData: {
           teamNumber: team,
-          tournamentKey: sourceTnmtFilter,
+          ...(sourceTnmtFilter && { tournamentKey: sourceTnmtFilter }),
         },
-        scouter: {
-          sourceTeamNumber: sourceTeamFilter,
-        },
+        ...(sourceTeamFilter && {
+          scouter: { sourceTeamNumber: sourceTeamFilter },
+        }),
       },
     });
 

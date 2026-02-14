@@ -22,7 +22,7 @@ export const breakdownDetails = createAnalysisHandler({
   },
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ params }) => {
+  createKey: async ({ params }) => {
     return {
       key: [
         "breakdownDetails",
