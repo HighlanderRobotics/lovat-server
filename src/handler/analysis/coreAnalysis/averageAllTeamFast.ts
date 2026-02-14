@@ -57,12 +57,14 @@ const config = {
       const perTournamentAvg: number[] = [];
       for (const row of tmd) {
         const vals = row.scoutReports.map((r) => r.driverAbility ?? 0);
-        if (vals.length > 0) perTournamentAvg.push(vals.reduce((a,b)=>a+b,0)/vals.length);
+        if (vals.length > 0)
+          perTournamentAvg.push(vals.reduce((a, b) => a + b, 0) / vals.length);
       }
       return perTournamentAvg.length ? weightedTourAvgLeft(perTournamentAvg) : 0;
     }
 
     if (metric === Metric.accuracy) {
+      // Compute per-tournament averages of interpolated accuracy percentages, then weight
       const tmd = await prismaClient.teamMatchData.findMany({
         where: { tournamentKey: sourceTnmtFilter },
         select: {
@@ -74,18 +76,16 @@ const config = {
         },
       });
       if (tmd.length === 0) return 0;
-      const perTournamentAvg: number[] = [];
-      for (const row of tmd) {
-        const vals = row.scoutReports.map((r) => r.accuracy).filter((v)=>v!==null && v!==undefined) as any[];
-        if (vals.length > 0) {
-          const avgAccEnum = vals.reduce((acc, cur)=> acc + 1, 0) / vals.length; // placeholder
-        }
-      }
-      // Interpolate by averaging enum percentages per report
       const perTournamentPercents: number[] = [];
       for (const row of tmd) {
-        const percents = row.scoutReports.map((r)=> accuracyToPercentageInterpolated(r.accuracy as any ?? 0));
-        if (percents.length>0) perTournamentPercents.push(percents.reduce((a,b)=>a+b,0)/percents.length);
+        const percents = row.scoutReports
+          .map((r: any) => accuracyToPercentageInterpolated(r.accuracy))
+          .filter((v: any) => typeof v === "number");
+        if (percents.length > 0) {
+          perTournamentPercents.push(
+            percents.reduce((a, b) => a + b, 0) / percents.length,
+          );
+        }
       }
       return perTournamentPercents.length ? weightedTourAvgLeft(perTournamentPercents) : 0;
     }
@@ -140,39 +140,26 @@ const config = {
         },
       });
       if (tmd.length === 0) return 0;
-       const perTournamentAvg: number[] = [];
-       for (const row of tmd) {
-         const totalsPerMatch = row.scoutReports.map((r) => {
-           const scored = r.events
-             .filter((e) => e.action === "STOP_SCORING")
-             .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-           const fed = r.events
-             .filter((e) => e.action === "STOP_FEEDING")
-             .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-           return scored + fed;
-         });
-         if (totalsPerMatch.length > 0) {
-           const avgMatch = totalsPerMatch.reduce((a, b) => a + b, 0) / totalsPerMatch.length;
-           perTournamentAvg.push(avgMatch);
-           if (process.env.ANALYSIS_DEBUG === "1") {
-             console.log("[avgAllTeamFast] totalFuelOutputted", {
-               tournamentKey: row.tournamentKey,
-               perMatch: totalsPerMatch,
-               tournamentValue: avgMatch,
-             });
-           }
-         }
-       }
-       const weighted = perTournamentAvg.length ? weightedTourAvgLeft(perTournamentAvg) : 0;
-       if (process.env.ANALYSIS_DEBUG === "1") {
-         console.log("[avgAllTeamFast] totalFuelOutputted weighted", {
-           perTournamentAvg,
-           weighted,
-         });
-       }
-       return weighted;
-    }
+      const perTournamentAvg: number[] = [];
+      for (const row of tmd) {
+        const totalsPerMatch = row.scoutReports.map((r) => {
+          const scored = r.events
+            .filter((e) => e.action === "STOP_SCORING")
+            .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+          const fed = r.events
+            .filter((e) => e.action === "STOP_FEEDING")
+            .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+          return scored + fed;
+        });
+        if (totalsPerMatch.length > 0) {
+          const avgMatch = totalsPerMatch.reduce((a, b) => a + b, 0) / totalsPerMatch.length;
+          perTournamentAvg.push(avgMatch);
+        }
+      }
+      const weighted = perTournamentAvg.length ? weightedTourAvgLeft(perTournamentAvg) : 0;
 
+      return weighted;
+    }
 
     if (metric === Metric.totalBallThroughput) {
       // Per-tournament average, then weighted across tournaments

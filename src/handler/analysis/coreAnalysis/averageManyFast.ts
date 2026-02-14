@@ -125,7 +125,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               return firstEventTime(r.events, (e) => e.action === "CLIMB");
             });
             const nonNullTimes = times.filter((t): t is number => t !== null);
-            if (nonNullTimes.length === 0) continue;
+            if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
             tournamentValue = avg(nonNullTimes);
             break;
           }
@@ -149,8 +149,8 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             });
 
             const nonNullTimes = times.filter((t): t is number => t !== null);
+            if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
             const adjustedTimes = nonNullTimes.map((t) => 2 * 60 + 33 - t);
-            if (nonNullTimes.length === 0) continue;
             tournamentValue = avg(adjustedTimes);
             break;
           }
@@ -180,9 +180,12 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             tournamentValue = avg(sr.map((r) => r.defenseEffectiveness));
             break;
           case Metric.accuracy:
-            tournamentValue = avg(
-              sr.map((r) => accuracyToPercentage[r.accuracy]),
-            );
+            {
+              const defined = sr.filter((r) => r.accuracy !== null && r.accuracy !== undefined);
+              tournamentValue = defined.length
+                ? avg(defined.map((r) => accuracyToPercentage[r.accuracy as any]))
+                : 0;
+            }
             break;
           case Metric.autoPoints:
           case Metric.teleopPoints:
@@ -307,7 +310,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
       for (const team of args.teams) {
         const teamResults = resultsByTeam[team];
         finalResults[String(metric)][String(team)] =
-          teamResults.length > 0 ? weightedTourAvgLeft(teamResults) : NaN;
+          teamResults.length > 0 ? weightedTourAvgLeft(teamResults) : -1;
       }
     }
 

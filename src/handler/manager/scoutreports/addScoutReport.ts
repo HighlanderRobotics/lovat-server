@@ -96,7 +96,7 @@ export const addScoutReport = async (
           .union([z.string(), z.null(), z.undefined()])
           .optional(),
         driverAbility: z.number(),
-        accuracy: z.number(),
+        accuracy: z.number().optional(),
         disrupts: z.boolean(),
         defenseEffectiveness: z.number(),
         scoresWhileMoving: z.boolean(),

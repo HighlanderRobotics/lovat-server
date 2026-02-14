@@ -96,12 +96,13 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
         case Metric.accuracy:
           srSelect = { accuracy: true };
           matchAggregationFunction = (reports) => {
-            return (
-              reports.reduce(
-                (acc, cur) => acc + accuracyToPercentage[cur.accuracy ?? "n/a"],
-                0,
-              ) / (reports.length || 1)
+            const defined = reports.filter((r) => r.accuracy !== null && r.accuracy !== undefined);
+            if (defined.length === 0) return 0;
+            const total = defined.reduce(
+              (acc, cur) => acc + accuracyToPercentage[cur.accuracy as any],
+              0,
             );
+            return total / defined.length;
           };
           break;
 
