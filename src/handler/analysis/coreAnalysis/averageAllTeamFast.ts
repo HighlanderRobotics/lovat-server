@@ -289,15 +289,18 @@ const config = {
         },
       });
       if (reports.length === 0) return 0;
-      const times: number[] = [];
-      reports.forEach((r) => {
-        const first = r.events
-          .filter((e) => e.action === "CLIMB" && (e.time ?? 0) <= autoEnd)
-          .map((e) => e.time ?? 0)
-          .sort((a, b) => a - b)[0];
-        if (first !== undefined) times.push(first);
-      });
-      return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+       const times: number[] = [];
+       reports.forEach((r) => {
+         const first = r.events
+           .filter((e) => e.action === "CLIMB" && (e.time ?? 0) <= autoEnd)
+           .map((e) => e.time ?? 0)
+           .sort((a, b) => a - b)[0];
+         if (first !== undefined) {
+           // convert to remaining auto time (auto = 18s)
+           times.push(autoEnd - first);
+         }
+       });
+       return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
     }
 
     if (metric === Metric.l1StartTime || metric === Metric.l2StartTime || metric === Metric.l3StartTime) {
@@ -316,13 +319,17 @@ const config = {
       if (reports.length === 0) return 0;
       const times: number[] = [];
       reports.forEach((r) => {
-        const firstTeleop = r.events
-          .filter((e) => e.action === "CLIMB" && (e.time ?? 0) > autoEnd)
-          .map((e) => e.time ?? 0)
-          .sort((a, b) => a - b)[0];
-        if (firstTeleop !== undefined) times.push(firstTeleop);
-      });
-      return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+         const firstTeleop = r.events
+           .filter((e) => e.action === "CLIMB" && (e.time ?? 0) > autoEnd && (e.time ?? 0) <= 158)
+           .map((e) => e.time ?? 0)
+           .sort((a, b) => a - b)[0];
+         if (firstTeleop !== undefined) {
+           // convert to remaining match time (match = 158s)
+           const remaining = 158 - firstTeleop;
+           times.push(remaining >= 0 ? remaining : 0);
+         }
+       });
+       return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
     }
 
     if (metric === Metric.defenseEffectiveness) {

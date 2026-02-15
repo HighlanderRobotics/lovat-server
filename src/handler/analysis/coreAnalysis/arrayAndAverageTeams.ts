@@ -327,23 +327,36 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           matchAggregationFunction = (reports) => {
             // Average first CLIMB time in auto for SUCCEEDED auto climbs
             const times: number[] = [];
-            reports.forEach((r) => {
+            reports.forEach((r, idx) => {
               const ac = (r as any).autoClimb as
                 | "SUCCEEDED"
                 | "FAILED"
                 | "N_A"
                 | undefined;
-              if (ac === "SUCCEEDED") {
-                const first = (r.events ?? [])
-                  .filter(
-                    (e) => e.action === "CLIMB" && (e.time ?? 0) <= autoEnd,
-                  )
-                  .map((e) => e.time ?? 0)
-                  .sort((a, b) => a - b)[0];
-                if (first !== undefined) times.push(first);
+              const rawClimbTimes = (r.events ?? [])
+                .filter((e) => e.action === "CLIMB")
+                .map((e) => e.time ?? 0);
+              const filteredAutoTimes = rawClimbTimes
+                .filter((t) => t <= autoEnd)
+                .sort((a, b) => a - b);
+              const first = filteredAutoTimes[0];
+              try {
+                console.debug("autoClimbStartTime", {
+                  reportIndex: idx,
+                  autoClimb: ac,
+                  rawClimbTimes,
+                  filteredAutoTimes,
+                  first,
+                });
+              } catch {}
+              if (ac === "SUCCEEDED" && first !== undefined) {
+                const remaining = autoEnd - first;
+                const clamped = remaining >= 0 ? remaining : 0;
+                times.push(clamped);
               }
             });
-            return times.length ? avg(times) : 0;
+            // Return -1 when no qualifying report produces a time
+            return times.length ? avg(times) : -1;
           };
           break;
 
@@ -362,7 +375,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
                 : metric === Metric.l2StartTime
                   ? "L2"
                   : "L3";
-            reports.forEach((r) => {
+            reports.forEach((r, idx) => {
               const eg = (r as any).endgameClimb as
                 | "NOT_ATTEMPTED"
                 | "FAILED"
@@ -370,17 +383,33 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
                 | "L2"
                 | "L3"
                 | undefined;
-              if (eg === required) {
-                const firstTeleop = (r.events ?? [])
-                  .filter(
-                    (e) => e.action === "CLIMB" && (e.time ?? 0) > autoEnd,
-                  )
-                  .map((e) => e.time ?? 0)
-                  .sort((a, b) => a - b)[0];
-                if (firstTeleop !== undefined) times.push(firstTeleop);
+              const rawClimbTimes = (r.events ?? [])
+                .filter((e) => e.action === "CLIMB")
+                .map((e) => e.time ?? 0);
+              const filteredTeleopTimes = rawClimbTimes
+                .filter((t) => t > autoEnd && t <= 158)
+                .sort((a, b) => a - b);
+              const firstTeleop = filteredTeleopTimes[0];
+              console.debug("lXStartTime", {
+                reportIndex: idx,
+                endgameClimb: eg,
+                required,
+                scoutReportUuid: (r as any).uuid,
+                events: (r.events ?? []).map((e) => ({
+                  action: e.action,
+                  time: e.time,
+                })),
+                rawClimbTimes,
+                filteredTeleopTimes,
+                firstTeleop,
+              });
+              if (eg === required && firstTeleop !== undefined) {
+                const remaining = 158 - firstTeleop;
+                const clamped = remaining >= 0 ? remaining : 0;
+                times.push(clamped);
               }
             });
-            return times.length ? avg(times) : 0;
+            return times.length ? avg(times) : -1;
           };
           break;
 
@@ -511,6 +540,23 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           dataPoint: matchValue,
           tournamentName: row.tournament.name,
         });
+        // Debug logging for climb start metrics
+        if (
+          metric === Metric.autoClimbStartTime ||
+          metric === Metric.l1StartTime ||
+          metric === Metric.l2StartTime ||
+          metric === Metric.l3StartTime
+        ) {
+          try {
+            console.debug("timeline", {
+              team,
+              match: row.key,
+              tnmt,
+              reports: row.scoutReports.length,
+              matchValue,
+            });
+          } catch {}
+        }
         // Accumulate per tournament
         perTeamTournamentValues[team][tnmt].push(matchValue);
       }
@@ -519,7 +565,8 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
       for (const team of teams) {
         const tournamentAverages: number[] = [];
         for (const values of Object.values(perTeamTournamentValues[team])) {
-          if (values.length > 0) tournamentAverages.push(avg(values));
+          const valid = values.filter((v) => v !== -1);
+          if (valid.length > 0) tournamentAverages.push(avg(valid));
         }
         result[team].average = weightedTourAvgLeft(tournamentAverages);
       }

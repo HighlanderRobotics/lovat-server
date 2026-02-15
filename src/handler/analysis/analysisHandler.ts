@@ -125,13 +125,18 @@ export const createAnalysisHandler: <
           try {
             await kv.set(key, JSON.stringify(calculatedAnalysis));
 
-            await prismaClient.cachedAnalysis.create({
-              data: {
-                key: key,
-                teamDependencies: teamDeps ?? [],
-                tournamentDependencies: tournamentDeps ?? [],
-              },
-            });
+            try {
+              await prismaClient.cachedAnalysis.create({
+                data: {
+                  key: key,
+                  teamDependencies: teamDeps ?? [],
+                  tournamentDependencies: tournamentDeps ?? [],
+                },
+              });
+            } catch (e: any) {
+              if (e?.code !== "P2002") throw e;
+              // Ignore duplicate key; another request already created the row
+            }
           } catch (error) {
             console.error(error);
             return;

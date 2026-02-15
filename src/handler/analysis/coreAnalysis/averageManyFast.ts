@@ -122,11 +122,18 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
           case Metric.autoClimbStartTime: {
             const times = sr.map((r) => {
               if (r.autoClimb !== AutoClimb.SUCCEEDED) return null;
-              return firstEventTime(r.events, (e) => e.action === "CLIMB");
+              return firstEventTime(
+                r.events,
+                (e) => e.action === "CLIMB" && e.time <= autoEnd,
+              );
             });
             const nonNullTimes = times.filter((t): t is number => t !== null);
             if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
-            tournamentValue = avg(nonNullTimes);
+            const adjustedTimes = nonNullTimes.map((t) => {
+              const remaining = autoEnd - t;
+              return remaining >= 0 ? remaining : 0;
+            });
+            tournamentValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
             break;
           }
 
@@ -144,14 +151,17 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               if (r.endgameClimb !== required) return null;
               return firstEventTime(
                 r.events,
-                (e) => e.action === "CLIMB" && e.time > autoEnd,
+                (e) => e.action === "CLIMB" && e.time > autoEnd && e.time <= 158,
               );
             });
 
             const nonNullTimes = times.filter((t): t is number => t !== null);
             if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
-            const adjustedTimes = nonNullTimes.map((t) => 2 * 60 + 33 - t);
-            tournamentValue = avg(adjustedTimes);
+            const adjustedTimes = nonNullTimes.map((t) => {
+              const remaining = 158 - t;
+              return remaining >= 0 ? remaining : 0;
+            });
+            tournamentValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
             break;
           }
           case Metric.contactDefenseTime:
