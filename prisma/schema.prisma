@@ -9,7 +9,7 @@ datasource db {
 
 model Event {
   eventUuid       String      @id @default(uuid())
-  time            Int
+  time            Float
   action          EventAction
   position        Position
   points          Int

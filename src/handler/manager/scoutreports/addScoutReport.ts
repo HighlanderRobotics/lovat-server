@@ -232,6 +232,14 @@ export const addScoutReport = async (
           points: points,
           quantity: quantity,
         });
+      console.log("Parsed event: ", {
+        scoutReportUuid: scoutReportUuid,
+        time: time,
+        action: action,
+        position: position,
+        points: points,
+        quantity: quantity,
+      });
 
       if (!paramsEvents.success) {
         res.status(400).send({

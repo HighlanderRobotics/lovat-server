@@ -96,7 +96,9 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
         case Metric.accuracy:
           srSelect = { accuracy: true };
           matchAggregationFunction = (reports) => {
-            const defined = reports.filter((r) => r.accuracy !== null && r.accuracy !== undefined);
+            const defined = reports.filter(
+              (r) => r.accuracy !== null && r.accuracy !== undefined,
+            );
             if (defined.length === 0) return 0;
             const total = defined.reduce(
               (acc, cur) => acc + accuracyToPercentage[cur.accuracy as any],
@@ -384,7 +386,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
 
         default:
           // Generic event count
-          console.error("!!!!");
           const action = metricToEvent[metric];
           // Only filter by action; avoid undefined position filter
           srSelect = {
