@@ -84,7 +84,7 @@ const metricsCategory: Metric[] = [
 ];
 
 // To differentiate auton and teleop events, benefit of the doubt given to auto
-const autoEnd = 18;
+const autoEnd = 23;
 
 const specificMatchPageMetrics = [];
 
@@ -153,7 +153,9 @@ const accuracyToPercentage: Record<number, number> = {
   5: 95,
 };
 
-export const accuracyToPercentageInterpolated = (avg: number | null | undefined): number => {
+export const accuracyToPercentageInterpolated = (
+  avg: number | null | undefined,
+): number => {
   avg = Math.max(0, Math.min(5, avg));
 
   if (avg === null || avg === undefined) return 0;

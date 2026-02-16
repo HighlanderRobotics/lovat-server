@@ -60,7 +60,9 @@ const config = {
         if (vals.length > 0)
           perTournamentAvg.push(vals.reduce((a, b) => a + b, 0) / vals.length);
       }
-      return perTournamentAvg.length ? weightedTourAvgLeft(perTournamentAvg) : 0;
+      return perTournamentAvg.length
+        ? weightedTourAvgLeft(perTournamentAvg)
+        : 0;
     }
 
     if (metric === Metric.accuracy) {
@@ -87,7 +89,9 @@ const config = {
           );
         }
       }
-      return perTournamentPercents.length ? weightedTourAvgLeft(perTournamentPercents) : 0;
+      return perTournamentPercents.length
+        ? weightedTourAvgLeft(perTournamentPercents)
+        : 0;
     }
 
     if (metric === Metric.fuelPerSecond) {
@@ -123,7 +127,8 @@ const config = {
         return duration > 0 ? totalFuel / duration : 0;
       });
 
-      const avgRate = perReportRates.reduce((a, b) => a + b, 0) / perReportRates.length;
+      const avgRate =
+        perReportRates.reduce((a, b) => a + b, 0) / perReportRates.length;
       return avgRate;
     }
 
@@ -152,11 +157,14 @@ const config = {
           return scored + fed;
         });
         if (totalsPerMatch.length > 0) {
-          const avgMatch = totalsPerMatch.reduce((a, b) => a + b, 0) / totalsPerMatch.length;
+          const avgMatch =
+            totalsPerMatch.reduce((a, b) => a + b, 0) / totalsPerMatch.length;
           perTournamentAvg.push(avgMatch);
         }
       }
-      const weighted = perTournamentAvg.length ? weightedTourAvgLeft(perTournamentAvg) : 0;
+      const weighted = perTournamentAvg.length
+        ? weightedTourAvgLeft(perTournamentAvg)
+        : 0;
 
       return weighted;
     }
@@ -185,11 +193,14 @@ const config = {
           return total;
         });
         if (totalsPerMatch.length > 0) {
-          const avgMatch = totalsPerMatch.reduce((a, b) => a + b, 0) / totalsPerMatch.length;
+          const avgMatch =
+            totalsPerMatch.reduce((a, b) => a + b, 0) / totalsPerMatch.length;
           perTournamentAvg.push(avgMatch);
         }
       }
-      return perTournamentAvg.length ? weightedTourAvgLeft(perTournamentAvg) : 0;
+      return perTournamentAvg.length
+        ? weightedTourAvgLeft(perTournamentAvg)
+        : 0;
     }
 
     if (metric === Metric.outpostIntakes) {
@@ -203,10 +214,15 @@ const config = {
         },
       });
       if (reports.length === 0) return 0;
-      const perReportCounts = reports.map((r) =>
-        r.events.filter((e) => e.action === "INTAKE" && e.position === "OUTPOST").length,
+      const perReportCounts = reports.map(
+        (r) =>
+          r.events.filter(
+            (e) => e.action === "INTAKE" && e.position === "OUTPOST",
+          ).length,
       );
-      return perReportCounts.reduce((a, b) => a + b, 0) / perReportCounts.length;
+      return (
+        perReportCounts.reduce((a, b) => a + b, 0) / perReportCounts.length
+      );
     }
 
     if (metric === Metric.timeFeeding) {
@@ -220,7 +236,9 @@ const config = {
       if (reports.length === 0) return 0;
       const perReport = reports.map((r) => {
         const feedEvents = r.events
-          .filter((e) => e.action === "START_FEEDING" || e.action === "STOP_FEEDING")
+          .filter(
+            (e) => e.action === "START_FEEDING" || e.action === "STOP_FEEDING",
+          )
           .sort((a, b) => a.time - b.time);
         let total = 0;
         for (let i = 0; i < feedEvents.length; i += 2) {
@@ -248,7 +266,10 @@ const config = {
       if (reports.length === 0) return 0;
       const perReportContact = reports.map((r) => {
         const evs = r.events
-          .filter((e) => e.action === "START_DEFENDING" || e.action === "STOP_DEFENDING")
+          .filter(
+            (e) =>
+              e.action === "START_DEFENDING" || e.action === "STOP_DEFENDING",
+          )
           .sort((a, b) => a.time - b.time);
         let total = 0;
         for (let i = 0; i < evs.length; i += 2) {
@@ -260,7 +281,9 @@ const config = {
       });
       const perReportCamping = reports.map((r) => {
         const evs = r.events
-          .filter((e) => e.action === "START_CAMPING" || e.action === "STOP_CAMPING")
+          .filter(
+            (e) => e.action === "START_CAMPING" || e.action === "STOP_CAMPING",
+          )
           .sort((a, b) => a.time - b.time);
         let total = 0;
         for (let i = 0; i < evs.length; i += 2) {
@@ -270,8 +293,10 @@ const config = {
         }
         return evs.length ? total : 0;
       });
-      const contactAvg = perReportContact.reduce((a, b) => a + b, 0) / perReportContact.length;
-      const campingAvg = perReportCamping.reduce((a, b) => a + b, 0) / perReportCamping.length;
+      const contactAvg =
+        perReportContact.reduce((a, b) => a + b, 0) / perReportContact.length;
+      const campingAvg =
+        perReportCamping.reduce((a, b) => a + b, 0) / perReportCamping.length;
       if (metric === Metric.contactDefenseTime) return contactAvg;
       if (metric === Metric.campingDefenseTime) return campingAvg;
       return contactAvg + campingAvg;
@@ -289,23 +314,31 @@ const config = {
         },
       });
       if (reports.length === 0) return 0;
-       const times: number[] = [];
-       reports.forEach((r) => {
-         const first = r.events
-           .filter((e) => e.action === "CLIMB" && (e.time ?? 0) <= autoEnd)
-           .map((e) => e.time ?? 0)
-           .sort((a, b) => a - b)[0];
-         if (first !== undefined) {
-           // convert to remaining auto time (auto = 18s)
-           times.push(autoEnd - first);
-         }
-       });
-       return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+      const times: number[] = [];
+      reports.forEach((r) => {
+        const first = r.events
+          .filter((e) => e.action === "CLIMB" && (e.time ?? 0) <= autoEnd)
+          .map((e) => e.time ?? 0)
+          .sort((a, b) => a - b)[0];
+        if (first !== undefined) {
+          // convert to remaining auto time (auto = 23s)
+          times.push(autoEnd - first);
+        }
+      });
+      return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
     }
 
-    if (metric === Metric.l1StartTime || metric === Metric.l2StartTime || metric === Metric.l3StartTime) {
+    if (
+      metric === Metric.l1StartTime ||
+      metric === Metric.l2StartTime ||
+      metric === Metric.l3StartTime
+    ) {
       const required =
-        metric === Metric.l1StartTime ? "L1" : metric === Metric.l2StartTime ? "L2" : "L3";
+        metric === Metric.l1StartTime
+          ? "L1"
+          : metric === Metric.l2StartTime
+            ? "L2"
+            : "L3";
       const reports = await prismaClient.scoutReport.findMany({
         where: {
           teamMatchData: { tournamentKey: sourceTnmtFilter },
@@ -319,17 +352,22 @@ const config = {
       if (reports.length === 0) return 0;
       const times: number[] = [];
       reports.forEach((r) => {
-         const firstTeleop = r.events
-           .filter((e) => e.action === "CLIMB" && (e.time ?? 0) > autoEnd && (e.time ?? 0) <= 158)
-           .map((e) => e.time ?? 0)
-           .sort((a, b) => a - b)[0];
-         if (firstTeleop !== undefined) {
-           // convert to remaining match time (match = 158s)
-           const remaining = 158 - firstTeleop;
-           times.push(remaining >= 0 ? remaining : 0);
-         }
-       });
-       return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+        const firstTeleop = r.events
+          .filter(
+            (e) =>
+              e.action === "CLIMB" &&
+              (e.time ?? 0) > autoEnd &&
+              (e.time ?? 0) <= 158,
+          )
+          .map((e) => e.time ?? 0)
+          .sort((a, b) => a - b)[0];
+        if (firstTeleop !== undefined) {
+          // convert to remaining match time (match = 158s)
+          const remaining = 158 - firstTeleop;
+          times.push(remaining >= 0 ? remaining : 0);
+        }
+      });
+      return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
     }
 
     if (metric === Metric.defenseEffectiveness) {
@@ -360,7 +398,10 @@ const config = {
                   metric === Metric.teleopPoints
                     ? ({ time: { gt: autoEnd }, action: "STOP_SCORING" } as any)
                     : metric === Metric.autoPoints
-                      ? ({ time: { lte: autoEnd }, action: "STOP_SCORING" } as any)
+                      ? ({
+                          time: { lte: autoEnd },
+                          action: "STOP_SCORING",
+                        } as any)
                       : ({ action: "STOP_SCORING" } as any),
                 select: { points: true, time: true },
               },
@@ -391,7 +432,7 @@ const config = {
         perTournamentValues[tnmt].push(matchTotal / row.scoutReports.length);
       }
       const perTournamentAverages = Object.values(perTournamentValues).map(
-        (arr) => (arr.reduce((a, b) => a + b, 0) / arr.length) || 0,
+        (arr) => arr.reduce((a, b) => a + b, 0) / arr.length || 0,
       );
       return perTournamentAverages.length
         ? weightedTourAvgLeft(perTournamentAverages)
