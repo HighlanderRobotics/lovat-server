@@ -34,7 +34,7 @@ export const EventActionSchema = z.enum([
   "STOP_FEEDING",
 ]);
 
-export const MobilitySchema = z.enum(["TRENCH", "BUMP", "BOTH", "NONE"]);
+export const FieldTraversalSchema = z.enum(["TRENCH", "BUMP", "BOTH", "NONE"]);
 export const BeachedSchema = z.enum(["ON_FUEL", "ON_BUMP", "BOTH", "NEITHER"]);
 export const EndgameClimbSchema = z.enum(["NOT_ATTEMPTED", "FAILED", "L1", "L2", "L3"]);
 export const ClimbPositionSchema = z.enum(["SIDE", "MIDDLE"]);
@@ -60,10 +60,11 @@ export const DataSourceRuleStringSchema = z.object({
 // Models: include scalar fields and foreign keys. Relation objects are omitted to avoid cycles.
 export const EventSchema = z.object({
   eventUuid: z.string().uuid(),
-  time: z.number().int(),
+  time: z.number(),
   action: EventActionSchema,
   position: PositionSchema,
   points: z.number().int(),
+  quantity: z.number().int().optional().nullable(),
   scoutReportUuid: z.string().uuid(),
 });
 
@@ -105,7 +106,7 @@ export const ScoutReportSchema = z.object({
   defenseEffectiveness: z.number().int(),
   feederTypes: z.array(FeederTypeSchema),
   intakeType: IntakeTypeSchema,
-  mobility: MobilitySchema,
+  fieldTraversal: FieldTraversalSchema,
   scoresWhileMoving: z.boolean(),
   disrupts: z.boolean(),
   endgameClimb: EndgameClimbSchema,
@@ -161,6 +162,7 @@ export const RegisteredTeamSchema = z.object({
   code: z.string(),
   email: z.string(),
   emailVerified: z.boolean(),
+  timeCreated: z.string().datetime().optional(),
   teamApproved: z.boolean(),
   website: z.string().optional().nullable(),
 });
@@ -233,7 +235,7 @@ export const CachedAnalysisSchema = z.object({
 export function registerPrismaSchemas(registry: OpenAPIRegistry) {
   registry.register("Position", PositionSchema);
   registry.register("EventAction", EventActionSchema);
-  registry.register("Mobility", MobilitySchema);
+  registry.register("FieldTraversal", FieldTraversalSchema);
   registry.register("Beached", BeachedSchema);
   registry.register("EndgameClimb", EndgameClimbSchema);
   registry.register("ClimbPosition", ClimbPositionSchema);
