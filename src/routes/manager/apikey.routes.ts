@@ -75,7 +75,7 @@ registry.registerPath({
                 createdAt: z.string().datetime(),
                 lastUsed: z.string().datetime().nullable(),
                 requests: z.number().int(),
-                user: z.object({ username: z.string() }),
+                user: z.object({ username: z.string().nullable() }),
               })
             ),
           }),

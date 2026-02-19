@@ -79,6 +79,7 @@ registry.registerPath({
       content: { "application/json": { schema: AllianceResponseSchema } },
     },
     400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -119,6 +120,7 @@ registry.registerPath({
     200: { description: "Prediction and alliance details", content: { "application/json": { schema: MatchPredictionResponseSchema } } },
     400: { description: "Invalid parameters" },
     401: { description: "Unauthorized" },
+    500: { description: "Internal server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -162,6 +164,7 @@ registry.registerPath({
   responses: {
     200: { description: "Picklist ranking results", content: { "application/json": { schema: z.object({ teams: z.array(PicklistEntrySchema) }) } } },
     400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
   },
   security: [{ bearerAuth: [] }],
 });

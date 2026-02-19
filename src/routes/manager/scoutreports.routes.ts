@@ -25,7 +25,7 @@ const ScoutReportCreateSchema = z.object({
   intakeType: z.enum(["GROUND", "OUTPOST", "BOTH", "NEITHER"]),
   robotBrokeDescription: z.string().nullable().optional(),
   driverAbility: z.number().int(),
-  accuracy: z.number().int(),
+  accuracy: z.number().int().optional(),
   disrupts: z.boolean(),
   defenseEffectiveness: z.number().int(),
   scoresWhileMoving: z.boolean(),
@@ -91,6 +91,7 @@ registry.registerPath({
   responses: {
     200: { description: "Deleted", content: { "text/plain": { schema: z.string() } } },
     400: { description: "Invalid request" },
+    403: { description: "Forbidden" },
     404: { description: "Not found" },
     500: { description: "Server error" },
   },

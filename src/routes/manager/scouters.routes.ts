@@ -113,7 +113,7 @@ registry.registerPath({
   tags: ["Manager - Scouters"],
   summary: "Unarchive scouter",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Unarchived" }, 401: { description: "Unauthorized" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
+  responses: { 200: { description: "Unarchived" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -122,7 +122,7 @@ registry.registerPath({
   tags: ["Manager - Scouters"],
   summary: "Archive scouter",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Archived" }, 401: { description: "Unauthorized" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
+  responses: { 200: { description: "Archived" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -131,7 +131,7 @@ registry.registerPath({
   tags: ["Manager - Scouters"],
   summary: "Update scouter name",
   request: { body: { content: { "application/json": { schema: z.object({ uuid: z.string().optional(), name: z.string() }) } } } },
-  responses: { 200: { description: "Updated" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" }, 500: { description: "Server error" } },
+  responses: { 200: { description: "Updated" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -139,7 +139,7 @@ registry.registerPath({
   path: "/v1/manager/scouterdashboard",
   tags: ["Manager - Scouters"],
   summary: "Delete scouter from dashboard",
-  responses: { 200: { description: "Deleted" }, 401: { description: "Unauthorized" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
+  responses: { 200: { description: "Deleted" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -156,7 +156,7 @@ registry.registerPath({
   tags: ["Manager - Scouters"],
   summary: "Add scouter on dashboard",
   request: { body: { content: { "application/json": { schema: z.object({ scouterId: z.string(), tournament: z.string().optional() }) } } } },
-  responses: { 200: { description: "Created" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" }, 500: { description: "Server error" } },
+  responses: { 200: { description: "Created" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 500: { description: "Server error" } },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({

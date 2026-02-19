@@ -23,6 +23,8 @@ registry.registerPath({
       description: "CSV",
       content: { "text/csv": { schema: z.string() } },
     },
+    400: { description: "Invalid parameters or not enough scouting data" },
+    500: { description: "Internal server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -42,6 +44,8 @@ registry.registerPath({
       description: "CSV",
       content: { "text/csv": { schema: z.string() } },
     },
+    400: { description: "Invalid parameters or not enough scouting data" },
+    500: { description: "Internal server error" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -56,6 +60,8 @@ registry.registerPath({
       description: "CSV",
       content: { "text/csv": { schema: z.string() } },
     },
+    400: { description: "Invalid parameters or not enough scouting data" },
+    500: { description: "Internal server error" },
   },
   security: [{ bearerAuth: [] }],
 });

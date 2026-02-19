@@ -188,6 +188,7 @@ registry.registerPath({
   responses: {
     200: { description: "Deleted" },
     401: { description: "Unauthorized" },
+    403: { description: "Cannot be performed using an API key" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -201,6 +202,7 @@ registry.registerPath({
   responses: {
     200: { description: "Upgraded" },
     401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
     400: { description: "Invalid request" },
   },
   security: [{ bearerAuth: [] }],
@@ -224,6 +226,7 @@ registry.registerPath({
       },
     },
     401: { description: "Unauthorized" },
+    403: { description: "Not a scouting lead" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -242,6 +245,7 @@ registry.registerPath({
       },
     },
     401: { description: "Unauthorized" },
+    403: { description: "Not authorized to get the team code" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -273,6 +277,7 @@ registry.registerPath({
       },
     },
     401: { description: "Unauthorized" },
+    403: { description: "Cannot be performed using an API key" },
     400: { description: "Invalid request" },
   },
   security: [{ bearerAuth: [] }],
@@ -393,6 +398,7 @@ registry.registerPath({
       },
     },
     401: { description: "Unauthorized" },
+    403: { description: "Cannot be performed using an API key" },
   },
   security: [{ bearerAuth: [] }],
 });

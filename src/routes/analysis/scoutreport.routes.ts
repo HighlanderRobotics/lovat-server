@@ -15,7 +15,11 @@ registry.registerPath({
   tags: ["Analysis - Scout Report"],
   summary: "Metrics for specific scout report",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Metrics", content: { "application/json": { schema: z.record(z.string(), z.any()) } } }, 404: { description: "Not found" } },
+  responses: {
+    200: { description: "Metrics", content: { "application/json": { schema: z.record(z.string(), z.any()) } } },
+    400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -24,7 +28,11 @@ registry.registerPath({
   tags: ["Analysis - Scout Report"],
   summary: "All scout reports for a match",
   request: { params: z.object({ match: z.coerce.number().int() }) },
-  responses: { 200: { description: "Reports", content: { "application/json": { schema: z.array(z.record(z.string(), z.any())) } } } },
+  responses: {
+    200: { description: "Reports", content: { "application/json": { schema: z.array(z.record(z.string(), z.any())) } } },
+    400: { description: "Invalid parameters" },
+    500: { description: "Internal server error or not authorized" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -33,7 +41,11 @@ registry.registerPath({
   tags: ["Analysis - Scout Report"],
   summary: "Timeline data for scout report",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Timeline", content: { "application/json": { schema: z.record(z.string(), z.any()) } } } },
+  responses: {
+    200: { description: "Timeline", content: { "application/json": { schema: z.record(z.string(), z.any()) } } },
+    400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
+  },
 });
 
 router.use(requireAuth);

@@ -41,12 +41,13 @@ export const requireAuth = async (
       const count = Number(await kv.incr(redisKey));
       if (count === 1) await kv.exp(redisKey);
 
-      if (count <= 1) {
+      if (count > 1) {
         res.status(429).json({
           message:
             "You have exceeded the rate limit for an API Key. Please wait before making more requests.",
           retryAfterSeconds: 3,
         });
+        return;
       }
 
       const apiKey = await prisma.apiKey.update({

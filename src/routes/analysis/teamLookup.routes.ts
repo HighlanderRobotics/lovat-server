@@ -22,7 +22,11 @@ registry.registerPath({
   tags: ["Analysis - Team Lookup"],
   summary: "Metric details for team",
   request: { params: MetricTeamParam },
-  responses: { 200: { description: "Details", content: { "application/json": { schema: z.record(z.string(), z.any()) } } } },
+  responses: {
+    200: { description: "Details", content: { "application/json": { schema: z.record(z.string(), z.any()) } } },
+    400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -31,7 +35,11 @@ registry.registerPath({
   tags: ["Analysis - Team Lookup"],
   summary: "Category metrics for team",
   request: { params: TeamParam },
-  responses: { 200: { description: "Categories", content: { "application/json": { schema: z.record(z.string(), z.any()) } } } },
+  responses: {
+    200: { description: "Categories", content: { "application/json": { schema: z.record(z.string(), z.any()) } } },
+    400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -40,7 +48,11 @@ registry.registerPath({
   tags: ["Analysis - Team Lookup"],
   summary: "Breakdown metrics for team",
   request: { params: TeamParam },
-  responses: { 200: { description: "Breakdown", content: { "application/json": { schema: z.record(z.string(), z.any()) } } } },
+  responses: {
+    200: { description: "Breakdown", content: { "application/json": { schema: z.record(z.string(), z.any()) } } },
+    400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -49,7 +61,11 @@ registry.registerPath({
   tags: ["Analysis - Team Lookup"],
   summary: "Specific breakdown details",
   request: { params: BreakdownParam },
-  responses: { 200: { description: "Details", content: { "application/json": { schema: z.record(z.string(), z.any()) } } } },
+  responses: {
+    200: { description: "Details", content: { "application/json": { schema: z.record(z.string(), z.any()) } } },
+    400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -58,7 +74,11 @@ registry.registerPath({
   tags: ["Analysis - Team Lookup"],
   summary: "Notes for team",
   request: { params: TeamParam },
-  responses: { 200: { description: "Notes", content: { "application/json": { schema: z.array(z.object({ note: z.string() })) } } } },
+  responses: {
+    200: { description: "Notes", content: { "application/json": { schema: z.array(z.object({ note: z.string() })) } } },
+    400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -67,7 +87,11 @@ registry.registerPath({
   tags: ["Analysis - Team Lookup"],
   summary: "Flags for team",
   request: { params: TeamParam },
-  responses: { 200: { description: "Flags", content: { "application/json": { schema: z.array(z.object({ flag: z.string() })) } } } },
+  responses: {
+    200: { description: "Flags", content: { "application/json": { schema: z.array(z.object({ flag: z.string() })) } } },
+    400: { description: "Invalid parameters" },
+    500: { description: "Internal server error" },
+  },
 });
 
 router.use(requireAuth);
