@@ -34,37 +34,12 @@ const ScoutReportCreateSchema = z.object({
   scouterUuid: z.string(),
   teamNumber: z.number().int(),
   events: z.array(
-    z.object({
-      time: z.number().int(),
-      action: z.enum([
-        "START_SCORING",
-        "STOP_SCORING",
-        "START_MATCH",
-        "START_CAMPING",
-        "STOP_CAMPING",
-        "START_DEFENDING",
-        "STOP_DEFENDING",
-        "INTAKE",
-        "OUTTAKE",
-        "DISRUPT",
-        "CROSS",
-        "CLIMB",
-        "START_FEEDING",
-        "STOP_FEEDING",
-      ]),
-      position: z.enum([
-        "LEFT_TRENCH",
-        "LEFT_BUMP",
-        "HUB",
-        "RIGHT_TRENCH",
-        "RIGHT_BUMP",
-        "NEUTRAL_ZONE",
-        "DEPOT",
-        "OUTPOST",
-        "NONE",
-      ]),
-      points: z.number().int(),
-    }),
+    z.tuple([
+      z.number().int(), // time
+      z.number().int(), // action index
+      z.number().int(), // position index
+      z.number().int().optional(), // points/quantity (optional)
+    ]),
   ),
 });
 

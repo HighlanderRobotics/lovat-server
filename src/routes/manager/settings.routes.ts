@@ -45,6 +45,7 @@ registry.registerPath({
     },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
+    403: { description: "Cannot be performed using an API key" },
     500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
