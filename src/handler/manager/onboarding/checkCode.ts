@@ -8,6 +8,11 @@ export const checkCode = async (
   res: Response,
 ): Promise<void> => {
   try {
+    if (req.tokenType === "apiKey") {
+      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      return;
+    }
+
     const params = z
       .object({
         number: z.number().min(0),

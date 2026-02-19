@@ -1,0 +1,231 @@
+/* =========================================================
+   BASE
+   ========================================================= */
+body,
+.swagger-ui {
+  background-color: #0f1118 !important;
+  color: #e5e7eb !important;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+/* =========================================================
+   TOP BAR
+   ========================================================= */
+.swagger-ui .topbar {
+  background-color: #13151c !important;
+  border-bottom: 1px solid #2a2c36 !important;
+}
+
+.swagger-ui .topbar-wrapper img {
+  filter: brightness(0) invert(1);
+}
+
+.swagger-ui pre.version {
+  background-color: rgba(0, 0, 0, 0) !important;
+  color: #e5e7eb !important;
+}
+/* =========================================================
+   AUTHORIZE BUTTON
+   ========================================================= */
+.swagger-ui .authorize {
+  background-color: #1e1a2e !important;
+  border: 1px solid #ffffff !important;
+  color: #e6e8ff !important;
+  border-radius: 8px !important;
+}
+
+.swagger-ui .authorize:hover {
+  background-color: #26213d !important;
+}
+
+/* Lock icon (closed) */
+.swagger-ui .authorize svg path {
+  fill: #ffffff !important;
+}
+
+/* Lock icon (authorized) */
+.swagger-ui .authorize.authorized svg path {
+  fill: #ffffff !important;
+}
+
+/* =========================================================
+   HEADERS & TAGS
+   ========================================================= */
+.swagger-ui h1,
+.swagger-ui h2,
+.swagger-ui h3,
+.swagger-ui h4,
+.swagger-ui .model-title {
+  color: #d6d8ff !important;
+}
+
+.swagger-ui .opblock-tag,
+.swagger-ui .opblock-tag small {
+  color: #c8cbff !important;
+}
+
+/* =========================================================
+   OPERATION BLOCKS
+   ========================================================= */
+.swagger-ui .opblock {
+  background-color: #161920 !important;
+  border: 1px solid #2d2f39 !important;
+  border-radius: 10px !important;
+}
+
+.swagger-ui .opblock-summary {
+  border-bottom: 1px solid #2d2f39 !important;
+}
+
+/* Endpoint paths (NOT purple) */
+.swagger-ui .opblock-summary-path,
+.swagger-ui .opblock-summary-path span {
+  color: #e5e7eb !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Endpoint description */
+.swagger-ui .opblock-summary-description {
+  color: #9ca3af !important;
+}
+
+/* =========================================================
+   HTTP METHOD COLORS
+   ========================================================= */
+.swagger-ui .opblock-summary-method {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* GET */
+.swagger-ui .opblock.opblock-get {
+  border-left: 5px solid #7aa7ff !important;
+  background-color: #161a2b !important;
+}
+.swagger-ui .opblock-get .opblock-summary-method {
+  background-color: #7aa7ff !important;
+}
+
+/* POST */
+.swagger-ui .opblock.opblock-post {
+  border-left: 5px solid #a77cff !important;
+  background-color: #1a1830 !important;
+}
+.swagger-ui .opblock-post .opblock-summary-method {
+  background-color: #a77cff !important;
+}
+
+/* PUT */
+.swagger-ui .opblock.opblock-put {
+  border-left: 5px solid #22c55e !important;
+  background-color: #18152a !important;
+}
+.swagger-ui .opblock-put .opblock-summary-method {
+  background-color: #22c55e !important;
+}
+/* PATCH */
+.swagger-ui .opblock.opblock-patch {
+  border-left: 5px solid #ffd166 !important;
+  background-color: #161b1d !important;
+}
+.swagger-ui .opblock-patch .opblock-summary-method {
+  background-color: #ffd166 !important;
+}
+/* DELETE */
+.swagger-ui .opblock.opblock-delete {
+  border-left: 5px solid #e06c75 !important;
+  background-color: #2a1518 !important;
+}
+.swagger-ui .opblock-delete .opblock-summary-method {
+  background-color: #e06c75 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+.swagger-ui .btn {
+  background-color: #6f7cfc !important;
+  border-color: #6f7cfc !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+}
+
+.swagger-ui .btn:hover {
+  background-color: #8e7fff !important;
+  border-color: #8e7fff !important;
+}
+
+/* =========================================================
+   INPUTS & FORMS
+   ========================================================= */
+.swagger-ui input,
+.swagger-ui select,
+.swagger-ui textarea {
+  background-color: #1a1d24 !important;
+  color: #e5e7eb !important;
+  border: 1px solid #2d2f39 !important;
+  border-radius: 6px !important;
+}
+
+.swagger-ui input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+.swagger-ui table {
+  background-color: #0f1118 !important;
+}
+
+.swagger-ui table thead th {
+  color: #c8cbff !important;
+  border-bottom: 1px solid #2d2f39 !important;
+}
+
+.swagger-ui table tbody td {
+  border-top: 1px solid #2d2f39 !important;
+}
+
+/* =========================================================
+   PARAMETERS & RESPONSES
+   ========================================================= */
+.swagger-ui .parameter__name,
+.swagger-ui .response-col_status,
+.swagger-ui .response-col_description,
+.swagger-ui .prop-type {
+  color: #bfc3ff !important;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+.swagger-ui pre,
+.swagger-ui .highlight-code {
+  background-color: #12141a !important;
+  color: #e5e7eb !important;
+  border-radius: 8px !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+.swagger-ui a {
+  color: #8e7fff !important;
+}
+
+.swagger-ui a:hover {
+  color: #a99cff !important;
+}
+
+/* =========================================================
+   HOVER POLISH
+   ========================================================= */
+.swagger-ui .opblock:hover {
+  box-shadow: 0 0 0 1px rgba(111, 124, 252, 0.25);
+}
