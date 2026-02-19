@@ -25,7 +25,7 @@ const config = {
   }),
   usesDataSource: false,
   shouldCache: true,
-  createKey: (args: { matchKey: string; scoutReportUuid: string }) => ({
+  createKey: async (args: { matchKey: string; scoutReportUuid: string }) => ({
     key: ["autoPathScouter", args.matchKey, args.scoutReportUuid],
   }),
   calculateAnalysis: async (args: {

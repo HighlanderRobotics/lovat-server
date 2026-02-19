@@ -26,7 +26,7 @@ const config = {
   }),
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args) => ({
+  createKey: async (args) => ({
     key: [
       "matchPredictionLogic",
       ...[args.red1, args.red2, args.red3].sort().map(String),

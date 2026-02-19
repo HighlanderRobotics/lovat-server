@@ -17,7 +17,7 @@ export type AnalysisFunctionConfig<
 > = {
   argsSchema: T;
   returnSchema?: R;
-  createKey: (params: z.infer<T>) => CreateKeyResult;
+  createKey: (params: z.infer<T>) => Promise<CreateKeyResult> | CreateKeyResult;
   calculateAnalysis: (
     params: z.infer<T>,
     ctx: AnalysisContext,
@@ -77,7 +77,7 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
     key: keyFragments,
     teamDependencies,
     tournamentDependencies,
-  } = config.createKey(passedArgs);
+  } = await config.createKey(passedArgs);
 
   if (config.usesDataSource) {
     const teamSource = context.dataSource.teams;
@@ -94,13 +94,18 @@ export async function runAnalysis<T extends z.ZodObject, R extends z.ZodType>(
     const rounded = roundAllNumbers(result);
 
     await kv.set(key, JSON.stringify(rounded));
-    await prismaClient.cachedAnalysis.create({
-      data: {
-        key,
-        teamDependencies: teamDependencies ?? [],
-        tournamentDependencies: tournamentDependencies ?? [],
-      },
-    });
+    try {
+      await prismaClient.cachedAnalysis.create({
+        data: {
+          key,
+          teamDependencies: teamDependencies ?? [],
+          tournamentDependencies: tournamentDependencies ?? [],
+        },
+      });
+    } catch (e: any) {
+      if (e?.code !== "P2002") throw e;
+      // Ignore duplicate key; another request already created the row
+    }
 
     return rounded as z.infer<R>;
   }

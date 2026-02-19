@@ -57,9 +57,15 @@ export async function computeAverageScoutReport(
       driverAbility: true,
       autoClimb: true,
       defenseEffectiveness: true,
-        events: {
-         select: { action: true, position: true, points: true, quantity: true, time: true },
-       },
+      events: {
+        select: {
+          action: true,
+          position: true,
+          points: true,
+          quantity: true,
+          time: true,
+        },
+      },
     },
   });
 
@@ -130,30 +136,33 @@ export async function computeAverageScoutReport(
         break;
       }
       case Metric.fuelPerSecond: {
-         const scoringStops = report.events.filter(
-           (e) => e.action === "STOP_SCORING",
-         );
-         const totalQuantity = scoringStops.reduce((a, b) => a + (b.quantity ?? 0), 0);
-         const firstStop = scoringStops.sort((a, b) => a.time - b.time)[0]?.time;
-         const duration = firstStop
-           ? firstStop - (report.events[0]?.time ?? 0)
-           : 150;
-         result[metric] = duration > 0 ? totalQuantity / duration : 0;
+        const scoringStops = report.events.filter(
+          (e) => e.action === "STOP_SCORING",
+        );
+        const totalQuantity = scoringStops.reduce(
+          (a, b) => a + (b.quantity ?? 0),
+          0,
+        );
+        const firstStop = scoringStops.sort((a, b) => a.time - b.time)[0]?.time;
+        const duration = firstStop
+          ? firstStop - (report.events[0]?.time ?? 0)
+          : 150;
+        result[metric] = duration > 0 ? totalQuantity / duration : 0;
         break;
       }
-       case Metric.feedingRate: {
-         const totalFeedQuantity = report.events
-           .filter((e) => e.action === "STOP_FEEDING")
-           .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-         const totalFeedingTime = pairedDuration(
-           report.events,
-           "START_FEEDING",
-           "STOP_FEEDING",
-         );
-         result[metric] =
-           totalFeedingTime > 0 ? totalFeedQuantity / totalFeedingTime : 0;
-         break;
-       }
+      case Metric.feedingRate: {
+        const totalFeedQuantity = report.events
+          .filter((e) => e.action === "STOP_FEEDING")
+          .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+        const totalFeedingTime = pairedDuration(
+          report.events,
+          "START_FEEDING",
+          "STOP_FEEDING",
+        );
+        result[metric] =
+          totalFeedingTime > 0 ? totalFeedQuantity / totalFeedingTime : 0;
+        break;
+      }
       case Metric.timeFeeding: {
         result[metric] = pairedDuration(
           report.events,
@@ -169,11 +178,13 @@ export async function computeAverageScoutReport(
         break;
       }
       case Metric.totalFuelOutputted: {
-         result[metric] = report.events
-           .filter((e) => e.action === "STOP_FEEDING" || e.action === "STOP_SCORING")
-           .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-         break;
-       }
+        result[metric] = report.events
+          .filter(
+            (e) => e.action === "STOP_FEEDING" || e.action === "STOP_SCORING",
+          )
+          .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+        break;
+      }
       case Metric.totalBallsFed: {
         result[metric] = report.events
           .filter((e) => e.action === "STOP_FEEDING")
@@ -211,7 +222,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
   argsSchema,
   usesDataSource: false,
   shouldCache: true,
-  createKey: (args) => ({
+  createKey: async (args) => ({
     key: [
       "averageScoutReport",
       args.scoutReportUuid,

@@ -96,7 +96,7 @@ export const addScoutReport = async (
           .union([z.string(), z.null(), z.undefined()])
           .optional(),
         driverAbility: z.number(),
-        accuracy: z.number(),
+        accuracy: z.number().optional(),
         disrupts: z.boolean(),
         defenseEffectiveness: z.number(),
         scoresWhileMoving: z.boolean(),
@@ -195,6 +195,8 @@ export const addScoutReport = async (
       paramsScoutReport.tournamentKey,
     );
 
+    console.log(paramsScoutReport.teamNumber);
+
     const scoutReportUuid = paramsScoutReport.uuid;
 
     for (const event of events) {
@@ -230,6 +232,14 @@ export const addScoutReport = async (
           points: points,
           quantity: quantity,
         });
+      console.log("Parsed event: ", {
+        scoutReportUuid: scoutReportUuid,
+        time: time,
+        action: action,
+        position: position,
+        points: points,
+        quantity: quantity,
+      });
 
       if (!paramsEvents.success) {
         res.status(400).send({

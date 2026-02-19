@@ -22,8 +22,10 @@ export const invalidateCache = async (
 
   const analysisRows = await prismaClient.cachedAnalysis.findMany({
     where: {
-      teamDependencies: teamsClause,
-      tournamentDependencies: tournamentsClause,
+      OR: [
+        { teamDependencies: teamsClause },
+        { tournamentDependencies: tournamentsClause },
+      ],
     },
     select: { key: true },
   });

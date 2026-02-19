@@ -122,11 +122,18 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
           case Metric.autoClimbStartTime: {
             const times = sr.map((r) => {
               if (r.autoClimb !== AutoClimb.SUCCEEDED) return null;
-              return firstEventTime(r.events, (e) => e.action === "CLIMB");
+              return firstEventTime(
+                r.events,
+                (e) => e.action === "CLIMB" && e.time <= autoEnd,
+              );
             });
             const nonNullTimes = times.filter((t): t is number => t !== null);
-            if (nonNullTimes.length === 0) continue;
-            tournamentValue = avg(nonNullTimes);
+            if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
+            const adjustedTimes = nonNullTimes.map((t) => {
+              const remaining = autoEnd - t;
+              return remaining >= 0 ? remaining : 0;
+            });
+            tournamentValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
             break;
           }
 
@@ -144,14 +151,17 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               if (r.endgameClimb !== required) return null;
               return firstEventTime(
                 r.events,
-                (e) => e.action === "CLIMB" && e.time > autoEnd,
+                (e) => e.action === "CLIMB" && e.time > autoEnd && e.time <= 158,
               );
             });
 
             const nonNullTimes = times.filter((t): t is number => t !== null);
-            const adjustedTimes = nonNullTimes.map((t) => 2 * 60 + 33 - t);
-            if (nonNullTimes.length === 0) continue;
-            tournamentValue = avg(adjustedTimes);
+            if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
+            const adjustedTimes = nonNullTimes.map((t) => {
+              const remaining = 158 - t;
+              return remaining >= 0 ? remaining : 0;
+            });
+            tournamentValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
             break;
           }
           case Metric.contactDefenseTime:
@@ -180,9 +190,12 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             tournamentValue = avg(sr.map((r) => r.defenseEffectiveness));
             break;
           case Metric.accuracy:
-            tournamentValue = avg(
-              sr.map((r) => accuracyToPercentage[r.accuracy]),
-            );
+            {
+              const defined = sr.filter((r) => r.accuracy !== null && r.accuracy !== undefined);
+              tournamentValue = defined.length
+                ? avg(defined.map((r) => accuracyToPercentage[r.accuracy as any]))
+                : 0;
+            }
             break;
           case Metric.autoPoints:
           case Metric.teleopPoints:
@@ -307,7 +320,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
       for (const team of args.teams) {
         const teamResults = resultsByTeam[team];
         finalResults[String(metric)][String(team)] =
-          teamResults.length > 0 ? weightedTourAvgLeft(teamResults) : NaN;
+          teamResults.length > 0 ? weightedTourAvgLeft(teamResults) : -1;
       }
     }
 

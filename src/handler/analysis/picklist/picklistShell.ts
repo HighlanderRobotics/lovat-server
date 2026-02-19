@@ -51,7 +51,7 @@ export const picklistShell = createAnalysisHandler({
   },
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ query }) => {
+  createKey: async ({ query }) => {
     const metricsKey = {
       totalPoints: query.totalPoints || 0,
       autoPoints: query.autoPoints || 0,

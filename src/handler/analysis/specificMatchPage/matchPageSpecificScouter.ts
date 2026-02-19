@@ -23,7 +23,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
   },
   usesDataSource: false,
   shouldCache: false,
-  createKey: ({ params }) => {
+  createKey: async ({ params }) => {
     return {
       key: ["matchPageSpecificScouter", params.uuid],
       teamDependencies: [],

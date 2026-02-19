@@ -9,7 +9,7 @@ import {
   ttlConstant,
 } from "../analysisConstants.js";
 import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast.js";
-import { Event, Position, Prisma, ScoutReport } from "@prisma/client";
+import { Event, Prisma, ScoutReport, $Enums } from "@prisma/client";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
@@ -52,7 +52,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
   returnSchema,
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args) => {
+  createKey: async (args) => {
     const { teams, metric } = args;
     return {
       key: [
@@ -77,56 +77,34 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
         dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
       );
 
-      // Endgame point prediction
-      if (metric === Metric.l1StartTime) {
-        //fix later
-        const result: Record<
-          number,
-          {
-            average: number;
-            timeLine:
-              | { match: string; dataPoint: number; tournamentName: string }[]
-              | null;
-          }
-        > = {};
-        for (const team of teams) {
-          result[team] = {
-            average: await endgamePicklistTeamFast(
-              team,
-              sourceTeamFilter,
-              sourceTnmtFilter,
-            ),
-            timeLine: null,
-          };
-        }
-        return result;
-      }
-
       // Data and aggregation based on metric. Variables determine data requested and aggregation method
-      let srSelect: Prisma.ScoutReportSelect = null;
-      let matchAggregationFunction: (
-        reports: Partial<ScoutReport & { events: Event[] }>[],
-      ) => number = null;
+      let srSelect: Prisma.ScoutReportSelect | null = null;
+      let matchAggregationFunction:
+        | ((reports: Partial<ScoutReport & { events: Event[] }>[]) => number)
+        | null = null;
 
       switch (metric) {
         case Metric.driverAbility:
           srSelect = { driverAbility: true };
           matchAggregationFunction = (reports) => {
             return (
-              reports.reduce((acc, cur) => acc + cur.driverAbility, 0) /
-              reports.length
+              reports.reduce((acc, cur) => acc + (cur.driverAbility ?? 0), 0) /
+              (reports.length || 1)
             );
           };
           break;
         case Metric.accuracy:
           srSelect = { accuracy: true };
           matchAggregationFunction = (reports) => {
-            return (
-              reports.reduce(
-                (acc, cur) => acc + accuracyToPercentage[cur.accuracy],
-                0,
-              ) / reports.length
+            const defined = reports.filter(
+              (r) => r.accuracy !== null && r.accuracy !== undefined,
             );
+            if (defined.length === 0) return 0;
+            const total = defined.reduce(
+              (acc, cur) => acc + accuracyToPercentage[cur.accuracy as any],
+              0,
+            );
+            return total / defined.length;
           };
           break;
 
@@ -134,33 +112,50 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           srSelect = { defenseEffectiveness: true };
           matchAggregationFunction = (reports) => {
             return (
-              reports.reduce((acc, cur) => acc + cur.defenseEffectiveness, 0) /
-              reports.length
+              reports.reduce(
+                (acc, cur) => acc + (cur.defenseEffectiveness ?? 0),
+                0,
+              ) / (reports.length || 1)
             );
           };
           break;
 
         case Metric.totalPoints:
           srSelect = {
-            events: { select: { points: true } },
+            events: {
+              where: { action: "STOP_SCORING" },
+              select: { points: true, time: true },
+            },
             endgameClimb: true,
+            autoClimb: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
-              sr.events.forEach((e) => {
-                total += e.points;
+              const events = sr.events ?? [];
+              events.forEach((e) => {
+                total += e.points ?? 0;
               });
-              total += endgameToPoints[sr.endgameClimb];
+              // Include auto climb points (15) when succeeded
+              const autoClimb = (sr as any).autoClimb as
+                | "SUCCEEDED"
+                | "FAILED"
+                | "N_A"
+                | undefined;
+              if (autoClimb === "SUCCEEDED") {
+                total += 15;
+              }
+              const endgame = sr.endgameClimb as keyof typeof endgameToPoints;
+              total += endgame ? (endgameToPoints[endgame] ?? 0) : 0;
             });
-            return total / reports.length;
+            return total / (reports.length || 1);
           };
           break;
 
         case Metric.teleopPoints:
           srSelect = {
             events: {
-              where: { time: { gt: autoEnd } },
+              where: { time: { gt: autoEnd }, action: "STOP_SCORING" },
               select: { points: true },
             },
             endgameClimb: true,
@@ -168,29 +163,31 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
-              sr.events.forEach((e) => {
-                total += e.points;
+              const events = sr.events ?? [];
+              events.forEach((e) => {
+                total += e.points ?? 0;
               });
             });
-            return total / reports.length;
+            return total / (reports.length || 1);
           };
           break;
 
         case Metric.autoPoints:
           srSelect = {
             events: {
-              where: { time: { lte: autoEnd } },
+              where: { time: { lte: autoEnd }, action: "STOP_SCORING" },
               select: { points: true },
             },
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
-              sr.events.forEach((e) => {
-                total += e.points;
+              const events = sr.events ?? [];
+              events.forEach((e) => {
+                total += e.points ?? 0;
               });
             });
-            return total / reports.length;
+            return total / (reports.length || 1);
           };
           break;
         case Metric.fuelPerSecond:
@@ -200,15 +197,16 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             },
           };
           matchAggregationFunction = (reports) => {
-            const totalFuel = reports
-              .flatMap((r) => r.events || [])
-              .filter((e) => e.action === "STOP_SCORING")
-              .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-            const duration = calculateTimeMetric(
-              reports as any,
-              "SCORING",
-            ).reduce((a, b) => a + b, 0);
-            return duration > 0 ? totalFuel / duration : 0;
+            // Average per-report scoring rate, then average per match
+            const perReportRates = reports.map((r) => {
+              const totalFuel = (r.events ?? [])
+                .filter((e) => e.action === "STOP_SCORING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              const durations = calculateTimeMetric([r] as any, "SCORING");
+              const duration = durations.reduce((a, b) => a + b, 0);
+              return duration > 0 ? totalFuel / duration : 0;
+            });
+            return avg(perReportRates);
           };
           break;
         case Metric.feedingRate:
@@ -232,16 +230,197 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               : 0;
           };
           break;
+        case Metric.timeFeeding:
+          srSelect = {
+            events: { select: { action: true, time: true } },
+          } as any;
+          matchAggregationFunction = (reports) => {
+            const perMatch = calculateTimeMetric(reports as any, "FEEDING");
+            return avg(perMatch);
+          };
+          break;
+        case Metric.contactDefenseTime:
+        case Metric.campingDefenseTime:
+        case Metric.totalDefenseTime:
+          srSelect = {
+            events: { select: { action: true, time: true } },
+          } as any;
+          matchAggregationFunction = (reports) => {
+            const contact = avg(
+              calculateTimeMetric(reports as any, "DEFENDING"),
+            );
+            const camping = avg(calculateTimeMetric(reports as any, "CAMPING"));
+            if (metric === Metric.contactDefenseTime) return contact;
+            if (metric === Metric.campingDefenseTime) return camping;
+            return contact + camping;
+          };
+          break;
+
+        case Metric.totalFuelOutputted:
+          srSelect = {
+            events: {
+              select: { action: true, quantity: true },
+            },
+          } as any;
+          matchAggregationFunction = (reports) => {
+            // Average per-report: STOP_SCORING.quantity + STOP_FEEDING.quantity
+            const perReportTotals = reports.map((r) => {
+              const events = r.events ?? [];
+              const scored = events
+                .filter((e) => e.action === "STOP_SCORING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              const fed = events
+                .filter((e) => e.action === "STOP_FEEDING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              return scored + fed;
+            });
+            return avg(perReportTotals);
+          };
+          break;
+
+        case Metric.totalBallThroughput:
+          srSelect = {
+            events: {
+              select: { action: true, quantity: true },
+            },
+          } as any;
+          matchAggregationFunction = (reports) => {
+            // Sum STOP_SCORING + STOP_FEEDING quantities per report
+            const perReportTotals = reports.map((r) => {
+              const events = r.events ?? [];
+              const total = events
+                .filter(
+                  (e) =>
+                    e.action === "STOP_SCORING" || e.action === "STOP_FEEDING",
+                )
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              return total;
+            });
+            return avg(perReportTotals);
+          };
+          break;
+
+        case Metric.outpostIntakes:
+          srSelect = {
+            events: {
+              select: { action: true, position: true },
+            },
+          } as any;
+          matchAggregationFunction = (reports) => {
+            const perReportCounts = reports.map(
+              (r) =>
+                (r.events ?? []).filter(
+                  (e) => e.action === "INTAKE" && e.position === "OUTPOST",
+                ).length,
+            );
+            return avg(perReportCounts);
+          };
+          break;
+
+        case Metric.autoClimbStartTime:
+          srSelect = {
+            events: {
+              select: { action: true, time: true },
+            },
+            autoClimb: true,
+          } as any;
+          matchAggregationFunction = (reports) => {
+            // Average first CLIMB time in auto for SUCCEEDED auto climbs
+            const times: number[] = [];
+            reports.forEach((r, idx) => {
+              const ac = (r as any).autoClimb as
+                | "SUCCEEDED"
+                | "FAILED"
+                | "N_A"
+                | undefined;
+              const rawClimbTimes = (r.events ?? [])
+                .filter((e) => e.action === "CLIMB")
+                .map((e) => e.time ?? 0);
+              const filteredAutoTimes = rawClimbTimes
+                .filter((t) => t <= autoEnd)
+                .sort((a, b) => a - b);
+              const first = filteredAutoTimes[0];
+              try {
+                console.debug("autoClimbStartTime", {
+                  reportIndex: idx,
+                  autoClimb: ac,
+                  rawClimbTimes,
+                  filteredAutoTimes,
+                  first,
+                });
+              } catch {}
+              if (ac === "SUCCEEDED" && first !== undefined) {
+                const remaining = autoEnd - first;
+                const clamped = remaining >= 0 ? remaining : 0;
+                times.push(clamped);
+              }
+            });
+            // Return -1 when no qualifying report produces a time
+            return times.length ? avg(times) : -1;
+          };
+          break;
+
+        case Metric.l1StartTime:
+        case Metric.l2StartTime:
+        case Metric.l3StartTime:
+          srSelect = {
+            events: { select: { action: true, time: true } },
+            endgameClimb: true,
+          } as any;
+          matchAggregationFunction = (reports) => {
+            const times: number[] = [];
+            const required =
+              metric === Metric.l1StartTime
+                ? "L1"
+                : metric === Metric.l2StartTime
+                  ? "L2"
+                  : "L3";
+            reports.forEach((r, idx) => {
+              const eg = (r as any).endgameClimb as
+                | "NOT_ATTEMPTED"
+                | "FAILED"
+                | "L1"
+                | "L2"
+                | "L3"
+                | undefined;
+              const rawClimbTimes = (r.events ?? [])
+                .filter((e) => e.action === "CLIMB")
+                .map((e) => e.time ?? 0);
+              const filteredTeleopTimes = rawClimbTimes
+                .filter((t) => t > autoEnd && t <= 158)
+                .sort((a, b) => a - b);
+              const firstTeleop = filteredTeleopTimes[0];
+              console.debug("lXStartTime", {
+                reportIndex: idx,
+                endgameClimb: eg,
+                required,
+                scoutReportUuid: (r as any).uuid,
+                events: (r.events ?? []).map((e) => ({
+                  action: e.action,
+                  time: e.time,
+                })),
+                rawClimbTimes,
+                filteredTeleopTimes,
+                firstTeleop,
+              });
+              if (eg === required && firstTeleop !== undefined) {
+                const remaining = 158 - firstTeleop;
+                const clamped = remaining >= 0 ? remaining : 0;
+                times.push(clamped);
+              }
+            });
+            return times.length ? avg(times) : -1;
+          };
+          break;
+
         default:
           // Generic event count
           const action = metricToEvent[metric];
-          let position: Position = undefined;
-
+          // Only filter by action; avoid undefined position filter
           srSelect = {
             events: {
               where: {
                 action: action,
-                position: position,
               },
               select: { eventUuid: true },
             },
@@ -250,18 +429,20 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
-              total += sr.events.length;
+              total += (sr.events ?? []).length;
             });
-            return total / reports.length;
+            return total / (reports.length || 1);
           };
           break;
       }
 
       // Finish setting up filters to decrease server load
-      const tmdFilter: Prisma.TeamMatchDataWhereInput = {
-        teamNumber: { in: teams },
-      };
+      const tmdFilter: Prisma.TeamMatchDataWhereInput = {};
+      // Team filter
+      tmdFilter.teamNumber = { in: teams };
+
       if (sourceTnmtFilter) {
+        // Assign helper output directly; it's Prisma-compatible
         tmdFilter.tournamentKey = sourceTnmtFilter;
       }
       const srFilter: Prisma.ScoutReportWhereInput = {};
@@ -290,7 +471,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           teamNumber: true,
           scoutReports: {
             where: srFilter,
-            select: srSelect,
+            select: srSelect ?? {},
           },
         },
         orderBy: [
@@ -306,48 +487,11 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
         ],
       });
 
-      // Organized as team number => tournament => list of avg /driver ability/event counts/points/ per match
-      const matchGroups: Record<
+      // Build per-team timelines and accumulate per-tournament values
+      const perTeamTournamentValues: Record<
         number,
-        {
-          match: string;
-          dataPoint: number;
-          tournamentName: string;
-        }[][]
+        Record<string, number[]>
       > = {};
-      for (const team of teams) {
-        matchGroups[team] = [];
-      }
-
-      // Group TMD by matches
-      const tournamentIndex: Record<number, number> = {};
-      let currTournament: string = null;
-      let currTeam: number = null;
-      for (const curMatch of tmd) {
-        if (
-          curMatch.tournamentKey !== currTournament ||
-          curMatch.teamNumber !== currTeam
-        ) {
-          currTournament = curMatch.tournamentKey;
-          currTeam = curMatch.teamNumber;
-          // Increment or initialize team-specific array index
-          tournamentIndex[currTeam] ||= 0;
-          tournamentIndex[currTeam]++;
-          matchGroups[currTeam][tournamentIndex[currTeam]] = [];
-        }
-
-        // Aggregate according to metric
-        if (curMatch.scoutReports.length > 0) {
-          const matchAvg = matchAggregationFunction(curMatch.scoutReports);
-          matchGroups[currTeam][tournamentIndex[currTeam]].push({
-            match: curMatch.key,
-            dataPoint: matchAvg,
-            tournamentName: curMatch.tournament.name,
-          });
-        }
-      }
-
-      // Push timelines and aggregate final result
       const result: Record<
         number,
         {
@@ -359,23 +503,72 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           }[];
         }
       > = {};
+
       for (const team of teams) {
+        perTeamTournamentValues[team] = {};
         result[team] = { average: 0, timeLine: [] };
-        const tournamentGroups: number[] = [];
+      }
 
-        // Push timelines and aggregate by tournament
-        matchGroups[team].forEach((tournament) => {
-          if (tournament.length > 0) {
-            result[team].timeLine.push(...tournament);
-            tournamentGroups.push(
-              tournament.reduce((acc, cur) => acc + cur.dataPoint, 0) /
-                tournament.length,
-            );
-          }
+      for (const row of tmd) {
+        const team = row.teamNumber;
+        const tnmt = row.tournamentKey;
+        if (!perTeamTournamentValues[team][tnmt])
+          perTeamTournamentValues[team][tnmt] = [];
+        if (!row.scoutReports.length) continue;
+
+        let matchValue = 0;
+        if (metric === Metric.fuelPerSecond) {
+          // Mirror averageManyFast: use total SCORING duration across all reports
+          const totalDuration = calculateTimeMetric(
+            row.scoutReports as any,
+            "SCORING",
+          ).reduce((a, b) => a + b, 0);
+          const perReportRates = (row.scoutReports as any).map((r: any) => {
+            const totalFuel = (r.events ?? [])
+              .filter((e: any) => e.action === "STOP_SCORING")
+              .reduce((acc: number, cur: any) => acc + (cur.quantity ?? 0), 0);
+            return totalDuration > 0 ? totalFuel / totalDuration : 0;
+          });
+          matchValue = avg(perReportRates);
+        } else {
+          matchValue = matchAggregationFunction!(row.scoutReports as any);
+        }
+
+        // Push timeline entry
+        result[team].timeLine.push({
+          match: row.key,
+          dataPoint: matchValue,
+          tournamentName: row.tournament.name,
         });
+        // Debug logging for climb start metrics
+        if (
+          metric === Metric.autoClimbStartTime ||
+          metric === Metric.l1StartTime ||
+          metric === Metric.l2StartTime ||
+          metric === Metric.l3StartTime
+        ) {
+          try {
+            console.debug("timeline", {
+              team,
+              match: row.key,
+              tnmt,
+              reports: row.scoutReports.length,
+              matchValue,
+            });
+          } catch {}
+        }
+        // Accumulate per tournament
+        perTeamTournamentValues[team][tnmt].push(matchValue);
+      }
 
-        // Weighted average for final result
-        result[team].average = weightedTourAvgLeft(tournamentGroups);
+      // Compute weighted averages per team across tournaments
+      for (const team of teams) {
+        const tournamentAverages: number[] = [];
+        for (const values of Object.values(perTeamTournamentValues[team])) {
+          const valid = values.filter((v) => v !== -1);
+          if (valid.length > 0) tournamentAverages.push(avg(valid));
+        }
+        result[team].average = weightedTourAvgLeft(tournamentAverages);
       }
 
       return result;

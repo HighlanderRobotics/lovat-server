@@ -14,7 +14,7 @@ export const getNotes = createAnalysisHandler({
   },
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ params }) => {
+  createKey: async ({ params }) => {
     return {
       key: ["getNotes", params.team.toString()],
       teamDependencies: [params.team],

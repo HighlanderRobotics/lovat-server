@@ -13,9 +13,10 @@ export type DataSourceRule<T extends number | string> = {
   items: T[];
 };
 
+// Return a Prisma-compatible filter object for scalar fields
 export const dataSourceRuleToPrismaFilter = <T extends number | string>(
   rule: DataSourceRule<T>,
-): ({ in: T[] } | { notIn: T[] } | undefined) => {
+): { in?: T[]; notIn?: T[] } | undefined => {
   if (!rule || rule.items.length === 0) return undefined;
   return rule.mode === "EXCLUDE" ? { notIn: rule.items } : { in: rule.items };
 };

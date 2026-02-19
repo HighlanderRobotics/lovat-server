@@ -12,7 +12,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
   returnSchema,
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args) => {
+  createKey: async (args) => {
     return {
       key: ["robotRole", args.team.toString()],
       teamDependencies: [args.team],
