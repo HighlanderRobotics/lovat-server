@@ -9,6 +9,11 @@ export const deleteScouter = async (
   res: Response,
 ): Promise<void> => {
   try {
+    if (req.tokenType === "apiKey") {
+      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      return;
+    }
+
     const user = req.user;
     const params = z
       .object({

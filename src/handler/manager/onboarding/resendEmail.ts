@@ -10,6 +10,11 @@ export const resendEmail = async (
   res: Response,
 ): Promise<void> => {
   try {
+    if (req.tokenType === "apiKey") {
+      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      return;
+    }
+
     const teamRow = await prismaClient.registeredTeam.findUnique({
       where: {
         number: req.user.teamNumber,
