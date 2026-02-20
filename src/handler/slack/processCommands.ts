@@ -65,26 +65,6 @@ export const processCommand = async (
 
       const messages: string[] = [];
 
-      if (no_leave) {
-        await prismaClient.slackSubscription.upsert({
-          where: {
-            subscriptionId: `${params.channel_id}_L`,
-          },
-          update: {
-            channelId: params.channel_id,
-            workspaceId: params.team_id,
-            subscribedEvent: "AUTO_LEAVE",
-          },
-          create: {
-            subscriptionId: `${params.channel_id}_L`,
-            channelId: params.channel_id,
-            workspaceId: params.team_id,
-            subscribedEvent: "AUTO_LEAVE",
-          },
-        });
-        messages.push("'no-leave'");
-      }
-
       if (breakSub) {
         await prismaClient.slackSubscription.upsert({
           where: {
@@ -148,17 +128,6 @@ export const processCommand = async (
 
       const messages: string[] = [];
 
-      if (no_leave) {
-        await prismaClient.slackSubscription.deleteMany({
-          where: {
-            channelId: params.channel_id,
-            workspaceId: params.team_id,
-            subscribedEvent: "AUTO_LEAVE",
-          },
-        });
-        messages.push("'no-leave'");
-      }
-
       if (breakSub) {
         await prismaClient.slackSubscription.deleteMany({
           where: {
@@ -173,7 +142,9 @@ export const processCommand = async (
       res
         .status(200)
         .send(
-          `Successfully unsubscribed from ${messages.join(" and ")} notifications`,
+          `Successfully unsubscribed from ${messages.join(
+            " and ",
+          )} notifications`,
         );
       return;
     } else {

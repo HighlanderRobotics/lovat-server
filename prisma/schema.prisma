@@ -9,10 +9,11 @@ datasource db {
 
 model Event {
   eventUuid       String      @id @default(uuid())
-  time            Int
+  time            Float
   action          EventAction
   position        Position
   points          Int
+  quantity        Int?
   scoutReportUuid String
   scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
 
@@ -47,22 +48,31 @@ model MutablePicklist {
 }
 
 model ScoutReport {
-  uuid                  String           @id @default(uuid())
+  uuid                  String        @id @default(uuid())
   teamMatchKey          String
   startTime             DateTime
   notes                 String
-  robotRole             RobotRole
-  algaePickup           AlgaePickup
-  coralPickup           CoralPickup
-  bargeResult           BargeResult
-  knocksAlgae           KnocksAlgae
-  underShallowCage      UnderShallowCage
-  robotBrokeDescription String?
+  robotRoles            RobotRole[]
   driverAbility         Int
   scouterUuid           String
+  robotBrokeDescription String?
   events                Event[]
-  scouter               Scouter          @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
-  teamMatchData         TeamMatchData    @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+  scouter               Scouter       @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
+  teamMatchData         TeamMatchData @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
+
+  // year specific fields
+  accuracy             Int
+  beached              Beached
+  climbPosition        ClimbPosition?
+  climbSide            ClimbSide?
+  defenseEffectiveness Int
+  feederTypes          FeederType[]
+  intakeType           IntakeType
+  fieldTraversal       FieldTraversal
+  scoresWhileMoving    Boolean
+  disrupts             Boolean
+  endgameClimb         EndgameClimb
+  autoClimb            AutoClimb
 }
 
 model ScouterScheduleShift {
@@ -84,10 +94,10 @@ model ScouterScheduleShift {
 model Scouter {
   uuid               String                 @id @default(uuid())
   name               String?
-  archived           Boolean                @default(false)
   sourceTeamNumber   Int
   strikes            Int                    @default(0)
   scouterReliability Int                    @default(0)
+  archived           Boolean                @default(false)
   scoutReports       ScoutReport[]
   sourceTeam         RegisteredTeam         @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
   team1Shifts        ScouterScheduleShift[] @relation("Team1")
@@ -101,25 +111,26 @@ model Scouter {
 }
 
 model SharedPicklist {
-  uuid              String @id @default(uuid())
-  name              String
-  totalPoints       Float
-  defense           Float
-  driverAbility     Float
-  autoPoints        Float
-  algaePickups      Float
-  coralPickups      Float
-  barge             Float
-  coralLevel1Scores Float
-  coralLevel2Scores Float
-  coralLevel3Scores Float
-  coralLevel4Scores Float
-  algaeProcessor    Float
-  algaeNet          Float
-  teleopPoints      Float
-  feeds             Float
-  authorId          String
-  author            User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  uuid                        String @id @default(uuid())
+  name                        String
+  totalPoints                 Float
+  autoPoints                  Float
+  teleopPoints                Float
+  authorId                    String
+  autoClimb                   Float
+  campingDefenseTime          Float
+  climbResult                 Float
+  contactDefenseTime          Float
+  driverAbility               Float
+  defenseEffectiveness        Float
+  estimatedSuccessfulFuelRate Float
+  estimatedTotalFuelScored    Float
+  feedingRate                 Float
+  scoringRate                 Float
+  totalDefensiveTime          Float
+  totalFuelFed                Float
+  totalFuelThroughput         Float
+  author                      User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model Team {
@@ -133,6 +144,7 @@ model RegisteredTeam {
   code                  String                 @unique
   email                 String
   emailVerified         Boolean                @default(false)
+  timeCreated           DateTime               @default(now()) // not accurate for teams registered before this field was added
   teamApproved          Boolean                @default(false)
   website               String?
   team                  Team                   @relation(fields: [number], references: [number], onDelete: Cascade)
@@ -157,7 +169,7 @@ model SlackWorkspace {
   botUserId     String
   authUserId    String
   subscriptions SlackSubscription[]
-  team          RegisteredTeam     @relation(fields: [owner], references: [number], onDelete: Cascade)
+  team          RegisteredTeam      @relation(fields: [owner], references: [number], onDelete: Cascade)
 }
 
 model SlackSubscription {
@@ -195,10 +207,8 @@ model User {
   emailVerified        Boolean           @default(false)
   username             String?
   role                 UserRole          @default(ANALYST)
-  tournamentSource     String[] /// @deprecated Use tournamentSourceRule instead
-  teamSource           Int[] /// @deprecated Use teamSourceRule instead
-  tournamentSourceRule Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
   teamSourceRule       Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
+  tournamentSourceRule Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
   ApiKeys              ApiKey[]
   mutablePicklists     MutablePicklist[]
   sharedPicklists      SharedPicklist[]
@@ -223,105 +233,103 @@ model CachedAnalysis {
 }
 
 enum Position {
+  LEFT_TRENCH
+  LEFT_BUMP
+  HUB
+  RIGHT_TRENCH
+  RIGHT_BUMP
+  NEUTRAL_ZONE
+  DEPOT
+  OUTPOST
   NONE
-  START_ONE
-  START_TWO
-  START_THREE
-  START_FOUR
-  LEVEL_ONE
-  LEVEL_TWO
-  LEVEL_THREE
-  LEVEL_FOUR
-  LEVEL_ONE_A
-  LEVEL_ONE_B
-  LEVEL_ONE_C
-  LEVEL_TWO_A
-  LEVEL_TWO_B
-  LEVEL_TWO_C
-  LEVEL_THREE_A
-  LEVEL_THREE_B
-  LEVEL_THREE_C
-  LEVEL_FOUR_A
-  LEVEL_FOUR_B
-  LEVEL_FOUR_C
-  GROUND_PIECE_A
-  GROUND_PIECE_B
-  GROUND_PIECE_C
-  CORAL_STATION_ONE
-  CORAL_STATION_TWO
 }
 
 enum EventAction {
-  PICKUP_CORAL
-  PICKUP_ALGAE
-  FEED
-  AUTO_LEAVE
-  DEFEND
-  SCORE_NET
-  FAIL_NET
-  SCORE_PROCESSOR
-  SCORE_CORAL
-  DROP_ALGAE
-  DROP_CORAL
-  START_POSITION
+  START_SCORING
+  STOP_SCORING
+  START_MATCH
+  START_CAMPING
+  STOP_CAMPING
+  START_DEFENDING
+  STOP_DEFENDING
+  INTAKE
+  OUTTAKE
+  DISRUPT
+  CROSS
+  CLIMB
+  START_FEEDING
+  STOP_FEEDING
 }
 
-enum MatchType {
-  QUALIFICATION
-  ELIMINATION
+enum FieldTraversal {
+  TRENCH
+  BUMP
+  BOTH
+  NONE
+}
+
+enum Beached {
+  ON_FUEL
+  ON_BUMP
+  BOTH
+  NEITHER
+}
+
+enum EndgameClimb {
+  NOT_ATTEMPTED
+  FAILED
+  L1
+  L2
+  L3
+}
+
+enum ClimbPosition {
+  SIDE
+  MIDDLE
+}
+
+enum ClimbSide {
+  FRONT
+  BACK
+}
+
+enum AutoClimb {
+  NOT_ATTEMPTED
+  FAILED
+  SUCCEEDED
+}
+
+enum FeederType {
+  CONTINUOUS
+  STOP_TO_SHOOT
+  DUMP
+}
+
+enum IntakeType {
+  GROUND
+  OUTPOST
+  BOTH
+  NEITHER
 }
 
 enum RobotRole {
-  OFFENSE
-  DEFENSE
-  FEEDER
+  CYCLING
+  SCORING
+  FEEDING
+  DEFENDING
   IMMOBILE
 }
 
-enum AlgaePickup {
-  NONE
-  GROUND
-  REEF
-  BOTH
-}
-
-enum KnocksAlgae {
-  NO
-  YES
-}
-
-enum AutoLeave {
-  NO
-  YES
-}
-
-enum UnderShallowCage {
-  NO
-  YES
-}
-
-enum CoralPickup {
-  NONE
-  GROUND
-  STATION
-  BOTH
-}
-
-enum BargeResult {
-  NOT_ATTEMPTED
-  PARKED
-  SHALLOW
-  FAILED_SHALLOW
-  DEEP
-  FAILED_DEEP
-}
-
 enum WarningType {
-  AUTO_LEAVE
   BREAK
 }
 
 enum UserRole {
   ANALYST
   SCOUTING_LEAD
+}
+
+enum MatchType {
+  QUALIFICATION
+  ELIMINATION
 }

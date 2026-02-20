@@ -6,6 +6,7 @@ import {
 } from "../analysisConstants.js";
 import z from "zod";
 import { runAnalysis } from "../analysisFunction.js";
+import { AutoClimbReverseMap } from "../../manager/managerConstants.js";
 
 const config = {
   argsSchema: z.object({ matchKey: z.string(), scoutReportUuid: z.string() }),
@@ -16,6 +17,7 @@ const config = {
         location: z.number(),
         event: z.number(),
         time: z.number(),
+        quantity: z.number().optional(),
       }),
     ),
     match: z.string(),
@@ -23,7 +25,7 @@ const config = {
   }),
   usesDataSource: false,
   shouldCache: true,
-  createKey: (args: { matchKey: string; scoutReportUuid: string }) => ({
+  createKey: async (args: { matchKey: string; scoutReportUuid: string }) => ({
     key: ["autoPathScouter", args.matchKey, args.scoutReportUuid],
   }),
   calculateAnalysis: async (args: {
@@ -38,6 +40,9 @@ const config = {
         time: {
           lte: autoEnd,
         },
+      },
+      orderBy: {
+        time: "asc",
       },
     });
     const scoutReport = await prismaClient.scoutReport.findUnique({
@@ -59,6 +64,7 @@ const config = {
       location: FlippedPositionMap[event.position],
       event: FlippedActionMap[event.action],
       time: event.time,
+      quantity: event.points,
     }));
 
     return {
@@ -66,6 +72,7 @@ const config = {
       positions: positions,
       match: args.matchKey,
       tournamentName: match.tournament.name,
+      climb: AutoClimbReverseMap[scoutReport.autoClimb],
     };
   },
 } as const;

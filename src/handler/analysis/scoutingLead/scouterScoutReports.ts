@@ -11,7 +11,7 @@ export const scouterScoutReports = createAnalysisHandler({
   },
   usesDataSource: true,
   shouldCache: false,
-  createKey: ({ query }) => ({
+  createKey: async ({ query }) => ({
     key: ["scouterScoutReports", query.scouterUuid, query.tournamentKey || ""],
     teamDependencies: [],
     tournamentDependencies: query.tournamentKey ? [query.tournamentKey] : [],

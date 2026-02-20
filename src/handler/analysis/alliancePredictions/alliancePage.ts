@@ -1,9 +1,6 @@
 import z from "zod";
 import { runAnalysis } from "../analysisFunction.js";
-import {
-  FlippedRoleMap,
-  Metric,
-} from "../analysisConstants.js";
+import { FlippedRoleMap, Metric } from "../analysisConstants.js";
 import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
 import { autoPathsTeam } from "../autoPaths/autoPathsTeam.js";
 import { robotRole } from "../coreAnalysis/robotRole.js";
@@ -42,17 +39,16 @@ const config = {
         ),
       }),
     ),
-    coralL1: z.number(),
-    coralL2: z.number(),
-    coralL3: z.number(),
-    coralL4: z.number(),
-    processor: z.number(),
-    net: z.number(),
+    l1StartTime: z.array(z.number().nullable()),
+    l2StartTime: z.array(z.number().nullable()),
+    l3StartTime: z.array(z.number().nullable()),
+    totalFuelOutputted: z.number(),
+    totalBallThroughput: z.number(),
   }),
   usesDataSource: true,
   shouldCache: true,
 
-  createKey: (args) => {
+  createKey: async (args) => {
     return {
       key: [
         "alliancePage",
@@ -72,17 +68,17 @@ const config = {
 
     const teamOneMainRole =
       FlippedRoleMap[
-        (await robotRole(ctx.user, { team: args.team1 })).mainRole ??
+        (await robotRole(ctx.user, { team: args.team1 })).mainRoles[0] ??
           RobotRole.IMMOBILE
       ];
     const teamTwoMainRole =
       FlippedRoleMap[
-        (await robotRole(ctx.user, { team: args.team2 })).mainRole ??
+        (await robotRole(ctx.user, { team: args.team2 })).mainRoles[0] ??
           RobotRole.IMMOBILE
       ];
     const teamThreeMainRole =
       FlippedRoleMap[
-        (await robotRole(ctx.user, { team: args.team3 })).mainRole ??
+        (await robotRole(ctx.user, { team: args.team3 })).mainRoles[0] ??
           RobotRole.IMMOBILE
       ];
 
@@ -99,12 +95,11 @@ const config = {
     const teamData = await averageManyFast(ctx.user, {
       teams: [args.team1, args.team2, args.team3],
       metrics: [
-        Metric.coralL1,
-        Metric.coralL2,
-        Metric.coralL3,
-        Metric.coralL4,
-        Metric.processorScores,
-        Metric.netScores,
+        Metric.l1StartTime,
+        Metric.l2StartTime,
+        Metric.l3StartTime,
+        Metric.totalFuelOutputted,
+        Metric.totalBallThroughput,
       ],
     });
 
@@ -133,30 +128,29 @@ const config = {
           paths: teamThreeAutoPaths,
         },
       ],
-      coralL1:
-        teamData[Metric.coralL1][args.team1] +
-        teamData[Metric.coralL1][args.team2] +
-        teamData[Metric.coralL1][args.team3],
-      coralL2:
-        teamData[Metric.coralL2][args.team1] +
-        teamData[Metric.coralL2][args.team2] +
-        teamData[Metric.coralL2][args.team3],
-      coralL3:
-        teamData[Metric.coralL3][args.team1] +
-        teamData[Metric.coralL3][args.team2] +
-        teamData[Metric.coralL3][args.team3],
-      coralL4:
-        teamData[Metric.coralL4][args.team1] +
-        teamData[Metric.coralL4][args.team2] +
-        teamData[Metric.coralL4][args.team3],
-      processor:
-        teamData[Metric.processorScores][args.team1] +
-        teamData[Metric.processorScores][args.team2] +
-        teamData[Metric.processorScores][args.team3],
-      net:
-        teamData[Metric.netScores][args.team1] +
-        teamData[Metric.netScores][args.team2] +
-        teamData[Metric.netScores][args.team3],
+      l1StartTime: [
+        teamData[Metric.l1StartTime][args.team1] > 0 ? teamData[Metric.l1StartTime][args.team1] : null,
+        teamData[Metric.l1StartTime][args.team2] > 0 ? teamData[Metric.l1StartTime][args.team2] : null,
+        teamData[Metric.l1StartTime][args.team3] > 0 ? teamData[Metric.l1StartTime][args.team3] : null,
+      ],
+      l2StartTime: [
+        teamData[Metric.l2StartTime][args.team1] > 0 ? teamData[Metric.l2StartTime][args.team1] : null,
+        teamData[Metric.l2StartTime][args.team2] > 0 ? teamData[Metric.l2StartTime][args.team2] : null,
+        teamData[Metric.l2StartTime][args.team3] > 0 ? teamData[Metric.l2StartTime][args.team3] : null,
+      ],
+      l3StartTime: [
+        teamData[Metric.l3StartTime][args.team1] > 0 ? teamData[Metric.l3StartTime][args.team1] : null,
+        teamData[Metric.l3StartTime][args.team2] > 0 ? teamData[Metric.l3StartTime][args.team2] : null,
+        teamData[Metric.l3StartTime][args.team3] > 0 ? teamData[Metric.l3StartTime][args.team3] : null,
+      ],
+      totalFuelOutputted:
+        teamData[Metric.totalFuelOutputted][args.team1] +
+        teamData[Metric.totalFuelOutputted][args.team2] +
+        teamData[Metric.totalFuelOutputted][args.team3],
+      totalBallThroughput:
+        teamData[Metric.totalBallThroughput][args.team1] +
+        teamData[Metric.totalBallThroughput][args.team2] +
+        teamData[Metric.totalBallThroughput][args.team3],
     };
   },
 } as const;

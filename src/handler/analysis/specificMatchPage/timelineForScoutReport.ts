@@ -1,9 +1,6 @@
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import {
-  FlippedActionMap,
-  FlippedPositionMap,
-} from "../analysisConstants.js";
+import { FlippedActionMap, FlippedPositionMap } from "../analysisConstants.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const timelineForScoutReport = createAnalysisHandler({
@@ -14,7 +11,7 @@ export const timelineForScoutReport = createAnalysisHandler({
   },
   usesDataSource: false,
   shouldCache: false,
-  createKey: ({ params }) => {
+  createKey: async ({ params }) => {
     return {
       key: ["timelineForScoutReport", params.uuid],
       teamDependencies: [],
@@ -26,14 +23,24 @@ export const timelineForScoutReport = createAnalysisHandler({
       where: {
         scoutReportUuid: params.uuid,
       },
+      orderBy: { time: "asc" },
     });
     const timelineArray = [];
     for (const element of events) {
-      timelineArray.push([
-        element.time,
-        FlippedActionMap[element.action],
-        FlippedPositionMap[element.position],
-      ]);
+      if (element.points !== 0) {
+        timelineArray.push([
+          element.time,
+          FlippedActionMap[element.action],
+          FlippedPositionMap[element.position],
+          element.points,
+        ]);
+      } else {
+        timelineArray.push([
+          element.time,
+          FlippedActionMap[element.action],
+          FlippedPositionMap[element.position],
+        ]);
+      }
     }
 
     return timelineArray;

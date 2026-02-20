@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 
 export const addScouterDashboard = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const params = z
@@ -23,13 +23,14 @@ export const addScouterDashboard = async (
       res.status(403).send("Not authorized to make a scouter");
       return;
     }
-    await prismaClient.scouter.create({
+
+    const scouter = await prismaClient.scouter.create({
       data: {
         name: params.data.name,
         sourceTeamNumber: req.user.teamNumber,
       },
     });
-    res.status(200).send("Scouter added");
+    res.status(201).send(scouter);
   } catch (error) {
     console.error(error);
     res.status(500).send(error);

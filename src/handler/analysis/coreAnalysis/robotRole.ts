@@ -1,24 +1,18 @@
 import z from "zod";
 import { MetricsBreakdown } from "../analysisConstants.js";
-import {
-  nonEventMetric,
-  NonEventMetricResult,
-} from "./nonEventMetric.js";
-import {
-  runAnalysis,
-  AnalysisFunctionConfig,
-} from "../analysisFunction.js";
+import { nonEventMetric, NonEventMetricResult } from "./nonEventMetric.js";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 import { User } from "@prisma/client";
 
 const argsSchema = z.object({ team: z.number() });
-const returnSchema = z.object({ mainRole: z.string().nullable() });
+const returnSchema = z.object({ mainRoles: z.array(z.string()) });
 
 const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
   argsSchema,
   returnSchema,
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args) => {
+  createKey: async (args) => {
     return {
       key: ["robotRole", args.team.toString()],
       teamDependencies: [args.team],
@@ -46,8 +40,12 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
         }
       }
 
+      const sortedRoles = Object.entries(roles)
+        .sort((a, b) => (b[1] as number) - (a[1] as number))
+        .map(([type]) => type);
+
       return {
-        mainRole: eventTypeWithMostOccurrences,
+        mainRoles: sortedRoles,
       };
     } catch (error) {
       console.error(error);

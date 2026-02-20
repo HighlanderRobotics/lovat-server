@@ -32,4 +32,8 @@ app.use(cookieParser());
 app.use(posthogReporter);
 
 // API entry point
-app.use("/v1", routes);
+app.use("/v1", routes); //theo was here
+
+app.get("/status", (req, res) => {
+  res.status(200).send("Server running");
+});

@@ -1,5 +1,5 @@
 import prismaClient from "../../../prismaClient.js";
-import { EventAction, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import {
   breakdownNeg,
   breakdownPos,
@@ -8,15 +8,12 @@ import {
 } from "../analysisConstants.js";
 
 import z from "zod";
-import {
-  dataSourceRuleToPrismaFilter,
-  dataSourceRuleSchema,
-} from "../dataSourceRule.js";
+import { dataSourceRuleSchema } from "../dataSourceRule.js";
 import { runAnalysis } from "../analysisFunction.js";
 
 /**
- * Optimized function: Returns a mapping of each distinct (lowercased) metric value to its percentage,
- * calculated directly in the database with a single query.
+ * Returns a mapping of each metric value to its percentage.
+ * Array metrics (robotRoles, feederTypes) are expanded via UNNEST.
  */
 const config = {
   argsSchema: z.object({
@@ -26,7 +23,7 @@ const config = {
   returnSchema: z.object({}).catchall(z.number()),
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args) => ({
+  createKey: async (args) => ({
     key: ["nonEventMetric", args.team.toString(), String(args.metric)],
     teamDependencies: [args.team],
     tournamentDependencies: [],
@@ -43,9 +40,6 @@ const config = {
         ctx.user.teamSourceRule,
       );
 
-      const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(tnmRule);
-      const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(teamRule);
-
       const tournamentList = tnmRule.items;
       const teamList = teamRule.items;
 
@@ -59,64 +53,40 @@ const config = {
           ? `sc."sourceTeamNumber" = ANY($2)`
           : `sc."sourceTeamNumber" != ALL($2)`;
 
-      if (args.metric === MetricsBreakdown.leavesAuto) {
-        const numLeaves = await prismaClient.teamMatchData.count({
-          where: {
-            teamNumber: args.team,
-            tournamentKey: sourceTnmtFilter,
-            scoutReports: {
-              some: {
-                AND: {
-                  events: {
-                    some: {
-                      action: EventAction.AUTO_LEAVE,
-                    },
-                  },
-                  scouter: {
-                    sourceTeamNumber: sourceTeamFilter,
-                  },
-                },
-              },
-            },
-          },
-        });
+      const ARRAY_METRICS = new Set<MetricsBreakdown>([
+        MetricsBreakdown.robotRole,
+        MetricsBreakdown.feederType,
+      ]);
 
-        const totalMatches = await prismaClient.teamMatchData.count({
-          where: {
-            teamNumber: args.team,
-            tournamentKey: sourceTnmtFilter,
-            scoutReports: {
-              some: {
-                scouter: {
-                  sourceTeamNumber: sourceTeamFilter,
-                },
-              },
-            },
-          },
-        });
+      const isArrayMetric = ARRAY_METRICS.has(args.metric);
 
-        const perc = numLeaves / totalMatches;
-
-        return {
-          True: perc,
-          False: 1 - perc,
-        };
-      }
-
-      const query = `
-      SELECT s."${args.metric}" AS breakdown,
-        COUNT(s."scouterUuid")::float / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
-      FROM "ScoutReport" s
-      JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
-      JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
-      WHERE tmd."teamNumber" = $3
-        AND ${tournamentCondition}
-        AND ${teamCondition}
-      GROUP BY s."${args.metric}"
-    `;
+      const query = isArrayMetric
+        ? `
+          SELECT value AS breakdown,
+                 COUNT(*)::float / SUM(COUNT(*)) OVER () AS percentage
+          FROM "ScoutReport" s
+          JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
+          JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
+          CROSS JOIN UNNEST(s."${args.metric}") AS value
+          WHERE tmd."teamNumber" = $3
+            AND ${tournamentCondition}
+            AND ${teamCondition}
+          GROUP BY value
+        `
+        : `
+          SELECT s."${args.metric}" AS breakdown,
+                 COUNT(s."scouterUuid")::float / SUM(COUNT(s."scouterUuid")) OVER () AS percentage
+          FROM "ScoutReport" s
+          JOIN "TeamMatchData" tmd ON tmd."key" = s."teamMatchKey"
+          JOIN "Scouter" sc ON sc."uuid" = s."scouterUuid"
+          WHERE tmd."teamNumber" = $3
+            AND ${tournamentCondition}
+            AND ${teamCondition}
+          GROUP BY s."${args.metric}"
+        `;
 
       interface QueryRow {
-        breakdown: string;
+        breakdown: any;
         percentage: string;
       }
 
@@ -131,6 +101,7 @@ const config = {
       for (const possibleRow of breakdownToEnum[args.metric]) {
         result[possibleRow] = 0;
       }
+
       for (const row of data) {
         const option = transformBreakdown(row.breakdown);
         result[option] = parseFloat(row.percentage);
@@ -146,6 +117,7 @@ const config = {
 
 export type NonEventMetricArgs = z.infer<typeof config.argsSchema>;
 export type NonEventMetricResult = z.infer<typeof config.returnSchema>;
+
 export async function nonEventMetric(
   user: User,
   args: NonEventMetricArgs,
@@ -153,12 +125,12 @@ export async function nonEventMetric(
   return runAnalysis(config, user, args);
 }
 
-// Edit to work with true/false breakdowns
-export const transformBreakdown = (input: string): string => {
+// Handles boolean + passthrough enum values
+export const transformBreakdown = (input: any): string => {
   switch (input) {
-    case "YES":
+    case true:
       return breakdownPos;
-    case "NO":
+    case false:
       return breakdownNeg;
     default:
       return input;

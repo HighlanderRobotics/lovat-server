@@ -14,7 +14,7 @@ export const getNotes = createAnalysisHandler({
   },
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ params }) => {
+  createKey: async ({ params }) => {
     return {
       key: ["getNotes", params.team.toString()],
       teamDependencies: [params.team],
@@ -44,8 +44,9 @@ export const getNotes = createAnalysisHandler({
 
     let notesAndMatches: {
       notes: string;
+      robotBrokeDescription?: string;
       match: string;
-      tounramentName: string; // Typo for backwards compatibility
+      tournamentName: string;
       sourceTeam: number;
       scouterName?: string;
     }[];
@@ -72,6 +73,7 @@ export const getNotes = createAnalysisHandler({
       },
       select: {
         notes: true,
+        robotBrokeDescription: true,
         teamMatchKey: true,
         teamMatchData: {
           select: {
@@ -100,7 +102,8 @@ export const getNotes = createAnalysisHandler({
       notesAndMatches = noteData.map((report) => ({
         notes: report.notes,
         match: report.teamMatchKey,
-        tounramentName: report.teamMatchData.tournament.name,
+        robotBrokeDescription: report.robotBrokeDescription,
+        tournamentName: report.teamMatchData.tournament.name,
         sourceTeam: report.scouter.sourceTeamNumber,
         scouterName:
           report.scouter.sourceTeamNumber === ctx.user.teamNumber
@@ -111,7 +114,8 @@ export const getNotes = createAnalysisHandler({
       notesAndMatches = noteData.map((report) => ({
         notes: report.notes,
         match: report.teamMatchKey,
-        tounramentName: report.teamMatchData.tournament.name,
+        robotBrokeDescription: report.robotBrokeDescription,
+        tournamentName: report.teamMatchData.tournament.name,
         sourceTeam: report.scouter.sourceTeamNumber,
       }));
     }

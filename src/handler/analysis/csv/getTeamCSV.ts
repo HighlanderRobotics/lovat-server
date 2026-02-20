@@ -7,54 +7,60 @@ import {
   RobotRole,
   EventAction,
   Position,
-  AlgaePickup,
-  CoralPickup,
-  BargeResult,
-  KnocksAlgae,
-  UnderShallowCage,
   Event,
+  AutoClimb,
+  FieldTraversal,
+  EndgameClimb,
+  Beached,
+  ClimbPosition,
+  ClimbSide,
+  FeederType,
+  IntakeType,
+  Scouter,
+  TeamMatchData,
 } from "@prisma/client";
-import {
-  autoEnd,
-  endgameToPoints,
-} from "../analysisConstants.js";
+import { autoEnd, endgameToPoints, Metric } from "../analysisConstants.js";
 import { z } from "zod";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
+import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
 
 interface AggregatedTeamData {
   teamNumber: number;
   mainRole: string;
   secondaryRole: string;
-  coralPickup: string;
-  algaePickup: string;
-  algaeKnocking: boolean;
-  underShallowCage: boolean;
-  avgTeleopPoints: number;
+  fieldTraversal: string;
+  avgTotalPoints: number;
   avgAutoPoints: number;
+  avgTeleopPoints: number;
+  avgFuelPerSecond: number;
+  avgAccuracy: number;
+  avgVolleysPerMatch: number;
+  avgL1StartTime: number;
+  avgL2StartTime: number;
+  avgL3StartTime: number;
+  avgAutoClimbStartTime: number;
   avgDriverAbility: number;
-  avgFeeds: number;
-  avgDefends: number;
-  avgCoralPickups: number;
-  avgAlgaePickups: number;
-  avgCoralDrops: number;
-  avgAlgaeDrops: number;
-  avgCoralL1: number;
-  avgCoralL2: number;
-  avgCoralL3: number;
-  avgCoralL4: number;
-  avgProcessorScores: number;
-  avgNetScores: number;
-  avgNetFails: number;
-  // avgOffensePoints: number - idea to calculate avgPoints only during offense matches, breaks down with conflicting role reports
-  percActiveAutons: number;
-  percBargeNone: number;
-  percBargePark: number;
-  percBargeShallow: number;
-  percBargeDeep: number;
-  percBargeFail: number;
+  avgContactDefenseTime: number;
+  avgDefenseEffectiveness: number;
+  avgCampingDefenseTime: number;
+  avgTotalDefenseTime: number;
+  avgTimeFeeding: number;
+  avgFeedingRate: number;
+  avgFeedsPerMatch: number;
+  avgTotalFuelOutputted: number;
+  avgTotalBallsFed: number;
+  avgTotalBallThroughput: number;
+  avgOutpostIntakes: number;
+  percDisrupts: number;
+  percScoresWhileMoving: number;
+  percClimbOne: number;
+  percClimbTwo: number;
+  percClimbThree: number;
+  percNoClimb: number;
+  percAutoClimb: number;
   matchesImmobile: number;
   numMatches: number;
   numReports: number;
@@ -62,18 +68,25 @@ interface AggregatedTeamData {
 
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
-  robotRole: RobotRole;
-  algaePickup: AlgaePickup;
-  coralPickup: CoralPickup;
-  bargeResult: BargeResult;
-  knocksAlgae: KnocksAlgae;
-  underShallowCage: UnderShallowCage;
+  uuid: string;
+  robotRoles: RobotRole[];
+  autoClimb: AutoClimb;
+  endgameClimb: EndgameClimb;
+  fieldTraversal: FieldTraversal;
+  beached: Beached;
+  climbSide: ClimbSide;
+  climbPosition: ClimbPosition;
+  scoresWhileMoving: boolean;
+  disrupts: boolean;
+  feederTypes: FeederType[];
+  intakeType: IntakeType;
   driverAbility: number;
+  accuracy: number;
+  defenseEffectiveness: number;
   events: Partial<Event>[];
   // This property represents the weighting of this report in the final aggregation [0..1]
   weight: number;
 }
-
 /**
  * Sends csv file of rows of AggregatedTeamData instances, representing a single team over all reports.
  * Uses data from queried tournament and user's teamSource. Available to Scouting Leads.
@@ -84,11 +97,6 @@ export const getTeamCSV = async (
   res: Response,
 ): Promise<void> => {
   try {
-    if (req.user.role !== UserRole.SCOUTING_LEAD) {
-      res.status(403).send("Not authorized to download scouting data");
-      return;
-    }
-
     // Data will only be sourced from a tournament as sent with the request
     const params = z
       .object({
@@ -112,7 +120,8 @@ export const getTeamCSV = async (
     const includeTeleop = teleop || !(auto || teleop);
 
     // Time filter for event counting
-    let eventTimeFilter: { time: { lte?: number; gt?: number } } = undefined;
+    let eventTimeFilter: { time: { lte?: number; gt?: number } } | undefined =
+      undefined;
     if (includeAuto && !includeTeleop) {
       eventTimeFilter = {
         time: {
@@ -135,21 +144,30 @@ export const getTeamCSV = async (
       select: {
         teamNumber: true,
         scoutReports: {
-          where: {
-            scouter: {
-              sourceTeamNumber: dataSourceRuleToPrismaFilter(
-                dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
-              ),
-            },
-          },
+          where: (() => {
+            const parsed = dataSourceRuleSchema(z.number()).safeParse(
+              req.user?.teamSourceRule,
+            );
+            if (!parsed.success) return {};
+            const filter = dataSourceRuleToPrismaFilter(parsed.data);
+            return filter ? { scouter: { sourceTeamNumber: filter } } : {};
+          })(),
           select: {
-            robotRole: true,
-            algaePickup: true,
-            coralPickup: true,
-            bargeResult: true,
-            knocksAlgae: true,
-            underShallowCage: true,
+            uuid: true,
+            robotRoles: true,
+            accuracy: true,
+            endgameClimb: true,
+            autoClimb: true,
+            fieldTraversal: true,
             driverAbility: true,
+            defenseEffectiveness: true,
+            beached: true,
+            climbSide: true,
+            climbPosition: true,
+            scoresWhileMoving: true,
+            disrupts: true,
+            feederTypes: true,
+            intakeType: true,
             events: {
               where: eventTimeFilter,
               select: {
@@ -193,25 +211,58 @@ export const getTeamCSV = async (
       return acc;
     }, []);
 
+    // Compute metrics using averageManyFast for all teams
+    const teams = groupedByTeam
+      .map((_, teamNum) => teamNum)
+      .filter((t) => groupedByTeam[t]?.reports?.length);
+    const metrics: Metric[] = [
+      Metric.totalPoints,
+      Metric.autoPoints,
+      Metric.teleopPoints,
+      Metric.driverAbility,
+      Metric.accuracy,
+      Metric.defenseEffectiveness,
+      Metric.fuelPerSecond,
+      Metric.volleysPerMatch,
+      Metric.l1StartTime,
+      Metric.l2StartTime,
+      Metric.l3StartTime,
+      Metric.autoClimbStartTime,
+      Metric.contactDefenseTime,
+      Metric.campingDefenseTime,
+      Metric.totalDefenseTime,
+      Metric.timeFeeding,
+      Metric.feedingRate,
+      Metric.feedsPerMatch,
+      Metric.totalFuelOutputted,
+      Metric.totalBallsFed,
+      Metric.totalBallThroughput,
+      Metric.outpostIntakes,
+    ];
+
+    const fast = (await averageManyFast(req.user, {
+      teams,
+      metrics,
+    })) as Record<string, Record<string, number>>;
+
     // Aggregate point values
-    const aggregatedData: AggregatedTeamData[] = [];
-    groupedByTeam.forEach((group, teamNum) => {
-      aggregatedData.push(
-        aggregateTeamReports(
+    const aggregatedData: AggregatedTeamData[] = await Promise.all(
+      teams.map((teamNum) => {
+        const group = groupedByTeam[teamNum];
+        return aggregateTeamReports(
           teamNum,
           group.numMatches,
           group.reports,
           includeAuto,
           includeTeleop,
-        ),
-      );
-    });
-
-    // Create and send the csv string through express
+          fast,
+        );
+      }),
+    );
     const csvString = stringify(aggregatedData, {
       header: true,
       // Creates column headers from data properties
-      columns: Object.keys(aggregatedData[0]),
+      columns: aggregatedData.length ? Object.keys(aggregatedData[0]) : [],
       // Required for excel viewing
       bom: true,
       // Rename boolean values to TRUE and FALSE
@@ -232,199 +283,147 @@ export const getTeamCSV = async (
   }
 };
 
-// Less verbose and don't want to create new arrays constantly
-const posL1: Position[] = [
-  Position.LEVEL_ONE_A,
-  Position.LEVEL_ONE_B,
-  Position.LEVEL_ONE_C,
-];
-const posL2: Position[] = [
-  Position.LEVEL_TWO_A,
-  Position.LEVEL_TWO_B,
-  Position.LEVEL_TWO_C,
-];
-const posL3: Position[] = [
-  Position.LEVEL_THREE_A,
-  Position.LEVEL_THREE_B,
-  Position.LEVEL_THREE_C,
-];
-
-function aggregateTeamReports(
+async function aggregateTeamReports(
   teamNum: number,
   numMatches: number,
   reports: PointsReport[],
   includeAuto: boolean,
   includeTeleop: boolean,
-): AggregatedTeamData {
+  fast: Record<string, Record<string, number>>,
+): Promise<AggregatedTeamData> {
   const data: AggregatedTeamData = {
     teamNumber: teamNum,
     mainRole: null,
     secondaryRole: null,
-    coralPickup: null,
-    algaePickup: null,
-    algaeKnocking: false,
-    underShallowCage: false,
-    avgTeleopPoints: 0,
+    fieldTraversal: null,
+    avgTotalPoints: 0,
     avgAutoPoints: 0,
+    avgTeleopPoints: 0,
+    avgFuelPerSecond: 0,
+    avgAccuracy: 0,
+    avgVolleysPerMatch: 0,
+    avgL1StartTime: 0,
+    avgL2StartTime: 0,
+    avgL3StartTime: 0,
+    avgAutoClimbStartTime: 0,
     avgDriverAbility: 0,
-    avgFeeds: 0,
-    avgDefends: 0,
-    avgCoralPickups: 0,
-    avgAlgaePickups: 0,
-    avgCoralDrops: 0,
-    avgAlgaeDrops: 0,
-    avgCoralL1: 0,
-    avgCoralL2: 0,
-    avgCoralL3: 0,
-    avgCoralL4: 0,
-    avgProcessorScores: 0,
-    avgNetScores: 0,
-    avgNetFails: 0,
-    percActiveAutons: 0,
-    percBargeNone: 0,
-    percBargePark: 0,
-    percBargeShallow: 0,
-    percBargeDeep: 0,
-    percBargeFail: 0,
+    avgContactDefenseTime: 0,
+    avgDefenseEffectiveness: 0,
+    avgCampingDefenseTime: 0,
+    avgTotalDefenseTime: 0,
+    avgTimeFeeding: 0,
+    avgFeedingRate: 0,
+    avgFeedsPerMatch: 0,
+    avgTotalFuelOutputted: 0,
+    avgTotalBallsFed: 0,
+    avgTotalBallThroughput: 0,
+    avgOutpostIntakes: 0,
+    percDisrupts: 0,
+    percScoresWhileMoving: 0,
+    percClimbOne: 0,
+    percClimbTwo: 0,
+    percClimbThree: 0,
+    percNoClimb: 0,
+    percAutoClimb: 0,
     matchesImmobile: 0,
-    numMatches: numMatches,
-    numReports: reports.length,
+    numMatches: 0,
+    numReports: 0,
   };
 
   // Out of scope iteration variables
   const roles: Record<RobotRole, number> = {
-    OFFENSE: 0,
-    DEFENSE: 0,
-    FEEDER: 0,
+    FEEDING: 0,
+    SCORING: 0,
+    DEFENDING: 0,
+    CYCLING: 0,
     IMMOBILE: 0,
   };
-  let coral: CoralPickup = CoralPickup.NONE;
-  let algae: AlgaePickup = AlgaePickup.NONE;
 
-  // Main iteration for most aggregation summing
+  // Main iteration for most aggregation summing (roles, fieldTraversal, perc flags)
   reports.forEach((report) => {
-    // Sum driver ability and robot role
-    data.avgDriverAbility += report.driverAbility * report.weight;
-    roles[report.robotRole] += report.weight;
-
-    // Set discrete robot capabilities
-    // Implement a safety for this? One incorrect report could mess up the data
-    data.algaeKnocking ||= report.knocksAlgae === KnocksAlgae.YES;
-    data.underShallowCage ||= report.underShallowCage === UnderShallowCage.YES;
-    if (coral === CoralPickup.NONE) {
-      coral = report.coralPickup;
-    } else if (
-      coral !== report.coralPickup &&
-      report.coralPickup !== CoralPickup.NONE
-    ) {
-      coral === CoralPickup.BOTH;
-    }
-    if (algae === AlgaePickup.NONE) {
-      algae = report.algaePickup;
-    } else if (
-      algae !== report.algaePickup &&
-      report.algaePickup !== AlgaePickup.NONE
-    ) {
-      algae === AlgaePickup.BOTH;
+    for (const role of report.robotRoles || []) {
+      roles[role] += report.weight / (report.robotRoles.length || 1);
     }
 
-    // Sum endgame results
-    switch (report.bargeResult) {
-      case BargeResult.NOT_ATTEMPTED:
-        data.percBargeNone += report.weight;
+    switch (report.fieldTraversal) {
+      case FieldTraversal.TRENCH:
+        data.fieldTraversal =
+          data.fieldTraversal === FieldTraversal.BUMP
+            ? FieldTraversal.BOTH
+            : FieldTraversal.TRENCH;
         break;
-      case BargeResult.PARKED:
-        data.percBargePark += report.weight;
+      case FieldTraversal.BUMP:
+        data.fieldTraversal =
+          data.fieldTraversal === FieldTraversal.TRENCH
+            ? FieldTraversal.BOTH
+            : FieldTraversal.BUMP;
         break;
-      case BargeResult.SHALLOW:
-        data.percBargeShallow += report.weight;
-        break;
-      case BargeResult.DEEP:
-        data.percBargeDeep += report.weight;
-        break;
-      default:
-        data.percBargeFail += report.weight;
+      case FieldTraversal.BOTH:
+        data.fieldTraversal = FieldTraversal.BOTH;
         break;
     }
 
-    // Sum match points and actions
-    report.events.forEach((event) => {
-      if (event.time <= autoEnd) {
-        data.avgAutoPoints += event.points * report.weight;
-      } else {
-        data.avgTeleopPoints += event.points * report.weight;
-      }
+    data.percDisrupts += report.disrupts ? report.weight : 0;
+    data.percScoresWhileMoving += report.scoresWhileMoving ? report.weight : 0;
 
-      switch (event.action) {
-        case EventAction.PICKUP_CORAL:
-          data.avgCoralPickups += report.weight;
-          break;
-        case EventAction.PICKUP_ALGAE:
-          data.avgAlgaePickups += report.weight;
-          break;
-        case EventAction.FEED:
-          data.avgFeeds += report.weight;
-          break;
-        case EventAction.AUTO_LEAVE:
-          data.percActiveAutons += report.weight;
-          break;
-        case EventAction.DEFEND:
-          data.avgDefends += report.weight;
-          break;
-        case EventAction.SCORE_NET:
-          data.avgNetScores += report.weight;
-          break;
-        case EventAction.FAIL_NET:
-          data.avgNetFails += report.weight;
-          break;
-        case EventAction.SCORE_PROCESSOR:
-          data.avgProcessorScores += report.weight;
-          break;
-        case EventAction.SCORE_CORAL:
-          switch (event.position) {
-            case Position.LEVEL_ONE:
-              data.avgCoralL1 += report.weight;
-              break;
-            case Position.LEVEL_TWO:
-              data.avgCoralL2 += report.weight;
-              break;
-            case Position.LEVEL_THREE:
-              data.avgCoralL3 += report.weight;
-              break;
-            case Position.LEVEL_FOUR:
-              data.avgCoralL4 += report.weight;
-              break;
-            default:
-              // During auto
-              if (posL1.includes(event.position)) {
-                data.avgCoralL1 += report.weight;
-              } else if (posL2.includes(event.position)) {
-                data.avgCoralL2 += report.weight;
-              } else if (posL3.includes(event.position)) {
-                data.avgCoralL3 += report.weight;
-              } else {
-                data.avgCoralL4 += report.weight;
-              }
-              break;
-          }
-          break;
-        case EventAction.DROP_ALGAE:
-          data.avgAlgaeDrops += report.weight;
-          break;
-        case EventAction.DROP_CORAL:
-          data.avgCoralDrops += report.weight;
-          break;
-      }
+    switch (report.endgameClimb) {
+      case EndgameClimb.L1:
+        data.percClimbOne += report.weight;
+        break;
+      case EndgameClimb.L2:
+        data.percClimbTwo += report.weight;
+        break;
+      case EndgameClimb.L3:
+        data.percClimbThree += report.weight;
+        break;
+      case EndgameClimb.NOT_ATTEMPTED:
+        data.percNoClimb += report.weight;
+        break;
+    }
 
-      // FIX: This will only work if all reports for a match mark robot role as offense
-      // if (report.robotRole === RobotRole.OFFENSE) {
-      //     data.avgOffensePoints += event.points * report.weight;
-      // }
-    });
+    data.percAutoClimb +=
+      report.autoClimb === AutoClimb.SUCCEEDED ? report.weight : 0;
   });
 
-  data.coralPickup = coral;
-  data.algaePickup = algae;
+  // Populate averages from averageManyFast for this team
+  const t = String(teamNum);
+  const getMetric = (m: Metric) => fast?.[String(m)]?.[t] ?? 0;
+  data.avgTotalPoints = roundToHundredth(getMetric(Metric.totalPoints));
+  data.avgAutoPoints = roundToHundredth(getMetric(Metric.autoPoints));
+  data.avgTeleopPoints = roundToHundredth(getMetric(Metric.teleopPoints));
+  data.avgDriverAbility = roundToHundredth(getMetric(Metric.driverAbility));
+  data.avgAccuracy = roundToHundredth(getMetric(Metric.accuracy));
+  data.avgDefenseEffectiveness = roundToHundredth(
+    getMetric(Metric.defenseEffectiveness),
+  );
+  data.avgFuelPerSecond = roundToHundredth(getMetric(Metric.fuelPerSecond));
+  data.avgVolleysPerMatch = roundToHundredth(getMetric(Metric.volleysPerMatch));
+  data.avgL1StartTime = roundToHundredth(getMetric(Metric.l1StartTime));
+  data.avgL2StartTime = roundToHundredth(getMetric(Metric.l2StartTime));
+  data.avgL3StartTime = roundToHundredth(getMetric(Metric.l3StartTime));
+  data.avgAutoClimbStartTime = roundToHundredth(
+    getMetric(Metric.autoClimbStartTime),
+  );
+  data.avgContactDefenseTime = roundToHundredth(
+    getMetric(Metric.contactDefenseTime),
+  );
+  data.avgCampingDefenseTime = roundToHundredth(
+    getMetric(Metric.campingDefenseTime),
+  );
+  data.avgTotalDefenseTime = roundToHundredth(
+    getMetric(Metric.totalDefenseTime),
+  );
+  data.avgTimeFeeding = roundToHundredth(getMetric(Metric.timeFeeding));
+  data.avgFeedingRate = roundToHundredth(getMetric(Metric.feedingRate));
+  data.avgFeedsPerMatch = roundToHundredth(getMetric(Metric.feedsPerMatch));
+  data.avgTotalFuelOutputted = roundToHundredth(
+    getMetric(Metric.totalFuelOutputted),
+  );
+  data.avgTotalBallsFed = roundToHundredth(getMetric(Metric.totalBallsFed));
+  data.avgTotalBallThroughput = roundToHundredth(
+    getMetric(Metric.totalBallThroughput),
+  );
+  data.avgOutpostIntakes = roundToHundredth(getMetric(Metric.outpostIntakes));
 
   data.matchesImmobile = roles.IMMOBILE || 0;
   // Remove IMMOBILE state from main roles
@@ -438,15 +437,15 @@ function aggregateTeamReports(
         if (role[1] >= highestOccurences[0]) {
           // Push main role to secondary
           highestOccurences[1] = highestOccurences[0];
-          data.secondaryRole = data.mainRole;
+          data.secondaryRole = data.mainRole as RobotRole | "NONE" | null;
 
           // Push new role to main
           highestOccurences[0] = role[1];
-          data.mainRole = role[0];
+          data.mainRole = role[0] as RobotRole;
         } else {
           // Push new role to secondary
           highestOccurences[1] = role[1];
-          data.secondaryRole = role[0];
+          data.secondaryRole = role[0] as RobotRole;
         }
       }
 
@@ -466,48 +465,35 @@ function aggregateTeamReports(
   // Divide relevent sums by number of matches to get mean
   // Don't divide by 0
   numMatches ||= 1;
+  // Populate counters in output
+  data.numMatches = numMatches;
+  data.numReports = reports.length;
 
-  data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints / numMatches);
-  data.avgAutoPoints = roundToHundredth(data.avgAutoPoints / numMatches);
-  data.avgDriverAbility = roundToHundredth(data.avgDriverAbility / numMatches);
-  data.avgFeeds = roundToHundredth(data.avgFeeds / numMatches);
-  data.avgDefends = roundToHundredth(data.avgDefends / numMatches);
-  data.avgCoralPickups = roundToHundredth(data.avgCoralPickups / numMatches);
-  data.avgAlgaePickups = roundToHundredth(data.avgAlgaePickups / numMatches);
-  data.avgCoralDrops = roundToHundredth(data.avgCoralDrops / numMatches);
-  data.avgAlgaeDrops = roundToHundredth(data.avgAlgaeDrops / numMatches);
-  data.avgCoralL1 = roundToHundredth(data.avgCoralL1 / numMatches);
-  data.avgCoralL2 = roundToHundredth(data.avgCoralL2 / numMatches);
-  data.avgCoralL3 = roundToHundredth(data.avgCoralL3 / numMatches);
-  data.avgCoralL4 = roundToHundredth(data.avgCoralL4 / numMatches);
-  data.avgProcessorScores = roundToHundredth(
-    data.avgProcessorScores / numMatches,
-  );
-  data.avgNetScores = roundToHundredth(data.avgNetScores / numMatches);
-  data.avgNetFails = roundToHundredth(data.avgNetFails / numMatches);
-  // data.avgOffensePoints = roundToHundredth(data.avgOffensePoints / numMatches);
-
-  data.percActiveAutons =
-    Math.round((data.percActiveAutons / numMatches) * 1000) / 10;
-  data.percBargeNone =
-    Math.round((data.percBargeNone / numMatches) * 1000) / 10;
-  data.percBargePark =
-    Math.round((data.percBargePark / numMatches) * 1000) / 10;
-  data.percBargeShallow =
-    Math.round((data.percBargeShallow / numMatches) * 1000) / 10;
-  data.percBargeDeep =
-    Math.round((data.percBargeDeep / numMatches) * 1000) / 10;
-  data.percBargeFail =
-    Math.round((data.percBargeFail / numMatches) * 1000) / 10;
-
-  // Add endgame points to total points
+  // Do not divide fast-derived per-match averages again
+  // avgTotalPoints already populated from fast and includes endgame
+  // Adjust teleop points to include endgame climb points if both phases are included
   if (includeTeleop && includeAuto) {
     data.avgTeleopPoints +=
-      (data.percBargePark * endgameToPoints[BargeResult.PARKED] +
-        data.percBargeShallow * endgameToPoints[BargeResult.SHALLOW] +
-        data.percBargeDeep * endgameToPoints[BargeResult.DEEP]) /
+      (data.percClimbOne * endgameToPoints[EndgameClimb.L1] +
+        data.percClimbTwo * endgameToPoints[EndgameClimb.L2] +
+        data.percClimbThree * endgameToPoints[EndgameClimb.L3]) /
       100;
   }
+
+  // Convert climb counts to percentages
+  data.percDisrupts = roundToHundredth((data.percDisrupts / numMatches) * 100);
+  data.percScoresWhileMoving = roundToHundredth(
+    (data.percScoresWhileMoving / numMatches) * 100,
+  );
+  data.percClimbOne = roundToHundredth((data.percClimbOne / numMatches) * 100);
+  data.percClimbTwo = roundToHundredth((data.percClimbTwo / numMatches) * 100);
+  data.percClimbThree = roundToHundredth(
+    (data.percClimbThree / numMatches) * 100,
+  );
+  data.percAutoClimb = roundToHundredth(
+    (data.percAutoClimb / numMatches) * 100,
+  );
+  data.percNoClimb = roundToHundredth((data.percNoClimb / numMatches) * 100);
 
   // Trim remaining datapoints
   data.avgTeleopPoints = roundToHundredth(data.avgTeleopPoints);

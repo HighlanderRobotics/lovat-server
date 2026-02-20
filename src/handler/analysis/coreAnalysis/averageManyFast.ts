@@ -7,26 +7,42 @@ import {
   swrConstant,
   ttlConstant,
   allTournaments,
+  accuracyToPercentage,
 } from "../analysisConstants.js";
-import { BargeResult, Position, Prisma } from "@prisma/client";
-import { endgameRuleOfSuccession } from "../picklist/endgamePicklistTeamFast.js";
-import { Event } from "@prisma/client";
+import { EndgameClimb, AutoClimb, Prisma, Event, $Enums } from "@prisma/client";
 import { weightedTourAvgLeft } from "./arrayAndAverageTeams.js";
 import z from "zod";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
-import {
-  runAnalysis,
-  AnalysisFunctionConfig,
-} from "../analysisFunction.js";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 import { User } from "@prisma/client";
+import { ca } from "zod/locales";
 
 export interface ArrayFilter<T> {
   notIn?: T[];
   in?: T[];
 }
+/* ----------------------- helpers ----------------------- */
+export function avg(values: number[]): number {
+  return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+}
+
+function avgNonNull(values: (number | null)[]): number {
+  const v = values.filter((x): x is number => x !== null);
+  return avg(v);
+}
+
+function firstEventTime(
+  events: Event[],
+  predicate: (e: Event) => boolean,
+): number | null {
+  const evt = events.filter(predicate).sort((a, b) => a.time - b.time)[0];
+  if (!evt) return null;
+  return evt.time;
+}
+/* ------------------------------------------------------- */
 
 const argsSchema = z.object({
   teams: z.array(z.number()),
@@ -38,241 +54,273 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
   returnSchema: z.record(z.string(), z.record(z.string(), z.number())),
   usesDataSource: true,
   shouldCache: true,
-  createKey: (args) => {
-    return {
-      key: [
-        "averageManyFast",
-        JSON.stringify(args.teams.sort((a, b) => a - b)),
-        JSON.stringify(args.metrics.map(String).sort()),
-      ],
-      teamDependencies: args.teams,
-      tournamentDependencies: [],
-    };
-  },
-  calculateAnalysis: async (
-    args: z.infer<typeof argsSchema>,
-    ctx: { user: User },
-  ) => {
-    const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
+
+  createKey: (args) => ({
+    key: [
+      "averageManyFast",
+      JSON.stringify(args.teams.sort((a, b) => a - b)),
+      JSON.stringify(args.metrics.map(String).sort()),
+    ],
+    teamDependencies: args.teams,
+    tournamentDependencies: [],
+  }),
+
+  calculateAnalysis: async (args, ctx) => {
+    const tnmtFilter = dataSourceRuleToPrismaFilter<string>(
       dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
     );
-    const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
+
+    const teamFilter = dataSourceRuleToPrismaFilter<number>(
       dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
     );
 
-    const tmdFilter: Prisma.TeamMatchDataWhereInput = {
+    const tmdWhere: Prisma.TeamMatchDataWhereInput = {
       teamNumber: { in: args.teams },
+      ...(tnmtFilter && { tournamentKey: tnmtFilter }),
     };
-    if (sourceTnmtFilter) {
-      tmdFilter.tournamentKey = sourceTnmtFilter;
-    }
-    const srFilter: Prisma.ScoutReportWhereInput = {};
-    if (sourceTeamFilter) {
-      srFilter.scouter = {
-        sourceTeamNumber: sourceTeamFilter,
-      };
-    }
+
+    const srWhere: Prisma.ScoutReportWhereInput = teamFilter
+      ? { scouter: { sourceTeamNumber: teamFilter } }
+      : {};
 
     const tmd = await prismaClient.teamMatchData.findMany({
       cacheStrategy: { swr: swrConstant, ttl: ttlConstant },
-      where: tmdFilter,
+      where: tmdWhere,
       select: {
-        tournamentKey: true,
         teamNumber: true,
+        tournamentKey: true,
         scoutReports: {
-          where: srFilter,
+          where: srWhere,
           select: {
-            events: {
-              select: {
-                action: true,
-                position: true,
-                points: true,
-                time: true,
-              },
-            },
+            events: true,
             driverAbility: true,
-            bargeResult: true,
+            endgameClimb: true,
+            autoClimb: true,
+            accuracy: true,
+            defenseEffectiveness: true,
           },
         },
       },
     });
 
-    interface GroupedData {
-      tournamentData: {
-        srEvents: Partial<Event>[][];
-        driverAbility: number[];
-        endgamePoints: number[];
-      }[];
-      endgame: {
-        resultCount: Partial<Record<BargeResult, number>>;
-        totalAttempts: number;
-      };
-    }
-
-    const rawDataGrouped = new Array<GroupedData>();
-    for (const team of args.teams) {
-      rawDataGrouped[team] ||= {
-        tournamentData: [],
-        endgame: { resultCount: {}, totalAttempts: 0 },
-      };
-    }
-
-    const tournamentIndexMap = await allTournaments;
-    tmd.forEach((val) => {
-      const currRow = rawDataGrouped[val.teamNumber];
-      const ti = tournamentIndexMap.indexOf(val.tournamentKey);
-
-      if (val.scoutReports.length === 0) {
-        return;
-      }
-
-      currRow.tournamentData[ti] ||= {
-        srEvents: [],
-        driverAbility: [],
-        endgamePoints: [],
-      };
-
-      for (const sr of val.scoutReports) {
-        const currRowTournament = currRow.tournamentData[ti];
-        currRowTournament.srEvents.push(sr.events);
-        currRowTournament.driverAbility.push(sr.driverAbility);
-        currRowTournament.endgamePoints.push(endgameToPoints[sr.bargeResult]);
-
-        if (
-          args.metrics.includes(Metric.bargePoints) &&
-          sr.bargeResult !== BargeResult.NOT_ATTEMPTED
-        ) {
-          currRow.endgame.totalAttempts++;
-          currRow.endgame.resultCount[sr.bargeResult] ||= 0;
-          currRow.endgame.resultCount[sr.bargeResult]++;
-        }
-      }
-    });
-
-    const teleopPoints: number[][] = [];
-    const autoPoints: number[][] = [];
-
+    const tournamentIndex = await allTournaments;
     const finalResults: Record<string, Record<string, number>> = {};
+
     for (const metric of args.metrics) {
-      let resultsByTournament: number[][] = [];
+      const resultsByTeam: Record<number, number[]> = {};
+      for (const team of args.teams) resultsByTeam[team] = [];
 
-      if (metric === Metric.bargePoints) {
-        finalResults[String(metric)] = {};
-        for (const team of args.teams) {
-          finalResults[String(metric)][String(team)] = endgameRuleOfSuccession(
-            rawDataGrouped[team].endgame.resultCount,
-            rawDataGrouped[team].endgame.totalAttempts,
-          );
-        }
-        continue;
-      } else if (metric === Metric.driverAbility) {
-        for (const team of args.teams) {
-          resultsByTournament[team] = [];
-          rawDataGrouped[team].tournamentData.forEach((tournament) => {
-            resultsByTournament[team].push(avgOrZero(tournament.driverAbility));
-          });
-        }
-      } else if (
-        metric === Metric.totalPoints ||
-        metric === Metric.teleopPoints ||
-        metric === Metric.autoPoints
-      ) {
-        if (
-          teleopPoints.length === 0 &&
-          (metric === Metric.totalPoints || metric === Metric.teleopPoints)
-        ) {
-          for (const team of args.teams) {
-            teleopPoints[team] = [];
-            rawDataGrouped[team].tournamentData.forEach((tournament) => {
-              const timedEvents = tournament.srEvents.map((val) =>
-                val.filter((e) => e.time > autoEnd),
-              );
-              const pointSumsByReport = timedEvents.map((e) =>
-                e.reduce((acc, cur) => acc + cur.points, 0),
-              );
-              teleopPoints[team].push(avgOrZero(pointSumsByReport));
-            });
-          }
-        }
-        if (
-          autoPoints.length === 0 &&
-          (metric === Metric.totalPoints || metric === Metric.autoPoints)
-        ) {
-          for (const team of args.teams) {
-            autoPoints[team] = [];
-            rawDataGrouped[team].tournamentData.forEach((tournament) => {
-              const timedEvents = tournament.srEvents.map((val) =>
-                val.filter((e) => e.time <= autoEnd),
-              );
-              const pointSumsByReport = timedEvents.map((e) =>
-                e.reduce((acc, cur) => acc + cur.points, 0),
-              );
-              autoPoints[team].push(avgOrZero(pointSumsByReport));
-            });
-          }
-        }
+      for (const row of tmd) {
+        if (!row.scoutReports.length) continue;
 
-        if (metric === Metric.teleopPoints) {
-          resultsByTournament = teleopPoints;
-        } else if (metric === Metric.autoPoints) {
-          resultsByTournament = autoPoints;
-        } else if (metric === Metric.totalPoints) {
-          for (const team of args.teams) {
-            resultsByTournament[team] = [];
-            let tournamentIndex = 0;
-            rawDataGrouped[team].tournamentData.forEach((tournament) => {
-              resultsByTournament[team][tournamentIndex] =
-                teleopPoints[team][tournamentIndex] +
-                autoPoints[team][tournamentIndex] +
-                avgOrZero(tournament.endgamePoints);
-              tournamentIndex++;
-            });
-          }
-        }
-      } else {
-        const action = metricToEvent[metric];
-        let position: Position = null;
+        const team = row.teamNumber;
+        const sr = row.scoutReports;
+
+        let tournamentValue = 0;
+
         switch (metric) {
-          case Metric.coralL1:
-            position = Position.LEVEL_ONE;
+          case Metric.autoClimbStartTime: {
+            const times = sr.map((r) => {
+              if (r.autoClimb !== AutoClimb.SUCCEEDED) return null;
+              return firstEventTime(
+                r.events,
+                (e) => e.action === "CLIMB" && e.time <= autoEnd,
+              );
+            });
+            const nonNullTimes = times.filter((t): t is number => t !== null);
+            if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
+            const adjustedTimes = nonNullTimes.map((t) => {
+              const remaining = autoEnd - t;
+              return remaining >= 0 ? remaining : 0;
+            });
+            tournamentValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
             break;
-          case Metric.coralL2:
-            position = Position.LEVEL_TWO;
+          }
+
+          case Metric.l1StartTime:
+          case Metric.l2StartTime:
+          case Metric.l3StartTime: {
+            const required =
+              metric === Metric.l1StartTime
+                ? EndgameClimb.L1
+                : metric === Metric.l2StartTime
+                  ? EndgameClimb.L2
+                  : EndgameClimb.L3;
+
+            const times = sr.map((r) => {
+              if (r.endgameClimb !== required) return null;
+              return firstEventTime(
+                r.events,
+                (e) => e.action === "CLIMB" && e.time > autoEnd && e.time <= 158,
+              );
+            });
+
+            const nonNullTimes = times.filter((t): t is number => t !== null);
+            if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
+            const adjustedTimes = nonNullTimes.map((t) => {
+              const remaining = 158 - t;
+              return remaining >= 0 ? remaining : 0;
+            });
+            tournamentValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
             break;
-          case Metric.coralL3:
-            position = Position.LEVEL_THREE;
+          }
+          case Metric.contactDefenseTime:
+          case Metric.campingDefenseTime:
+          case Metric.totalDefenseTime: {
+            const perMatch = sr.map((r) => {
+              const contact = (tournamentValue = avg(
+                calculateTimeMetric(sr, "DEFENDING"),
+              ));
+              const camping = (tournamentValue = avg(
+                calculateTimeMetric(sr, "CAMPING"),
+              ));
+              if (metric === Metric.contactDefenseTime) return contact;
+              if (metric === Metric.campingDefenseTime) return camping;
+              return contact + camping;
+            });
+            tournamentValue = avg(perMatch);
             break;
-          case Metric.coralL4:
-            position = Position.LEVEL_FOUR;
+          }
+
+          /* ---------- SCORED METRICS ---------- */
+          case Metric.driverAbility:
+            tournamentValue = avg(sr.map((r) => r.driverAbility));
             break;
+          case Metric.defenseEffectiveness:
+            tournamentValue = avg(sr.map((r) => r.defenseEffectiveness));
+            break;
+          case Metric.accuracy:
+            {
+              const defined = sr.filter((r) => r.accuracy !== null && r.accuracy !== undefined);
+              tournamentValue = defined.length
+                ? avg(defined.map((r) => accuracyToPercentage[r.accuracy as any]))
+                : 0;
+            }
+            break;
+          case Metric.autoPoints:
+          case Metric.teleopPoints:
+          case Metric.totalPoints: {
+            const perMatch = sr.map((r) => {
+              const auto = r.events
+                .filter((e) => e.time <= autoEnd && e.action === "STOP_SCORING")
+                .reduce((a, b) => a + b.points, 0);
+              const tele = r.events
+                .filter((e) => e.time > autoEnd && e.action === "STOP_SCORING")
+                .reduce((a, b) => a + b.points, 0);
+              const aClimb = avg(
+                sr.map((s) => (s.autoClimb !== AutoClimb.SUCCEEDED ? 0 : 15)),
+              );
+              const endgame = avg(
+                sr.map((s) => endgameToPoints[s.endgameClimb]),
+              );
+              if (metric === Metric.autoPoints) return auto;
+              if (metric === Metric.teleopPoints) return tele;
+              return aClimb + auto + tele + endgame;
+            });
+            tournamentValue = avg(perMatch);
+            break;
+          }
+          case Metric.fuelPerSecond: {
+            const perMatch = sr.map((r) => {
+              const totalFuel = r.events
+                .filter((e) => e.action === "STOP_SCORING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              const duration = calculateTimeMetric(sr, "SCORING").reduce(
+                (a, b) => a + b,
+                0,
+              );
+              return duration > 0 ? totalFuel / duration : 0;
+            });
+            tournamentValue = avg(perMatch);
+            break;
+          }
+          case Metric.totalFuelOutputted: {
+            const perMatch = sr.map((r) => {
+              const shotQty = r.events
+                .filter((e) => e.action === "STOP_SCORING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              const feedQty = r.events
+                .filter((e) => e.action === "STOP_FEEDING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+              return shotQty + feedQty;
+            });
+            tournamentValue = avg(perMatch);
+            break;
+          }
+          case Metric.totalBallsFed: {
+            const perMatch = sr.map((r) => {
+              return r.events
+                .filter((e) => e.action === "STOP_FEEDING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+            });
+            tournamentValue = avg(perMatch);
+            break;
+          }
+          case Metric.totalBallThroughput: {
+            const perMatch = sr.map((r) => {
+              return r.events
+                .filter(
+                  (e) =>
+                    e.action === "STOP_FEEDING" || e.action === "STOP_SCORING",
+                )
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+            });
+            tournamentValue = avg(perMatch);
+            break;
+          }
+          case Metric.feedsPerMatch: {
+            const perMatch = sr.map(
+              (r) => r.events.filter((e) => e.action === "STOP_FEEDING").length,
+            );
+            tournamentValue = avg(perMatch);
+            break;
+          }
+          case Metric.feedingRate: {
+            const feedTime = calculateTimeMetric(sr, "FEEDING");
+            const feeds = sr.flatMap((r) =>
+              r.events.filter((e) => e.action === "STOP_FEEDING"),
+            );
+            const totalFeedQuantity = feeds.reduce(
+              (acc, f) => acc + (f.quantity ?? 0),
+              0,
+            );
+            tournamentValue =
+              totalFeedQuantity > 0 ? totalFeedQuantity / avg(feedTime) : 0;
+            break;
+          }
+          case Metric.timeFeeding: {
+            tournamentValue = avg(calculateTimeMetric(sr, "FEEDING"));
+            break;
+          }
+
+          case Metric.outpostIntakes: {
+            const perMatch = sr.map(
+              (r) =>
+                r.events.filter(
+                  (e) => e.action === "INTAKE" && e.position === "OUTPOST",
+                ).length,
+            );
+            tournamentValue = avg(perMatch);
+            break;
+          }
+          default: {
+            const perMatch = sr.map(
+              (r) =>
+                r.events.filter((e) => e.action === metricToEvent[metric])
+                  .length,
+            );
+            tournamentValue = avg(perMatch);
+          }
         }
 
-        for (const team of args.teams) {
-          resultsByTournament[team] = [];
-          rawDataGrouped[team].tournamentData.forEach((tournament) => {
-            let countAtTournament = 0;
-            tournament.srEvents.forEach((sr) => {
-              sr.forEach((event) => {
-                if (
-                  event.action === action &&
-                  (position === null || event.position === position)
-                ) {
-                  countAtTournament++;
-                }
-              });
-            });
-            resultsByTournament[team].push(
-              countAtTournament / tournament.srEvents.length,
-            );
-          });
-        }
+        resultsByTeam[team].push(tournamentValue);
       }
 
       finalResults[String(metric)] = {};
       for (const team of args.teams) {
-        finalResults[String(metric)][String(team)] = weightedTourAvgLeft(
-          resultsByTournament[team],
-        );
+        const teamResults = resultsByTeam[team];
+        finalResults[String(metric)][String(team)] =
+          teamResults.length > 0 ? weightedTourAvgLeft(teamResults) : -1;
       }
     }
 
@@ -285,22 +333,33 @@ export const averageManyFast = async (
   args: z.infer<typeof argsSchema>,
 ) => runAnalysis(config, user, args);
 
-export const getSourceFilter = <T>(
-  sources: T[],
-  possibleSources: T[],
-): ArrayFilter<T> | undefined => {
-  if (sources.length === possibleSources.length) {
-    return undefined;
-  }
-  if (sources.length >= possibleSources.length * 0.7) {
-    const unsourcedTeams = possibleSources.filter(
-      (val) => !sources.includes(val),
+export function calculateTimeMetric(
+  sr: {
+    events?: {
+      eventUuid: string;
+      time: number;
+      action: $Enums.EventAction;
+      position: $Enums.Position;
+      points: number;
+      scoutReportUuid: string;
+    }[];
+  }[],
+  event: string,
+): number[] {
+  const perMatch = sr.map((r) => {
+    const feedingEvents = r.events.filter(
+      (e) => e.action === `STOP_${event}` || e.action === `START_${event}`,
     );
-    return { notIn: unsourcedTeams };
-  }
-  return { in: sources };
-};
-
-function avgOrZero(values: number[]): number {
-  return values.reduce((acc, cur) => acc + cur, 0) / values.length || 0;
+    const feedingEventsSorted = feedingEvents.sort((a, b) => a.time - b.time);
+    let totalTime = 0;
+    for (let i = 0; i < feedingEventsSorted.length; i += 2) {
+      const startEvent = feedingEventsSorted[i];
+      const endEvent = feedingEventsSorted[i + 1];
+      if (startEvent && endEvent) {
+        totalTime += endEvent.time - startEvent.time;
+      }
+    }
+    return feedingEvents.length > 0 ? totalTime : 0;
+  });
+  return perMatch;
 }

@@ -10,7 +10,6 @@ import {
 import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
 import { zScoreMany } from "./zScoreMany.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
-
 /**
  * Main picklist endpoint. Note inconsistent strings make it confusing for this season.
  * Normal metrics are sent and received in lettering suggested by query inputs, but FLAGS are sent and received as shown in metricToName.
@@ -32,44 +31,44 @@ export const picklistShell = createAnalysisHandler({
         })
         .optional(),
       stage: z.string().optional(),
-      totalpoints: z.coerce.number().optional(),
-      autopoints: z.coerce.number().optional(),
-      teleoppoints: z.coerce.number().optional(),
-      driverability: z.coerce.number().optional(),
-      bargeresult: z.coerce.number().optional(),
-      totalcoral: z.coerce.number().optional(),
-      level1: z.coerce.number().optional(),
-      level2: z.coerce.number().optional(),
-      level3: z.coerce.number().optional(),
-      level4: z.coerce.number().optional(),
-      coralpickup: z.coerce.number().optional(),
-      algaeProcessor: z.coerce.number().optional(),
-      algaeNet: z.coerce.number().optional(),
-      algaePickups: z.coerce.number().optional(),
-      feeds: z.coerce.number().optional(),
-      defends: z.coerce.number().optional(),
+      totalPoints: z.coerce.number().optional(),
+      autoPoints: z.coerce.number().optional(),
+      teleopPoints: z.coerce.number().optional(),
+      driverAbility: z.coerce.number().optional(),
+      climbResult: z.coerce.number().optional(),
+      autoClimb: z.coerce.number().optional(),
+      defenseEffectiveness: z.coerce.number().optional(),
+      contactDefenseTime: z.coerce.number().optional(),
+      campingDefenseTime: z.coerce.number().optional(),
+      totalDefensiveTime: z.coerce.number().optional(),
+      totalFuelThroughput: z.coerce.number().optional(),
+      totalFuelFed: z.coerce.number().optional(),
+      feedingRate: z.coerce.number().optional(),
+      scoringRate: z.coerce.number().optional(),
+      estimatedSuccessfulFuelRate: z.coerce.number().optional(),
+      estimatedTotalFuelScored: z.coerce.number().optional(),
     }),
   },
   usesDataSource: true,
   shouldCache: true,
-  createKey: ({ query }) => {
+  createKey: async ({ query }) => {
     const metricsKey = {
-      totalpoints: query.totalpoints || 0,
-      autopoints: query.autopoints || 0,
-      teleoppoints: query.teleoppoints || 0,
-      driverability: query.driverability || 0,
-      bargeresult: query.bargeresult || 0,
-      totalcoral: query.totalcoral || 0,
-      level1: query.level1 || 0,
-      level2: query.level2 || 0,
-      level3: query.level3 || 0,
-      level4: query.level4 || 0,
-      coralpickup: query.coralpickup || 0,
-      algaeProcessor: query.algaeProcessor || 0,
-      algaeNet: query.algaeNet || 0,
-      algaePickups: query.algaePickups || 0,
-      feeds: query.feeds || 0,
-      defends: query.defends || 0,
+      totalPoints: query.totalPoints || 0,
+      autoPoints: query.autoPoints || 0,
+      teleopPoints: query.teleopPoints || 0,
+      driverAbility: query.driverAbility || 0,
+      climbResult: query.climbResult || 0,
+      autoClimb: query.autoClimb || 0,
+      defenseEffectiveness: query.defenseEffectiveness || 0,
+      contactDefenseTime: query.contactDefenseTime || 0,
+      campingDefenseTime: query.campingDefenseTime || 0,
+      totalDefensiveTime: query.totalDefensiveTime || 0,
+      totalFuelThroughput: query.totalFuelThroughput || 0,
+      totalFuelFed: query.totalFuelFed || 0,
+      feedingRate: query.feedingRate || 0,
+      scoringRate: query.scoringRate || 0,
+      estimatedSuccessfulFuelRate: query.estimatedSuccessfulFuelRate || 0,
+      estimatedTotalFuelScored: query.estimatedTotalFuelScored || 0,
     };
 
     return {
@@ -80,37 +79,34 @@ export const picklistShell = createAnalysisHandler({
         JSON.stringify(metricsKey),
       ],
       teamDependencies: [],
-      tournamentDependencies: [query.tournamentKey],
+      tournamentDependencies: query.tournamentKey ? [query.tournamentKey] : [],
     };
   },
   calculateAnalysis: async ({ query }, ctx) => {
-    // Stopgap to error out 2024 picklists
-    if (query.stage) {
-      throw new Error("OUTDATED_PICKLIST");
-    }
+    // Accept legacy 'stage' param but ignore it
 
     // No data without a tournament key (should make this an impossible request from frontend)
     if (!query.tournamentKey) {
-      return [];
+      return { teams: [] };
     }
 
     const metrics = {
-      totalpoints: query.totalpoints || 0,
-      autopoints: query.autopoints || 0,
-      teleoppoints: query.teleoppoints || 0,
-      driverability: query.driverability || 0,
-      bargeresult: query.bargeresult || 0,
-      totalCoral: query.totalcoral || 0,
-      level1: query.level1 || 0,
-      level2: query.level2 || 0,
-      level3: query.level3 || 0,
-      level4: query.level4 || 0,
-      coralpickup: query.coralpickup || 0,
-      algaeProcessor: query.algaeProcessor || 0,
-      algaeNet: query.algaeNet || 0,
-      algaePickups: query.algaePickups || 0,
-      feeds: query.feeds || 0,
-      defends: query.defends || 0,
+      totalPoints: query.totalPoints || 0,
+      autoPoints: query.autoPoints || 0,
+      teleopPoints: query.teleopPoints || 0,
+      driverAbility: query.driverAbility || 0,
+      climbResult: query.climbResult || 0,
+      autoClimb: query.autoClimb || 0,
+      defenseEffectiveness: query.defenseEffectiveness || 0,
+      contactDefenseTime: query.contactDefenseTime || 0,
+      campingDefenseTime: query.campingDefenseTime || 0,
+      totalDefensiveTime: query.totalDefensiveTime || 0,
+      totalFuelThroughput: query.totalFuelThroughput || 0,
+      totalFuelFed: query.totalFuelFed || 0,
+      feedingRate: query.feedingRate || 0,
+      scoringRate: query.scoringRate || 0,
+      estimatedSuccessfulFuelRate: query.estimatedSuccessfulFuelRate || 0,
+      estimatedTotalFuelScored: query.estimatedTotalFuelScored || 0,
     };
 
     //check for all metrics being 0, if so error

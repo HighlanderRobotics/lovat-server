@@ -3,56 +3,62 @@ import prismaClient from "../../../prismaClient.js";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { stringify } from "csv-stringify/sync";
 import {
-  UserRole,
-  EventAction,
-  Position,
-  UnderShallowCage,
-  KnocksAlgae,
-  BargeResult,
-  RobotRole,
-  AlgaePickup,
-  CoralPickup,
   Scouter,
   TeamMatchData,
   Event,
+  RobotRole,
+  AutoClimb,
+  EndgameClimb,
+  Beached,
+  FieldTraversal,
+  ClimbPosition,
+  ClimbSide,
+  FeederType,
+  IntakeType,
 } from "@prisma/client";
-import {
-  autoEnd,
-  endgameToPoints,
-} from "../analysisConstants.js";
+import { autoEnd, endgameToPoints, Metric } from "../analysisConstants.js";
 import { z } from "zod";
 import {
   dataSourceRuleToPrismaFilter,
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
+import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
 export interface CondensedReport {
   match: string;
   teamNumber: number;
-  role: string;
-  coralPickup: string;
-  algaePickup: string;
-  algaeKnocking: boolean;
-  underShallowCage: boolean;
+  totalPoints: number;
   teleopPoints: number;
   autoPoints: number;
   driverAbility: number;
-  feeds: number;
-  defends: number;
-  coralPickups: number;
-  algaePickups: number;
-  coralDrops: number;
-  algaeDrops: number;
-  coralL1: number;
-  coralL2: number;
-  coralL3: number;
-  coralL4: number;
-  processorScores: number;
-  netScores: number;
-  netFails: number;
-  activeAuton: boolean;
-  endgame: string;
+  fuelPerSecond: number;
+  accuracy: number;
+  volleysPerMatch: number;
+  l1StartTime: number;
+  l2StartTime: number;
+  l3StartTime: number;
+  autoClimbStartTime: number;
+  contactDefenseTime: number;
+  defenseEffectiveness: number;
+  campingDefenseTime: number;
+  totalDefenseTime: number;
+  timeFeeding: number;
+  feedingRate: number;
+  feedsPerMatch: number;
+  totalFuelOutputted: number;
+  totalBallThroughput: number;
+  totalBallsFed: number;
+  outpostIntakes: number;
+  robotRoles: string;
+  fieldTraversal: string;
+  endgameClimb: string;
+  beached: string;
+  scoresWhileMoving: boolean;
+  disrupts: boolean;
+  autoClimb: string;
+  feederTypes: string;
+  intakeType: string;
   scouter: string;
   notes: string;
 }
@@ -60,16 +66,24 @@ export interface CondensedReport {
 // Simplified scouting report with properties required for aggregation
 interface PointsReport {
   notes: string;
-  robotRole: RobotRole;
-  algaePickup: AlgaePickup;
-  coralPickup: CoralPickup;
-  bargeResult: BargeResult;
-  knocksAlgae: KnocksAlgae;
-  underShallowCage: UnderShallowCage;
+  robotRoles: RobotRole[];
+  autoClimb: AutoClimb;
+  endgameClimb: EndgameClimb;
+  fieldTraversal: FieldTraversal;
+  beached: Beached;
+  climbSide: ClimbSide;
+  climbPosition: ClimbPosition;
+  scoresWhileMoving: boolean;
+  disrupts: boolean;
+  feederTypes: FeederType[];
+  intakeType: IntakeType;
   driverAbility: number;
+  accuracy: number;
+  defenseEffectiveness: number;
   events: Partial<Event>[];
   scouter: Partial<Scouter>;
   teamMatchData: Partial<TeamMatchData>;
+  uuid?: string;
 }
 
 /**
@@ -81,11 +95,6 @@ export const getReportCSV = async (
   res: Response,
 ): Promise<void> => {
   try {
-    if (req.user.role !== UserRole.SCOUTING_LEAD) {
-      res.status(403).send("Not authorized to download scouting data");
-      return;
-    }
-
     // Source data from queried tournament
     const params = z
       .object({
@@ -109,7 +118,8 @@ export const getReportCSV = async (
     const includeTeleop = teleop || !(auto || teleop);
 
     // Time filter for event counting
-    let eventTimeFilter: { time: { lte?: number; gt?: number } } = undefined;
+    let eventTimeFilter: { time: { lte?: number; gt?: number } } | undefined =
+      undefined;
     if (includeAuto && !includeTeleop) {
       eventTimeFilter = {
         time: {
@@ -126,26 +136,40 @@ export const getReportCSV = async (
 
     // Select scout reports from the given tournament and team sources
     // These instances will be looped through and remade into rows of the csv
-    const datapoints = await prismaClient.scoutReport.findMany({
-      where: {
-        teamMatchData: {
-          tournamentKey: params.data.tournamentKey,
-        },
-        scouter: {
-          sourceTeamNumber: dataSourceRuleToPrismaFilter(
-            dataSourceRuleSchema(z.number()).parse(req.user.teamSourceRule),
-          ),
-        },
+    const where: any = {
+      teamMatchData: {
+        tournamentKey: params.data.tournamentKey,
       },
+    };
+    const parsedRule = dataSourceRuleSchema(z.number()).safeParse(
+      req.user?.teamSourceRule,
+    );
+    if (parsedRule.success) {
+      const filter = dataSourceRuleToPrismaFilter(parsedRule.data);
+      if (filter) {
+        where.scouter = { sourceTeamNumber: filter };
+      }
+    }
+
+    const datapoints = await prismaClient.scoutReport.findMany({
+      where,
       select: {
+        uuid: true,
         notes: true,
-        robotRole: true,
-        algaePickup: true,
-        coralPickup: true,
-        bargeResult: true,
-        knocksAlgae: true,
-        underShallowCage: true,
+        robotRoles: true,
+        endgameClimb: true,
+        autoClimb: true,
         driverAbility: true,
+        accuracy: true,
+        defenseEffectiveness: true,
+        climbPosition: true,
+        climbSide: true,
+        fieldTraversal: true,
+        beached: true,
+        scoresWhileMoving: true,
+        disrupts: true,
+        feederTypes: true,
+        intakeType: true,
         events: {
           where: eventTimeFilter,
           select: {
@@ -153,6 +177,7 @@ export const getReportCSV = async (
             action: true,
             position: true,
             points: true,
+            quantity: true,
           },
         },
         scouter: {
@@ -182,15 +207,42 @@ export const getReportCSV = async (
       return;
     }
 
-    const condensed = datapoints.map((r) =>
-      condenseReport(r, req.user.teamNumber, includeAuto, includeTeleop),
+    const condensed = await Promise.all(
+      datapoints.map(async (r) =>
+        condenseReport(
+          {
+            uuid: r.uuid,
+            notes: r.notes,
+            robotRoles: r.robotRoles,
+            endgameClimb: r.endgameClimb,
+            autoClimb: r.autoClimb,
+            driverAbility: r.driverAbility,
+            accuracy: r.accuracy,
+            defenseEffectiveness: r.defenseEffectiveness,
+            events: r.events,
+            scouter: r.scouter,
+            teamMatchData: r.teamMatchData,
+            climbPosition: r.climbPosition,
+            climbSide: r.climbSide,
+            fieldTraversal: r.fieldTraversal,
+            beached: r.beached,
+            scoresWhileMoving: r.scoresWhileMoving,
+            disrupts: r.disrupts,
+            feederTypes: r.feederTypes,
+            intakeType: r.intakeType,
+          },
+          req.user.teamNumber,
+          includeAuto,
+          includeTeleop,
+        ),
+      ),
     );
 
     // Create and send the csv string through express
     const csvString = stringify(condensed, {
       header: true,
       // Creates column headers from data properties
-      columns: Object.keys(condensed[0]),
+      columns: condensed.length ? Object.keys(condensed[0]) : [],
       // Required for excel viewing
       bom: true,
       // Rename boolean values to TRUE and FALSE
@@ -211,137 +263,142 @@ export const getReportCSV = async (
   }
 };
 
-// Less verbose and don't want to create new arrays constantly
-const posL1: Position[] = [
-  Position.LEVEL_ONE_A,
-  Position.LEVEL_ONE_B,
-  Position.LEVEL_ONE_C,
-];
-const posL2: Position[] = [
-  Position.LEVEL_TWO_A,
-  Position.LEVEL_TWO_B,
-  Position.LEVEL_TWO_C,
-];
-const posL3: Position[] = [
-  Position.LEVEL_THREE_A,
-  Position.LEVEL_THREE_B,
-  Position.LEVEL_THREE_C,
-];
-
-function condenseReport(
+async function condenseReport(
   report: PointsReport,
   userTeam: number,
   includeAuto: boolean,
   includeTeleop: boolean,
-): CondensedReport {
+): Promise<CondensedReport> {
   const data: CondensedReport = {
     match:
-      report.teamMatchData.matchType.at(0) + report.teamMatchData.matchNumber,
-    teamNumber: report.teamMatchData.teamNumber,
-    role: report.robotRole,
-    coralPickup: report.coralPickup,
-    algaePickup: report.algaePickup,
-    algaeKnocking: report.knocksAlgae === KnocksAlgae.YES,
-    underShallowCage: report.underShallowCage === UnderShallowCage.YES,
+      String(report.teamMatchData.matchType?.at(0) ?? "") +
+      String(report.teamMatchData.matchNumber ?? ""),
+    teamNumber: report.teamMatchData.teamNumber ?? 0,
+    totalPoints: 0,
+    accuracy: report.accuracy ?? 0,
+    autoClimb: String(report.autoClimb ?? ""),
+    fuelPerSecond: 0,
+    volleysPerMatch: 0,
+    l1StartTime: 0,
+    l2StartTime: 0,
+    l3StartTime: 0,
+    autoClimbStartTime: 0,
+    driverAbility: report.driverAbility ?? 0,
+    contactDefenseTime: 0,
+    defenseEffectiveness: report.defenseEffectiveness ?? 0,
+    campingDefenseTime: 0,
+    totalDefenseTime: 0,
+    timeFeeding: 0,
+    feedingRate: 0,
+    feedsPerMatch: 0,
+    totalFuelOutputted: 0,
+    totalBallsFed: 0,
+    totalBallThroughput: 0,
+    outpostIntakes: 0,
+    robotRoles: (report.robotRoles || []).join(","),
+    beached: String(report.beached ?? ""),
+    scoresWhileMoving: Boolean(report.scoresWhileMoving),
+    disrupts: Boolean(report.disrupts),
+    endgameClimb: String(report.endgameClimb ?? ""),
+    feederTypes: (report.feederTypes || []).join(","),
+    intakeType: String(report.intakeType ?? ""),
+    fieldTraversal: String(report.fieldTraversal ?? "N/A"),
     teleopPoints: 0,
     autoPoints: 0,
-    driverAbility: report.driverAbility,
-    feeds: 0,
-    defends: 0,
-    coralPickups: 0,
-    algaePickups: 0,
-    coralDrops: 0,
-    algaeDrops: 0,
-    coralL1: 0,
-    coralL2: 0,
-    coralL3: 0,
-    coralL4: 0,
-    processorScores: 0,
-    netScores: 0,
-    netFails: 0,
-    activeAuton: false,
-    endgame: report.bargeResult,
     scouter: "",
-    notes: report.notes.replace(/,/g, ";"), // Avoid commas in a csv...
+    notes: String(report.notes ?? "").replace(/,/g, ";"),
   };
 
-  // Sum match points and actions
-  report.events.forEach((event) => {
-    if (event.time <= autoEnd) {
-      data.autoPoints += event.points;
+  // Compute points using events (respects includeAuto/includeTeleop time filter)
+  (report.events || []).forEach((event) => {
+    const t = Number(event.time ?? 0);
+    const pts = Number(event.points ?? 0);
+    if (t <= autoEnd) {
+      data.autoPoints += pts;
     } else {
-      data.teleopPoints += event.points;
-    }
-
-    switch (event.action) {
-      case EventAction.PICKUP_CORAL:
-        data.coralPickups++;
-        break;
-      case EventAction.PICKUP_ALGAE:
-        data.algaePickups++;
-        break;
-      case EventAction.FEED:
-        data.feeds++;
-        break;
-      case EventAction.AUTO_LEAVE:
-        data.activeAuton = true;
-        break;
-      case EventAction.DEFEND:
-        data.defends++;
-        break;
-      case EventAction.SCORE_NET:
-        data.netScores++;
-        break;
-      case EventAction.FAIL_NET:
-        data.netFails++;
-        break;
-      case EventAction.SCORE_PROCESSOR:
-        data.processorScores++;
-        break;
-      case EventAction.SCORE_CORAL:
-        switch (event.position) {
-          case Position.LEVEL_ONE:
-            data.coralL1++;
-            break;
-          case Position.LEVEL_TWO:
-            data.coralL2++;
-            break;
-          case Position.LEVEL_THREE:
-            data.coralL3++;
-            break;
-          case Position.LEVEL_FOUR:
-            data.coralL4++;
-            break;
-          default:
-            // During auto
-            if (posL1.includes(event.position)) {
-              data.coralL1++;
-            } else if (posL2.includes(event.position)) {
-              data.coralL2++;
-            } else if (posL3.includes(event.position)) {
-              data.coralL3++;
-            } else {
-              data.coralL4++;
-            }
-            break;
-        }
-        break;
-      case EventAction.DROP_ALGAE:
-        data.algaeDrops++;
-        break;
-      case EventAction.DROP_CORAL:
-        data.coralDrops++;
-        break;
+      data.teleopPoints += pts;
     }
   });
 
-  // Add stage points to total points
+  // Add stage points to total points when exporting full match
   if (includeTeleop && includeAuto) {
-    data.teleopPoints += endgameToPoints[data.endgame as BargeResult];
+    const climb = report.endgameClimb;
+    data.teleopPoints += climb ? endgameToPoints[climb] : 0;
   }
 
-  if (report.scouter.sourceTeamNumber === userTeam) {
-    data.scouter = report.scouter.name.replace(/,/g, ";"); // Avoid commas in a csv...
+  // Use averageScoutReport to populate computed metrics for this single report
+  if (report.uuid) {
+    const metrics = [
+      Metric.totalPoints,
+      Metric.autoPoints,
+      Metric.teleopPoints,
+      Metric.fuelPerSecond,
+      Metric.volleysPerMatch,
+      Metric.l1StartTime,
+      Metric.l2StartTime,
+      Metric.l3StartTime,
+      Metric.autoClimbStartTime,
+      Metric.driverAbility,
+      Metric.contactDefenseTime,
+      Metric.defenseEffectiveness,
+      Metric.campingDefenseTime,
+      Metric.totalDefenseTime,
+      Metric.timeFeeding,
+      Metric.feedingRate,
+      Metric.feedsPerMatch,
+      Metric.totalFuelOutputted,
+      Metric.totalBallsFed,
+      Metric.totalBallThroughput,
+      Metric.outpostIntakes,
+    ];
+    const agg = await averageScoutReport({} as any, {
+      scoutReportUuid: report.uuid,
+      metrics,
+    });
+
+    const val = (m: Metric) => (agg as Record<string, number>)[m];
+
+    // Populate numeric metrics if available
+    const maybeSet = (m: Metric, setter: (n: number) => void) => {
+      const n = val(m);
+      if (typeof n === "number" && Number.isFinite(n)) setter(n);
+    };
+
+    // totalPoints from analysis, otherwise derived from segment sums
+    const total = val(Metric.totalPoints);
+    data.totalPoints =
+      typeof total === "number" && Number.isFinite(total)
+        ? total
+        : data.teleopPoints + data.autoPoints;
+
+    maybeSet(Metric.fuelPerSecond, (n) => (data.fuelPerSecond = n));
+    maybeSet(Metric.volleysPerMatch, (n) => (data.volleysPerMatch = n));
+    maybeSet(Metric.l1StartTime, (n) => (data.l1StartTime = n));
+    maybeSet(Metric.l2StartTime, (n) => (data.l2StartTime = n));
+    maybeSet(Metric.l3StartTime, (n) => (data.l3StartTime = n));
+    maybeSet(Metric.autoClimbStartTime, (n) => (data.autoClimbStartTime = n));
+    maybeSet(Metric.driverAbility, (n) => (data.driverAbility = n));
+    maybeSet(Metric.contactDefenseTime, (n) => (data.contactDefenseTime = n));
+    maybeSet(
+      Metric.defenseEffectiveness,
+      (n) => (data.defenseEffectiveness = n),
+    );
+    maybeSet(Metric.campingDefenseTime, (n) => (data.campingDefenseTime = n));
+    maybeSet(Metric.totalDefenseTime, (n) => (data.totalDefenseTime = n));
+    maybeSet(Metric.timeFeeding, (n) => (data.timeFeeding = n));
+    maybeSet(Metric.feedingRate, (n) => (data.feedingRate = n));
+    maybeSet(Metric.feedsPerMatch, (n) => (data.feedsPerMatch = n));
+    maybeSet(Metric.totalFuelOutputted, (n) => (data.totalFuelOutputted = n));
+    maybeSet(Metric.totalBallsFed, (n) => (data.totalBallsFed = n));
+    maybeSet(Metric.totalBallThroughput, (n) => (data.totalBallThroughput = n));
+    maybeSet(Metric.outpostIntakes, (n) => (data.outpostIntakes = n));
+
+    // Keep per-segment points computed from filtered events
+    // Do not overwrite autoPoints/teleopPoints to respect includeAuto/includeTeleop
+  }
+
+  if (report.scouter?.sourceTeamNumber === userTeam && report.scouter?.name) {
+    data.scouter = String(report.scouter.name).replace(/,/g, ";");
   }
 
   return data;

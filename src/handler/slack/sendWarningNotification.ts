@@ -60,12 +60,7 @@ export async function sendWarningToSlack(
 
       // Call the chat.postMessage method using the built-in WebClient
       if (thread == null || thread == undefined) {
-        if (warning == WarningType.AUTO_LEAVE) {
-          result = await client.chat.postMessage({
-            channel: channel.channelId,
-            text: `Heads up! *${scouterName}* reported your alliance partner in *${partnerMatchLabel}*, team *${teamNumber}*, didn't leave during auto in *Q${matchNumber}*`,
-          });
-        } else if (warning == WarningType.BREAK) {
+        if (warning == WarningType.BREAK) {
           result = await client.chat.postMessage({
             channel: channel.channelId,
             // robotBrokeDesc needs to be filtered because old versions of Collection will send it as null, or it might be undefined
@@ -77,7 +72,8 @@ export async function sendWarningToSlack(
             }`,
           });
         }
-        const subscriptionIdent = `${channel.channelId}_${warning == WarningType.AUTO_LEAVE ? "L" : "B"}`;
+        const subscriptionIdent = `${channel.channelId}_B
+        }`;
 
         await prismaClient.slackNotificationThread.create({
           data: {
@@ -90,13 +86,7 @@ export async function sendWarningToSlack(
         });
       } else {
         // when there have already been problems reported about a team, we just send a message to the thread instead of having multiple messages
-        if (warning == WarningType.AUTO_LEAVE) {
-          result = await client.chat.postMessage({
-            channel: channel.channelId,
-            thread_ts: thread.messageId,
-            text: `Also reported by *${scouterName}* in *Q${matchNumber}*`,
-          });
-        } else if (warning == WarningType.BREAK) {
+        if (warning == WarningType.BREAK) {
           result = await client.chat.postMessage({
             channel: channel.channelId,
             thread_ts: thread.messageId,

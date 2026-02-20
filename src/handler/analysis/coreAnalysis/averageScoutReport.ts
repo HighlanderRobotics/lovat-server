@@ -5,12 +5,46 @@ import {
   Metric,
   metricToEvent,
 } from "../analysisConstants.js";
-import { EventAction, Position, User } from "@prisma/client";
+import { AutoClimb, User } from "@prisma/client";
 import z from "zod";
-import {
-  runAnalysis,
-  AnalysisFunctionConfig,
-} from "../analysisFunction.js";
+import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
+
+function firstEventTime(
+  events: { action: string; time: number }[],
+  action: string,
+  predicate?: (t: number) => boolean,
+): number | null {
+  const evt = events
+    .filter(
+      (e) => e.action === action && (predicate ? predicate(e.time) : true),
+    )
+    .sort((a, b) => a.time - b.time)[0];
+  return evt ? evt.time : null;
+}
+
+function pairedDuration(
+  events: { action: string; time: number }[],
+  startAction: string,
+  stopAction: string,
+): number {
+  const relevant = events
+    .filter((e) => e.action === startAction || e.action === stopAction)
+    .sort((a, b) => a.time - b.time);
+  let total = 0;
+  for (let i = 0; i < relevant.length; i += 2) {
+    const start = relevant[i];
+    const stop = relevant[i + 1];
+    if (
+      start &&
+      stop &&
+      start.action === startAction &&
+      stop.action === stopAction
+    ) {
+      total += stop.time - start.time;
+    }
+  }
+  return total;
+}
 
 export async function computeAverageScoutReport(
   scoutReportUuid: string,
@@ -19,10 +53,18 @@ export async function computeAverageScoutReport(
   const report = await prismaClient.scoutReport.findUniqueOrThrow({
     where: { uuid: scoutReportUuid },
     select: {
-      bargeResult: true,
+      endgameClimb: true,
       driverAbility: true,
+      autoClimb: true,
+      defenseEffectiveness: true,
       events: {
-        select: { action: true, position: true, points: true, time: true },
+        select: {
+          action: true,
+          position: true,
+          points: true,
+          quantity: true,
+          time: true,
+        },
       },
     },
   });
@@ -34,19 +76,9 @@ export async function computeAverageScoutReport(
       case Metric.driverAbility:
         result[metric] = report.driverAbility;
         break;
-      case Metric.bargePoints:
-        result[metric] = endgameToPoints[report.bargeResult];
-        break;
-      case Metric.autonLeaves:
-        result[metric] = report.events.some(
-          (e) => e.action === EventAction.AUTO_LEAVE,
-        )
-          ? 1
-          : 0;
-        break;
       case Metric.totalPoints:
         result[metric] =
-          endgameToPoints[report.bargeResult] +
+          endgameToPoints[report.endgameClimb] +
           report.events.reduce((acc, cur) => acc + cur.points, 0);
         break;
       case Metric.teleopPoints:
@@ -55,37 +87,126 @@ export async function computeAverageScoutReport(
           .reduce((acc, cur) => acc + cur.points, 0);
         break;
       case Metric.autoPoints:
-        result[metric] = report.events
-          .filter((e) => e.time <= autoEnd)
-          .reduce((acc, cur) => acc + cur.points, 0);
+        result[metric] =
+          report.events
+            .filter((e) => e.time <= autoEnd)
+            .reduce((acc, cur) => acc + cur.points, 0) +
+          (report.autoClimb === AutoClimb.SUCCEEDED ? 10 : 0);
         break;
-      default:
+      case Metric.autoClimbStartTime: {
+        const t = firstEventTime(report.events, "CLIMB", (t) => t <= autoEnd);
+        if (t !== null) result[metric] = 2 * 60 + 33 - t;
+        break;
+      }
+      case Metric.l1StartTime:
+      case Metric.l2StartTime:
+      case Metric.l3StartTime: {
+        const t = firstEventTime(report.events, "CLIMB", (t) => t > autoEnd);
+        if (t !== null) result[metric] = 2 * 60 + 33 - t;
+        break;
+      }
+      case Metric.contactDefenseTime: {
+        result[metric] = pairedDuration(
+          report.events,
+          "START_DEFENDING",
+          "STOP_DEFENDING",
+        );
+        break;
+      }
+      case Metric.campingDefenseTime: {
+        result[metric] = pairedDuration(
+          report.events,
+          "START_CAMPING",
+          "STOP_CAMPING",
+        );
+        break;
+      }
+      case Metric.totalDefenseTime: {
+        const contact = pairedDuration(
+          report.events,
+          "START_DEFENDING",
+          "STOP_DEFENDING",
+        );
+        const camping = pairedDuration(
+          report.events,
+          "START_CAMPING",
+          "STOP_CAMPING",
+        );
+        result[metric] = contact + camping;
+        break;
+      }
+      case Metric.fuelPerSecond: {
+        const scoringStops = report.events.filter(
+          (e) => e.action === "STOP_SCORING",
+        );
+        const totalQuantity = scoringStops.reduce(
+          (a, b) => a + (b.quantity ?? 0),
+          0,
+        );
+        const firstStop = scoringStops.sort((a, b) => a.time - b.time)[0]?.time;
+        const duration = firstStop
+          ? firstStop - (report.events[0]?.time ?? 0)
+          : 150;
+        result[metric] = duration > 0 ? totalQuantity / duration : 0;
+        break;
+      }
+      case Metric.feedingRate: {
+        const totalFeedQuantity = report.events
+          .filter((e) => e.action === "STOP_FEEDING")
+          .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+        const totalFeedingTime = pairedDuration(
+          report.events,
+          "START_FEEDING",
+          "STOP_FEEDING",
+        );
+        result[metric] =
+          totalFeedingTime > 0 ? totalFeedQuantity / totalFeedingTime : 0;
+        break;
+      }
+      case Metric.timeFeeding: {
+        result[metric] = pairedDuration(
+          report.events,
+          "START_FEEDING",
+          "STOP_FEEDING",
+        );
+        break;
+      }
+      case Metric.feedsPerMatch: {
+        result[metric] = report.events.filter(
+          (e) => e.action === "STOP_FEEDING",
+        ).length;
+        break;
+      }
+      case Metric.totalFuelOutputted: {
+        result[metric] = report.events
+          .filter(
+            (e) => e.action === "STOP_FEEDING" || e.action === "STOP_SCORING",
+          )
+          .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+        break;
+      }
+      case Metric.totalBallsFed: {
+        result[metric] = report.events
+          .filter((e) => e.action === "STOP_FEEDING")
+          .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+        break;
+      }
+      case Metric.totalBallThroughput: {
+        result[metric] = report.events
+          .filter(
+            (e) => e.action === "STOP_FEEDING" || e.action === "STOP_SCORING",
+          )
+          .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+        break;
+      }
+      default: {
         const action = metricToEvent[metric];
-        let position: Position = null;
-        switch (metric) {
-          case Metric.coralL1:
-            position = Position.LEVEL_ONE;
-            break;
-          case Metric.coralL2:
-            position = Position.LEVEL_TWO;
-            break;
-          case Metric.coralL3:
-            position = Position.LEVEL_THREE;
-            break;
-          case Metric.coralL4:
-            position = Position.LEVEL_FOUR;
-            break;
-        }
-        if (position) {
-          result[metric] = report.events.filter(
-            (e) => e.action === action && e.position === position,
-          ).length;
-        } else {
+        if (action) {
           result[metric] = report.events.filter(
             (e) => e.action === action,
           ).length;
         }
-        break;
+      }
     }
   }
 
@@ -101,7 +222,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
   argsSchema,
   usesDataSource: false,
   shouldCache: true,
-  createKey: (args) => ({
+  createKey: async (args) => ({
     key: [
       "averageScoutReport",
       args.scoutReportUuid,

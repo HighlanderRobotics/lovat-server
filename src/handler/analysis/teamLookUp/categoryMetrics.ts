@@ -1,10 +1,7 @@
 import z from "zod";
 import prismaClient from "../../../prismaClient.js";
-import {
-  metricsCategory,
-  metricToName,
-} from "../analysisConstants.js";
-import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
+import { metricsCategory, metricToName } from "../analysisConstants.js";
+import { arrayAndAverageTeams } from "../coreAnalysis/arrayAndAverageTeams.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const categoryMetrics = createAnalysisHandler({
@@ -47,13 +44,14 @@ export const categoryMetrics = createAnalysisHandler({
 
     const result: Record<string, any> = {};
 
-    const data = await averageManyFast(ctx.user, {
-      teams: [params.team],
-      metrics: metricsCategory,
-    });
-
     for (const metric of metricsCategory) {
-      result[metricToName[metric]] = data[metric][params.team];
+      const teamAverageAndTimeLine = (
+        await arrayAndAverageTeams(ctx.user, {
+          teams: [params.team],
+          metric,
+        })
+      )[params.team];
+      result[metricToName[metric]] = teamAverageAndTimeLine.average;
     }
 
     return result;

@@ -6,7 +6,11 @@ import {
   specificMatchPageMetrics,
   metricToName,
 } from "../analysisConstants.js";
-import { BargeResultReverseMap } from "../../manager/managerConstants.js";
+import {
+  AutoClimbReverseMap,
+  EndgameClimbReverseMap,
+  FeederTypeReverseMap,
+} from "../../manager/managerConstants.js";
 import { autoPathScouter } from "./autoPathScouter.js";
 import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
@@ -19,7 +23,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
   },
   usesDataSource: false,
   shouldCache: false,
-  createKey: ({ params }) => {
+  createKey: async ({ params }) => {
     return {
       key: ["matchPageSpecificScouter", params.uuid],
       teamDependencies: [],
@@ -31,20 +35,65 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       where: {
         uuid: params.uuid,
       },
+      select: {
+        uuid: true,
+        teamMatchKey: true,
+        startTime: true,
+        notes: true,
+        robotBrokeDescription: true,
+        driverAbility: true,
+        defenseEffectiveness: true,
+        robotRoles: true,
+        endgameClimb: true,
+        autoClimb: true,
+        feederTypes: true,
+        accuracy: true,
+      },
     });
 
-    const output = {
-      totalPoints: (
-        await averageScoutReport(ctx.user, {
-          scoutReportUuid: scoutReport.uuid,
-          metrics: [Metric.totalPoints],
-        })
-      )[Metric.totalPoints],
+    if (!scoutReport) return {} as any;
+
+    const metrics = [
+      Metric.totalPoints,
+      Metric.autoClimbStartTime,
+      Metric.contactDefenseTime,
+      Metric.campingDefenseTime,
+      Metric.totalDefenseTime,
+      Metric.fuelPerSecond,
+      Metric.feedingRate,
+      Metric.feedsPerMatch,
+      Metric.l1StartTime,
+      Metric.volleysPerMatch,
+      Metric.totalBallsFed,
+    ];
+
+    const agg = await averageScoutReport(ctx.user, {
+      scoutReportUuid: scoutReport.uuid,
+      metrics,
+    });
+
+    const output: any = {
+      totalPoints: agg[Metric.totalPoints],
       driverAbility: scoutReport.driverAbility,
-      role: FlippedRoleMap[scoutReport.robotRole],
-      // stage : stageMap[scoutReport.stage],
-      // highNote : highNoteMap[scoutReport.highNote],
-      barge: BargeResultReverseMap[scoutReport.bargeResult],
+      accuracy: scoutReport.accuracy,
+      totalBallsFed: agg[Metric.totalBallsFed],
+      volleys: agg[Metric.volleysPerMatch],
+      defenseEffectiveness: scoutReport.defenseEffectiveness,
+      robotRoles: scoutReport.robotRoles.map((role) => FlippedRoleMap[role]),
+      climb: EndgameClimbReverseMap[scoutReport.endgameClimb],
+      autoClimb: AutoClimbReverseMap[scoutReport.autoClimb],
+      autoClimbStartTime: agg[Metric.autoClimbStartTime] ?? 0,
+      contactDefenseTime: agg[Metric.contactDefenseTime] ?? 0,
+      campingDefenseTime: agg[Metric.campingDefenseTime] ?? 0,
+      totalDefenseTime: agg[Metric.totalDefenseTime] ?? 0,
+      scoringRate: agg[Metric.fuelPerSecond] ?? 0,
+      feedingRate: agg[Metric.feedingRate] ?? 0,
+      feeds: agg[Metric.feedsPerMatch] ?? 0,
+      feederType: (scoutReport.feederTypes || []).map(
+        (f) => FeederTypeReverseMap[f],
+      ),
+      climbResult: EndgameClimbReverseMap[scoutReport.endgameClimb],
+      climbStartTime: agg[Metric.l1StartTime] ?? 0,
       autoPath: await autoPathScouter(ctx.user, {
         matchKey: scoutReport.teamMatchKey,
         scoutReportUuid: scoutReport.uuid,

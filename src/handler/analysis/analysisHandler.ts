@@ -1,10 +1,11 @@
 import { RequestHandler } from "express";
-import z from "zod";
+import z, { boolean } from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 import prismaClient from "../../prismaClient.js";
 import { dataSourceRuleSchema } from "./dataSourceRule.js";
 import { kv } from "../../redisClient.js";
 import { AnalysisContext } from "./analysisConstants.js";
+import { CreateKeyResult } from "./analysisFunction.js";
 
 export type AnalysisHandlerParamsSchema<
   T extends z.ZodObject,
@@ -31,11 +32,9 @@ export type AnalysisHandlerArgs<
   V extends z.ZodObject,
 > = {
   params: AnalysisHandlerParamsSchema<T, U, V>;
-  createKey: (params: AnalysisHandlerParams<T, U, V>) => {
-    key: string[];
-    teamDependencies?: number[];
-    tournamentDependencies?: string[];
-  };
+  createKey: (
+    params: AnalysisHandlerParams<T, U, V>,
+  ) => Promise<CreateKeyResult> | CreateKeyResult;
   calculateAnalysis: (
     params: AnalysisHandlerParams<T, U, V>,
     ctx: AnalysisContext,
@@ -90,7 +89,7 @@ export const createAnalysisHandler: <
         key: keyFragments,
         teamDependencies: teamDeps,
         tournamentDependencies: tournamentDeps,
-      } = args.createKey(params);
+      } = await args.createKey(params);
 
       const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
         context.dataSource.teams,
@@ -126,13 +125,18 @@ export const createAnalysisHandler: <
           try {
             await kv.set(key, JSON.stringify(calculatedAnalysis));
 
-            await prismaClient.cachedAnalysis.create({
-              data: {
-                key: key,
-                teamDependencies: teamDeps ?? [],
-                tournamentDependencies: tournamentDeps ?? [],
-              },
-            });
+            try {
+              await prismaClient.cachedAnalysis.create({
+                data: {
+                  key: key,
+                  teamDependencies: teamDeps ?? [],
+                  tournamentDependencies: tournamentDeps ?? [],
+                },
+              });
+            } catch (e: any) {
+              if (e?.code !== "P2002") throw e;
+              // Ignore duplicate key; another request already created the row
+            }
           } catch (error) {
             console.error(error);
             return;
@@ -144,7 +148,12 @@ export const createAnalysisHandler: <
         }
       } else {
         res.set("X-Lovat-Cache", "hit");
-        res.status(200).send(JSON.parse(cacheRow.toString()));
+        res
+          .status(200)
+          .send(
+            JSON.parse(cacheRow.toString()).error ??
+              JSON.parse(cacheRow.toString()),
+          );
       }
     } catch (error) {
       if (error instanceof z.ZodError) {

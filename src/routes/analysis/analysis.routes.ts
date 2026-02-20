@@ -4,9 +4,9 @@ import { picklistShell } from "../../handler/analysis/picklist/picklistShell.js"
 import { pitDisplay } from "../../handler/manager/pitDisplay.js";
 import { requireAuth } from "../../lib/middleware/requireAuth.js";
 import { Router } from "express";
-import teamLookup from "./teamLookup.routes.js"
-import csv from "./csv.routes.js"
-import scoutReport from "./scoutreport.routes.js"
+import teamLookup from "./teamLookup.routes.js";
+import csv from "./csv.routes.js";
+import scoutReport from "./scoutreport.routes.js";
 
 const router = Router();
 

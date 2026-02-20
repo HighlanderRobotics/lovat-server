@@ -27,61 +27,61 @@ export const arrayToRule = <T extends string | number>(
   return { mode: "INCLUDE", items: sources };
 };
 
-const migrateUserDataSources = async (user: User) => {
-  await prismaClient.user.update({
-    where: {
-      id: user.id,
-    },
-    data: {
-      teamSourceRule: arrayToRule<number>(
-        user.teamSource,
-        await allTeamNumbers,
-      ),
-      tournamentSourceRule: arrayToRule<string>(
-        user.tournamentSource,
-        await allTournaments,
-      ),
-    },
-  });
-};
+// const migrateUserDataSources = async (user: User) => {
+//   await prismaClient.user.update({
+//     where: {
+//       id: user.id,
+//     },
+//     data: {
+//       teamSourceRule: arrayToRule<number>(
+//         user.teamSource,
+//         await allTeamNumbers,
+//       ),
+//       tournamentSourceRule: arrayToRule<string>(
+//         user.tournamentSource,
+//         await allTournaments,
+//       ),
+//     },
+//   });
+// };
 
-export const migrateDataSources = async () => {
-  const shouldSkip = (
-    await prismaClient.featureToggle.findUnique({
-      where: { feature: "skipDataSourceMigration" },
-    })
-  )?.enabled;
+// export const migrateDataSources = async () => {
+//   const shouldSkip = (
+//     await prismaClient.featureToggle.findUnique({
+//       where: { feature: "skipDataSourceMigration" },
+//     })
+//   )?.enabled;
 
-  if (shouldSkip) {
-    console.log("Skipping data source migration");
-    return;
-  }
+//   if (shouldSkip) {
+//     console.log("Skipping data source migration");
+//     return;
+//   }
 
-  const batchSize = 20;
-  let processed = 0;
-  const totalUsers = await prismaClient.user.count();
+//   const batchSize = 20;
+//   let processed = 0;
+//   const totalUsers = await prismaClient.user.count();
 
-  while (processed < totalUsers) {
-    const batch = await prismaClient.user.findMany({
-      skip: processed,
-      take: batchSize,
-    });
+//   while (processed < totalUsers) {
+//     const batch = await prismaClient.user.findMany({
+//       skip: processed,
+//       take: batchSize,
+//     });
 
-    await Promise.all(batch.map((user) => migrateUserDataSources(user)));
-    processed += batch.length;
-    console.log(`Processed ${processed} of ${totalUsers} users`);
-  }
+//     await Promise.all(batch.map((user) => migrateUserDataSources(user)));
+//     processed += batch.length;
+//     console.log(`Processed ${processed} of ${totalUsers} users`);
+//   }
 
-  await prismaClient.featureToggle.upsert({
-    where: {
-      feature: "skipDataSourceMigration",
-    },
-    create: {
-      feature: "skipDataSourceMigration",
-      enabled: true,
-    },
-    update: {
-      enabled: true,
-    },
-  });
-};
+//   await prismaClient.featureToggle.upsert({
+//     where: {
+//       feature: "skipDataSourceMigration",
+//     },
+//     create: {
+//       feature: "skipDataSourceMigration",
+//       enabled: true,
+//     },
+//     update: {
+//       enabled: true,
+//     },
+//   });
+// };

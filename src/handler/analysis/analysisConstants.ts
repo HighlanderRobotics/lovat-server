@@ -1,11 +1,14 @@
 import {
+  AutoClimb,
+  EndgameClimb,
   EventAction,
-  BargeResult,
+  FeederType,
   Position,
   RobotRole,
-  CoralPickup,
-  AlgaePickup,
   User,
+  IntakeType,
+  Beached,
+  FieldTraversal,
 } from "@prisma/client";
 import prismaClient from "../../prismaClient.js";
 import { DataSourceRule } from "./dataSourceRule.js";
@@ -18,242 +21,245 @@ const defaultEndgamePoints = 1.5;
 // General numeric metrics
 enum Metric {
   totalPoints,
-  driverAbility,
-  teleopPoints,
   autoPoints,
-  feeds,
-  defends, // General game metrics
-  coralPickups,
-  algaePickups,
-  coralDrops,
-  algaeDrops, // Game piece interactions
-  coralL1,
-  coralL2,
-  coralL3,
-  coralL4,
-  processorScores,
-  netScores,
-  netFails, // Game piece scoring
-  autonLeaves,
-  bargePoints, // Auto/Endgame
-  totalCoral, // Late addition
+  teleopPoints,
+  fuelPerSecond,
+  accuracy,
+  volleysPerMatch,
+  l1StartTime,
+  l2StartTime,
+  l3StartTime,
+  autoClimbStartTime,
+  driverAbility,
+  contactDefenseTime,
+  defenseEffectiveness,
+  campingDefenseTime,
+  totalDefenseTime,
+  timeFeeding,
+  feedingRate,
+  feedsPerMatch,
+  totalFuelOutputted,
+  totalBallsFed,
+  totalBallThroughput,
+  outpostIntakes,
 }
 
 // !!!IMPORTANT!!! toString() must return a property of ScoutReport
 // Metrics for discrete ScoutReport fields
 enum MetricsBreakdown {
-  robotRole = "robotRole",
-  algaePickup = "algaePickup",
-  coralPickup = "coralPickup",
-  bargeResult = "bargeResult",
-  knocksAlgae = "knocksAlgae",
-  underShallowCage = "underShallowCage",
-  leavesAuto = "leavesAuto",
+  robotRole = "robotRoles",
+  fieldTraversal = "fieldTraversal",
+  climbResult = "endgameClimb",
+  beached = "beached",
+  scoresWhileMoving = "scoresWhileMoving",
+  disrupts = "disrupts",
+  autoClimb = "autoClimb",
+  feederType = "feederTypes",
+  intakeType = "intakeType",
 }
 
 // Ranking metrics
 const metricsCategory: Metric[] = [
   Metric.totalPoints,
-  Metric.driverAbility,
-  Metric.teleopPoints,
   Metric.autoPoints,
-  Metric.feeds,
-  Metric.defends,
-  Metric.coralPickups,
-  Metric.algaePickups,
-  Metric.coralDrops,
-  Metric.algaeDrops,
-  Metric.totalCoral,
-  Metric.coralL1,
-  Metric.coralL2,
-  Metric.coralL3,
-  Metric.coralL4,
-  Metric.processorScores,
-  Metric.netScores,
-  Metric.netFails,
+  Metric.teleopPoints,
+  Metric.fuelPerSecond,
+  Metric.accuracy,
+  Metric.volleysPerMatch,
+  Metric.l1StartTime,
+  Metric.l2StartTime,
+  Metric.l3StartTime,
+  Metric.autoClimbStartTime,
+  Metric.driverAbility,
+  Metric.contactDefenseTime,
+  Metric.defenseEffectiveness,
+  Metric.campingDefenseTime,
+  Metric.totalDefenseTime,
+  Metric.timeFeeding,
+  Metric.feedingRate,
+  Metric.feedsPerMatch,
+  Metric.totalFuelOutputted,
+  Metric.totalBallsFed,
+  Metric.outpostIntakes,
 ];
 
 // To differentiate auton and teleop events, benefit of the doubt given to auto
-const autoEnd = 18;
+const autoEnd = 23;
 
-const specificMatchPageMetrics = [
-  Metric.defends,
-  Metric.coralL1,
-  Metric.coralL2,
-  Metric.coralL3,
-  Metric.coralL4,
-  Metric.processorScores,
-  Metric.netScores,
-  Metric.netFails,
-];
+const specificMatchPageMetrics = [];
 
 // Easy point calculation
-const endgameToPoints: Record<BargeResult, number> = {
-  [BargeResult.NOT_ATTEMPTED]: 0,
-  [BargeResult.PARKED]: 2,
-  [BargeResult.SHALLOW]: 6,
-  [BargeResult.FAILED_SHALLOW]: 0,
-  [BargeResult.DEEP]: 12,
-  [BargeResult.FAILED_DEEP]: 0,
+const endgameToPoints: Record<EndgameClimb, number> = {
+  [EndgameClimb.NOT_ATTEMPTED]: 0,
+  [EndgameClimb.FAILED]: 0,
+  [EndgameClimb.L1]: 10,
+  [EndgameClimb.L2]: 20,
+  [EndgameClimb.L3]: 30,
 };
 
 // Metrics that are analyzed by event count
 const metricToEvent: Partial<Record<Metric, EventAction>> = {
-  [Metric.feeds]: EventAction.FEED,
-  [Metric.defends]: EventAction.DEFEND,
-  [Metric.coralPickups]: EventAction.PICKUP_CORAL,
-  [Metric.algaePickups]: EventAction.PICKUP_ALGAE,
-  [Metric.coralDrops]: EventAction.DROP_CORAL,
-  [Metric.algaeDrops]: EventAction.DROP_ALGAE,
-  [Metric.totalCoral]: EventAction.SCORE_CORAL,
-  [Metric.coralL1]: EventAction.SCORE_CORAL,
-  [Metric.coralL2]: EventAction.SCORE_CORAL,
-  [Metric.coralL3]: EventAction.SCORE_CORAL,
-  [Metric.coralL4]: EventAction.SCORE_CORAL,
-  [Metric.processorScores]: EventAction.SCORE_PROCESSOR,
-  [Metric.netScores]: EventAction.SCORE_NET,
-  [Metric.netFails]: EventAction.FAIL_NET,
-  [Metric.autonLeaves]: EventAction.AUTO_LEAVE,
+  [Metric.feedsPerMatch]: EventAction.START_FEEDING,
+  [Metric.volleysPerMatch]: EventAction.START_SCORING,
+  [Metric.outpostIntakes]: EventAction.INTAKE,
 };
 
 const FlippedRoleMap: Record<RobotRole, number> = {
-  [RobotRole.OFFENSE]: 0,
-  [RobotRole.DEFENSE]: 1,
-  [RobotRole.FEEDER]: 2,
-  [RobotRole.IMMOBILE]: 3,
+  [RobotRole.CYCLING]: 0,
+  [RobotRole.SCORING]: 1,
+  [RobotRole.FEEDING]: 2,
+  [RobotRole.DEFENDING]: 3,
+  [RobotRole.IMMOBILE]: 4,
 };
 
 const FlippedActionMap: Record<EventAction, number> = {
-  [EventAction.PICKUP_CORAL]: 0,
-  [EventAction.PICKUP_ALGAE]: 1,
-  [EventAction.FEED]: 2,
-  [EventAction.AUTO_LEAVE]: 3,
-  [EventAction.DEFEND]: 4,
-  [EventAction.SCORE_NET]: 5,
-  [EventAction.FAIL_NET]: 6,
-  [EventAction.SCORE_PROCESSOR]: 7,
-  [EventAction.SCORE_CORAL]: 8,
-  [EventAction.DROP_ALGAE]: 9,
-  [EventAction.DROP_CORAL]: 10,
-  [EventAction.START_POSITION]: 11,
+  [EventAction.START_SCORING]: 0,
+  [EventAction.STOP_SCORING]: 1,
+  [EventAction.START_MATCH]: 2,
+  [EventAction.START_CAMPING]: 3,
+  [EventAction.STOP_CAMPING]: 4,
+  [EventAction.START_DEFENDING]: 5,
+  [EventAction.STOP_DEFENDING]: 6,
+  [EventAction.INTAKE]: 7,
+  [EventAction.OUTTAKE]: 8,
+  [EventAction.DISRUPT]: 9,
+  [EventAction.CROSS]: 10,
+  [EventAction.CLIMB]: 11,
+  [EventAction.START_FEEDING]: 12,
+  [EventAction.STOP_FEEDING]: 13,
 };
 
 const FlippedPositionMap: Record<Position, number> = {
-  [Position.NONE]: 0,
-  [Position.START_ONE]: 1,
-  [Position.START_TWO]: 2,
-  [Position.START_THREE]: 3,
-  [Position.START_FOUR]: 4,
-  [Position.LEVEL_ONE]: 5,
-  [Position.LEVEL_TWO]: 6,
-  [Position.LEVEL_THREE]: 7,
-  [Position.LEVEL_FOUR]: 8,
-  [Position.LEVEL_ONE_A]: 9,
-  [Position.LEVEL_ONE_B]: 10,
-  [Position.LEVEL_ONE_C]: 11,
-  [Position.LEVEL_TWO_A]: 12,
-  [Position.LEVEL_TWO_B]: 13,
-  [Position.LEVEL_TWO_C]: 14,
-  [Position.LEVEL_THREE_A]: 15,
-  [Position.LEVEL_THREE_B]: 16,
-  [Position.LEVEL_THREE_C]: 17,
-  [Position.LEVEL_FOUR_A]: 18,
-  [Position.LEVEL_FOUR_B]: 19,
-  [Position.LEVEL_FOUR_C]: 20,
-  [Position.GROUND_PIECE_A]: 21,
-  [Position.GROUND_PIECE_B]: 22,
-  [Position.GROUND_PIECE_C]: 23,
-  [Position.CORAL_STATION_ONE]: 24,
-  [Position.CORAL_STATION_TWO]: 25,
+  [Position.LEFT_TRENCH]: 0,
+  [Position.LEFT_BUMP]: 1,
+  [Position.HUB]: 2,
+  [Position.RIGHT_TRENCH]: 3,
+  [Position.RIGHT_BUMP]: 4,
+  [Position.NEUTRAL_ZONE]: 5,
+  [Position.DEPOT]: 6,
+  [Position.OUTPOST]: 7,
+  [Position.NONE]: 8,
 };
 
-const breakdownPos = "True";
-const breakdownNeg = "False";
+const breakdownPos = "TRUE";
+const breakdownNeg = "FALSE";
 
-const lowercaseToBreakdown: Record<string, MetricsBreakdown> = {
-  robotrole: MetricsBreakdown.robotRole,
-  algaepickup: MetricsBreakdown.algaePickup,
-  coralpickup: MetricsBreakdown.coralPickup,
-  bargeresult: MetricsBreakdown.bargeResult,
-  knocksalgae: MetricsBreakdown.knocksAlgae,
-  Undershallowcage: MetricsBreakdown.underShallowCage,
-  leavesauto: MetricsBreakdown.leavesAuto,
+const accuracyToPercentage: Record<number, number> = {
+  0: 25,
+  1: 55,
+  2: 65,
+  3: 75,
+  4: 85,
+  5: 95,
+};
+
+export const accuracyToPercentageInterpolated = (
+  avg: number | null | undefined,
+): number => {
+  avg = Math.max(0, Math.min(5, avg));
+
+  if (avg === null || avg === undefined) return 0;
+  const lower = Math.floor(avg);
+  const upper = Math.ceil(avg);
+
+  if (lower === upper) return accuracyToPercentage[lower];
+
+  const fraction = avg - lower;
+  return (
+    accuracyToPercentage[lower] +
+    fraction * (accuracyToPercentage[upper] - accuracyToPercentage[lower])
+  );
+};
+
+export const dashboardToServer: Record<string, string> = {
+  robotRole: "robotRoles",
+  fieldTraversal: "fieldTraversal",
+  climbResult: "endgameClimb",
+  beached: "beached",
+  scoresWhileMoving: "scoresWhileMoving",
+  disrupts: "disrupts",
+  autoClimb: "autoClimb",
+  feederType: "feederTypes",
+  intakeType: "intakeType",
 };
 
 const breakdownToEnum: Record<MetricsBreakdown, string[]> = {
   [MetricsBreakdown.robotRole]: [...Object.values(RobotRole)],
-  [MetricsBreakdown.algaePickup]: [...Object.values(AlgaePickup)],
-  [MetricsBreakdown.coralPickup]: [...Object.values(CoralPickup)],
-  [MetricsBreakdown.bargeResult]: [...Object.values(BargeResult)],
-  [MetricsBreakdown.knocksAlgae]: [breakdownNeg, breakdownPos],
-  [MetricsBreakdown.underShallowCage]: [breakdownNeg, breakdownPos],
-  [MetricsBreakdown.leavesAuto]: [breakdownNeg, breakdownPos],
+  [MetricsBreakdown.fieldTraversal]: [...Object.values(FieldTraversal)],
+  [MetricsBreakdown.climbResult]: [...Object.values(EndgameClimb)],
+  [MetricsBreakdown.beached]: [...Object.values(Beached)],
+  [MetricsBreakdown.scoresWhileMoving]: [breakdownNeg, breakdownPos],
+  [MetricsBreakdown.autoClimb]: [...Object.values(AutoClimb)],
+  [MetricsBreakdown.feederType]: [...Object.values(FeederType)],
+  [MetricsBreakdown.intakeType]: [...Object.values(IntakeType)],
+  [MetricsBreakdown.disrupts]: [breakdownNeg, breakdownPos],
 };
 
 const metricsToNumber: Record<string, number> = {
   totalPoints: 0,
-  driverAbility: 1,
+  autoPoints: 1,
   teleopPoints: 2,
-  autoPoints: 3,
-  feeds: 4,
-  defends: 5,
-  coralPickups: 6,
-  algaePickups: 7,
-  coralDrops: 8,
-  algaeDrops: 9,
-  coralL1: 10,
-  coralL2: 11,
-  coralL3: 12,
-  coralL4: 13,
-  processorScores: 14,
-  netScores: 15,
-  netFails: 16,
-  autonLeaves: 17,
-  bargePoints: 18,
-  totalCoral: 19,
+  fuelPerSecond: 3,
+  scoringRate: 3, // alias used by UI for balls per second
+  accuracy: 4,
+  volleysPerMatch: 5,
+  l1StartTime: 6,
+  l2StartTime: 7,
+  l3StartTime: 8,
+  autoClimbStartTime: 9,
+  driverAbility: 10,
+  contactDefenseTime: 11,
+  defenseEffectiveness: 12,
+  campingDefenseTime: 13,
+  totalDefenseTime: 14,
+  timeFeeding: 15,
+  feedingRate: 16,
+  feedsPerMatch: 17,
+  totalFuelOutputted: 18,
+  totalBallsFed: 19,
+  totalBallThroughput: 20,
+  totalBallThroughPut: 20, // UI alias with capital P
+  outpostIntakes: 21,
 };
 
 const metricToName: Record<Metric, string> = {
   [Metric.totalPoints]: "totalPoints",
-  [Metric.driverAbility]: "driverAbility",
-  [Metric.teleopPoints]: "teleopPoints",
   [Metric.autoPoints]: "autoPoints",
-  [Metric.feeds]: "feeds",
-  [Metric.defends]: "defends",
-  [Metric.coralPickups]: "coralPickups",
-  [Metric.algaePickups]: "algaePickups",
-  [Metric.coralDrops]: "coralDrops",
-  [Metric.algaeDrops]: "algaeDrops",
-  [Metric.totalCoral]: "totalCoral",
-  [Metric.coralL1]: "coralL1",
-  [Metric.coralL2]: "coralL2",
-  [Metric.coralL3]: "coralL3",
-  [Metric.coralL4]: "coralL4",
-  [Metric.processorScores]: "processorScores",
-  [Metric.netScores]: "netScores",
-  [Metric.netFails]: "netFails",
-  [Metric.autonLeaves]: "autonLeaves",
-  [Metric.bargePoints]: "bargePoints",
+  [Metric.teleopPoints]: "teleopPoints",
+  [Metric.fuelPerSecond]: "fuelPerSecond",
+  [Metric.accuracy]: "accuracy",
+  [Metric.volleysPerMatch]: "volleysPerMatch",
+  [Metric.l1StartTime]: "l1StartTime",
+  [Metric.l2StartTime]: "l2StartTime",
+  [Metric.l3StartTime]: "l3StartTime",
+  [Metric.autoClimbStartTime]: "autoClimbStartTime",
+  [Metric.driverAbility]: "driverAbility",
+  [Metric.contactDefenseTime]: "contactDefenseTime",
+  [Metric.defenseEffectiveness]: "defenseEffectiveness",
+  [Metric.campingDefenseTime]: "campingDefenseTime",
+  [Metric.totalDefenseTime]: "totalDefenseTime",
+  [Metric.timeFeeding]: "timeFeeding",
+  [Metric.feedingRate]: "feedingRate",
+  [Metric.feedsPerMatch]: "feedsPerMatch",
+  [Metric.totalFuelOutputted]: "totalFuelOutputted",
+  [Metric.totalBallsFed]: "totalBallsFed",
+  [Metric.totalBallThroughput]: "totalBallThroughput",
+  [Metric.outpostIntakes]: "outpostIntakes",
 };
 
 // Translates between picklist parameters and metric enum
 const picklistToMetric: Record<string, Metric> = {
-  totalpoints: Metric.totalPoints,
-  autopoints: Metric.autoPoints,
-  teleoppoints: Metric.teleopPoints,
-  driverability: Metric.driverAbility,
-  bargeresult: Metric.bargePoints,
-  totalCoral: Metric.totalCoral,
-  level1: Metric.coralL1,
-  level2: Metric.coralL2,
-  level3: Metric.coralL3,
-  level4: Metric.coralL4,
-  coralpickup: Metric.coralPickups,
-  algaeProcessor: Metric.processorScores,
-  algaeNet: Metric.netScores,
-  algaePickups: Metric.algaePickups,
-  feeds: Metric.feeds,
-  defends: Metric.defends,
+  totalPoints: Metric.totalPoints,
+  autoPoints: Metric.autoPoints,
+  teleopPoints: Metric.teleopPoints,
+  autoClimb: Metric.autoClimbStartTime,
+  defenseEffectiveness: Metric.defenseEffectiveness,
+  contactDefenseTime: Metric.contactDefenseTime,
+  campingDefenseTime: Metric.campingDefenseTime,
+  totalDefensiveTime: Metric.totalDefenseTime,
+  totalFuelThroughput: Metric.totalFuelOutputted,
+  feedingRate: Metric.feedingRate,
+  scoringRate: Metric.fuelPerSecond,
 };
 
 // For occasional query optimizations
@@ -302,10 +308,10 @@ export {
   metricsToNumber,
   allTeamNumbers,
   allTournaments,
-  lowercaseToBreakdown,
   breakdownPos,
   breakdownNeg,
   breakdownToEnum,
+  accuracyToPercentage,
 };
 
 export type AnalysisContext = {

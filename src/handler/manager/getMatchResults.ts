@@ -43,12 +43,10 @@ export const getMatchResults = async (
 
 export const ALLIANCE_METRICS: Metric[] = [
   Metric.totalPoints,
-  Metric.coralL1,
-  Metric.coralL2,
-  Metric.coralL3,
-  Metric.coralL4,
-  Metric.processorScores,
-  Metric.netScores,
+  Metric.totalDefenseTime,
+  Metric.totalFuelOutputted,
+  Metric.autoPoints,
+  Metric.teleopPoints,
 ];
 
 interface MatchResultsOutput {
@@ -59,12 +57,10 @@ interface MatchResultsOutput {
 interface AllianceResultsOutput {
   teams: TeamOutput[];
   totalPoints: number;
-  coralL1: number;
-  coralL2: number;
-  coralL3: number;
-  coralL4: number;
-  processor: number;
-  net: number;
+  totalDefenseTime: number;
+  totalFuelOutputted: number;
+  autoPoints: number;
+  teleopPoints: number;
 }
 
 interface TeamOutput {
@@ -109,12 +105,10 @@ async function getAllianceResults(
       await getTeamResults(matchData[2]),
     ],
     totalPoints: totals[Metric.totalPoints],
-    coralL1: totals[Metric.coralL1],
-    coralL2: totals[Metric.coralL2],
-    coralL3: totals[Metric.coralL3],
-    coralL4: totals[Metric.coralL4],
-    processor: totals[Metric.processorScores],
-    net: totals[Metric.netScores],
+    totalDefenseTime: totals[Metric.totalDefenseTime],
+    totalFuelOutputted: totals[Metric.totalFuelOutputted],
+    autoPoints: totals[Metric.autoPoints],
+    teleopPoints: totals[Metric.teleopPoints],
   };
 
   return out;
@@ -143,13 +137,16 @@ async function getTeamResults(
 }
 
 function getRobotRole(reports: ScoutReport[]) {
-  const out: number[] = [0, 0, 0, 0];
+  const out: number[] = [0, 0, 0, 0, 0, 0];
 
   for (const report of reports) {
-    if (report.robotRole === "OFFENSE") out[0] += 1;
-    if (report.robotRole === "DEFENSE") out[1] += 1;
-    if (report.robotRole === "FEEDER") out[2] += 1;
-    if (report.robotRole === "IMMOBILE") out[3] += 1;
+    for (const role of report.robotRoles || []) {
+      if (role === "CYCLING") out[0]++;
+      if (role === "SCORING") out[1]++;
+      if (role === "FEEDING") out[2]++;
+      if (role === "DEFENDING") out[3]++;
+      if (role === "IMMOBILE") out[4]++;
+    }
   }
 
   return out;
