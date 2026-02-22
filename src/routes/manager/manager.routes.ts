@@ -415,8 +415,8 @@ router.use("/scoutreports", scoutreports);
 router.use("/settings", settings);
 router.use("/apikey", apikey);
 
-router.get("/teams", requireAuth, requireVerifiedTeam, getTeams);
-router.get("/tournaments", requireAuth, requireVerifiedTeam, getTournaments);
+router.get("/teams", requireAuth, getTeams);
+router.get("/tournaments", requireAuth, getTournaments);
 
 router.get(
   "/matches/:tournament",
