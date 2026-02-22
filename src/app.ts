@@ -44,15 +44,20 @@ app.get("/status", (req, res) => {
 });
 
 // OpenAPI docs
-const openApiDocument = generateOpenApiDocument();
+const isDevelopment = process.env.NODE_ENV === "development";
+const openApiDocument = !isDevelopment ? generateOpenApiDocument() : undefined;
+
 app.get("/doc.json", (_req, res) => {
-  res.json(openApiDocument);
+  const doc = isDevelopment ? generateOpenApiDocument() : openApiDocument;
+  res.json(doc);
 });
 
 app.use(
   "/doc",
   swaggerUi.serve,
-  swaggerUi.setup(openApiDocument, {
+  swaggerUi.setup(isDevelopment ? undefined : openApiDocument, {
+    // In development, Swagger UI will fetch the spec from /doc.json on each request.
+    swaggerOptions: isDevelopment ? { url: "/doc.json" } : undefined,
     customCssUrl: "/swaggerTheme.css",
   }),
 );
