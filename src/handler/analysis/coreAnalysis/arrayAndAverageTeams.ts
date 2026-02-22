@@ -8,8 +8,7 @@ import {
   swrConstant,
   ttlConstant,
 } from "../analysisConstants.js";
-import { endgamePicklistTeamFast } from "../picklist/endgamePicklistTeamFast.js";
-import { Event, Prisma, ScoutReport, $Enums } from "@prisma/client";
+import { Event, Prisma, ScoutReport } from "@prisma/client";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
@@ -17,7 +16,6 @@ import {
 import z from "zod";
 import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
 import {
-  averageManyFast,
   avg,
   calculateTimeMetric,
 } from "./averageManyFast.js";

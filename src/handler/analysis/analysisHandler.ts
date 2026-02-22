@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import z, { boolean } from "zod";
+import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
 import prismaClient from "../../prismaClient.js";
 import { dataSourceRuleSchema } from "./dataSourceRule.js";

@@ -3,10 +3,7 @@ import prismaClient from "../../../prismaClient.js";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { stringify } from "csv-stringify/sync";
 import {
-  UserRole,
   RobotRole,
-  EventAction,
-  Position,
   Event,
   AutoClimb,
   FieldTraversal,
@@ -16,8 +13,6 @@ import {
   ClimbSide,
   FeederType,
   IntakeType,
-  Scouter,
-  TeamMatchData,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints, Metric } from "../analysisConstants.js";
 import { z } from "zod";

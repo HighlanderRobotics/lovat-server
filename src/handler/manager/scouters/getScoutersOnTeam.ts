@@ -7,7 +7,6 @@ export const getScoutersOnTeam = async (
   res: Response,
 ): Promise<void> => {
   try {
-    console.log(req.headers);
     const params = z
       .object({
         teamCode: z.string(),

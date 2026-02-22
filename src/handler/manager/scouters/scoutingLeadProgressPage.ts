@@ -125,9 +125,6 @@ export const scoutingLeadProgressPage = async (
             totalAssignedScouterMatches += matchesForShift;
           }
         });
-        console.log(scouter.name);
-        console.log("totalAssinged");
-        console.log(totalAssignedScouterMatches);
         const matchesScoutedAtTournament =
           await prismaClient.scoutReport.groupBy({
             by: ["teamMatchKey"],
@@ -138,9 +135,6 @@ export const scoutingLeadProgressPage = async (
               },
             },
           });
-
-        console.log("matches scouted");
-        console.log(matchesScoutedAtTournament.length);
         const currData = {
           scouterUuid: scouter.uuid,
           scouterName: scouter.name,

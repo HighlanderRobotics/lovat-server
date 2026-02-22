@@ -1,6 +1,6 @@
 import { Response } from "express";
 import prismaClient from "../../../prismaClient.js";
-import z, { check } from "zod";
+import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { PositionMap, EventActionMap } from "../managerConstants.js";
 import { addTournamentMatches } from "../addTournamentMatches.js";

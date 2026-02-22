@@ -28,7 +28,6 @@ export const checkCodeScouter = async (
         code: params.data.code,
       },
     });
-    console.log(teamWithCode);
     if (teamWithCode === null) {
       //not a valid code
       res.status(200).send(false);

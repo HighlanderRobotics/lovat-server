@@ -132,8 +132,6 @@ export const getScheduleForScouter = async (
       }
     }
 
-    // console.log(finalArr)
-
     res.status(200).send({ hash: hashJsonObject(rows), data: finalArr });
   } catch (error) {
     console.error(error);

@@ -3,12 +3,10 @@ import {
   accuracyToPercentageInterpolated,
   allTeamNumbers,
   autoEnd,
-  defaultEndgamePoints,
   endgameToPoints,
   Metric,
   metricToEvent,
 } from "../analysisConstants.js";
-import { Prisma } from "@prisma/client";
 import z from "zod";
 import {
   dataSourceRuleToPrismaFilter,

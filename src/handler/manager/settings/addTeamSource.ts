@@ -11,7 +11,6 @@ export const addTeamSource = async (
 ): Promise<void> => {
   try {
     const user = req.user;
-    console.log(req.body);
     if (req.body.mode === "ALL_TEAMS") {
       await prismaClient.user.update({
         where: {
