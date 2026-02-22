@@ -7,14 +7,9 @@ import { arrayToRule } from "../../../lib/migrateDataSources.js";
 
 export const addTeamSource = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
-    if (req.tokenType === "apiKey") {
-      res.status(403).json({ error: "This action cannot be performed using an API key" });
-      return;
-    }
-
     const user = req.user;
     console.log(req.body);
     if (req.body.mode === "ALL_TEAMS") {
@@ -64,7 +59,7 @@ export const addTeamSource = async (
         data: {
           teamSourceRule: arrayToRule<number>(
             params.data.teamSource,
-            await allTeamNumbers
+            await allTeamNumbers,
           ),
         },
       });
