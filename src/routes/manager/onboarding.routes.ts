@@ -8,7 +8,7 @@ import { addRegisteredTeam } from "../../handler/manager/registeredteams/addRegi
 import rateLimit from "express-rate-limit";
 import { addWebsite } from "../../handler/manager/onboarding/addWebsite.js";
 import { resendEmail } from "../../handler/manager/onboarding/resendEmail.js";
-import { registry } from "../../lib/openapi.js";
+import { registry, LovatTimestampHeader } from "../../lib/openapi.js";
 import { z } from "zod";
 
 /*
@@ -37,7 +37,10 @@ registry.registerPath({
   path: "/v1/manager/onboarding/verifyemail",
   tags: ["Manager - Onboarding"],
   summary: "Approve team email (signed)",
-  request: { body: { content: { "application/json": { schema: z.object({ code: z.string() }) } } } },
+  request: {
+    headers: LovatTimestampHeader,
+    body: { content: { "application/json": { schema: z.object({ code: z.string() }) } } },
+  },
   responses: { 200: { description: "Approved" }, 400: { description: "Invalid" }, 403: { description: "Invalid signature" }, 404: { description: "Code not recognized" }, 500: { description: "Server error" } },
   security: [{ lovatSignature: [] }],
 });

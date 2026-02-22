@@ -183,6 +183,9 @@ export const SlackWorkspaceSchema = z.object({
   authUserId: z.string(),
 });
 
+// Public schema omitting authToken for API responses
+export const SlackWorkspacePublicSchema = SlackWorkspaceSchema.omit({ authToken: true });
+
 export const SlackSubscriptionSchema = z.object({
   subscriptionId: z.string(),
   channelId: z.string(),
@@ -226,6 +229,15 @@ export const ApiKeySchema = z.object({
   requests: z.number().int(),
 });
 
+// Public response schema matching what API endpoints actually return
+export const ApiKeyResponseSchema = z.object({
+  uuid: z.string().uuid(),
+  name: z.string(),
+  createdAt: z.string().datetime(),
+  lastUsed: z.string().datetime().optional().nullable(),
+  requests: z.number().int(),
+});
+
 export const CachedAnalysisSchema = z.object({
   key: z.string(),
   teamDependencies: z.array(z.number().int()).default([]),
@@ -259,11 +271,11 @@ export function registerPrismaSchemas(registry: OpenAPIRegistry) {
   registry.register("Team", TeamSchema);
   registry.register("RegisteredTeam", RegisteredTeamSchema);
   registry.register("EmailVerificationRequest", EmailVerificationRequestSchema);
-  registry.register("SlackWorkspace", SlackWorkspaceSchema);
+  registry.register("SlackWorkspace", SlackWorkspacePublicSchema);
   registry.register("SlackSubscription", SlackSubscriptionSchema);
   registry.register("SlackNotificationThread", SlackNotificationThreadSchema);
   registry.register("Tournament", TournamentSchema);
   registry.register("User", UserSchema);
-  registry.register("ApiKey", ApiKeySchema);
+  registry.register("ApiKey", ApiKeyResponseSchema);
   registry.register("CachedAnalysis", CachedAnalysisSchema);
 }

@@ -4,7 +4,7 @@ import { rejectRegisteredTeam } from "../../handler/manager/registeredteams/reje
 import { approveRegisteredTeam } from "../../handler/manager/registeredteams/approveRegisteredTeam.js";
 import { checkRegisteredTeam } from "../../handler/manager/registeredteams/checkRegisteredTeam.js";
 import requireLovatSignature from "../../lib/middleware/requireLovatSignature.js";
-import { registry } from "../../lib/openapi.js";
+import { registry, LovatTimestampHeader } from "../../lib/openapi.js";
 import { z } from "zod";
 import { RegisteredTeamSchema } from "../../lib/prisma-zod.js";
 
@@ -46,7 +46,7 @@ registry.registerPath({
   summary: "Approve team",
   description:
     "Requires `x-signature` and `x-timestamp` headers. Signs request body, method, path.",
-  request: { params: TeamParamSchema },
+  request: { params: TeamParamSchema, headers: LovatTimestampHeader },
   responses: {
     200: {
       description: "Approved registered team row",
@@ -67,7 +67,7 @@ registry.registerPath({
   summary: "Reject team",
   description:
     "Requires `x-signature` and `x-timestamp` headers. Signs request body, method, path.",
-  request: { params: TeamParamSchema },
+  request: { params: TeamParamSchema, headers: LovatTimestampHeader },
   responses: {
     200: {
       description: "Rejection message",

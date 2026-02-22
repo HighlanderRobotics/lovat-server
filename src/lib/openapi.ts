@@ -36,6 +36,13 @@ registry.registerComponent("securitySchemes", "lovatSignature", {
   description: "HMAC signature header (requires accompanying x-timestamp)",
 });
 
+// Reusable header parameter schema for x-timestamp (used with lovatSignature)
+export const LovatTimestampHeader = z.object({
+  "x-timestamp": z
+    .string()
+    .openapi({ description: "Unix timestamp (seconds) used in HMAC signature generation" }),
+});
+
 // Minimal example: document the /status health check route
 registry.registerPath({
   method: "get",

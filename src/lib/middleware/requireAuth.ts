@@ -49,31 +49,36 @@ export const requireAuth = async (
         });
         return;
       }
-
-      const apiKey = await prisma.apiKey.update({
-        where: {
-          keyHash: keyHash,
-        },
-        data: {
-          requests: {
-            increment: 1,
+      try {
+        const apiKey = await prisma.apiKey.update({
+          where: {
+            keyHash: keyHash,
           },
-        },
-        include: {
-          user: true,
-        },
-      });
+          data: {
+            requests: {
+              increment: 1,
+            },
+          },
+          include: {
+            user: true,
+          },
+        });
 
-      if (!apiKey) {
+        if (!apiKey) {
+          res.status(401).send("Invalid API key");
+          return;
+        }
+
+        req.user = apiKey.user;
+        req.tokenType = "apiKey";
+
+        next();
+        return;
+      } catch (error) {
+        console.error("Error validating API key:", error);
         res.status(401).send("Invalid API key");
         return;
       }
-
-      req.user = apiKey.user;
-      req.tokenType = "apiKey";
-
-      next();
-      return;
     }
 
     try {
