@@ -64,11 +64,6 @@ export const requireAuth = async (
           },
         });
 
-        if (!apiKey) {
-          res.status(401).send("Invalid API key");
-          return;
-        }
-
         req.user = apiKey.user;
         req.tokenType = "apiKey";
 
@@ -152,6 +147,7 @@ export const requireAuth = async (
       }
 
       req.user = user;
+      req.tokenType = "jwt";
 
       next();
     }
