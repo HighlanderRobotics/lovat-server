@@ -30,6 +30,7 @@ import { getMatchResults } from "../../handler/manager/getMatchResults.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 import { TeamSchema, TournamentSchema } from "../../lib/prisma-zod.js";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 const router = Router();
 
@@ -414,31 +415,61 @@ router.use("/scoutreports", scoutreports);
 router.use("/settings", settings);
 router.use("/apikey", apikey);
 
-router.get("/teams", requireAuth, getTeams);
-router.get("/tournaments", requireAuth, getTournaments);
+router.get("/teams", requireAuth, requireVerifiedTeam, getTeams);
+router.get("/tournaments", requireAuth, requireVerifiedTeam, getTournaments);
 
-router.get("/matches/:tournament", requireAuth, getMatches);
+router.get(
+  "/matches/:tournament",
+  requireAuth,
+  requireVerifiedTeam,
+  getMatches,
+);
 
-router.put("/notes/:uuid", requireAuth, updateNotes);
-router.get("/scoutershift/scouters", requireAuth, getScouters);
+router.put("/notes/:uuid", requireAuth, requireVerifiedTeam, updateNotes);
+router.get(
+  "/scoutershift/scouters",
+  requireAuth,
+  requireVerifiedTeam,
+  getScouters,
+);
 
 router.get("/profile", requireAuth, getProfile);
 
-router.get("/users", requireAuth, getUsers);
+router.get("/users", requireAuth, requireVerifiedTeam, getUsers);
 
-router.delete("/user", requireAuth, deleteUser);
+router.delete("/user", requireAuth, requireVerifiedTeam, deleteUser);
 
-router.post("/upgradeuser", requireAuth, updateRoleToScoutingLead);
-router.get("/analysts", requireAuth, getAnalysts);
+router.post(
+  "/upgradeuser",
+  requireAuth,
+  requireVerifiedTeam,
+  updateRoleToScoutingLead,
+);
+router.get("/analysts", requireAuth, requireVerifiedTeam, getAnalysts);
 
 router.post("/noteam", requireAuth, addNotOnTeam);
 
-router.get("/code", requireAuth, getTeamCode);
+router.get("/code", requireAuth, requireVerifiedTeam, getTeamCode);
 
-router.post("/dashboard/scoutreport", requireAuth, addScoutReportDashboard);
+router.post(
+  "/dashboard/scoutreport",
+  requireAuth,
+  requireVerifiedTeam,
+  addScoutReportDashboard,
+);
 
-router.get("/team-tournament-status", requireAuth, getTeamTournamentStatus);
+router.get(
+  "/team-tournament-status",
+  requireAuth,
+  requireVerifiedTeam,
+  getTeamTournamentStatus,
+);
 
-router.get("/match-results-page", requireAuth, getMatchResults);
+router.get(
+  "/match-results-page",
+  requireAuth,
+  requireVerifiedTeam,
+  getMatchResults,
+);
 
 export default router;

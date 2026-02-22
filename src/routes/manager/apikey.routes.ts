@@ -6,6 +6,7 @@ import { renameApiKey } from "../../handler/manager/apikey/renameApiKey.js";
 import { revokeApiKey } from "../../handler/manager/apikey/revokeApiKey.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 // OpenAPI docs for API key management (JWT required)
 registry.registerPath({
@@ -13,10 +14,16 @@ registry.registerPath({
   path: "/v1/manager/apikey",
   tags: ["Manager - API Keys"],
   summary: "Create a new API key",
-  description: "JWT required; API keys (lvt-...) are not permitted for this endpoint.",
+  description:
+    "JWT required; API keys (lvt-...) are not permitted for this endpoint.",
   request: { query: z.object({ name: z.string() }) },
   responses: {
-    200: { description: "Created", content: { "application/json": { schema: z.object({ apiKey: z.string() }) } } },
+    200: {
+      description: "Created",
+      content: {
+        "application/json": { schema: z.object({ apiKey: z.string() }) },
+      },
+    },
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden for API key auth" },
@@ -29,10 +36,14 @@ registry.registerPath({
   path: "/v1/manager/apikey",
   tags: ["Manager - API Keys"],
   summary: "Revoke an API key",
-  description: "JWT required; API keys (lvt-...) are not permitted for this endpoint.",
+  description:
+    "JWT required; API keys (lvt-...) are not permitted for this endpoint.",
   request: { query: z.object({ uuid: z.string() }) },
   responses: {
-    200: { description: "Revoked", content: { "application/json": { schema: z.string() } } },
+    200: {
+      description: "Revoked",
+      content: { "application/json": { schema: z.string() } },
+    },
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden for API key auth" },
@@ -45,10 +56,14 @@ registry.registerPath({
   path: "/v1/manager/apikey",
   tags: ["Manager - API Keys"],
   summary: "Rename an API key",
-  description: "JWT required; API keys (lvt-...) are not permitted for this endpoint.",
+  description:
+    "JWT required; API keys (lvt-...) are not permitted for this endpoint.",
   request: { query: z.object({ uuid: z.string(), newName: z.string() }) },
   responses: {
-    200: { description: "Renamed", content: { "application/json": { schema: z.string() } } },
+    200: {
+      description: "Renamed",
+      content: { "application/json": { schema: z.string() } },
+    },
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
     403: { description: "Forbidden for API key auth" },
@@ -76,7 +91,7 @@ registry.registerPath({
                 lastUsed: z.string().datetime().nullable(),
                 requests: z.number().int(),
                 user: z.object({ username: z.string().nullable() }),
-              })
+              }),
             ),
           }),
         },
@@ -90,7 +105,7 @@ registry.registerPath({
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(requireAuth, requireVerifiedTeam);
 
 router.post("/", addApiKey);
 router.delete("/", revokeApiKey);

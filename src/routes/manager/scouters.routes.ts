@@ -18,6 +18,7 @@ import { updateScouterName } from "../../handler/manager/scouters/updateScouterN
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 import { ScouterSchema } from "../../lib/prisma-zod.js";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 const router = Router();
 
@@ -39,7 +40,16 @@ registry.registerPath({
   tags: ["Manager - Scouters (Public)"],
   summary: "Email team code to registered address",
   request: { query: z.object({ teamNumber: z.number().int() }) },
-  responses: { 200: { description: "Email sent", content: { "application/json": { schema: z.object({ email: z.string().email() }) } } }, 400: { description: "Invalid request" }, 500: { description: "Server error" } },
+  responses: {
+    200: {
+      description: "Email sent",
+      content: {
+        "application/json": { schema: z.object({ email: z.string().email() }) },
+      },
+    },
+    400: { description: "Invalid request" },
+    500: { description: "Server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -47,15 +57,33 @@ registry.registerPath({
   tags: ["Manager - Scouters (Public)"],
   summary: "Check team code",
   request: { query: z.object({ code: z.string() }) },
-  responses: { 200: { description: "Valid or team row", content: { "application/json": { schema: z.any() } } }, 400: { description: "Invalid request" }, 500: { description: "Server error" } },
+  responses: {
+    200: {
+      description: "Valid or team row",
+      content: { "application/json": { schema: z.any() } },
+    },
+    400: { description: "Invalid request" },
+    500: { description: "Server error" },
+  },
 });
 registry.registerPath({
   method: "post",
   path: "/v1/manager/name/uuid/{uuid}",
   tags: ["Manager - Scouters (Public)"],
   summary: "Change scouter name by UUID",
-  request: { params: z.object({ uuid: z.string() }), body: { content: { "application/json": { schema: z.object({ name: z.string() }) } } } },
-  responses: { 200: { description: "Updated" }, 400: { description: "Invalid request" }, 500: { description: "Server error" } },
+  request: {
+    params: z.object({ uuid: z.string() }),
+    body: {
+      content: {
+        "application/json": { schema: z.object({ name: z.string() }) },
+      },
+    },
+  },
+  responses: {
+    200: { description: "Updated" },
+    400: { description: "Invalid request" },
+    500: { description: "Server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -78,8 +106,23 @@ registry.registerPath({
   path: "/v1/manager/scouter",
   tags: ["Manager - Scouters (Public)"],
   summary: "Create scouter",
-  request: { body: { content: { "application/json": { schema: z.object({ teamNumber: z.number().int(), name: z.string() }) } } } },
-  responses: { 200: { description: "Created", content: { "application/json": { schema: z.any() } } }, 400: { description: "Invalid request" }, 500: { description: "Server error" } },
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ teamNumber: z.number().int(), name: z.string() }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Created",
+      content: { "application/json": { schema: z.any() } },
+    },
+    400: { description: "Invalid request" },
+    500: { description: "Server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -87,15 +130,31 @@ registry.registerPath({
   tags: ["Manager - Scouters (Public)"],
   summary: "List tournaments",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Tournaments", content: { "application/json": { schema: z.array(z.any()) } } }, 500: { description: "Server error" } },
+  responses: {
+    200: {
+      description: "Tournaments",
+      content: { "application/json": { schema: z.array(z.any()) } },
+    },
+    500: { description: "Server error" },
+  },
 });
 registry.registerPath({
   method: "get",
   path: "/v1/manager/scouterschedules/{tournament}",
   tags: ["Manager - Scouters (Public)"],
   summary: "Get scouter schedule",
-  request: { params: z.object({ tournament: z.string() }), headers: z.object({ "x-team-code": z.string() }) },
-  responses: { 200: { description: "Schedule", content: { "application/json": { schema: z.any() } } }, 400: { description: "Invalid request" }, 500: { description: "Server error" } },
+  request: {
+    params: z.object({ tournament: z.string() }),
+    headers: z.object({ "x-team-code": z.string() }),
+  },
+  responses: {
+    200: {
+      description: "Schedule",
+      content: { "application/json": { schema: z.any() } },
+    },
+    400: { description: "Invalid request" },
+    500: { description: "Server error" },
+  },
 });
 registry.registerPath({
   method: "get",
@@ -103,7 +162,14 @@ registry.registerPath({
   tags: ["Manager - Scouters (Public)"],
   summary: "List scouter tournaments with schedule",
   request: { headers: z.object({ "x-team-code": z.string() }) },
-  responses: { 200: { description: "Tournaments", content: { "application/json": { schema: z.array(z.any()) } } }, 400: { description: "Invalid request" }, 500: { description: "Server error" } },
+  responses: {
+    200: {
+      description: "Tournaments",
+      content: { "application/json": { schema: z.array(z.any()) } },
+    },
+    400: { description: "Invalid request" },
+    500: { description: "Server error" },
+  },
 });
 
 // OpenAPI docs for protected scouters endpoints
@@ -113,7 +179,13 @@ registry.registerPath({
   tags: ["Manager - Scouters"],
   summary: "Unarchive scouter",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Unarchived" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
+  responses: {
+    200: { description: "Unarchived" },
+    401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
+    404: { description: "Not found" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -122,7 +194,13 @@ registry.registerPath({
   tags: ["Manager - Scouters"],
   summary: "Archive scouter",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Archived" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
+  responses: {
+    200: { description: "Archived" },
+    401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
+    404: { description: "Not found" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -130,8 +208,22 @@ registry.registerPath({
   path: "/v1/manager/scoutername",
   tags: ["Manager - Scouters"],
   summary: "Update scouter name",
-  request: { body: { content: { "application/json": { schema: z.object({ uuid: z.string().optional(), name: z.string() }) } } } },
-  responses: { 200: { description: "Updated" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 500: { description: "Server error" } },
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ uuid: z.string().optional(), name: z.string() }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: { description: "Updated" },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -139,7 +231,13 @@ registry.registerPath({
   path: "/v1/manager/scouterdashboard",
   tags: ["Manager - Scouters"],
   summary: "Delete scouter from dashboard",
-  responses: { 200: { description: "Deleted" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
+  responses: {
+    200: { description: "Deleted" },
+    401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
+    404: { description: "Not found" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -147,7 +245,14 @@ registry.registerPath({
   path: "/v1/manager/scouterspage",
   tags: ["Manager - Scouters"],
   summary: "Scouting lead progress page",
-  responses: { 200: { description: "Page data", content: { "application/json": { schema: z.any() } } } , 401: { description: "Unauthorized" }, 500: { description: "Server error" } },
+  responses: {
+    200: {
+      description: "Page data",
+      content: { "application/json": { schema: z.any() } },
+    },
+    401: { description: "Unauthorized" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -155,8 +260,25 @@ registry.registerPath({
   path: "/v1/manager/scouterdashboard",
   tags: ["Manager - Scouters"],
   summary: "Add scouter on dashboard",
-  request: { body: { content: { "application/json": { schema: z.object({ scouterId: z.string(), tournament: z.string().optional() }) } } } },
-  responses: { 200: { description: "Created" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 500: { description: "Server error" } },
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            scouterId: z.string(),
+            tournament: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: { description: "Created" },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -164,17 +286,54 @@ registry.registerPath({
   path: "/v1/manager/scouterreports",
   tags: ["Manager - Scouters"],
   summary: "List scouter reports",
-  responses: { 200: { description: "Reports", content: { "application/json": { schema: z.any() } } } , 401: { description: "Unauthorized" }, 500: { description: "Server error" } },
+  responses: {
+    200: {
+      description: "Reports",
+      content: { "application/json": { schema: z.any() } },
+    },
+    401: { description: "Unauthorized" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 
-router.post("/unarchive/uuid/:uuid", requireAuth, unarchiveScouter);
-router.post("/archive/uuid/:uuid", requireAuth, archiveScouter);
+router.post(
+  "/unarchive/uuid/:uuid",
+  requireAuth,
+  requireVerifiedTeam,
+  unarchiveScouter,
+);
+router.post(
+  "/archive/uuid/:uuid",
+  requireAuth,
+  requireVerifiedTeam,
+  archiveScouter,
+);
 
-router.put("/scoutername", requireAuth, updateScouterName);
-router.delete("/scouterdashboard", requireAuth, deleteScouter);
-router.get("/scouterspage", requireAuth, scoutingLeadProgressPage);
-router.post("/scouterdashboard", requireAuth, addScouterDashboard);
-router.get("/scouterreports", requireAuth, scouterScoutReports);
+router.put("/scoutername", requireAuth, requireVerifiedTeam, updateScouterName);
+router.delete(
+  "/scouterdashboard",
+  requireAuth,
+  requireVerifiedTeam,
+  deleteScouter,
+);
+router.get(
+  "/scouterspage",
+  requireAuth,
+  requireVerifiedTeam,
+  scoutingLeadProgressPage,
+);
+router.post(
+  "/scouterdashboard",
+  requireAuth,
+  requireVerifiedTeam,
+  addScouterDashboard,
+);
+router.get(
+  "/scouterreports",
+  requireAuth,
+  requireVerifiedTeam,
+  scouterScoutReports,
+);
 
 export default router;

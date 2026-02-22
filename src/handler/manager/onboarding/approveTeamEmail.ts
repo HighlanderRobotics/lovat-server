@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { kv } from "../../../redisClient.js";
 
 export const approveTeamEmail = async (
   req: Request,
@@ -36,7 +37,9 @@ export const approveTeamEmail = async (
         },
       });
 
-      res.status(200).send("Team email sucsessfully verified");
+      await kv.set(`auth:team:${row.teamNumber}`, "verified");
+
+      res.status(200).send("Team email successfully verified");
     }
   } catch (error) {
     if (error instanceof PrismaClientKnownRequestError) {

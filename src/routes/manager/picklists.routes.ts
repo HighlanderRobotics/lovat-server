@@ -7,6 +7,7 @@ import { getSinglePicklist } from "../../handler/manager/picklists/getSinglePick
 import { updatePicklist } from "../../handler/manager/picklists/updatePicklist.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 /*
 
@@ -85,10 +86,16 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: "Picklist created", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Picklist created",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid body" },
     401: { description: "Unauthorized" },
-    403: { description: "Cannot be performed using an API key, or user is not on a team" },
+    403: {
+      description:
+        "Cannot be performed using an API key, or user is not on a team",
+    },
     500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
@@ -102,7 +109,9 @@ registry.registerPath({
   responses: {
     200: {
       description: "List of picklists",
-      content: { "application/json": { schema: z.array(PicklistSummarySchema) } },
+      content: {
+        "application/json": { schema: z.array(PicklistSummarySchema) },
+      },
     },
     401: { description: "Unauthorized" },
     403: { description: "User is not on a team" },
@@ -120,7 +129,10 @@ registry.registerPath({
     params: z.object({ uuid: z.string() }),
   },
   responses: {
-    200: { description: "Picklist detail", content: { "application/json": { schema: PicklistDetailSchema } } },
+    200: {
+      description: "Picklist detail",
+      content: { "application/json": { schema: PicklistDetailSchema } },
+    },
     400: { description: "Invalid UUID" },
     401: { description: "Unauthorized" },
     403: { description: "Picklist not found or not on same team" },
@@ -136,13 +148,21 @@ registry.registerPath({
   summary: "Update picklist",
   request: {
     params: z.object({ uuid: z.string() }),
-    body: { content: { "application/json": { schema: PicklistUpdateBodySchema } } },
+    body: {
+      content: { "application/json": { schema: PicklistUpdateBodySchema } },
+    },
   },
   responses: {
-    200: { description: "Picklist updated", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Picklist updated",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid input" },
     401: { description: "Unauthorized" },
-    403: { description: "Cannot be performed using an API key, or not authorized to update" },
+    403: {
+      description:
+        "Cannot be performed using an API key, or not authorized to update",
+    },
     500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
@@ -155,10 +175,16 @@ registry.registerPath({
   summary: "Delete picklist",
   request: { params: z.object({ uuid: z.string() }) },
   responses: {
-    200: { description: "Deleted", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Deleted",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid UUID" },
     401: { description: "Unauthorized" },
-    403: { description: "Cannot be performed using an API key, or unauthorized to delete this picklist" },
+    403: {
+      description:
+        "Cannot be performed using an API key, or unauthorized to delete this picklist",
+    },
     404: { description: "Not found" },
     500: { description: "Server error" },
   },
@@ -167,7 +193,7 @@ registry.registerPath({
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(requireAuth, requireVerifiedTeam);
 
 router.post("/", addPicklist);
 

@@ -4,6 +4,7 @@ import { updateScouterShift } from "../../handler/manager/scoutershifts/updateSc
 import { deleteScouterShift } from "../../handler/manager/scoutershifts/deleteScouterShift.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 const router = Router();
 
@@ -23,8 +24,23 @@ registry.registerPath({
   path: "/v1/manager/scoutershifts/{uuid}",
   tags: ["Manager - Scouter Shifts"],
   summary: "Update scouter shift",
-  request: { params: z.object({ uuid: z.string() }), body: { content: { "application/json": { schema: ScouterShiftUpdateSchema } } } },
-  responses: { 200: { description: "Updated" }, 400: { description: "Invalid request" }, 401: { description: "Unauthorized" }, 403: { description: "Cannot be performed using an API key, or not a scouting lead" }, 404: { description: "Shift not found" }, 500: { description: "Server error" } },
+  request: {
+    params: z.object({ uuid: z.string() }),
+    body: {
+      content: { "application/json": { schema: ScouterShiftUpdateSchema } },
+    },
+  },
+  responses: {
+    200: { description: "Updated" },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
+    403: {
+      description:
+        "Cannot be performed using an API key, or not a scouting lead",
+    },
+    404: { description: "Shift not found" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -33,11 +49,17 @@ registry.registerPath({
   tags: ["Manager - Scouter Shifts"],
   summary: "Delete scouter shift",
   request: { params: z.object({ uuid: z.string() }) },
-  responses: { 200: { description: "Deleted" }, 401: { description: "Unauthorized" }, 403: { description: "Forbidden" }, 404: { description: "Not found" }, 500: { description: "Server error" } },
+  responses: {
+    200: { description: "Deleted" },
+    401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
+    404: { description: "Not found" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 
-router.use(requireAuth);
+router.use(requireAuth, requireVerifiedTeam);
 
 router.post("/:uuid", updateScouterShift);
 

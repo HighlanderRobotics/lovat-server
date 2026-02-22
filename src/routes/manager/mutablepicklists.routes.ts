@@ -8,6 +8,7 @@ import { updateMutablePicklist } from "../../handler/manager/mutablepicklists/up
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 import { MutablePicklistSchema } from "../../lib/prisma-zod.js";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 /*
 
@@ -39,12 +40,22 @@ registry.registerPath({
   path: "/v1/manager/mutablepicklists",
   tags: ["Manager - Mutable Picklists"],
   summary: "Create mutable picklist",
-  request: { body: { content: { "application/json": { schema: MutablePicklistCreateSchema } } } },
+  request: {
+    body: {
+      content: { "application/json": { schema: MutablePicklistCreateSchema } },
+    },
+  },
   responses: {
-    200: { description: "Created", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Created",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
-    403: { description: "Cannot be performed using an API key, or user is not on a team" },
+    403: {
+      description:
+        "Cannot be performed using an API key, or user is not on a team",
+    },
     500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
@@ -56,7 +67,12 @@ registry.registerPath({
   tags: ["Manager - Mutable Picklists"],
   summary: "List mutable picklists",
   responses: {
-    200: { description: "List", content: { "application/json": { schema: z.array(MutablePicklistListItemSchema) } } },
+    200: {
+      description: "List",
+      content: {
+        "application/json": { schema: z.array(MutablePicklistListItemSchema) },
+      },
+    },
     401: { description: "Unauthorized" },
     403: { description: "User is not on a team" },
     500: { description: "Server error" },
@@ -71,7 +87,12 @@ registry.registerPath({
   summary: "Get mutable picklist",
   request: { params: z.object({ uuid: z.string() }) },
   responses: {
-    200: { description: "Detail", content: { "application/json": { schema: MutablePicklistSchema.nullable() } } },
+    200: {
+      description: "Detail",
+      content: {
+        "application/json": { schema: MutablePicklistSchema.nullable() },
+      },
+    },
     400: { description: "Invalid request" },
     404: { description: "Not found" },
     500: { description: "Server error" },
@@ -86,13 +107,28 @@ registry.registerPath({
   summary: "Update mutable picklist",
   request: {
     params: z.object({ uuid: z.string() }),
-    body: { content: { "application/json": { schema: z.object({ name: z.string(), teams: z.array(z.number().int()) }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            name: z.string(),
+            teams: z.array(z.number().int()),
+          }),
+        },
+      },
+    },
   },
   responses: {
-    200: { description: "Updated", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Updated",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
-    403: { description: "Cannot be performed using an API key, or not authorized to update" },
+    403: {
+      description:
+        "Cannot be performed using an API key, or not authorized to update",
+    },
     500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
@@ -105,10 +141,16 @@ registry.registerPath({
   summary: "Delete mutable picklist",
   request: { params: z.object({ uuid: z.string() }) },
   responses: {
-    200: { description: "Deleted", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Deleted",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
-    403: { description: "Cannot be performed using an API key, or not authorized to delete" },
+    403: {
+      description:
+        "Cannot be performed using an API key, or not authorized to delete",
+    },
     404: { description: "Not found" },
     500: { description: "Server error" },
   },
@@ -117,7 +159,7 @@ registry.registerPath({
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(requireAuth, requireVerifiedTeam);
 
 router.post("/", addMutablePicklist);
 router.delete("/:uuid", deleteMutablePicklist);

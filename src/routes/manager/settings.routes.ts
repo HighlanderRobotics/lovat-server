@@ -10,6 +10,7 @@ import { addTournamentSource } from "../../handler/manager/settings/addTournamen
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 import { getTeamEmail } from "../../handler/manager/settings/getTeamEmail.js";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 const updateTeamEmails = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -198,7 +199,12 @@ router.post("/teamsource", addTeamSource);
 router.get("/tournamentsource", getTournamentSource);
 router.post("/tournamentsource", addTournamentSource);
 
-router.get("/teamemail", getTeamEmail);
-router.put("/teamemail", updateTeamEmails, updateTeamEmail);
+router.get("/teamemail", requireVerifiedTeam, getTeamEmail);
+router.put(
+  "/teamemail",
+  requireVerifiedTeam,
+  updateTeamEmails,
+  updateTeamEmail,
+);
 
 export default router;

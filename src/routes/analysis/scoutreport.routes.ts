@@ -5,6 +5,7 @@ import { scoutReportForMatch } from "../../handler/analysis/specificMatchPage/sc
 import { timelineForScoutReport } from "../../handler/analysis/specificMatchPage/timelineForScoutReport.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 const router = Router();
 
@@ -16,7 +17,12 @@ registry.registerPath({
   summary: "Metrics for specific scout report",
   request: { params: z.object({ uuid: z.string() }) },
   responses: {
-    200: { description: "Metrics", content: { "application/json": { schema: z.record(z.string(), z.any()) } } },
+    200: {
+      description: "Metrics",
+      content: {
+        "application/json": { schema: z.record(z.string(), z.any()) },
+      },
+    },
     400: { description: "Invalid parameters" },
     500: { description: "Internal server error" },
   },
@@ -29,7 +35,12 @@ registry.registerPath({
   summary: "All scout reports for a match",
   request: { params: z.object({ match: z.coerce.number().int() }) },
   responses: {
-    200: { description: "Reports", content: { "application/json": { schema: z.array(z.record(z.string(), z.any())) } } },
+    200: {
+      description: "Reports",
+      content: {
+        "application/json": { schema: z.array(z.record(z.string(), z.any())) },
+      },
+    },
     400: { description: "Invalid parameters" },
     500: { description: "Internal server error or not authorized" },
   },
@@ -42,13 +53,18 @@ registry.registerPath({
   summary: "Timeline data for scout report",
   request: { params: z.object({ uuid: z.string() }) },
   responses: {
-    200: { description: "Timeline", content: { "application/json": { schema: z.record(z.string(), z.any()) } } },
+    200: {
+      description: "Timeline",
+      content: {
+        "application/json": { schema: z.record(z.string(), z.any()) },
+      },
+    },
     400: { description: "Invalid parameters" },
     500: { description: "Internal server error" },
   },
 });
 
-router.use(requireAuth);
+router.use(requireAuth, requireVerifiedTeam);
 
 router.get("/metrics/scoutreport/:uuid", matchPageSpecificScouter);
 router.get("/scoutreports/match/:match", scoutReportForMatch);

@@ -4,6 +4,7 @@ import { getReportCSV } from "../../handler/analysis/csv/getReportCSV.js";
 import { getTeamCSV } from "../../handler/analysis/csv/getTeamCSV.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 const router = Router();
 
@@ -66,7 +67,7 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
 });
 
-router.use(requireAuth);
+router.use(requireAuth, requireVerifiedTeam);
 
 router.get("/csvplain", getTeamCSV);
 router.get("/reportcsv", getReportCSV);

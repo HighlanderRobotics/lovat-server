@@ -6,7 +6,11 @@ import { addScouterShift } from "../../handler/manager/tournament/addScouterShif
 import { getScouterSchedule } from "../../handler/manager/tournament/getScouterSchedule.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
-import { TeamSchema, ScouterScheduleShiftSchema } from "../../lib/prisma-zod.js";
+import {
+  TeamSchema,
+  ScouterScheduleShiftSchema,
+} from "../../lib/prisma-zod.js";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 /*
 
@@ -21,7 +25,9 @@ import { TeamSchema, ScouterScheduleShiftSchema } from "../../lib/prisma-zod.js"
 
 const TournamentParamSchema = z.object({ tournament: z.string() });
 
-const ScouterTeamRelationSchema = z.object({ name: z.string().nullable(), uuid: z.string() }).nullable();
+const ScouterTeamRelationSchema = z
+  .object({ name: z.string().nullable(), uuid: z.string() })
+  .nullable();
 
 const ScouterScheduleShiftWithTeamsSchema = ScouterScheduleShiftSchema.extend({
   team1: ScouterTeamRelationSchema,
@@ -38,7 +44,14 @@ registry.registerPath({
   tags: ["Manager - Tournaments"],
   summary: "List teams in tournament",
   request: { params: TournamentParamSchema },
-  responses: { 200: { description: "Teams", content: { "application/json": { schema: z.array(TeamSchema) } } }, 401: { description: "Unauthorized" }, 500: { description: "Server error" } },
+  responses: {
+    200: {
+      description: "Teams",
+      content: { "application/json": { schema: z.array(TeamSchema) } },
+    },
+    401: { description: "Unauthorized" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -47,7 +60,25 @@ registry.registerPath({
   tags: ["Manager - Tournaments"],
   summary: "Ranked teams",
   request: { params: TournamentParamSchema },
-  responses: { 200: { description: "Rankings", content: { "application/json": { schema: z.array(z.object({ number: z.number().int(), name: z.string(), rank: z.number().int().nullable(), rankingPoints: z.number().int().nullable(), matchesPlayed: z.number().int().nullable() })) } } } , 500: { description: "Server error" } },
+  responses: {
+    200: {
+      description: "Rankings",
+      content: {
+        "application/json": {
+          schema: z.array(
+            z.object({
+              number: z.number().int(),
+              name: z.string(),
+              rank: z.number().int().nullable(),
+              rankingPoints: z.number().int().nullable(),
+              matchesPlayed: z.number().int().nullable(),
+            }),
+          ),
+        },
+      },
+    },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 registry.registerPath({
@@ -76,7 +107,10 @@ registry.registerPath({
   },
   responses: {
     200: { description: "Created" },
-    400: { description: "Invalid request, overlapping scouters, or overlapping shift matches" },
+    400: {
+      description:
+        "Invalid request, overlapping scouters, or overlapping shift matches",
+    },
     401: { description: "Unauthorized" },
     403: { description: "API key forbidden or user role not SCOUTING_LEAD" },
     500: { description: "Server error" },
@@ -89,7 +123,22 @@ registry.registerPath({
   tags: ["Manager - Tournaments"],
   summary: "List scouter shifts",
   request: { params: TournamentParamSchema },
-  responses: { 200: { description: "Shifts", content: { "application/json": { schema: z.object({ hash: z.string(), data: z.array(ScouterScheduleShiftWithTeamsSchema) }) } } }, 401: { description: "Unauthorized" }, 403: { description: "User not affiliated with a team" }, 500: { description: "Server error" } },
+  responses: {
+    200: {
+      description: "Shifts",
+      content: {
+        "application/json": {
+          schema: z.object({
+            hash: z.string(),
+            data: z.array(ScouterScheduleShiftWithTeamsSchema),
+          }),
+        },
+      },
+    },
+    401: { description: "Unauthorized" },
+    403: { description: "User not affiliated with a team" },
+    500: { description: "Server error" },
+  },
   security: [{ bearerAuth: [] }],
 });
 
@@ -101,9 +150,12 @@ router.get("/:tournament/teams", getTeamsInTournament);
 
 router.get("/:tournament/rankedTeams", getTeamRankings);
 
-router.post("/:tournament/scoutershifts", addScouterShift);
+router.post("/:tournament/scoutershifts", requireVerifiedTeam, addScouterShift);
 
-router.get("/:tournament/scoutershifts", getScouterSchedule);
+router.get(
+  "/:tournament/scoutershifts",
+  requireVerifiedTeam,
+  getScouterSchedule,
+);
 
 export default router;
-

@@ -7,7 +7,11 @@ import { getScoutReport } from "../../handler/manager/scoutreports/getScoutRepor
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 
-import { EventSchema, ScoutReportSchema as PrismaScoutReportSchema } from "../../lib/prisma-zod.js";
+import {
+  EventSchema,
+  ScoutReportSchema as PrismaScoutReportSchema,
+} from "../../lib/prisma-zod.js";
+import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 
 const ScoutReportCreateSchema = z.object({
   uuid: z.string(),
@@ -16,7 +20,9 @@ const ScoutReportCreateSchema = z.object({
   matchNumber: z.number().int(),
   startTime: z.number().int(),
   notes: z.string(),
-  robotRoles: z.array(z.enum(["CYCLING", "SCORING", "FEEDING", "DEFENDING", "IMMOBILE"])),
+  robotRoles: z.array(
+    z.enum(["CYCLING", "SCORING", "FEEDING", "DEFENDING", "IMMOBILE"]),
+  ),
   mobility: z.enum(["TRENCH", "BUMP", "BOTH", "NONE"]),
   climbPosition: z.enum(["SIDE", "MIDDLE"]).optional(),
   climbSide: z.enum(["FRONT", "BACK"]).optional(),
@@ -49,9 +55,16 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
   tags: ["Manager - Scout Reports"],
   summary: "Create scout report",
-  request: { body: { content: { "application/json": { schema: ScoutReportCreateSchema } } } },
+  request: {
+    body: {
+      content: { "application/json": { schema: ScoutReportCreateSchema } },
+    },
+  },
   responses: {
-    200: { description: "Created", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Created",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
     404: { description: "Match not found" },
@@ -71,7 +84,10 @@ registry.registerPath({
       description: "Scout report and events",
       content: {
         "application/json": {
-          schema: z.object({ scoutReport: PrismaScoutReportSchema, events: z.array(EventSchema) }),
+          schema: z.object({
+            scoutReport: PrismaScoutReportSchema,
+            events: z.array(EventSchema),
+          }),
         },
       },
     },
@@ -89,7 +105,10 @@ registry.registerPath({
   summary: "Delete scout report",
   request: { params: z.object({ uuid: z.string() }) },
   responses: {
-    200: { description: "Deleted", content: { "text/plain": { schema: z.string() } } },
+    200: {
+      description: "Deleted",
+      content: { "text/plain": { schema: z.string() } },
+    },
     400: { description: "Invalid request" },
     403: { description: "Forbidden" },
     404: { description: "Not found" },
@@ -99,9 +118,10 @@ registry.registerPath({
 
 const router = Router();
 
-router.use(requireAuth);
-
 router.post("/", addScoutReport);
+
+router.use(requireAuth, requireVerifiedTeam);
+
 router.get("/:uuid", getScoutReport);
 router.delete("/:uuid", deleteScoutReport);
 
