@@ -52,7 +52,6 @@ const ScoutReportCreateSchema = z.object({
 registry.registerPath({
   method: "post",
   path: "/v1/manager/scoutreports",
-  security: [{ bearerAuth: [] }],
   tags: ["Manager - Scout Reports"],
   summary: "Create scout report",
   request: {
@@ -66,7 +65,6 @@ registry.registerPath({
       content: { "text/plain": { schema: z.string() } },
     },
     400: { description: "Invalid request" },
-    401: { description: "Unauthorized" },
     404: { description: "Match not found" },
     500: { description: "Server error" },
   },
