@@ -20,7 +20,9 @@ registerPrismaSchemas(registry);
 registry.registerComponent("securitySchemes", "bearerAuth", {
   type: "http",
   scheme: "bearer",
-  bearerFormat: "JWT",
+  description:
+    "Accepts either a JWT token from Auth0 or an API key (prefixed with 'lvt-'). " +
+    "Use format: Authorization: Bearer <token>",
 });
 registry.registerComponent("securitySchemes", "slackToken", {
   type: "apiKey",

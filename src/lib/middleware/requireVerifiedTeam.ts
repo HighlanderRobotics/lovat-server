@@ -9,6 +9,10 @@ export const requireVerifiedTeam = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
+    if (!req.user || !req.user.teamNumber) {
+      res.status(401).send("No team");
+      return;
+    }
     const teamNumber = req.user.teamNumber;
 
     let teamVerified: boolean =

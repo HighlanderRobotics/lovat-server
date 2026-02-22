@@ -31,27 +31,6 @@ registry.registerPath({
 });
 registry.registerPath({
   method: "get",
-  path: "/v1/analysis/matchcsv",
-  tags: ["Analysis - CSV"],
-  summary: "Team match CSV",
-  request: {
-    query: z.object({
-      team: z.coerce.number().int(),
-      tournamentKey: z.string().optional(),
-    }),
-  },
-  responses: {
-    200: {
-      description: "CSV",
-      content: { "text/csv": { schema: z.string() } },
-    },
-    400: { description: "Invalid parameters or not enough scouting data" },
-    500: { description: "Internal server error" },
-  },
-  security: [{ bearerAuth: [] }],
-});
-registry.registerPath({
-  method: "get",
   path: "/v1/analysis/reportcsv",
   tags: ["Analysis - CSV"],
   summary: "Report CSV",
