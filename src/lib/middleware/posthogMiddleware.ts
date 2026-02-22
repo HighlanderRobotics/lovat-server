@@ -59,7 +59,7 @@ const posthogReporter = async (
         properties: {
           $ip: req.ips[0] || req.ip,
           $set: userProps,
-          $pathname: req.route?.path,
+          $pathname: req.baseUrl + req.route?.path,
           method: req.method,
           cache: res.getHeader("X-Lovat-Cache"),
           operatingSystem: req.headers["X-Operating-System"],
