@@ -2,6 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
+import { UserRole } from "@prisma/client";
 
 export const getScoutReport = async (
   req: AuthenticatedRequest,
@@ -24,6 +25,14 @@ export const getScoutReport = async (
       where: {
         uuid: params.data.uuid,
       },
+      include: {
+        scouter: {
+          select: {
+            name: true,
+            sourceTeamNumber: true,
+          },
+        },
+      },
     });
 
     if (!scoutReport) {
@@ -36,7 +45,23 @@ export const getScoutReport = async (
         scoutReportUuid: req.params.uuid,
       },
     });
-    res.status(200).send({ scoutReport: scoutReport, events: events });
+
+    const user = req.user;
+    const isOnSameTeam =
+      user.teamNumber !== null &&
+      scoutReport.scouter.sourceTeamNumber === user.teamNumber;
+
+    const canModify = isOnSameTeam && user.role === UserRole.SCOUTING_LEAD;
+
+    const { scouter, ...reportWithoutScouter } = scoutReport;
+    const responseReport = {
+      ...reportWithoutScouter,
+      scouterName: isOnSameTeam ? scouter.name : undefined,
+    };
+
+    res
+      .status(200)
+      .send({ scoutReport: responseReport, events: events, canModify });
   } catch (error) {
     console.error(error);
     res.status(500).send(error);
