@@ -21,7 +21,6 @@ import {
 } from "@prisma/client";
 import { invalidateCache } from "../../../lib/clearCache.js";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
-import { PrismaClient } from "@prisma/client/extension";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { checkForInvalidEvents } from "./addScoutReport.js";
 
@@ -49,7 +48,7 @@ export const addScoutReportDashboard = async (
           .union([z.string(), z.null(), z.undefined()])
           .optional(),
         driverAbility: z.number(),
-        accuracy: z.number().optional(),
+        accuracy: z.union([z.number(), z.null(), z.undefined()]),
         disrupts: z.boolean(),
         defenseEffectiveness: z.number(),
         scoresWhileMoving: z.boolean(),
@@ -129,7 +128,7 @@ export const addScoutReportDashboard = async (
         fieldTraversal: paramsScoutReport.mobility,
         defenseEffectiveness: paramsScoutReport.defenseEffectiveness,
         scoresWhileMoving: paramsScoutReport.scoresWhileMoving,
-        accuracy: paramsScoutReport.accuracy,
+        accuracy: paramsScoutReport.accuracy ?? null,
         climbPosition: paramsScoutReport.climbPosition,
         climbSide: paramsScoutReport.climbSide,
         endgameClimb: paramsScoutReport.endgameClimb,
@@ -237,16 +236,17 @@ export const addScoutReportDashboard = async (
       });
       return;
     } else if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        res.status(400).send({
+          error: `This scouter has been deleted or never existed.`,
+          displayError:
+            "This scouter has been deleted. Reset your settings and choose a new scouter.",
+        });
+        return;
+      }
       res.status(400).send({
         error: `The scout report with the same uuid already exists.`,
         displayError: "Scout report already uploaded",
-      });
-      return;
-    } else if (error instanceof PrismaClient.NotFoundError) {
-      res.status(400).send({
-        error: `This scouter has been deleted or never existed.`,
-        displayError:
-          "This scouter has been deleted. Reset your settings and choose a new scouter.",
       });
       return;
     }

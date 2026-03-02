@@ -61,7 +61,7 @@ model ScoutReport {
   teamMatchData         TeamMatchData @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
 
   // year specific fields
-  accuracy             Int
+  accuracy             Int?
   beached              Beached
   climbPosition        ClimbPosition?
   climbSide            ClimbSide?
