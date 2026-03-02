@@ -8,7 +8,7 @@ import scouters from "./scouters.routes.js";
 import tournaments from "./tournaments.routes.js";
 import scoutreports from "./scoutreports.routes.js";
 import settings from "./settings.routes.js";
-import scoutershifts from "./scouters.routes.js";
+import scoutershifts from "./scoutershifts.routes.js";
 //import apikey from "./apikey.routes.js";
 
 import { getTournaments } from "../../handler/manager/getTournaments.js";
