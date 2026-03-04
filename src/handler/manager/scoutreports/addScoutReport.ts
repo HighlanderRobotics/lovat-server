@@ -35,7 +35,7 @@ export const checkForInvalidEvents = (events: any[][]): string[] | null => {
           break;
         } else if (inEvent !== null) {
           errors.push(
-            `Invalid input. Cannot start ${eventType[1]} event while in ${inEvent} event.`,
+            `Invalid input. Cannot start ${eventType[1]} event while in ${inEvent} event.`
           );
           break;
         }
@@ -44,12 +44,12 @@ export const checkForInvalidEvents = (events: any[][]): string[] | null => {
       case "STOP":
         if (inEvent === null) {
           errors.push(
-            `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`,
+            `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`
           );
           break;
         } else if (inEvent !== eventType[1]) {
           errors.push(
-            `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`,
+            `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`
           );
           break;
         }
@@ -72,7 +72,7 @@ export const checkForInvalidEvents = (events: any[][]): string[] | null => {
 
 export const addScoutReport = async (
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     console.log("Adding scout report with params: ", req.body);
@@ -125,7 +125,7 @@ export const addScoutReport = async (
 
     const invalidEventErrors = checkForInvalidEvents(events);
     if (invalidEventErrors) {
-      console.log({
+      res.status(400).send({
         error: invalidEventErrors,
         displayError: invalidEventErrors.join(" "),
       });
@@ -191,7 +191,7 @@ export const addScoutReport = async (
     // Collect all affected cached analyses
     invalidateCache(
       paramsScoutReport.teamNumber,
-      paramsScoutReport.tournamentKey,
+      paramsScoutReport.tournamentKey
     );
 
     console.log(paramsScoutReport.teamNumber);
@@ -265,7 +265,7 @@ export const addScoutReport = async (
         matchRow.matchNumber,
         matchRow.teamNumber,
         matchRow.tournamentKey,
-        paramsScoutReport.uuid,
+        paramsScoutReport.uuid
       );
     }
 
