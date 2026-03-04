@@ -4,6 +4,7 @@ import {
   endgameToPoints,
   Metric,
   metricToEvent,
+  minActionDuration,
 } from "../analysisConstants.js";
 import { AutoClimb, User } from "@prisma/client";
 import z from "zod";
@@ -26,6 +27,7 @@ function pairedDuration(
   events: { action: string; time: number }[],
   startAction: string,
   stopAction: string,
+  applyMinDuration: boolean = false,
 ): number {
   const relevant = events
     .filter((e) => e.action === startAction || e.action === stopAction)
@@ -40,7 +42,10 @@ function pairedDuration(
       start.action === startAction &&
       stop.action === stopAction
     ) {
-      total += stop.time - start.time;
+      const duration = stop.time - start.time;
+      if (!applyMinDuration || duration >= minActionDuration) {
+        total += duration;
+      }
     }
   }
   return total;
@@ -158,6 +163,7 @@ export async function computeAverageScoutReport(
           report.events,
           "START_FEEDING",
           "STOP_FEEDING",
+          true,
         );
         result[metric] =
           totalFeedingTime > 0 ? totalFeedQuantity / totalFeedingTime : 0;
@@ -168,6 +174,7 @@ export async function computeAverageScoutReport(
           report.events,
           "START_FEEDING",
           "STOP_FEEDING",
+          true,
         );
         break;
       }

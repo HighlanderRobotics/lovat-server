@@ -4,6 +4,7 @@ import {
   endgameToPoints,
   Metric,
   metricToEvent,
+  minActionDuration,
   swrConstant,
   ttlConstant,
   allTournaments,
@@ -356,7 +357,10 @@ export function calculateTimeMetric(
       const startEvent = feedingEventsSorted[i];
       const endEvent = feedingEventsSorted[i + 1];
       if (startEvent && endEvent) {
-        totalTime += endEvent.time - startEvent.time;
+        const duration = endEvent.time - startEvent.time;
+        if (duration >= minActionDuration) {
+          totalTime += duration;
+        }
       }
     }
     return feedingEvents.length > 0 ? totalTime : 0;

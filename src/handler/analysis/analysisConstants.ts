@@ -86,6 +86,8 @@ const metricsCategory: Metric[] = [
 // To differentiate auton and teleop events, benefit of the doubt given to auto
 const autoEnd = 23;
 
+const minActionDuration = 0.5;
+
 const specificMatchPageMetrics = [];
 
 // Easy point calculation
@@ -291,6 +293,7 @@ export {
   Metric,
   metricsCategory,
   autoEnd,
+  minActionDuration,
   specificMatchPageMetrics,
   MetricsBreakdown,
   multiplerBaseAnalysis,

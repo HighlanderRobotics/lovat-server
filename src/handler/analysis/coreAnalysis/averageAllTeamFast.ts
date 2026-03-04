@@ -7,6 +7,7 @@ import {
   endgameToPoints,
   Metric,
   metricToEvent,
+  minActionDuration,
 } from "../analysisConstants.js";
 import { Prisma } from "@prisma/client";
 import z from "zod";
@@ -122,7 +123,12 @@ const config = {
         for (let i = 0; i < scoringEvents.length; i += 2) {
           const startEv = scoringEvents[i];
           const stopEv = scoringEvents[i + 1];
-          if (startEv && stopEv) duration += stopEv.time - startEv.time;
+          if (startEv && stopEv) {
+            const pairDuration = stopEv.time - startEv.time;
+            if (pairDuration >= minActionDuration) {
+              duration += pairDuration;
+            }
+          }
         }
         return duration > 0 ? totalFuel / duration : 0;
       });
@@ -244,7 +250,12 @@ const config = {
         for (let i = 0; i < feedEvents.length; i += 2) {
           const s = feedEvents[i];
           const t = feedEvents[i + 1];
-          if (s && t) total += t.time - s.time;
+          if (s && t) {
+            const pairDuration = t.time - s.time;
+            if (pairDuration >= minActionDuration) {
+              total += pairDuration;
+            }
+          }
         }
         return feedEvents.length ? total : 0;
       });
