@@ -10,11 +10,22 @@ const posthogReporter = async (
   next: NextFunction
 ): Promise<void> => {
   const t0 = performance.now();
+  const getHeaderValue = (headerName: string) => {
+    const value = req.headers[headerName];
+
+    return Array.isArray(value) ? value[0] : value;
+  };
 
   res.once("finish", async () => {
     const t1 = performance.now();
 
     const user = "user" in req && req.user;
+    const teamCode = getHeaderValue("x-team-code");
+    const appVersion = getHeaderValue("x-app-version");
+    const osName = getHeaderValue("x-os-name");
+    const scouterUuid = getHeaderValue("x-scouter-uuid");
+    const deviceId = getHeaderValue("x-device-id");
+    const appBuild = getHeaderValue("x-build-number");
 
     let userProps;
 
@@ -29,20 +40,36 @@ const posthogReporter = async (
       };
     } else {
       try {
-        const teamCode = z
-          .string()
-          .optional()
-          .parse(req.headers["x-team-code"]);
+        const parsedTeamCode = z.string().optional().parse(teamCode);
+        const parsedScouterUuid = z.string().optional().parse(scouterUuid);
 
-        if (teamCode) {
+        if (parsedScouterUuid) {
+          const scouter = await prisma.scouter.findUnique({
+            where: {
+              uuid: parsedScouterUuid,
+            },
+          });
+
+          if (scouter) {
+            userProps = {
+              uuid: scouter.uuid,
+              name: scouter.name,
+              userType: "scouter",
+              teamNumber: scouter.sourceTeamNumber,
+              teamCode: parsedTeamCode,
+            };
+          }
+        }
+
+        if (!userProps && parsedTeamCode) {
           const team = await prisma.registeredTeam.findUnique({
             where: {
-              code: teamCode,
+              code: parsedTeamCode,
             },
           });
 
           userProps = {
-            teamCode: team && teamCode,
+            teamCode: parsedTeamCode,
             userType: "scouter",
             teamNumber: team?.number,
           };
@@ -62,9 +89,44 @@ const posthogReporter = async (
           $pathname: req.baseUrl + req.route?.path,
           method: req.method,
           cache: res.getHeader("X-Lovat-Cache"),
-          $os_name: req.headers["x-operating-system"],
-          appVersion: req.headers["x-app-version"],
-          appBuild: req.headers["x-build-number"],
+          $os_name: osName,
+          appVersion,
+          appBuild,
+          path: req.originalUrl,
+          query: req.query,
+          reqBody: req.body,
+          statusCode: res.statusCode,
+          railwayDeployment: process.env.RAILWAY_DEPLOYMENT_ID,
+          railwayReplica: process.env.RAILWAY_REPLICA_ID,
+          gitCommit: process.env.RAILWAY_GIT_COMMIT_SHA,
+          responseTime: Math.round(t1 - t0),
+        },
+        disableGeoip: false,
+      });
+    }
+    if (userProps?.userType === "scouter") {
+      const distinctId =
+        userProps.uuid ?? deviceId ?? (req.ip ? `scouter:ip:${req.ip}` : "scouter:unknown");
+
+      if (deviceId && userProps.uuid) {
+        posthog.alias({
+          distinctId: deviceId,
+          alias: userProps.uuid,
+        });
+      }
+
+      posthog.capture({
+        distinctId,
+        event: "response",
+        properties: {
+          $ip: req.ips[0] || req.ip,
+          $set: userProps,
+          $pathname: req.baseUrl + req.route?.path,
+          method: req.method,
+          cache: res.getHeader("X-Lovat-Cache"),
+          $os_name: osName,
+          appVersion,
+          appBuild,
           path: req.originalUrl,
           query: req.query,
           reqBody: req.body,
