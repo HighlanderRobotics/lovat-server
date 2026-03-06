@@ -21,9 +21,6 @@ export const scoutReportForMatch = createAnalysisHandler({
     const scoutReports = await prismaClient.scoutReport.findMany({
       where: {
         teamMatchKey: params.match,
-        scouter: {
-          sourceTeamNumber: ctx.user.teamNumber,
-        },
       },
 
       select: {
@@ -35,10 +32,17 @@ export const scoutReportForMatch = createAnalysisHandler({
         scouter: {
           select: {
             name: true,
+            sourceTeamNumber: true,
           },
         },
       },
     });
+
+    for (const report of scoutReports) {
+      if (ctx.user.teamNumber !== report.scouter.sourceTeamNumber) {
+        report.scouter.name = `Scouter from ${report.scouter.sourceTeamNumber}`;
+      }
+    }
 
     return scoutReports;
   },
