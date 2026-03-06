@@ -1,6 +1,5 @@
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { UserRole } from "@prisma/client";
 import { createAnalysisHandler } from "../analysisHandler.js";
 
 export const scoutReportForMatch = createAnalysisHandler({
@@ -19,14 +18,6 @@ export const scoutReportForMatch = createAnalysisHandler({
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {
-    //comfirm if finding first is ideal
-    if (
-      ctx.user.teamNumber === null ||
-      ctx.user.role !== UserRole.SCOUTING_LEAD
-    ) {
-      throw new Error("Not authorized to access this endpoint.");
-    }
-
     const scoutReports = await prismaClient.scoutReport.findMany({
       where: {
         teamMatchKey: params.match,
