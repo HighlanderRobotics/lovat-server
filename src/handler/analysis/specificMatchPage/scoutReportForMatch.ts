@@ -1,6 +1,7 @@
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import { createAnalysisHandler } from "../analysisHandler.js";
+import { UserRole } from "@prisma/client";
 
 export const scoutReportForMatch = createAnalysisHandler({
   params: {
@@ -39,11 +40,16 @@ export const scoutReportForMatch = createAnalysisHandler({
     });
 
     for (const report of scoutReports) {
-      if (ctx.user.teamNumber !== report.scouter.sourceTeamNumber) {
+      if (ctx.user.teamNumber === report.scouter.sourceTeamNumber) {
         report.scouter.name = `Scouter from ${report.scouter.sourceTeamNumber}`;
       }
     }
 
-    return scoutReports;
+    return scoutReports.map((report) => ({
+      ...report,
+      canModify:
+        ctx.user?.role === UserRole.SCOUTING_LEAD &&
+        ctx.user.teamNumber === report.scouter.sourceTeamNumber,
+    }));
   },
 });
