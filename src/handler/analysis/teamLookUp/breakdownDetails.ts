@@ -34,7 +34,7 @@ export const breakdownDetails = createAnalysisHandler({
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {
-    let queryStr = `
+    const queryStr = `
         SELECT "${dashboardToServer[params.breakdown]}" AS breakdown,
             "teamMatchKey" AS key,
             tmnt."name" AS tournament,

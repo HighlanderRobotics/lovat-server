@@ -75,7 +75,6 @@ export const addScoutReport = async (
   res: Response
 ): Promise<void> => {
   try {
-    console.log("Adding scout report with params: ", req.body);
     const paramsScoutReport = z
       .object({
         uuid: z.string(),
@@ -194,8 +193,6 @@ export const addScoutReport = async (
       paramsScoutReport.tournamentKey
     );
 
-    console.log(paramsScoutReport.teamNumber);
-
     const scoutReportUuid = paramsScoutReport.uuid;
 
     for (const event of events) {
@@ -231,14 +228,6 @@ export const addScoutReport = async (
           points: points,
           quantity: quantity,
         });
-      console.log("Parsed event: ", {
-        scoutReportUuid: scoutReportUuid,
-        time: time,
-        action: action,
-        position: position,
-        points: points,
-        quantity: quantity,
-      });
 
       if (!paramsEvents.success) {
         console.log({

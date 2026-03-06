@@ -1,10 +1,6 @@
-import { User } from "@prisma/client";
 import { DataSourceRule } from "../handler/analysis/dataSourceRule.js";
-import {
-  allTeamNumbers,
-  allTournaments,
-} from "../handler/analysis/analysisConstants.js";
-import prismaClient from "../prismaClient.js";
+
+
 
 export const arrayToRule = <T extends string | number>(
   sources: T[],

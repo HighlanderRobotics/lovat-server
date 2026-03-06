@@ -25,9 +25,21 @@ const flush = async (): ReturnType<Awaited<typeof redis>["flushDb"]> => {
   return await (await redis).flushDb();
 };
 
+const incr = async (key: string): ReturnType<Awaited<typeof redis>["incr"]> => {
+  return await (await redis).incr(key);
+};
+
+const exp = async (
+  key: string,
+): ReturnType<Awaited<typeof redis>["expire"]> => {
+  return await (await redis).expire(key, 3);
+};
+
 export const kv = {
   set,
   get,
   del,
   flush,
+  incr,
+  exp,
 };

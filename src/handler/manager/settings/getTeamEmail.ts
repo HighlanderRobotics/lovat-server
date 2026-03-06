@@ -1,11 +1,7 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
-import {
-  dataSourceRuleSchema,
-  dataSourceRuleToArray,
-} from "../../analysis/dataSourceRule.js";
-import z from "zod";
-import { allTeamNumbers } from "../../analysis/analysisConstants.js";
+
+
 import prismaClient from "../../../prismaClient.js";
 
 export const getTeamEmail = async (

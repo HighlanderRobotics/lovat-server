@@ -4,6 +4,7 @@ import { User } from "@prisma/client";
 import { Request as ExpressRequest, Response, NextFunction } from "express";
 import * as jose from "jose";
 import { createHash } from "crypto";
+import { kv } from "../../redisClient.js";
 
 export interface AuthenticatedRequest extends ExpressRequest {
   user: User;
@@ -35,45 +36,44 @@ export const requireAuth = async (
 
       const keyHash = createHash("sha256").update(tokenString).digest("hex");
 
-      const rateLimit = await prisma.apiKey.findUnique({
-        where: {
-          keyHash: keyHash,
-        },
-      });
+      const redisKey = `auth:apikey:${keyHash}:rate`;
 
-      if (Date.now() - rateLimit.lastUsed.getTime() <= 3 * 1000) {
+      const count = Number(await kv.incr(redisKey));
+      if (count === 1) await kv.exp(redisKey);
+
+      if (count > 1) {
         res.status(429).json({
           message:
             "You have exceeded the rate limit for an API Key. Please wait before making more requests.",
           retryAfterSeconds: 3,
         });
+        return;
       }
-
-      const apiKey = await prisma.apiKey.update({
-        where: {
-          keyHash: keyHash,
-        },
-        data: {
-          lastUsed: new Date(),
-          requests: {
-            increment: 1,
+      try {
+        const apiKey = await prisma.apiKey.update({
+          where: {
+            keyHash: keyHash,
           },
-        },
-        include: {
-          user: true,
-        },
-      });
+          data: {
+            requests: {
+              increment: 1,
+            },
+          },
+          include: {
+            user: true,
+          },
+        });
 
-      if (!apiKey) {
+        req.user = apiKey.user;
+        req.tokenType = "apiKey";
+
+        next();
+        return;
+      } catch (error) {
+        console.error("Error validating API key:", error);
         res.status(401).send("Invalid API key");
         return;
       }
-
-      req.user = apiKey.user;
-      req.tokenType = "apiKey";
-
-      next();
-      return;
     }
 
     try {
@@ -147,6 +147,7 @@ export const requireAuth = async (
       }
 
       req.user = user;
+      req.tokenType = "jwt";
 
       next();
     }

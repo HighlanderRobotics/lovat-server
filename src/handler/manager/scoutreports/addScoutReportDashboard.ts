@@ -1,6 +1,6 @@
 import { Response } from "express";
 import prismaClient from "../../../prismaClient.js";
-import z, { check } from "zod";
+import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { PositionMap, EventActionMap } from "../managerConstants.js";
 import { addTournamentMatches } from "../addTournamentMatches.js";
@@ -29,6 +29,11 @@ export const addScoutReportDashboard = async (
   res: Response,
 ): Promise<void> => {
   try {
+    if (req.tokenType === "apiKey") {
+      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      return;
+    }
+
     const paramsScoutReport = z
       .object({
         uuid: z.string(),
