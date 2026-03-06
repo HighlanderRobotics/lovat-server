@@ -4,7 +4,7 @@ import {
   extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { version } from "../../package.json";
+import pkg from "./../../package.json" with { type: "json" };
 
 // Enable .openapi() on Zod types
 extendZodWithOpenApi(z);
@@ -40,9 +40,9 @@ registry.registerComponent("securitySchemes", "lovatSignature", {
 
 // Reusable header parameter schema for x-timestamp (used with lovatSignature)
 export const LovatTimestampHeader = z.object({
-  "x-timestamp": z
-    .string()
-    .openapi({ description: "Unix timestamp (seconds) used in HMAC signature generation" }),
+  "x-timestamp": z.string().openapi({
+    description: "Unix timestamp (seconds) used in HMAC signature generation",
+  }),
 });
 
 // Minimal example: document the /status health check route
@@ -69,7 +69,7 @@ export function generateOpenApiDocument() {
     openapi: "3.1.0",
     info: {
       title: "Lovat API",
-      version: version,
+      version: pkg.version,
       description:
         "API Documentation for Lovat, a scouting system used to scout teams and matches in the First Robotics Competition",
     },

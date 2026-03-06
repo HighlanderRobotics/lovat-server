@@ -1,7 +1,7 @@
 import { NextFunction, Response } from "express";
-import { AuthenticatedRequest } from "./requireAuth";
-import prisma from "../../prismaClient";
-import { kv } from "../../redisClient";
+import { AuthenticatedRequest } from "./requireAuth.js";
+import prisma from "../../prismaClient.js";
+import { kv } from "../../redisClient.js";
 
 export const requireVerifiedTeam = async (
   req: AuthenticatedRequest,
