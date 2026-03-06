@@ -39,14 +39,15 @@ export const scoutReportForMatch = createAnalysisHandler({
       },
     });
 
-    for (const report of scoutReports) {
-      if (ctx.user.teamNumber === report.scouter.sourceTeamNumber) {
-        report.scouter.name = `Scouter from ${report.scouter.sourceTeamNumber}`;
-      }
-    }
-
     return scoutReports.map((report) => ({
       ...report,
+      scouter: {
+        ...report.scouter,
+        name:
+          ctx.user.teamNumber === report.scouter.sourceTeamNumber
+            ? report.scouter.name
+            : `Scouter from ${report.scouter.sourceTeamNumber}`,
+      },
       canModify:
         ctx.user?.role === UserRole.SCOUTING_LEAD &&
         ctx.user.teamNumber === report.scouter.sourceTeamNumber,
