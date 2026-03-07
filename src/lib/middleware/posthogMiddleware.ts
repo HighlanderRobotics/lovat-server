@@ -16,6 +16,20 @@ const posthogReporter = async (
     return Array.isArray(value) ? value[0] : value;
   };
 
+  let resBody: unknown;
+  const originalSend = res.send.bind(res);
+  res.send = function (body?: unknown) {
+    if (res.statusCode >= 400) {
+      try {
+        resBody =
+          typeof body === "string" ? JSON.parse(body) : body;
+      } catch {
+        resBody = body;
+      }
+    }
+    return originalSend(body);
+  };
+
   res.once("finish", async () => {
     const t1 = performance.now();
 
@@ -95,6 +109,7 @@ const posthogReporter = async (
           path: req.originalUrl,
           query: req.query,
           reqBody: req.body,
+          resBody,
           statusCode: res.statusCode,
           railwayDeployment: process.env.RAILWAY_DEPLOYMENT_ID,
           railwayReplica: process.env.RAILWAY_REPLICA_ID,
@@ -130,6 +145,7 @@ const posthogReporter = async (
           path: req.originalUrl,
           query: req.query,
           reqBody: req.body,
+          resBody,
           statusCode: res.statusCode,
           railwayDeployment: process.env.RAILWAY_DEPLOYMENT_ID,
           railwayReplica: process.env.RAILWAY_REPLICA_ID,
