@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
+const { PrismaClientKnownRequestError } = Prisma;
 import { kv } from "../../../redisClient.js";
 
 export const approveTeamEmail = async (
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     const params = z

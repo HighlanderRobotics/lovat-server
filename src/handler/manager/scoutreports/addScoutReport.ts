@@ -12,6 +12,7 @@ import {
   FieldTraversal,
   Position,
   MatchType,
+  Prisma,
   RobotRole,
   ClimbPosition,
   ClimbSide,
@@ -19,7 +20,8 @@ import {
 } from "@prisma/client";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../../lib/clearCache.js";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+
+const { PrismaClientKnownRequestError } = Prisma;
 
 export const checkForInvalidEvents = (events: any[][]): string[] | null => {
   let inEvent: string | null = null;

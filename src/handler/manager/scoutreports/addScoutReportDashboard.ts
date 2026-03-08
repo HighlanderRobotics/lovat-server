@@ -14,6 +14,7 @@ import {
   IntakeType,
   MatchType,
   Position,
+  Prisma,
   RobotRole,
   FieldTraversal,
   ClimbPosition,
@@ -21,16 +22,19 @@ import {
 } from "@prisma/client";
 import { invalidateCache } from "../../../lib/clearCache.js";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { checkForInvalidEvents } from "./addScoutReport.js";
+
+const { PrismaClientKnownRequestError } = Prisma;
 
 export const addScoutReportDashboard = async (
   req: AuthenticatedRequest,
-  res: Response,
+  res: Response
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
-      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      res
+        .status(403)
+        .json({ error: "This action cannot be performed using an API key" });
       return;
     }
 
@@ -144,7 +148,7 @@ export const addScoutReportDashboard = async (
     // Invalidate cached analyses
     invalidateCache(
       paramsScoutReport.teamNumber,
-      paramsScoutReport.tournamentKey,
+      paramsScoutReport.tournamentKey
     );
 
     const scoutReportUuid = paramsScoutReport.uuid;
@@ -225,7 +229,7 @@ export const addScoutReportDashboard = async (
         matchRow.matchNumber,
         matchRow.teamNumber,
         matchRow.tournamentKey,
-        paramsScoutReport.uuid,
+        paramsScoutReport.uuid
       );
     }
 
