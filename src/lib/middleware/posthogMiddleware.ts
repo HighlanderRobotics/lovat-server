@@ -15,6 +15,27 @@ const posthogReporter = async (
   next: NextFunction
 ): Promise<void> => {
   const t0 = performance.now();
+  const shouldSkipEvent = (statusCode: number) => {
+    if (statusCode >= 500) {
+      return false;
+    }
+
+    if (req.method !== "GET") {
+      return false;
+    }
+
+    const routePath = req.route?.path;
+    if (!routePath) {
+      return false;
+    }
+
+    const path = `${req.baseUrl}${routePath}`;
+    return (
+      path === "/v1/manager/scouters/:uuid/tournaments" ||
+      path === "/v1/manager/scouters" ||
+      path === "/v1/manager/scouterschedules/:tournament"
+    );
+  };
   const getHeaderValue = (headerName: string) => {
     const value = req.headers[headerName];
 
@@ -99,6 +120,10 @@ const posthogReporter = async (
     }
 
     if (userProps?.userType === "user") {
+      if (shouldSkipEvent(res.statusCode)) {
+        return;
+      }
+
       posthog.capture({
         distinctId: user.id,
         event: "response",
@@ -125,6 +150,10 @@ const posthogReporter = async (
       });
     }
     if (userProps?.userType === "scouter") {
+      if (shouldSkipEvent(res.statusCode)) {
+        return;
+      }
+
       const distinctId =
         userProps.uuid ?? deviceId ?? (req.ip ? `scouter:ip:${req.ip}` : "scouter:unknown");
 
