@@ -14,10 +14,10 @@ export const getNotices = async (
     const allNotices = await prismaClient.notice.findMany();
 
     const notices = allNotices.filter((notice) => {
-      const noticeVersion =
+      const noticeRange =
         appType === "collection" ? notice.collection : notice.dashboard;
 
-      if (!noticeVersion || !semver.valid(semver.coerce(noticeVersion))) {
+      if (!noticeRange || !semver.validRange(noticeRange)) {
         return false;
       }
 
@@ -25,7 +25,12 @@ export const getNotices = async (
         return true;
       }
 
-      return semver.satisfies(semver.coerce(appVersion), noticeVersion)!;
+      const coercedAppVersion = semver.coerce(appVersion);
+      if (!coercedAppVersion) {
+        return false;
+      }
+
+      return semver.satisfies(coercedAppVersion, noticeRange);
     });
 
     res.status(200).json(notices);

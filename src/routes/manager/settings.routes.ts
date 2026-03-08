@@ -203,10 +203,10 @@ registry.registerPath({
         "application/json": {
           schema: z.array(
             z.object({
-              id: z.number(),
+              id: z.string(),
               version: z.string(),
               message: z.string(),
-              displayMode: z.nativeEnum(DisplayMode),
+              display: z.nativeEnum(DisplayMode),
               collection: z.string().nullable(),
               dashboard: z.string().nullable(),
             }),
