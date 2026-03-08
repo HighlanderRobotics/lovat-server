@@ -28,7 +28,7 @@ const { PrismaClientKnownRequestError } = Prisma;
 
 export const addScoutReportDashboard = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
@@ -102,7 +102,7 @@ export const addScoutReportDashboard = async (
     }
 
     // Find target TeamMatchData row
-    const matchRow = await prismaClient.teamMatchData.findFirst({
+    let matchRow = await prismaClient.teamMatchData.findFirst({
       where: {
         tournamentKey: paramsScoutReport.tournamentKey,
         matchNumber: paramsScoutReport.matchNumber,
@@ -110,13 +110,28 @@ export const addScoutReportDashboard = async (
         teamNumber: paramsScoutReport.teamNumber,
       },
     });
+
     if (!matchRow) {
-      res.status(404).send({
-        error: `There are no matches that meet these requirements. ${paramsScoutReport.tournamentKey}, ${paramsScoutReport.matchNumber}, ${paramsScoutReport.matchType}, ${paramsScoutReport.teamNumber}`,
-        displayError: "Match does not exist",
+      await addTournamentMatches(paramsScoutReport.tournamentKey);
+
+      matchRow = await prismaClient.teamMatchData.findFirst({
+        where: {
+          tournamentKey: paramsScoutReport.tournamentKey,
+          matchNumber: paramsScoutReport.matchNumber,
+          matchType: paramsScoutReport.matchType,
+          teamNumber: paramsScoutReport.teamNumber,
+        },
       });
-      return;
+
+      if (!matchRow) {
+        res.status(404).send({
+          error: `There are no matches that meet these requirements. ${paramsScoutReport.tournamentKey}, ${paramsScoutReport.matchNumber}, ${paramsScoutReport.matchType}, ${paramsScoutReport.teamNumber}`,
+          displayError: "Match does not exist",
+        });
+        return;
+      }
     }
+
     const matchKey = matchRow.key;
 
     // Create scout report using relations to match core handler
@@ -148,7 +163,7 @@ export const addScoutReportDashboard = async (
     // Invalidate cached analyses
     invalidateCache(
       paramsScoutReport.teamNumber,
-      paramsScoutReport.tournamentKey
+      paramsScoutReport.tournamentKey,
     );
 
     const scoutReportUuid = paramsScoutReport.uuid;
@@ -229,7 +244,7 @@ export const addScoutReportDashboard = async (
         matchRow.matchNumber,
         matchRow.teamNumber,
         matchRow.tournamentKey,
-        paramsScoutReport.uuid
+        paramsScoutReport.uuid,
       );
     }
 

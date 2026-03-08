@@ -23,7 +23,7 @@ import { invalidateCache } from "../../../lib/clearCache.js";
 
 const { PrismaClientKnownRequestError } = Prisma;
 
-export const checkForInvalidEvents = (events: any[][]): string[] | null => {
+export const checkForInvalidEvents = (events: number[][]): string[] | null => {
   let inEvent: string | null = null;
   const errors: string[] = [];
 
@@ -37,7 +37,7 @@ export const checkForInvalidEvents = (events: any[][]): string[] | null => {
           break;
         } else if (inEvent !== null) {
           errors.push(
-            `Invalid input. Cannot start ${eventType[1]} event while in ${inEvent} event.`
+            `Invalid input. Cannot start ${eventType[1]} event while in ${inEvent} event.`,
           );
           break;
         }
@@ -46,12 +46,12 @@ export const checkForInvalidEvents = (events: any[][]): string[] | null => {
       case "STOP":
         if (inEvent === null) {
           errors.push(
-            `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`
+            `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`,
           );
           break;
         } else if (inEvent !== eventType[1]) {
           errors.push(
-            `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`
+            `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`,
           );
           break;
         }
@@ -74,7 +74,7 @@ export const checkForInvalidEvents = (events: any[][]): string[] | null => {
 
 export const addScoutReport = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const paramsScoutReport = z
@@ -138,12 +138,13 @@ export const addScoutReport = async (
         tournamentKey: paramsScoutReport.tournamentKey,
       },
     });
+
     if (tournamentMatchRows === null || tournamentMatchRows.length === 0) {
       await addTournamentMatches(paramsScoutReport.tournamentKey);
     }
 
     // Get key for relevant TeamMatchData
-    const matchRow = await prismaClient.teamMatchData.findFirst({
+    let matchRow = await prismaClient.teamMatchData.findFirst({
       where: {
         tournamentKey: paramsScoutReport.tournamentKey,
         matchNumber: paramsScoutReport.matchNumber,
@@ -151,13 +152,28 @@ export const addScoutReport = async (
         teamNumber: paramsScoutReport.teamNumber,
       },
     });
+
     if (!matchRow) {
-      res.status(404).send({
-        error: `There are no matches that meet these requirements. ${paramsScoutReport.tournamentKey}, ${paramsScoutReport.matchNumber}, ${paramsScoutReport.matchType}, ${paramsScoutReport.teamNumber}`,
-        displayError: "Match does not exist",
+      await addTournamentMatches(paramsScoutReport.tournamentKey);
+
+      matchRow = await prismaClient.teamMatchData.findFirst({
+        where: {
+          tournamentKey: paramsScoutReport.tournamentKey,
+          matchNumber: paramsScoutReport.matchNumber,
+          matchType: paramsScoutReport.matchType,
+          teamNumber: paramsScoutReport.teamNumber,
+        },
       });
-      return;
+
+      if (!matchRow) {
+        res.status(404).send({
+          error: `There are no matches that meet these requirements. ${paramsScoutReport.tournamentKey}, ${paramsScoutReport.matchNumber}, ${paramsScoutReport.matchType}, ${paramsScoutReport.teamNumber}`,
+          displayError: "Match does not exist",
+        });
+        return;
+      }
     }
+
     const matchKey = matchRow.key;
 
     // Create scout report in database
@@ -192,7 +208,7 @@ export const addScoutReport = async (
     // Collect all affected cached analyses
     invalidateCache(
       paramsScoutReport.teamNumber,
-      paramsScoutReport.tournamentKey
+      paramsScoutReport.tournamentKey,
     );
 
     const scoutReportUuid = paramsScoutReport.uuid;
@@ -256,7 +272,7 @@ export const addScoutReport = async (
         matchRow.matchNumber,
         matchRow.teamNumber,
         matchRow.tournamentKey,
-        paramsScoutReport.uuid
+        paramsScoutReport.uuid,
       );
     }
 
