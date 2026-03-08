@@ -35,6 +35,14 @@ const exp = async (
   return await (await redis).expire(key, 3);
 };
 
+const setEx = async (
+  key: string,
+  data: string,
+  seconds: number,
+): ReturnType<Awaited<typeof redis>["set"]> => {
+  return await (await redis).set(key, data, { EX: seconds });
+};
+
 export const kv = {
   set,
   get,
@@ -42,4 +50,5 @@ export const kv = {
   flush,
   incr,
   exp,
+  setEx,
 };
