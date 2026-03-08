@@ -233,6 +233,21 @@ model CachedAnalysis {
   tournamentDependencies String[] @default([])
 }
 
+model Notice {
+  id        String   @id @default(uuid())
+  message   String
+  collection String?
+  dashboard String?
+  version   String
+  display DisplayMode
+}
+
+enum DisplayMode {
+  LOCKOUT
+  PERSISTENT
+  ONCE
+}
+
 enum Position {
   LEFT_TRENCH
   LEFT_BUMP

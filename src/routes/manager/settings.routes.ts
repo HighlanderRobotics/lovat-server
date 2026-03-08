@@ -11,6 +11,8 @@ import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 import { getTeamEmail } from "../../handler/manager/settings/getTeamEmail.js";
 import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
+import { getNotices } from "../../handler/manager/settings/getNotices.js";
+import { DisplayMode } from "@prisma/client";
 
 const updateTeamEmails = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -188,6 +190,39 @@ registry.registerPath({
   },
   security: [{ bearerAuth: [] }],
 });
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/settings/notices",
+  tags: ["Manager - Settings"],
+  summary: "Get notices",
+  responses: {
+    200: {
+      description: "Notices",
+      content: {
+        "application/json": {
+          schema: z.array(
+            z.object({
+              id: z.number(),
+              version: z.string(),
+              message: z.string(),
+              displayMode: z.nativeEnum(DisplayMode),
+              collection: z.string().nullable(),
+              dashboard: z.string().nullable(),
+            }),
+          ),
+        },
+      },
+    },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
+    429: { description: "Rate limited" },
+    500: { description: "Server error" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+router.get("/notices", getNotices);
 
 router.use(requireAuth);
 
