@@ -1,8 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "./requireAuth.js";
 import { posthog } from "../../posthogClient.js";
+import { kv } from "../../redisClient.js";
 import prisma from "../../prismaClient.js";
 import z from "zod";
+
+const ALIAS_TTL_SECONDS = 60 * 60 * 24 * 30;
+const getAliasCacheKey = (deviceId: string, scouterUuid: string) =>
+  `posthog:alias:${deviceId}:${scouterUuid}`;
 
 const posthogReporter = async (
   req: Request | AuthenticatedRequest,
@@ -10,6 +15,27 @@ const posthogReporter = async (
   next: NextFunction
 ): Promise<void> => {
   const t0 = performance.now();
+  const shouldSkipEvent = (statusCode: number) => {
+    if (statusCode >= 500) {
+      return false;
+    }
+
+    if (req.method !== "GET") {
+      return false;
+    }
+
+    const routePath = req.route?.path;
+    if (!routePath) {
+      return false;
+    }
+
+    const path = `${req.baseUrl}${routePath}`;
+    return (
+      path === "/v1/manager/scouters/:uuid/tournaments" ||
+      path === "/v1/manager/scouters" ||
+      path === "/v1/manager/scouterschedules/:tournament"
+    );
+  };
   const getHeaderValue = (headerName: string) => {
     const value = req.headers[headerName];
 
@@ -94,6 +120,10 @@ const posthogReporter = async (
     }
 
     if (userProps?.userType === "user") {
+      if (shouldSkipEvent(res.statusCode)) {
+        return;
+      }
+
       posthog.capture({
         distinctId: user.id,
         event: "response",
@@ -120,14 +150,24 @@ const posthogReporter = async (
       });
     }
     if (userProps?.userType === "scouter") {
+      if (shouldSkipEvent(res.statusCode)) {
+        return;
+      }
+
       const distinctId =
         userProps.uuid ?? deviceId ?? (req.ip ? `scouter:ip:${req.ip}` : "scouter:unknown");
 
       if (deviceId && userProps.uuid) {
-        posthog.alias({
-          distinctId: deviceId,
-          alias: userProps.uuid,
-        });
+        const aliasKey = getAliasCacheKey(deviceId, userProps.uuid);
+        const alreadyAliased = await kv.get(aliasKey);
+
+        if (!alreadyAliased) {
+          posthog.alias({
+            distinctId: deviceId,
+            alias: userProps.uuid,
+          });
+          await kv.setEx(aliasKey, "1", ALIAS_TTL_SECONDS);
+        }
       }
 
       posthog.capture({
