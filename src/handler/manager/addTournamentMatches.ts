@@ -17,6 +17,7 @@ export const addTournamentMatches = async (
         key: tournamentKey,
       },
     });
+
     if (tournamentRow === null) {
       throw "tournament not found when trying to insert tournament matches";
     }
@@ -24,7 +25,9 @@ export const addTournamentMatches = async (
     const eventResponse = await fetch(`${url}/event/${tournamentKey}`, {
       headers: { "X-TBA-Auth-Key": process.env.TBA_KEY },
     });
+
     const json = await eventResponse.json();
+
     const { remap_teams } = z
       .object({
         remap_teams: z
@@ -34,12 +37,33 @@ export const addTournamentMatches = async (
       })
       .parse(json);
 
-    const matchesResponse = await axios.get(
-      `${url}/event/${tournamentKey}/matches`,
-      {
-        headers: { "X-TBA-Auth-Key": process.env.TBA_KEY },
+    let matchesResponse = null;
+    try {
+      matchesResponse = await axios.get(
+        `${url}/event/${tournamentKey}/matches`,
+        {
+          headers: {
+            "X-TBA-Auth-Key": process.env.TBA_KEY,
+            "If-None-Match": tournamentRow.latestFetchETag ?? "",
+          },
+        },
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 304) {
+        return;
+      } else {
+        throw error;
+      }
+    }
+
+    await prismaClient.tournament.update({
+      where: {
+        key: tournamentKey,
       },
-    );
+      data: {
+        latestFetchETag: matchesResponse.headers.etag,
+      },
+    });
 
     // For each match in the tournament
     matchesResponse.data.sort((a, b) => b.actual_time - a.actual_time);
@@ -163,6 +187,5 @@ export const addTournamentMatches = async (
     }
   } catch (error) {
     console.log(error);
-    throw error;
   }
 };

@@ -91,16 +91,6 @@ export const addScoutReportDashboard = async (
       return;
     }
 
-    // Ensure tournament matches exist
-    const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
-      where: {
-        tournamentKey: paramsScoutReport.tournamentKey,
-      },
-    });
-    if (tournamentMatchRows === null || tournamentMatchRows.length === 0) {
-      await addTournamentMatches(paramsScoutReport.tournamentKey);
-    }
-
     // Find target TeamMatchData row
     let matchRow = await prismaClient.teamMatchData.findFirst({
       where: {
@@ -134,6 +124,19 @@ export const addScoutReportDashboard = async (
 
     const matchKey = matchRow.key;
 
+    const scoutReportUuid = paramsScoutReport.uuid;
+
+    const events = req.body.events as number[][];
+
+    const invalidEventErrors = checkForInvalidEvents(events);
+    if (invalidEventErrors) {
+      res.status(400).send({
+        error: invalidEventErrors,
+        displayError: invalidEventErrors.join(" "),
+      });
+      return;
+    }
+
     // Create scout report using relations to match core handler
     await prismaClient.scoutReport.create({
       data: {
@@ -165,19 +168,6 @@ export const addScoutReportDashboard = async (
       paramsScoutReport.teamNumber,
       paramsScoutReport.tournamentKey,
     );
-
-    const scoutReportUuid = paramsScoutReport.uuid;
-
-    const events = req.body.events as number[][];
-
-    const invalidEventErrors = checkForInvalidEvents(events);
-    if (invalidEventErrors) {
-      res.status(400).send({
-        error: invalidEventErrors,
-        displayError: invalidEventErrors.join(" "),
-      });
-      return;
-    }
 
     // Build events payload
     const eventDataArray: {

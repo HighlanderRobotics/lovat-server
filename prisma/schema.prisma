@@ -198,6 +198,7 @@ model Tournament {
   mutablePicklists      MutablePicklist[]
   scouterScheduleShifts ScouterScheduleShift[]
   teamMatchData         TeamMatchData[]
+  latestFetchETag       String?
 }
 
 model User {

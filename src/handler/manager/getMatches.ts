@@ -46,15 +46,7 @@ export const getMatches = async (
       return;
     }
 
-    // Check that matches from a tournament exist; if not, add them
-    const matchRow = await prismaClient.teamMatchData.findFirst({
-      where: {
-        tournamentKey: params.data.tournamentKey,
-      },
-    });
-    if (!matchRow) {
-      await addTournamentMatches(params.data.tournamentKey);
-    }
+    await addTournamentMatches(params.data.tournamentKey);
 
     // Assuming all elimination matches are not scouted, find the last scouted match (and pretend it is the last completed one)
     const last = await prismaClient.teamMatchData.findFirst({

@@ -132,16 +132,6 @@ export const addScoutReport = async (
       });
       return;
     }
-    // Add tournament matches if they dont exist
-    const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
-      where: {
-        tournamentKey: paramsScoutReport.tournamentKey,
-      },
-    });
-
-    if (tournamentMatchRows === null || tournamentMatchRows.length === 0) {
-      await addTournamentMatches(paramsScoutReport.tournamentKey);
-    }
 
     // Get key for relevant TeamMatchData
     let matchRow = await prismaClient.teamMatchData.findFirst({
@@ -248,7 +238,7 @@ export const addScoutReport = async (
         });
 
       if (!paramsEvents.success) {
-        console.log({
+        res.status(400).send({
           error: paramsEvents,
           displayError:
             "Invalid input. Make sure you are using the correct input.",
