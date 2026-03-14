@@ -10,6 +10,10 @@ export const addTournamentMatches = async (
       throw "tournament key is undefined";
     }
 
+    if (!tournamentKey.startsWith("2026")) {
+      return;
+    }
+
     const url = "https://www.thebluealliance.com/api/v3";
     let nonQM = 1;
     const tournamentRow = await prismaClient.tournament.findUnique({
@@ -66,7 +70,7 @@ export const addTournamentMatches = async (
     });
 
     // For each match in the tournament
-    matchesResponse.data.sort((a, b) => b.actual_time - a.actual_time);
+    matchesResponse.data.sort((a, b) => a.actual_time - b.actual_time);
 
     for (const match of matchesResponse.data) {
       if (match.comp_level == "qm") {
@@ -142,7 +146,7 @@ export const addTournamentMatches = async (
           const realTeamKey = mapEntry ? mapEntry[0] : fakeTeamKey;
           const currTeam = Number(realTeamKey.substring(3));
 
-          const currMatchKey = `${tournamentKey}_em${nonQM}_${k}`;
+          const currMatchKey = `${match.key}_${k}`;
 
           const params = z
             .object({

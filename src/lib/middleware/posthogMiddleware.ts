@@ -12,7 +12,7 @@ const getAliasCacheKey = (deviceId: string, scouterUuid: string) =>
 const posthogReporter = async (
   req: Request | AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const t0 = performance.now();
   const shouldSkipEvent = (statusCode: number) => {
@@ -47,8 +47,7 @@ const posthogReporter = async (
   res.send = function (body?: unknown) {
     if (res.statusCode >= 400) {
       try {
-        resBody =
-          typeof body === "string" ? JSON.parse(body) : body;
+        resBody = typeof body === "string" ? JSON.parse(body) : body;
       } catch {
         resBody = body;
       }
@@ -133,6 +132,7 @@ const posthogReporter = async (
           $pathname: req.baseUrl + req.route?.path,
           method: req.method,
           cache: res.getHeader("X-Lovat-Cache"),
+          authType: req["tokenType"],
           $os_name: osName,
           appVersion,
           appBuild,
@@ -155,7 +155,9 @@ const posthogReporter = async (
       }
 
       const distinctId =
-        userProps.uuid ?? deviceId ?? (req.ip ? `scouter:ip:${req.ip}` : "scouter:unknown");
+        userProps.uuid ??
+        deviceId ??
+        (req.ip ? `scouter:ip:${req.ip}` : "scouter:unknown");
 
       if (deviceId && userProps.uuid) {
         const aliasKey = getAliasCacheKey(deviceId, userProps.uuid);
@@ -198,7 +200,7 @@ const posthogReporter = async (
     if (process.env.NODE_ENV === "development") {
       console.log(
         `${req.method} ${req.originalUrl}: %d ms, HTTP ${res.statusCode}`,
-        Math.round(t1 - t0)
+        Math.round(t1 - t0),
       );
     }
   });
