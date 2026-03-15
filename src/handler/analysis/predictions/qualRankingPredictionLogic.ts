@@ -12,6 +12,10 @@ type TeamRanking = {
   losses: number;
   ties: number;
   rankingPoints: number;
+  matchesPlayed: number;
+  combinedScore: number;
+  averageScore: number;
+  highScore: number;
 };
 
 const config = {
@@ -25,6 +29,10 @@ const config = {
       wins: z.number(),
       losses: z.number(),
       ties: z.number(),
+      matchesPlayed: z.number(),
+      combinedScore: z.number(),
+      averageScore: z.number(),
+      highScore: z.number(),
     }),
   ),
   usesDataSource: true,
@@ -92,6 +100,10 @@ const config = {
           losses: 0,
           ties: 0,
           rankingPoints: 0,
+          matchesPlayed: 0,
+          combinedScore: 0,
+          averageScore: 0,
+          highScore: 0,
         };
         return acc;
       },
@@ -119,6 +131,12 @@ const config = {
               teams[team].ties += 1;
             }
             teams[team].rankingPoints += redRPs;
+            teams[team].matchesPlayed += 1;
+            teams[team].combinedScore += match.alliances.red.score;
+            teams[team].highScore = Math.max(
+              teams[team].highScore,
+              match.alliances.red.score,
+            );
           }
 
           for (const team of blueTeams) {
@@ -130,6 +148,12 @@ const config = {
               teams[team].ties += 1;
             }
             teams[team].rankingPoints += blueRPs;
+            teams[team].matchesPlayed += 1;
+            teams[team].combinedScore += match.alliances.blue.score;
+            teams[team].highScore = Math.max(
+              teams[team].highScore,
+              match.alliances.blue.score,
+            );
           }
         } else {
           let redRPs = 0;
@@ -193,6 +217,12 @@ const config = {
               teams[team].losses += 1;
             }
             teams[team].rankingPoints += redRPs;
+            teams[team].matchesPlayed += 1;
+            teams[team].combinedScore += redAlliance.totalPoints * 0.9;
+            teams[team].highScore = Math.max(
+              teams[team].highScore,
+              redAlliance.totalPoints * 0.9,
+            );
           }
 
           for (const team of blueTeams) {
@@ -202,21 +232,34 @@ const config = {
               teams[team].wins += 1;
             }
             teams[team].rankingPoints += blueRPs;
+            teams[team].matchesPlayed += 1;
+            teams[team].combinedScore += blueAlliance.totalPoints * 0.9;
+            teams[team].highScore = Math.max(
+              teams[team].highScore,
+              blueAlliance.totalPoints * 0.9,
+            );
           }
         }
       }
     }
 
+    for (const teamNumber in teams) {
+      const teamData = teams[teamNumber];
+      teamData.averageScore =
+        teamData.matchesPlayed > 0
+          ? teamData.combinedScore / teamData.matchesPlayed
+          : 0;
+    }
+
     const rankingArray = Object.values(teams).sort((a, b) => {
       if (b.rankingPoints !== a.rankingPoints) {
         return b.rankingPoints - a.rankingPoints;
-      } else if (b.wins !== a.wins) {
-        return b.wins - a.wins;
-      } else if (b.losses !== a.losses) {
-        return a.losses - b.losses;
-      } else {
-        return 0;
+      } else if (b.averageScore !== a.averageScore) {
+        return b.averageScore - a.averageScore;
+      } else if (b.highScore !== a.highScore) {
+        return b.highScore - a.highScore;
       }
+      return 0;
     });
 
     return rankingArray;
