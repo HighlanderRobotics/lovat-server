@@ -15,7 +15,6 @@ export const addTournamentMatches = async (
     }
 
     const url = "https://www.thebluealliance.com/api/v3";
-    let nonQM = 1;
     const tournamentRow = await prismaClient.tournament.findUnique({
       where: {
         key: tournamentKey,
@@ -69,8 +68,28 @@ export const addTournamentMatches = async (
       },
     });
 
+    const playoffMatchOrder = new Map<string, number>([
+      ["sf1m1", 1],
+      ["sf2m1", 2],
+      ["sf3m1", 3],
+      ["sf4m1", 4],
+      ["sf5m1", 5],
+      ["sf6m1", 6],
+      ["sf7m1", 7],
+      ["sf8m1", 8],
+      ["sf9m1", 9],
+      ["sf10m1", 10],
+      ["sf11m1", 11],
+      ["sf12m1", 12],
+      ["sf13m1", 13],
+      ["f1m1", 14],
+      ["f1m2", 15],
+    ]);
+
     // For each match in the tournament
-    matchesResponse.data.sort((a, b) => a.actual_time - b.actual_time);
+    matchesResponse.data.sort(
+      (a, b) => (a.actual_time ?? a.time ?? 0) - (b.actual_time ?? b.time ?? 0),
+    );
 
     for (const match of matchesResponse.data) {
       if (match.comp_level == "qm") {
@@ -138,13 +157,37 @@ export const addTournamentMatches = async (
           ...match.alliances.blue.team_keys,
         ];
 
-        for (let k = 0; k < 6; k++) {
-          const fakeTeamKey = teams[k]; // The one TBA sends you which is potentially "fake", like frc6418B
+        if (teams.length !== 6) {
+          continue;
+        }
+
+        const mappedTeams: number[] = [];
+        let allTeamsKnown = true;
+        for (const teamKey of teams) {
           const mapEntry = Object.entries(remap_teams).find(
-            (v) => v[1] === fakeTeamKey,
+            (v) => v[1] === teamKey,
           );
-          const realTeamKey = mapEntry ? mapEntry[0] : fakeTeamKey;
-          const currTeam = Number(realTeamKey.substring(3));
+          const realTeamKey = mapEntry ? mapEntry[0] : teamKey;
+          const teamNumber = Number(realTeamKey.substring(3));
+          if (!Number.isFinite(teamNumber) || teamNumber <= 0) {
+            allTeamsKnown = false;
+            break;
+          }
+          mappedTeams.push(teamNumber);
+        }
+
+        if (!allTeamsKnown) {
+          continue;
+        }
+
+        const matchSuffix = match.key.split("_")[1] ?? "";
+        const matchNumber = playoffMatchOrder.get(matchSuffix);
+        if (!matchNumber) {
+          continue;
+        }
+
+        for (let k = 0; k < 6; k++) {
+          const currTeam = mappedTeams[k];
 
           const currMatchKey = `${match.key}_${k}`;
 
@@ -158,7 +201,7 @@ export const addTournamentMatches = async (
             .safeParse({
               key: currMatchKey,
               tournamentKey: tournamentKey,
-              matchNumber: nonQM,
+              matchNumber: matchNumber,
               teamNumber: currTeam,
             });
 
@@ -186,7 +229,6 @@ export const addTournamentMatches = async (
             },
           });
         }
-        nonQM += 1;
       }
     }
   } catch (error) {
