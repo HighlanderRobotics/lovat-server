@@ -103,8 +103,8 @@ export const addTournamentMatches = async (
         for (let k = 0; k < teams.length; k++) {
           matchesString =
             matchesString +
-            `('${match.key}_${k}', '${tournamentKey}', ${match.match_number}, '${teams[k]}', '${match.comp_level}'), `;
-          const currMatchKey = `${match.key}_${k}`;
+            `('${tournamentKey}_qm${match.match_number}_${k}', '${tournamentKey}', ${match.match_number}, '${teams[k]}', '${match.comp_level}'), `;
+          const currMatchKey = `${tournamentKey}_qm${match.match_number}_${k}`;
 
           const fakeTeamKey = teams[k]; // The one TBA sends you which is potentially "fake", like frc6418B
           const mapEntry = Object.entries(remap_teams).find(
@@ -189,7 +189,7 @@ export const addTournamentMatches = async (
         for (let k = 0; k < 6; k++) {
           const currTeam = mappedTeams[k];
 
-          const currMatchKey = `${match.key}_${k}`;
+          const currMatchKey = `${tournamentKey}_em${matchNumber}_${k}`;
 
           const params = z
             .object({
