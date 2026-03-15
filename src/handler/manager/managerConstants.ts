@@ -76,8 +76,9 @@ const MatchTypeMap: Record<number, MatchType> = {
   1: MatchType.ELIMINATION,
 };
 const ReverseMatchTypeMap: Record<MatchType, number> = {
-  [MatchType.QUALIFICATION]: 0,
-  [MatchType.ELIMINATION]: 1,
+  [MatchType.PRACTICE]: 0,
+  [MatchType.QUALIFICATION]: 1,
+  [MatchType.ELIMINATION]: 2,
 };
 const ScouterScheduleMap = {
   0: "team1",
@@ -100,8 +101,9 @@ const MatchTypeToAbrivation = {
   1: "em",
 };
 const MatchEnumToAbrivation: Record<MatchType, string> = {
+  [MatchType.PRACTICE]: "pr",
   [MatchType.QUALIFICATION]: "qm",
-  [MatchType.ELIMINATION]: "em",
+  [MatchType.ELIMINATION]: "sf",
 };
 
 export {

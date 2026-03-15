@@ -331,6 +331,7 @@ enum UserRole {
 }
 
 enum MatchType {
+  PRACTICE
   QUALIFICATION
   ELIMINATION
 }

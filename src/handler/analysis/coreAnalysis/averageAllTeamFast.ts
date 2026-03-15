@@ -97,7 +97,12 @@ const config = {
       // scoringRate: total STOP_SCORING quantity divided by SCORING duration per report, averaged across reports
       const reports = await prismaClient.scoutReport.findMany({
         where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          teamMatchData: {
+            tournamentKey: sourceTnmtFilter,
+            NOT: {
+              matchType: "PRACTICE",
+            },
+          },
           scouter: { sourceTeamNumber: sourceTeamFilter },
         },
         select: {
@@ -210,7 +215,12 @@ const config = {
     if (metric === Metric.outpostIntakes) {
       const reports = await prismaClient.scoutReport.findMany({
         where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          teamMatchData: {
+            tournamentKey: sourceTnmtFilter,
+            NOT: {
+              matchType: "PRACTICE",
+            },
+          },
           scouter: { sourceTeamNumber: sourceTeamFilter },
         },
         select: {
@@ -232,7 +242,12 @@ const config = {
     if (metric === Metric.timeFeeding) {
       const reports = await prismaClient.scoutReport.findMany({
         where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          teamMatchData: {
+            tournamentKey: sourceTnmtFilter,
+            NOT: {
+              matchType: "PRACTICE",
+            },
+          },
           scouter: { sourceTeamNumber: sourceTeamFilter },
         },
         select: { events: { select: { action: true, time: true } } },
@@ -267,7 +282,12 @@ const config = {
     ) {
       const reports = await prismaClient.scoutReport.findMany({
         where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          teamMatchData: {
+            tournamentKey: sourceTnmtFilter,
+            NOT: {
+              matchType: "PRACTICE",
+            },
+          },
           scouter: { sourceTeamNumber: sourceTeamFilter },
         },
         select: { events: { select: { action: true, time: true } } },
@@ -314,7 +334,12 @@ const config = {
     if (metric === Metric.autoClimbStartTime) {
       const reports = await prismaClient.scoutReport.findMany({
         where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          teamMatchData: {
+            tournamentKey: sourceTnmtFilter,
+            NOT: {
+              matchType: "PRACTICE",
+            },
+          },
           scouter: { sourceTeamNumber: sourceTeamFilter },
           autoClimb: "SUCCEEDED",
         },
@@ -350,7 +375,12 @@ const config = {
             : "L3";
       const reports = await prismaClient.scoutReport.findMany({
         where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
+          teamMatchData: {
+            tournamentKey: sourceTnmtFilter,
+            NOT: {
+              matchType: "PRACTICE",
+            },
+          },
           scouter: { sourceTeamNumber: sourceTeamFilter },
           endgameClimb: required as any,
         },

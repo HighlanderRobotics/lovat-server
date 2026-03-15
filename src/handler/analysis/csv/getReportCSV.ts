@@ -139,6 +139,9 @@ export const getReportCSV = async (
     const where: any = {
       teamMatchData: {
         tournamentKey: params.data.tournamentKey,
+        NOT: {
+          matchType: "PRACTICE",
+        },
       },
     };
     const parsedRule = dataSourceRuleSchema(z.number()).safeParse(
