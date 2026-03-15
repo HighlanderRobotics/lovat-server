@@ -16,6 +16,54 @@ import {
 import { runAnalysis } from "../analysisFunction.js";
 import { weightedTourAvgLeft } from "./arrayAndAverageTeams.js";
 
+// ---------------------------------------------------------------------------
+// Helpers to convert a Prisma filter shape → SQL fragment + params
+// ---------------------------------------------------------------------------
+
+type PrismaFilter<T> = { in?: T[]; notIn?: T[] } | undefined;
+
+/**
+ * Returns a SQL snippet like `= ANY($N::text[])` or `!= ALL($N::text[])`,
+ * plus the array value to bind at position N.
+ *
+ * @param filter   Result of dataSourceRuleToPrismaFilter
+ * @param cast     Postgres cast string, e.g. "text[]" or "int[]"
+ * @param col      Fully-qualified column reference, e.g. `tmd."tournamentKey"`
+ * @param startIdx 1-based index for the first new $N placeholder
+ * @returns        { clause, param, nextIdx }
+ *                 clause is empty string if filter is undefined (no restriction)
+ */
+function filterToSql<T extends string | number>(
+  filter: PrismaFilter<T>,
+  cast: string,
+  col: string,
+  startIdx: number,
+): { clause: string; param: T[] | null; nextIdx: number } {
+  if (!filter) return { clause: "", param: null, nextIdx: startIdx };
+  if (filter.in) {
+    return {
+      clause: `AND ${col} = ANY($${startIdx}::${cast})`,
+      param: filter.in,
+      nextIdx: startIdx + 1,
+    };
+  }
+  if (filter.notIn) {
+    return {
+      clause: `AND ${col} != ALL($${startIdx}::${cast})`,
+      param: filter.notIn,
+      nextIdx: startIdx + 1,
+    };
+  }
+  return { clause: "", param: null, nextIdx: startIdx };
+}
+
+/** Build the positional params array, skipping nulls */
+function buildParams(...maybeParams: (unknown[] | null)[]): unknown[] {
+  return maybeParams.filter((p): p is unknown[] => p !== null);
+}
+
+// ---------------------------------------------------------------------------
+
 const config = {
   argsSchema: z.object({ metric: z.nativeEnum(Metric) }),
   usesDataSource: true,
@@ -34,85 +82,147 @@ const config = {
   ) => {
     const metric = args.metric;
 
-    const sourceTnmtFilter = dataSourceRuleToPrismaFilter<string>(
-      dataSourceRuleSchema(z.string()).parse(ctx.user.tournamentSourceRule),
+    const sourceTnmtRule = dataSourceRuleSchema(z.string()).parse(
+      ctx.user.tournamentSourceRule,
     );
-    const sourceTeamFilter = dataSourceRuleToPrismaFilter<number>(
-      dataSourceRuleSchema(z.number()).parse(ctx.user.teamSourceRule),
+    const sourceTeamRule = dataSourceRuleSchema(z.number()).parse(
+      ctx.user.teamSourceRule,
     );
 
+    // Prisma-compatible filter objects (used only where safe / no bind-var risk)
+    const sourceTnmtFilter =
+      dataSourceRuleToPrismaFilter<string>(sourceTnmtRule);
+    const sourceTeamFilter =
+      dataSourceRuleToPrismaFilter<number>(sourceTeamRule);
+
+    // SQL helpers for the two filters
+    const tnmtSql = (col: string, idx: number) =>
+      filterToSql(sourceTnmtFilter, "text[]", col, idx);
+    const teamSql = (col: string, idx: number) =>
+      filterToSql(sourceTeamFilter, "int[]", col, idx);
+
+    // ------------------------------------------------------------------
+    // driverAbility
+    // ------------------------------------------------------------------
     if (metric === Metric.driverAbility) {
-      const tmd = await prismaClient.teamMatchData.findMany({
-        where: { tournamentKey: sourceTnmtFilter },
-        select: {
-          tournamentKey: true,
-          scoutReports: {
-            where: { scouter: { sourceTeamNumber: sourceTeamFilter } },
-            select: { driverAbility: true },
-          },
-        },
-      });
-      if (tmd.length === 0) return 0;
-      const perTournamentAvg: number[] = [];
-      for (const row of tmd) {
-        const vals = row.scoutReports.map((r) => r.driverAbility ?? 0);
-        if (vals.length > 0)
-          perTournamentAvg.push(vals.reduce((a, b) => a + b, 0) / vals.length);
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        { tournamentKey: string; driverAbility: number | null }[]
+      >(
+        `SELECT tmd."tournamentKey", sr."driverAbility"
+         FROM "TeamMatchData" tmd
+         JOIN "ScoutReport" sr ON sr."teamMatchKey" = tmd."key"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE 1=1 ${t.clause} ${s.clause}`,
+        ...params,
+      );
+
+      if (raw.length === 0) return 0;
+
+      const byTournament: Record<string, number[]> = {};
+      for (const row of raw) {
+        if (row.driverAbility == null) continue;
+        (byTournament[row.tournamentKey] ??= []).push(row.driverAbility);
       }
+      const perTournamentAvg = Object.values(byTournament).map(
+        (vals) => vals.reduce((a, b) => a + b, 0) / vals.length,
+      );
       return perTournamentAvg.length
         ? weightedTourAvgLeft(perTournamentAvg)
         : 0;
     }
 
+    // ------------------------------------------------------------------
+    // accuracy
+    // ------------------------------------------------------------------
     if (metric === Metric.accuracy) {
-      // Compute per-tournament averages of interpolated accuracy percentages, then weight
-      const tmd = await prismaClient.teamMatchData.findMany({
-        where: { tournamentKey: sourceTnmtFilter },
-        select: {
-          tournamentKey: true,
-          scoutReports: {
-            where: { scouter: { sourceTeamNumber: sourceTeamFilter } },
-            select: { accuracy: true },
-          },
-        },
-      });
-      if (tmd.length === 0) return 0;
-      const perTournamentPercents: number[] = [];
-      for (const row of tmd) {
-        const percents = row.scoutReports
-          .map((r: any) => accuracyToPercentageInterpolated(r.accuracy))
-          .filter((v: any) => typeof v === "number");
-        if (percents.length > 0) {
-          perTournamentPercents.push(
-            percents.reduce((a, b) => a + b, 0) / percents.length,
-          );
-        }
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        { tournamentKey: string; accuracy: number | null }[]
+      >(
+        `SELECT tmd."tournamentKey", sr."accuracy"
+         FROM "TeamMatchData" tmd
+         JOIN "ScoutReport" sr ON sr."teamMatchKey" = tmd."key"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE 1=1 ${t.clause} ${s.clause}`,
+        ...params,
+      );
+
+      if (raw.length === 0) return 0;
+
+      const byTournament: Record<string, number[]> = {};
+      for (const row of raw) {
+        const pct = accuracyToPercentageInterpolated(row.accuracy);
+        if (typeof pct !== "number") continue;
+        (byTournament[row.tournamentKey] ??= []).push(pct);
       }
-      return perTournamentPercents.length
-        ? weightedTourAvgLeft(perTournamentPercents)
+      const perTournamentAvg = Object.values(byTournament).map(
+        (vals) => vals.reduce((a, b) => a + b, 0) / vals.length,
+      );
+      return perTournamentAvg.length
+        ? weightedTourAvgLeft(perTournamentAvg)
         : 0;
     }
 
+    // ------------------------------------------------------------------
+    // fuelPerSecond
+    // ------------------------------------------------------------------
     if (metric === Metric.fuelPerSecond) {
-      // scoringRate: total STOP_SCORING quantity divided by SCORING duration per report, averaged across reports
-      const reports = await prismaClient.scoutReport.findMany({
-        where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
-        },
-        select: {
-          events: { select: { action: true, quantity: true, time: true } },
-        },
-      });
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
 
-      if (reports.length === 0) return 0;
+      const raw = await prismaClient.$queryRawUnsafe<
+        { action: string; quantity: number | null; time: number }[]
+      >(
+        `SELECT e."action", e."quantity", e."time"
+         FROM "Event" e
+         JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE e."action" IN ('START_SCORING','STOP_SCORING')
+           ${t.clause} ${s.clause}`,
+        ...params,
+      );
 
-      const perReportRates = reports.map((r) => {
-        const totalFuel = r.events
+      if (raw.length === 0) return 0;
+
+      // Group events back into per-report buckets isn't possible without
+      // scoutReportUuid — fetch that too
+      const rawWithUuid = await prismaClient.$queryRawUnsafe<
+        {
+          scoutReportUuid: string;
+          action: string;
+          quantity: number | null;
+          time: number;
+        }[]
+      >(
+        `SELECT e."scoutReportUuid", e."action", e."quantity", e."time"
+         FROM "Event" e
+         JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE e."action" IN ('START_SCORING','STOP_SCORING')
+           ${t.clause} ${s.clause}`,
+        ...params,
+      );
+
+      const byReport: Record<string, typeof rawWithUuid> = {};
+      for (const row of rawWithUuid) {
+        (byReport[row.scoutReportUuid] ??= []).push(row);
+      }
+
+      const perReportRates = Object.values(byReport).map((events) => {
+        const totalFuel = events
           .filter((e) => e.action === "STOP_SCORING")
           .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-        // Compute total SCORING duration via START_/STOP_ pairs
-        const scoringEvents = r.events
+        const scoringEvents = events
           .filter(
             (e) => e.action === "START_SCORING" || e.action === "STOP_SCORING",
           )
@@ -123,162 +233,236 @@ const config = {
           const stopEv = scoringEvents[i + 1];
           if (startEv && stopEv) {
             const pairDuration = stopEv.time - startEv.time;
-            if (pairDuration >= minActionDuration) {
-              duration += pairDuration;
-            }
+            if (pairDuration >= minActionDuration) duration += pairDuration;
           }
         }
         return duration > 0 ? totalFuel / duration : 0;
       });
 
-      const avgRate =
-        perReportRates.reduce((a, b) => a + b, 0) / perReportRates.length;
-      return avgRate;
-    }
-
-    if (metric === Metric.totalFuelOutputted) {
-      // Per-tournament average, then weighted across tournaments
-      const tmd = await prismaClient.teamMatchData.findMany({
-        where: { tournamentKey: sourceTnmtFilter },
-        select: {
-          tournamentKey: true,
-          scoutReports: {
-            where: { scouter: { sourceTeamNumber: sourceTeamFilter } },
-            select: { events: { select: { action: true, quantity: true } } },
-          },
-        },
-      });
-      if (tmd.length === 0) return 0;
-      const perTournamentAvg: number[] = [];
-      for (const row of tmd) {
-        const totalsPerMatch = row.scoutReports.map((r) => {
-          const scored = r.events
-            .filter((e) => e.action === "STOP_SCORING")
-            .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-          const fed = r.events
-            .filter((e) => e.action === "STOP_FEEDING")
-            .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-          return scored + fed;
-        });
-        if (totalsPerMatch.length > 0) {
-          const avgMatch =
-            totalsPerMatch.reduce((a, b) => a + b, 0) / totalsPerMatch.length;
-          perTournamentAvg.push(avgMatch);
-        }
-      }
-      const weighted = perTournamentAvg.length
-        ? weightedTourAvgLeft(perTournamentAvg)
+      return perReportRates.length
+        ? perReportRates.reduce((a, b) => a + b, 0) / perReportRates.length
         : 0;
-
-      return weighted;
     }
 
-    if (metric === Metric.totalBallThroughput) {
-      // Per-tournament average, then weighted across tournaments
-      const tmd = await prismaClient.teamMatchData.findMany({
-        where: { tournamentKey: sourceTnmtFilter },
-        select: {
-          tournamentKey: true,
-          scoutReports: {
-            where: { scouter: { sourceTeamNumber: sourceTeamFilter } },
-            select: { events: { select: { action: true, quantity: true } } },
-          },
-        },
-      });
-      if (tmd.length === 0) return 0;
-      const perTournamentAvg: number[] = [];
-      for (const row of tmd) {
-        const totalsPerMatch = row.scoutReports.map((r) => {
-          const total = r.events
-            .filter(
-              (e) => e.action === "STOP_SCORING" || e.action === "STOP_FEEDING",
-            )
-            .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-          return total;
-        });
-        if (totalsPerMatch.length > 0) {
-          const avgMatch =
-            totalsPerMatch.reduce((a, b) => a + b, 0) / totalsPerMatch.length;
-          perTournamentAvg.push(avgMatch);
+    // ------------------------------------------------------------------
+    // totalFuelOutputted
+    // ------------------------------------------------------------------
+    if (metric === Metric.totalFuelOutputted) {
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        {
+          tournamentKey: string;
+          scoutReportUuid: string;
+          action: string;
+          quantity: number | null;
+        }[]
+      >(
+        `SELECT tmd."tournamentKey", e."scoutReportUuid", e."action", e."quantity"
+         FROM "Event" e
+         JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE e."action" IN ('STOP_SCORING','STOP_FEEDING')
+           ${t.clause} ${s.clause}`,
+        ...params,
+      );
+
+      if (raw.length === 0) return 0;
+
+      // Sum per report, then average per tournament
+      const reportTotals: Record<
+        string,
+        { tournamentKey: string; total: number }
+      > = {};
+      for (const row of raw) {
+        if (!reportTotals[row.scoutReportUuid]) {
+          reportTotals[row.scoutReportUuid] = {
+            tournamentKey: row.tournamentKey,
+            total: 0,
+          };
         }
+        reportTotals[row.scoutReportUuid].total += row.quantity ?? 0;
       }
+
+      const byTournament: Record<string, number[]> = {};
+      for (const { tournamentKey, total } of Object.values(reportTotals)) {
+        (byTournament[tournamentKey] ??= []).push(total);
+      }
+      const perTournamentAvg = Object.values(byTournament).map(
+        (arr) => arr.reduce((a, b) => a + b, 0) / arr.length,
+      );
       return perTournamentAvg.length
         ? weightedTourAvgLeft(perTournamentAvg)
         : 0;
     }
 
-    if (metric === Metric.outpostIntakes) {
-      const reports = await prismaClient.scoutReport.findMany({
-        where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
-        },
-        select: {
-          events: { select: { action: true, position: true } },
-        },
-      });
-      if (reports.length === 0) return 0;
-      const perReportCounts = reports.map(
-        (r) =>
-          r.events.filter(
-            (e) => e.action === "INTAKE" && e.position === "OUTPOST",
-          ).length,
+    // ------------------------------------------------------------------
+    // totalBallThroughput
+    // ------------------------------------------------------------------
+    if (metric === Metric.totalBallThroughput) {
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        {
+          tournamentKey: string;
+          scoutReportUuid: string;
+          quantity: number | null;
+        }[]
+      >(
+        `SELECT tmd."tournamentKey", e."scoutReportUuid", e."quantity"
+         FROM "Event" e
+         JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE e."action" IN ('STOP_SCORING','STOP_FEEDING')
+           ${t.clause} ${s.clause}`,
+        ...params,
       );
-      return (
-        perReportCounts.reduce((a, b) => a + b, 0) / perReportCounts.length
+
+      if (raw.length === 0) return 0;
+
+      const reportTotals: Record<
+        string,
+        { tournamentKey: string; total: number }
+      > = {};
+      for (const row of raw) {
+        if (!reportTotals[row.scoutReportUuid]) {
+          reportTotals[row.scoutReportUuid] = {
+            tournamentKey: row.tournamentKey,
+            total: 0,
+          };
+        }
+        reportTotals[row.scoutReportUuid].total += row.quantity ?? 0;
+      }
+
+      const byTournament: Record<string, number[]> = {};
+      for (const { tournamentKey, total } of Object.values(reportTotals)) {
+        (byTournament[tournamentKey] ??= []).push(total);
+      }
+      const perTournamentAvg = Object.values(byTournament).map(
+        (arr) => arr.reduce((a, b) => a + b, 0) / arr.length,
       );
+      return perTournamentAvg.length
+        ? weightedTourAvgLeft(perTournamentAvg)
+        : 0;
     }
 
+    // ------------------------------------------------------------------
+    // outpostIntakes
+    // ------------------------------------------------------------------
+    if (metric === Metric.outpostIntakes) {
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        { scoutReportUuid: string; count: bigint }[]
+      >(
+        `SELECT e."scoutReportUuid", COUNT(*) AS count
+         FROM "Event" e
+         JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE e."action" = 'INTAKE' AND e."position" = 'OUTPOST'
+           ${t.clause} ${s.clause}
+         GROUP BY e."scoutReportUuid"`,
+        ...params,
+      );
+
+      if (raw.length === 0) return 0;
+      return raw.reduce((acc, r) => acc + Number(r.count), 0) / raw.length;
+    }
+
+    // ------------------------------------------------------------------
+    // timeFeeding
+    // ------------------------------------------------------------------
     if (metric === Metric.timeFeeding) {
-      const reports = await prismaClient.scoutReport.findMany({
-        where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
-        },
-        select: { events: { select: { action: true, time: true } } },
-      });
-      if (reports.length === 0) return 0;
-      const perReport = reports.map((r) => {
-        const feedEvents = r.events
-          .filter(
-            (e) => e.action === "START_FEEDING" || e.action === "STOP_FEEDING",
-          )
-          .sort((a, b) => a.time - b.time);
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        { scoutReportUuid: string; action: string; time: number }[]
+      >(
+        `SELECT e."scoutReportUuid", e."action", e."time"
+         FROM "Event" e
+         JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE e."action" IN ('START_FEEDING','STOP_FEEDING')
+           ${t.clause} ${s.clause}`,
+        ...params,
+      );
+
+      if (raw.length === 0) return 0;
+
+      const byReport: Record<string, { action: string; time: number }[]> = {};
+      for (const row of raw) {
+        (byReport[row.scoutReportUuid] ??= []).push({
+          action: row.action,
+          time: row.time,
+        });
+      }
+
+      const perReport = Object.values(byReport).map((events) => {
+        const sorted = events.sort((a, b) => a.time - b.time);
         let total = 0;
-        for (let i = 0; i < feedEvents.length; i += 2) {
-          const s = feedEvents[i];
-          const t = feedEvents[i + 1];
+        for (let i = 0; i < sorted.length; i += 2) {
+          const s = sorted[i];
+          const t = sorted[i + 1];
           if (s && t) {
-            const pairDuration = t.time - s.time;
-            if (pairDuration >= minActionDuration) {
-              total += pairDuration;
-            }
+            const dur = t.time - s.time;
+            if (dur >= minActionDuration) total += dur;
           }
         }
-        return feedEvents.length ? total : 0;
+        return total;
       });
+
       return perReport.reduce((a, b) => a + b, 0) / perReport.length;
     }
 
+    // ------------------------------------------------------------------
+    // defense times
+    // ------------------------------------------------------------------
     if (
       metric === Metric.contactDefenseTime ||
       metric === Metric.campingDefenseTime ||
       metric === Metric.totalDefenseTime
     ) {
-      const reports = await prismaClient.scoutReport.findMany({
-        where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
-        },
-        select: { events: { select: { action: true, time: true } } },
-      });
-      if (reports.length === 0) return 0;
-      const perReportContact = reports.map((r) => {
-        const evs = r.events
-          .filter(
-            (e) =>
-              e.action === "START_DEFENDING" || e.action === "STOP_DEFENDING",
-          )
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        { scoutReportUuid: string; action: string; time: number }[]
+      >(
+        `SELECT e."scoutReportUuid", e."action", e."time"
+         FROM "Event" e
+         JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE e."action" IN ('START_DEFENDING','STOP_DEFENDING','START_CAMPING','STOP_CAMPING')
+           ${t.clause} ${s.clause}`,
+        ...params,
+      );
+
+      if (raw.length === 0) return 0;
+
+      const byReport: Record<string, typeof raw> = {};
+      for (const row of raw) (byReport[row.scoutReportUuid] ??= []).push(row);
+
+      const calcDuration = (
+        events: { action: string; time: number }[],
+        start: string,
+        stop: string,
+      ) => {
+        const evs = events
+          .filter((e) => e.action === start || e.action === stop)
           .sort((a, b) => a.time - b.time);
         let total = 0;
         for (let i = 0; i < evs.length; i += 2) {
@@ -287,56 +471,65 @@ const config = {
           if (s && t) total += t.time - s.time;
         }
         return evs.length ? total : 0;
-      });
-      const perReportCamping = reports.map((r) => {
-        const evs = r.events
-          .filter(
-            (e) => e.action === "START_CAMPING" || e.action === "STOP_CAMPING",
-          )
-          .sort((a, b) => a.time - b.time);
-        let total = 0;
-        for (let i = 0; i < evs.length; i += 2) {
-          const s = evs[i];
-          const t = evs[i + 1];
-          if (s && t) total += t.time - s.time;
-        }
-        return evs.length ? total : 0;
-      });
+      };
+
+      const reports = Object.values(byReport);
       const contactAvg =
-        perReportContact.reduce((a, b) => a + b, 0) / perReportContact.length;
+        reports
+          .map((r) => calcDuration(r, "START_DEFENDING", "STOP_DEFENDING"))
+          .reduce((a, b) => a + b, 0) / reports.length;
       const campingAvg =
-        perReportCamping.reduce((a, b) => a + b, 0) / perReportCamping.length;
+        reports
+          .map((r) => calcDuration(r, "START_CAMPING", "STOP_CAMPING"))
+          .reduce((a, b) => a + b, 0) / reports.length;
+
       if (metric === Metric.contactDefenseTime) return contactAvg;
       if (metric === Metric.campingDefenseTime) return campingAvg;
       return contactAvg + campingAvg;
     }
 
+    // ------------------------------------------------------------------
+    // autoClimbStartTime
+    // ------------------------------------------------------------------
     if (metric === Metric.autoClimbStartTime) {
-      const reports = await prismaClient.scoutReport.findMany({
-        where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
-          autoClimb: "SUCCEEDED",
-        },
-        select: {
-          events: { select: { action: true, time: true } },
-        },
-      });
-      if (reports.length === 0) return 0;
-      const times: number[] = [];
-      reports.forEach((r) => {
-        const first = r.events
-          .filter((e) => e.action === "CLIMB" && (e.time ?? 0) <= autoEnd)
-          .map((e) => e.time ?? 0)
-          .sort((a, b) => a - b)[0];
-        if (first !== undefined) {
-          // convert to remaining auto time (auto = 23s)
-          times.push(autoEnd - first);
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        { scoutReportUuid: string; time: number }[]
+      >(
+        `SELECT e."scoutReportUuid", e."time"
+         FROM "Event" e
+         JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE e."action" = 'CLIMB'
+           AND e."time" <= ${autoEnd}
+           AND sr."autoClimb" = 'SUCCEEDED'
+           ${t.clause} ${s.clause}`,
+        ...params,
+      );
+
+      if (raw.length === 0) return 0;
+
+      // Earliest CLIMB per report
+      const byReport: Record<string, number> = {};
+      for (const row of raw) {
+        if (
+          byReport[row.scoutReportUuid] === undefined ||
+          row.time < byReport[row.scoutReportUuid]
+        ) {
+          byReport[row.scoutReportUuid] = row.time;
         }
-      });
-      return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+      }
+      const times = Object.values(byReport).map((t) => autoEnd - t);
+      return times.reduce((a, b) => a + b, 0) / times.length;
     }
 
+    // ------------------------------------------------------------------
+    // l1/l2/l3 StartTime
+    // ------------------------------------------------------------------
     if (
       metric === Metric.l1StartTime ||
       metric === Metric.l2StartTime ||
@@ -348,122 +541,161 @@ const config = {
           : metric === Metric.l2StartTime
             ? "L2"
             : "L3";
-      const reports = await prismaClient.scoutReport.findMany({
-        where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
-          endgameClimb: required as any,
-        },
-        select: {
-          events: { select: { action: true, time: true } },
-        },
-      });
-      if (reports.length === 0) return 0;
-      const times: number[] = [];
-      reports.forEach((r) => {
-        const firstTeleop = r.events
-          .filter(
-            (e) =>
-              e.action === "CLIMB" &&
-              (e.time ?? 0) > autoEnd &&
-              (e.time ?? 0) <= 158,
-          )
-          .map((e) => e.time ?? 0)
-          .sort((a, b) => a - b)[0];
-        if (firstTeleop !== undefined) {
-          // convert to remaining match time (match = 158s)
-          const remaining = 158 - firstTeleop;
-          times.push(remaining >= 0 ? remaining : 0);
+
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const climbIdx = t.nextIdx + (s.param ? 1 : 0);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        { scoutReportUuid: string; time: number }[]
+      >(
+        `SELECT e."scoutReportUuid", e."time"
+         FROM "Event" e
+         JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE e."action" = 'CLIMB'
+           AND e."time" > ${autoEnd}
+           AND e."time" <= 158
+           AND sr."endgameClimb" = $${climbIdx}
+           ${t.clause} ${s.clause}`,
+        ...params,
+        required,
+      );
+
+      if (raw.length === 0) return 0;
+
+      const byReport: Record<string, number> = {};
+      for (const row of raw) {
+        if (
+          byReport[row.scoutReportUuid] === undefined ||
+          row.time < byReport[row.scoutReportUuid]
+        ) {
+          byReport[row.scoutReportUuid] = row.time;
         }
-      });
-      return times.length ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+      }
+      const times = Object.values(byReport).map((t) => Math.max(0, 158 - t));
+      return times.reduce((a, b) => a + b, 0) / times.length;
     }
 
+    // ------------------------------------------------------------------
+    // defenseEffectiveness
+    // ------------------------------------------------------------------
     if (metric === Metric.defenseEffectiveness) {
-      const data = await prismaClient.scoutReport.aggregate({
-        _avg: { defenseEffectiveness: true },
-        where: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
-        },
-      });
-      return data._avg.defenseEffectiveness ?? 0;
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<{ avg: number | null }[]>(
+        `SELECT AVG(sr."defenseEffectiveness") AS avg
+         FROM "ScoutReport" sr
+         JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+         JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+         WHERE 1=1 ${t.clause} ${s.clause}`,
+        ...params,
+      );
+
+      return raw[0]?.avg ?? 0;
     }
 
+    // ------------------------------------------------------------------
+    // teleopPoints / autoPoints / totalPoints
+    // ------------------------------------------------------------------
     if (
       metric === Metric.teleopPoints ||
       metric === Metric.autoPoints ||
       metric === Metric.totalPoints
     ) {
-      const tmd = await prismaClient.teamMatchData.findMany({
-        where: { tournamentKey: sourceTnmtFilter },
-        select: {
-          tournamentKey: true,
-          scoutReports: {
-            where: { scouter: { sourceTeamNumber: sourceTeamFilter } },
-            select: {
-              events: {
-                where:
-                  metric === Metric.teleopPoints
-                    ? ({ time: { gt: autoEnd }, action: "STOP_SCORING" } as any)
-                    : metric === Metric.autoPoints
-                      ? ({
-                          time: { lte: autoEnd },
-                          action: "STOP_SCORING",
-                        } as any)
-                      : ({ action: "STOP_SCORING" } as any),
-                select: { points: true, time: true },
-              },
-              endgameClimb: metric === Metric.totalPoints ? true : false,
-              autoClimb: metric === Metric.totalPoints ? true : false,
-            } as any,
-          },
-        },
-      });
-      if (tmd.length === 0) return 0;
+      const timeFilter =
+        metric === Metric.teleopPoints
+          ? `AND e."time" > ${autoEnd}`
+          : metric === Metric.autoPoints
+            ? `AND e."time" <= ${autoEnd}`
+            : "";
+
+      const t = tnmtSql(`tmd."tournamentKey"`, 1);
+      const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+      const params = buildParams(t.param, s.param);
+
+      const raw = await prismaClient.$queryRawUnsafe<
+        {
+          tournamentKey: string;
+          scoutReportUuid: string;
+          matchPoints: bigint;
+          endgameClimb: string | null;
+          autoClimb: string | null;
+        }[]
+      >(
+        `SELECT
+           tmd."tournamentKey",
+           sr."uuid" AS "scoutReportUuid",
+           COALESCE(SUM(e."points"), 0) AS "matchPoints",
+           ${
+             metric === Metric.totalPoints
+               ? `sr."endgameClimb", sr."autoClimb"`
+               : `NULL AS "endgameClimb", NULL AS "autoClimb"`
+           }
+         FROM "TeamMatchData" tmd
+         JOIN "ScoutReport" sr  ON sr."teamMatchKey" = tmd."key"
+         LEFT JOIN "Event" e    ON e."scoutReportUuid" = sr."uuid"
+                               AND e."action" = 'STOP_SCORING'
+                               ${timeFilter}
+         JOIN "Scouter" sct     ON sct."uuid" = sr."scouterUuid"
+         WHERE 1=1 ${t.clause} ${s.clause}
+         GROUP BY tmd."tournamentKey", sr."uuid", sr."endgameClimb", sr."autoClimb"`,
+        ...params,
+      );
+
+      if (raw.length === 0) return 0;
+
       const perTournamentValues: Record<string, number[]> = {};
-      for (const row of tmd) {
-        const tnmt = row.tournamentKey as string;
-        if (!perTournamentValues[tnmt]) perTournamentValues[tnmt] = [];
-        if (!row.scoutReports.length) continue;
-        let matchTotal = 0;
-        row.scoutReports.forEach((sr: any) => {
-          (sr.events ?? []).forEach((e: any) => {
-            matchTotal += e.points ?? 0;
-          });
-          if (metric === Metric.totalPoints) {
-            // include endgame and auto climb points
-            const endgame = sr.endgameClimb as keyof typeof endgameToPoints;
-            matchTotal += endgame ? (endgameToPoints[endgame] ?? 0) : 0;
-            if (sr.autoClimb === "SUCCEEDED") matchTotal += 15;
-          }
-        });
-        perTournamentValues[tnmt].push(matchTotal / row.scoutReports.length);
+      for (const row of raw) {
+        let points = Number(row.matchPoints);
+        if (metric === Metric.totalPoints) {
+          const endgame = row.endgameClimb as keyof typeof endgameToPoints;
+          points += endgame ? (endgameToPoints[endgame] ?? 0) : 0;
+          if (row.autoClimb === "SUCCEEDED") points += 15;
+        }
+        (perTournamentValues[row.tournamentKey] ??= []).push(points);
       }
+
       const perTournamentAverages = Object.values(perTournamentValues).map(
-        (arr) => arr.reduce((a, b) => a + b, 0) / arr.length || 0,
+        (arr) => arr.reduce((a, b) => a + b, 0) / arr.length,
       );
       return perTournamentAverages.length
         ? weightedTourAvgLeft(perTournamentAverages)
         : 0;
     }
 
+    // ------------------------------------------------------------------
+    // All other metrics — event groupBy
+    // ------------------------------------------------------------------
     const action = metricToEvent[metric];
 
-    const data = await prismaClient.event.groupBy({
-      by: "scoutReportUuid",
-      _count: { _all: true },
-      where: {
-        scoutReport: {
-          teamMatchData: { tournamentKey: sourceTnmtFilter },
-          scouter: { sourceTeamNumber: sourceTeamFilter },
-        },
-        action: action,
-      },
-    });
+    const t = tnmtSql(`tmd."tournamentKey"`, 1);
+    const s = teamSql(`sct."sourceTeamNumber"`, t.nextIdx);
+    const actionIdx = t.nextIdx + (s.param ? 1 : 0);
+    const params = buildParams(t.param, s.param);
 
-    const avgCount =
-      data.reduce((acc, cur) => acc + cur._count._all, 0) / data.length;
+    const data = await prismaClient.$queryRawUnsafe<
+      { scoutReportUuid: string; count: bigint }[]
+    >(
+      `SELECT e."scoutReportUuid", COUNT(*) AS count
+       FROM "Event" e
+       JOIN "ScoutReport" sr  ON sr."uuid" = e."scoutReportUuid"
+       JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+       JOIN "Scouter" sct    ON sct."uuid" = sr."scouterUuid"
+       WHERE e."action" = $${actionIdx}
+         ${t.clause} ${s.clause}
+       GROUP BY e."scoutReportUuid"`,
+      ...params,
+      action,
+    );
+
+    const avgCount = data.length
+      ? data.reduce((acc, cur) => acc + Number(cur.count), 0) / data.length
+      : 0;
     return avgCount || 0;
   },
 } as const;
