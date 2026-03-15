@@ -5,6 +5,7 @@ import { User } from "@prisma/client";
 import { alliancePage } from "./alliancePage.js";
 import z from "zod";
 import { runAnalysis } from "../analysisFunction.js";
+import { addTournamentMatches } from "../../manager/addTournamentMatches.js";
 
 type TeamRanking = {
   teamNumber: number;
@@ -44,6 +45,8 @@ const config = {
   calculateAnalysis: async (args, ctx) => {
     let matchesResponse = null;
     let teamsResponse = null;
+
+    await addTournamentMatches(args.tournamentKey);
 
     const url = "https://www.thebluealliance.com/api/v3";
     try {
