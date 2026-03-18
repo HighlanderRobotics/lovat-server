@@ -15,15 +15,6 @@ export const requireSlackToken = async (
       return;
     }
 
-    if (req.body.api_app_id !== process.env.SLACK_APP_ID) {
-      res.status(401).send("Unauthorized");
-      console.warn(
-        "Received request with invalid app ID:",
-        req.body.api_app_id,
-      );
-      return;
-    }
-
     if (!signature || !timestamp) {
       res.status(401).send("Unauthorized");
       console.warn("Missing Slack signature or timestamp");
