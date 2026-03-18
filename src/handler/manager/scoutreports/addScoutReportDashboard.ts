@@ -22,7 +22,10 @@ import {
 } from "@prisma/client";
 import { invalidateCache } from "../../../lib/clearCache.js";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
-import { checkForInvalidEvents } from "./addScoutReport.js";
+import {
+  checkForInvalidEvents,
+  removeOrphanedStartEvents,
+} from "./addScoutReport.js";
 
 const { PrismaClientKnownRequestError } = Prisma;
 
@@ -65,6 +68,7 @@ export const addScoutReportDashboard = async (
         endgameClimb: z.nativeEnum(EndgameClimb),
         scouterUuid: z.string(),
         teamNumber: z.number(),
+        appVersion: z.string().optional(),
       })
       .parse(req.body);
 
@@ -126,7 +130,10 @@ export const addScoutReportDashboard = async (
 
     const scoutReportUuid = paramsScoutReport.uuid;
 
-    const events = req.body.events as number[][];
+    const events = removeOrphanedStartEvents(
+      req.body.events as number[][],
+      paramsScoutReport.appVersion,
+    );
 
     const invalidEventErrors = checkForInvalidEvents(events);
     if (invalidEventErrors) {
