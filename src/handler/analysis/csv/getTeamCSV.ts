@@ -1,4 +1,5 @@
 import { Response } from "express";
+import axios from "axios";
 import prismaClient from "../../../prismaClient.js";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { stringify } from "csv-stringify/sync";
@@ -181,6 +182,80 @@ export const getTeamCSV = async (
     });
 
     if (datapoints.length === 0) {
+      // No TeamMatchData found - try to fetch teams from TBA
+      try {
+        const url = "https://www.thebluealliance.com/api/v3";
+        const teamsResponse = await axios.get(
+          `${url}/event/${params.data.tournamentKey}/teams/simple`,
+          {
+            headers: {
+              "X-TBA-Auth-Key": process.env.TBA_KEY,
+            },
+          },
+        );
+        
+        if (teamsResponse.data && teamsResponse.data.length > 0) {
+          const teams = teamsResponse.data.map((t: any) => t.team_number as number);
+          
+          // Create empty aggregated data for each team from TBA
+          const emptyData: AggregatedTeamData[] = teams.map((teamNum: number) => ({
+            teamNumber: teamNum,
+            mainRole: "NONE",
+            secondaryRole: "NONE",
+            fieldTraversal: null,
+            avgTotalPoints: 0,
+            avgAutoPoints: 0,
+            avgTeleopPoints: 0,
+            avgFuelPerSecond: 0,
+            avgAccuracy: 0,
+            avgVolleysPerMatch: 0,
+            avgL1StartTime: 0,
+            avgL2StartTime: 0,
+            avgL3StartTime: 0,
+            avgAutoClimbStartTime: 0,
+            avgDriverAbility: 0,
+            avgContactDefenseTime: 0,
+            avgDefenseEffectiveness: 0,
+            avgCampingDefenseTime: 0,
+            avgTotalDefenseTime: 0,
+            avgTimeFeeding: 0,
+            avgFeedingRate: 0,
+            avgFeedsPerMatch: 0,
+            avgTotalFuelOutputted: 0,
+            avgTotalBallsFed: 0,
+            avgTotalBallThroughput: 0,
+            avgOutpostIntakes: 0,
+            percDisrupts: 0,
+            percScoresWhileMoving: 0,
+            percClimbOne: 0,
+            percClimbTwo: 0,
+            percClimbThree: 0,
+            percNoClimb: 0,
+            percAutoClimb: 0,
+            matchesImmobile: 0,
+            numMatches: 0,
+            numReports: 0,
+          }));
+          
+          const csvString = stringify(emptyData, {
+            header: true,
+            columns: emptyData.length ? Object.keys(emptyData[0]) : [],
+            bom: true,
+            cast: {
+              boolean: (b) => (b ? "TRUE" : "FALSE"),
+            },
+            quote: false,
+          });
+
+          res.attachment("teamDataDownload.csv");
+          res.header("Content-Type", "text/csv");
+          res.send(csvString);
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching teams from TBA:", error);
+      }
+      
       res.status(400).send("Not enough scouting data from provided sources");
       return;
     }
