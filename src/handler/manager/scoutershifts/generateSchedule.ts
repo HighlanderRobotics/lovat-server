@@ -146,7 +146,7 @@ const generateSchedule = async (tournamentKey: string) => {
   );
 };
 
-generateSchedule("2026casnf");
+generateSchedule("2026cagle");
 
 interface Gap {
   match_number: number;
