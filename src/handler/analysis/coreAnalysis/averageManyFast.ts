@@ -216,17 +216,16 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             break;
           }
           case Metric.fuelPerSecond: {
-            const perReport = sr.map((r) => {
-              const totalFuel = r.events
-                .filter((e) => e.action === "STOP_SCORING")
-                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-              const duration = calculateTimeMetric([r], "SCORING").reduce(
-                (a, b) => a + b,
-                0,
-              );
-              return duration > 0 ? totalFuel / duration : 0;
-            });
-            matchValue = avg(perReport);
+            // Total fuel across all reports / total duration across all reports
+            const totalFuel = sr
+              .flatMap((r) => r.events)
+              .filter((e) => e.action === "STOP_SCORING")
+              .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+            const totalDuration = calculateTimeMetric(sr, "SCORING").reduce(
+              (a, b) => a + b,
+              0,
+            );
+            matchValue = totalDuration > 0 ? totalFuel / totalDuration : 0;
             break;
           }
           case Metric.totalFuelOutputted: {

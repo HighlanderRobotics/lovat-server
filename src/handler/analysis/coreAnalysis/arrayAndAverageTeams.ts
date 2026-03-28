@@ -298,6 +298,22 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           };
           break;
 
+        case Metric.totalBallsFed:
+          srSelect = {
+            events: {
+              select: { action: true, quantity: true },
+            },
+          } as any;
+          matchAggregationFunction = (reports) => {
+            const perReportTotals = reports.map((r) => {
+              return (r.events ?? [])
+                .filter((e) => e.action === "STOP_FEEDING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+            });
+            return avg(perReportTotals);
+          };
+          break;
+
         case Metric.outpostIntakes:
           srSelect = {
             events: {
@@ -516,18 +532,16 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
 
         let matchValue = 0;
         if (metric === Metric.fuelPerSecond) {
-          // Mirror averageManyFast: use total SCORING duration across all reports
+          // Total fuel across all reports / total duration across all reports
+          const totalFuel = (row.scoutReports as any)
+            .flatMap((r: any) => r.events ?? [])
+            .filter((e: any) => e.action === "STOP_SCORING")
+            .reduce((acc: number, cur: any) => acc + (cur.quantity ?? 0), 0);
           const totalDuration = calculateTimeMetric(
             row.scoutReports as any,
             "SCORING",
           ).reduce((a, b) => a + b, 0);
-          const perReportRates = (row.scoutReports as any).map((r: any) => {
-            const totalFuel = (r.events ?? [])
-              .filter((e: any) => e.action === "STOP_SCORING")
-              .reduce((acc: number, cur: any) => acc + (cur.quantity ?? 0), 0);
-            return totalDuration > 0 ? totalFuel / totalDuration : 0;
-          });
-          matchValue = avg(perReportRates);
+          matchValue = totalDuration > 0 ? totalFuel / totalDuration : 0;
         } else {
           matchValue = matchAggregationFunction!(row.scoutReports as any);
         }
