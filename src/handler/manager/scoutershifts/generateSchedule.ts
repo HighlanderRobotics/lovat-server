@@ -1,10 +1,10 @@
 import axios from "axios";
 import z, { ZodError } from "zod";
-import prismaClient from "../../../prismaClient";
+import prismaClient from "../../../prismaClient.js";
 // import { writeFileSync } from "fs";
 // import { join } from "path";
 // import { homedir } from "os";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { Response } from "express";
 
 const shiftScouterEx = [
