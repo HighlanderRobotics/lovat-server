@@ -5,6 +5,7 @@ import { deleteScouterShift } from "../../handler/manager/scoutershifts/deleteSc
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
+import { superScoutingSchedule } from "../../handler/manager/scoutershifts/generateSchedule.js";
 
 const router = Router();
 
@@ -60,6 +61,8 @@ registry.registerPath({
 });
 
 router.use(requireAuth, requireVerifiedTeam);
+
+router.get("/generate", superScoutingSchedule);
 
 router.post("/:uuid", updateScouterShift);
 
