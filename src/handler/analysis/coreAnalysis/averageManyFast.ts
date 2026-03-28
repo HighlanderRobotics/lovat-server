@@ -107,16 +107,22 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
     const finalResults: Record<string, Record<string, number>> = {};
 
     for (const metric of args.metrics) {
-      const resultsByTeam: Record<number, number[]> = {};
-      for (const team of args.teams) resultsByTeam[team] = [];
+      // Group by team -> tournament -> match values
+      const resultsByTeamAndTournament: Record<number, Record<string, number[]>> = {};
+      for (const team of args.teams) resultsByTeamAndTournament[team] = {};
 
       for (const row of tmd) {
         if (!row.scoutReports.length) continue;
 
         const team = row.teamNumber;
+        const tnmt = row.tournamentKey;
         const sr = row.scoutReports;
 
-        let tournamentValue = 0;
+        if (!resultsByTeamAndTournament[team][tnmt]) {
+          resultsByTeamAndTournament[team][tnmt] = [];
+        }
+
+        let matchValue = 0;
 
         switch (metric) {
           case Metric.autoClimbStartTime: {
@@ -128,12 +134,12 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               );
             });
             const nonNullTimes = times.filter((t): t is number => t !== null);
-            if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
+            if (nonNullTimes.length === 0) { matchValue = -1; break; }
             const adjustedTimes = nonNullTimes.map((t) => {
               const remaining = autoEnd - t;
               return remaining >= 0 ? remaining : 0;
             });
-            tournamentValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
+            matchValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
             break;
           }
 
@@ -156,43 +162,36 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             });
 
             const nonNullTimes = times.filter((t): t is number => t !== null);
-            if (nonNullTimes.length === 0) { tournamentValue = -1; break; }
+            if (nonNullTimes.length === 0) { matchValue = -1; break; }
             const adjustedTimes = nonNullTimes.map((t) => {
               const remaining = 158 - t;
               return remaining >= 0 ? remaining : 0;
             });
-            tournamentValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
+            matchValue = avg(adjustedTimes.length ? adjustedTimes : [0]);
             break;
           }
           case Metric.contactDefenseTime:
           case Metric.campingDefenseTime:
           case Metric.totalDefenseTime: {
-            const perMatch = sr.map((r) => {
-              const contact = (tournamentValue = avg(
-                calculateTimeMetric(sr, "DEFENDING"),
-              ));
-              const camping = (tournamentValue = avg(
-                calculateTimeMetric(sr, "CAMPING"),
-              ));
-              if (metric === Metric.contactDefenseTime) return contact;
-              if (metric === Metric.campingDefenseTime) return camping;
-              return contact + camping;
-            });
-            tournamentValue = avg(perMatch);
+            const contact = avg(calculateTimeMetric(sr, "DEFENDING"));
+            const camping = avg(calculateTimeMetric(sr, "CAMPING"));
+            if (metric === Metric.contactDefenseTime) matchValue = contact;
+            else if (metric === Metric.campingDefenseTime) matchValue = camping;
+            else matchValue = contact + camping;
             break;
           }
 
           /* ---------- SCORED METRICS ---------- */
           case Metric.driverAbility:
-            tournamentValue = avg(sr.map((r) => r.driverAbility));
+            matchValue = avg(sr.map((r) => r.driverAbility));
             break;
           case Metric.defenseEffectiveness:
-            tournamentValue = avg(sr.map((r) => r.defenseEffectiveness));
+            matchValue = avg(sr.map((r) => r.defenseEffectiveness));
             break;
           case Metric.accuracy:
             {
               const defined = sr.filter((r) => r.accuracy !== null && r.accuracy !== undefined);
-              tournamentValue = defined.length
+              matchValue = defined.length
                 ? avg(defined.map((r) => accuracyToPercentage[r.accuracy as any]))
                 : 0;
             }
@@ -200,7 +199,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
           case Metric.autoPoints:
           case Metric.teleopPoints:
           case Metric.totalPoints: {
-            const perMatch = sr.map((r) => {
+            const perReport = sr.map((r) => {
               const auto = r.events
                 .filter((e) => e.time <= autoEnd && e.action === "STOP_SCORING")
                 .reduce((a, b) => a + b.points, 0);
@@ -213,25 +212,25 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               if (metric === Metric.teleopPoints) return tele;
               return aClimb + auto + tele + endgame;
             });
-            tournamentValue = avg(perMatch);
+            matchValue = avg(perReport);
             break;
           }
           case Metric.fuelPerSecond: {
-            const perMatch = sr.map((r) => {
+            const perReport = sr.map((r) => {
               const totalFuel = r.events
                 .filter((e) => e.action === "STOP_SCORING")
                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
-              const duration = calculateTimeMetric(sr, "SCORING").reduce(
+              const duration = calculateTimeMetric([r], "SCORING").reduce(
                 (a, b) => a + b,
                 0,
               );
               return duration > 0 ? totalFuel / duration : 0;
             });
-            tournamentValue = avg(perMatch);
+            matchValue = avg(perReport);
             break;
           }
           case Metric.totalFuelOutputted: {
-            const perMatch = sr.map((r) => {
+            const perReport = sr.map((r) => {
               const shotQty = r.events
                 .filter((e) => e.action === "STOP_SCORING")
                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
@@ -240,20 +239,20 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
               return shotQty + feedQty;
             });
-            tournamentValue = avg(perMatch);
+            matchValue = avg(perReport);
             break;
           }
           case Metric.totalBallsFed: {
-            const perMatch = sr.map((r) => {
+            const perReport = sr.map((r) => {
               return r.events
                 .filter((e) => e.action === "STOP_FEEDING")
                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
             });
-            tournamentValue = avg(perMatch);
+            matchValue = avg(perReport);
             break;
           }
           case Metric.totalBallThroughput: {
-            const perMatch = sr.map((r) => {
+            const perReport = sr.map((r) => {
               return r.events
                 .filter(
                   (e) =>
@@ -261,14 +260,14 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
                 )
                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
             });
-            tournamentValue = avg(perMatch);
+            matchValue = avg(perReport);
             break;
           }
           case Metric.feedsPerMatch: {
-            const perMatch = sr.map(
+            const perReport = sr.map(
               (r) => r.events.filter((e) => e.action === "STOP_FEEDING").length,
             );
-            tournamentValue = avg(perMatch);
+            matchValue = avg(perReport);
             break;
           }
           case Metric.feedingRate: {
@@ -280,43 +279,48 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               (acc, f) => acc + (f.quantity ?? 0),
               0,
             );
-            tournamentValue =
+            matchValue =
               totalFeedQuantity > 0 ? totalFeedQuantity / avg(feedTime) : 0;
             break;
           }
           case Metric.timeFeeding: {
-            tournamentValue = avg(calculateTimeMetric(sr, "FEEDING"));
+            matchValue = avg(calculateTimeMetric(sr, "FEEDING"));
             break;
           }
 
           case Metric.outpostIntakes: {
-            const perMatch = sr.map(
+            const perReport = sr.map(
               (r) =>
                 r.events.filter(
                   (e) => e.action === "INTAKE" && e.position === "OUTPOST",
                 ).length,
             );
-            tournamentValue = avg(perMatch);
+            matchValue = avg(perReport);
             break;
           }
           default: {
-            const perMatch = sr.map(
+            const perReport = sr.map(
               (r) =>
                 r.events.filter((e) => e.action === metricToEvent[metric])
                   .length,
             );
-            tournamentValue = avg(perMatch);
+            matchValue = avg(perReport);
           }
         }
 
-        resultsByTeam[team].push(tournamentValue);
+        resultsByTeamAndTournament[team][tnmt].push(matchValue);
       }
 
       finalResults[String(metric)] = {};
       for (const team of args.teams) {
-        const teamResults = resultsByTeam[team];
+        // First average within each tournament, then apply weighted average across tournaments
+        const tournamentAverages: number[] = [];
+        for (const values of Object.values(resultsByTeamAndTournament[team])) {
+          const valid = values.filter((v) => v !== -1);
+          if (valid.length > 0) tournamentAverages.push(avg(valid));
+        }
         finalResults[String(metric)][String(team)] =
-          teamResults.length > 0 ? weightedTourAvgLeft(teamResults) : -1;
+          tournamentAverages.length > 0 ? weightedTourAvgLeft(tournamentAverages) : -1;
       }
     }
 
