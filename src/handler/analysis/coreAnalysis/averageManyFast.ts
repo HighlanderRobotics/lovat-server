@@ -207,12 +207,8 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               const tele = r.events
                 .filter((e) => e.time > autoEnd && e.action === "STOP_SCORING")
                 .reduce((a, b) => a + b.points, 0);
-              const aClimb = avg(
-                sr.map((s) => (s.autoClimb !== AutoClimb.SUCCEEDED ? 0 : 15)),
-              );
-              const endgame = avg(
-                sr.map((s) => endgameToPoints[s.endgameClimb]),
-              );
+              const aClimb = r.autoClimb === AutoClimb.SUCCEEDED ? 15 : 0;
+              const endgame = endgameToPoints[r.endgameClimb];
               if (metric === Metric.autoPoints) return auto;
               if (metric === Metric.teleopPoints) return tele;
               return aClimb + auto + tele + endgame;
