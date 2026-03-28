@@ -222,9 +222,10 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
                 .reduce((a, b) => a + b.points, 0);
               const aClimb = r.autoClimb === AutoClimb.SUCCEEDED ? 15 : 0;
               const endgame = endgameToPoints[r.endgameClimb];
-              if (metric === Metric.autoPoints) return auto;
-              if (metric === Metric.teleopPoints) return tele;
-              return aClimb + auto + tele + endgame;
+              if (metric === Metric.autoPoints)
+                return auto * r.accuracy + aClimb;
+              if (metric === Metric.teleopPoints) return tele * r.accuracy;
+              return aClimb + auto * r.accuracy + tele * r.accuracy + endgame;
             });
             matchValue = avg(perReport);
             break;
