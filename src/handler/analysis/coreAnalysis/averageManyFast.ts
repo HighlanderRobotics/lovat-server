@@ -108,7 +108,10 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
 
     for (const metric of args.metrics) {
       // Group by team -> tournament -> match values
-      const resultsByTeamAndTournament: Record<number, Record<string, number[]>> = {};
+      const resultsByTeamAndTournament: Record<
+        number,
+        Record<string, number[]>
+      > = {};
       for (const team of args.teams) resultsByTeamAndTournament[team] = {};
 
       for (const row of tmd) {
@@ -134,7 +137,10 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               );
             });
             const nonNullTimes = times.filter((t): t is number => t !== null);
-            if (nonNullTimes.length === 0) { matchValue = -1; break; }
+            if (nonNullTimes.length === 0) {
+              matchValue = -1;
+              break;
+            }
             const adjustedTimes = nonNullTimes.map((t) => {
               const remaining = autoEnd - t;
               return remaining >= 0 ? remaining : 0;
@@ -157,12 +163,16 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               if (r.endgameClimb !== required) return null;
               return firstEventTime(
                 r.events,
-                (e) => e.action === "CLIMB" && e.time > autoEnd && e.time <= 158,
+                (e) =>
+                  e.action === "CLIMB" && e.time > autoEnd && e.time <= 158,
               );
             });
 
             const nonNullTimes = times.filter((t): t is number => t !== null);
-            if (nonNullTimes.length === 0) { matchValue = -1; break; }
+            if (nonNullTimes.length === 0) {
+              matchValue = -1;
+              break;
+            }
             const adjustedTimes = nonNullTimes.map((t) => {
               const remaining = 158 - t;
               return remaining >= 0 ? remaining : 0;
@@ -190,9 +200,13 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
             break;
           case Metric.accuracy:
             {
-              const defined = sr.filter((r) => r.accuracy !== null && r.accuracy !== undefined);
+              const defined = sr.filter(
+                (r) => r.accuracy !== null && r.accuracy !== undefined,
+              );
               matchValue = defined.length
-                ? avg(defined.map((r) => accuracyToPercentage[r.accuracy as any]))
+                ? avg(
+                    defined.map((r) => accuracyToPercentage[r.accuracy as any]),
+                  )
                 : 0;
             }
             break;
@@ -253,10 +267,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
           case Metric.totalBallThroughput: {
             const perReport = sr.map((r) => {
               return r.events
-                .filter(
-                  (e) =>
-                    e.action === "STOP_FEEDING" || e.action === "STOP_SCORING",
-                )
+                .filter((e) => e.action === "STOP_SCORING")
                 .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
             });
             matchValue = avg(perReport);
@@ -319,7 +330,9 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
           if (valid.length > 0) tournamentAverages.push(avg(valid));
         }
         finalResults[String(metric)][String(team)] =
-          tournamentAverages.length > 0 ? weightedTourAvgLeft(tournamentAverages) : -1;
+          tournamentAverages.length > 0
+            ? weightedTourAvgLeft(tournamentAverages)
+            : -1;
       }
     }
 
