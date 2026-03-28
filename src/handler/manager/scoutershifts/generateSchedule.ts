@@ -163,7 +163,7 @@ const getScheduleGaps = async (matches: any[]) => {
       gaps.push({
         match_number: match.match_number - 1,
         gap: gap,
-        type: gap < 10000 ? "LUNCH" : "EOD", // or "LUNCH" based on your logic
+        type: gap < 10000 ? "LUNCH" : "EOD",
       });
     }
     previousTime = match.time;
