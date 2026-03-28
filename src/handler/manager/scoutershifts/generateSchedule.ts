@@ -1,9 +1,9 @@
 import axios from "axios";
 import z, { ZodError } from "zod";
 import prismaClient from "../../../prismaClient";
-import { writeFileSync } from "fs";
-import { join } from "path";
-import { homedir } from "os";
+// import { writeFileSync } from "fs";
+// import { join } from "path";
+// import { homedir } from "os";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
 import { Response } from "express";
 
@@ -25,7 +25,7 @@ const generateSchedule = async (
     return;
   }
 
-  console.log("generating schedule for " + tournamentKey);
+  // console.log("generating schedule for " + tournamentKey);
 
   const url = "https://www.thebluealliance.com/api/v3";
   const tournamentRow = await prismaClient.tournament.findUnique({
@@ -55,7 +55,7 @@ const generateSchedule = async (
 
   let matchesResponse = null;
   let teamsResponse = null;
-  console.log("fetching matches for " + tournamentKey);
+  // console.log("fetching matches for " + tournamentKey);
   try {
     matchesResponse = await axios.get(`${url}/event/${tournamentKey}/matches`, {
       headers: {
@@ -165,12 +165,12 @@ const generateSchedule = async (
 
   csvRows.push("EOD,,,,,,,");
 
-  console.log(csvRows.join("\n"));
+  // console.log(csvRows.join("\n"));
 
-  writeFileSync(
-    join(homedir(), "Downloads", "temp", `${tournamentKey}_schedule.csv`),
-    csvRows.join("\n"),
-  );
+  // writeFileSync(
+  //   join(homedir(), "Downloads", "temp", `${tournamentKey}_schedule.csv`),
+  //   csvRows.join("\n"),
+  // );
 
   return csvRows.join("\n");
 };
@@ -227,7 +227,7 @@ const getScheduleGaps = async (matches: any[]) => {
     }
     previousTime = match.time;
   }
-  console.log(gaps);
+  // console.log(gaps);
   return gaps;
 };
 
@@ -242,15 +242,15 @@ const buildShifts = (gaps: Gap[], shiftScouters: string[][] = []) => {
     });
     periodStart = gap.match_number + 1;
   }
-  console.log(periods.length);
+  // console.log(periods.length);
 
   for (const period of periods) {
     const periodLength = period.end - period.start + 1;
-    console.log(periodLength);
+    // console.log(periodLength);
     const numShifts = Math.ceil(periodLength / optimalMatches);
-    console.log(numShifts);
+    // console.log(numShifts);
     const shiftLength = Math.ceil(periodLength / numShifts);
-    console.log(shiftLength);
+    // console.log(shiftLength);
     for (let i = 0; i < numShifts; i++) {
       shifts.push({
         start: period.start + i * shiftLength,
@@ -260,7 +260,7 @@ const buildShifts = (gaps: Gap[], shiftScouters: string[][] = []) => {
     }
   }
 
-  console.log(shifts);
+  // console.log(shifts);
 
   return shifts;
 };
