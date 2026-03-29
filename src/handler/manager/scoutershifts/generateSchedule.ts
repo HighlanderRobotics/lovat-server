@@ -21,10 +21,6 @@ const generateSchedule = async (
     throw "tournament key is undefined";
   }
 
-  if (!tournamentKey.startsWith("2026")) {
-    return;
-  }
-
   // console.log("generating schedule for " + tournamentKey);
 
   const url = "https://www.thebluealliance.com/api/v3";
