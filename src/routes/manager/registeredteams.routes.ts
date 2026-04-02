@@ -13,9 +13,15 @@ const TeamParamSchema = z.object({ team: z.string() });
 // Status variants returned by checkRegisteredTeam handler
 const RegistrationStatusSchema = z.discriminatedUnion("status", [
   z.object({ status: z.literal("NOT_STARTED") }),
-  z.object({ status: z.literal("PENDING_EMAIL_VERIFICATION"), email: z.string() }),
+  z.object({
+    status: z.literal("PENDING_EMAIL_VERIFICATION"),
+    email: z.string(),
+  }),
   z.object({ status: z.literal("PENDING_WEBSITE") }),
-  z.object({ status: z.literal("PENDING_TEAM_VERIFICATION"), teamEmail: z.string() }),
+  z.object({
+    status: z.literal("PENDING_TEAM_VERIFICATION"),
+    teamEmail: z.string(),
+  }),
   z.object({ status: z.literal("REGISTERED_ON_TEAM") }),
   z.object({ status: z.literal("REGISTERED_OFF_TEAM") }),
   z.object({ status: z.literal("PENDING") }),

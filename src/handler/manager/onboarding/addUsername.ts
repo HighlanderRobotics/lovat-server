@@ -8,7 +8,9 @@ export const addUsername = async (
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
-      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      res
+        .status(403)
+        .json({ error: "This action cannot be performed using an API key" });
       return;
     }
 

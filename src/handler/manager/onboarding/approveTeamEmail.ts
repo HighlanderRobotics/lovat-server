@@ -7,7 +7,7 @@ import { kv } from "../../../redisClient.js";
 
 export const approveTeamEmail = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z

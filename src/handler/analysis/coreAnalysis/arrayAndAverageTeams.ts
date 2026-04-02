@@ -15,10 +15,7 @@ import {
 } from "../dataSourceRule.js";
 import z from "zod";
 import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
-import {
-  avg,
-  calculateTimeMetric,
-} from "./averageManyFast.js";
+import { avg, calculateTimeMetric } from "./averageManyFast.js";
 
 // Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
 // Provides a timeline of metric value per match.
@@ -131,7 +128,10 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
-              const accuracyEnum = (sr as any).accuracy as number | null | undefined;
+              const accuracyEnum = (sr as any).accuracy as
+                | number
+                | null
+                | undefined;
               const accuracyPercent =
                 accuracyEnum !== null &&
                 accuracyEnum !== undefined &&
@@ -171,7 +171,10 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
-              const accuracyEnum = (sr as any).accuracy as number | null | undefined;
+              const accuracyEnum = (sr as any).accuracy as
+                | number
+                | null
+                | undefined;
               const accuracyPercent =
                 accuracyEnum !== null &&
                 accuracyEnum !== undefined &&
@@ -199,7 +202,10 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
-              const accuracyEnum = (sr as any).accuracy as number | null | undefined;
+              const accuracyEnum = (sr as any).accuracy as
+                | number
+                | null
+                | undefined;
               const accuracyPercent =
                 accuracyEnum !== null &&
                 accuracyEnum !== undefined &&

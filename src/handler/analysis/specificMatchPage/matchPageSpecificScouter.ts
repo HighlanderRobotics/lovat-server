@@ -95,7 +95,7 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       feedingRate: agg[Metric.feedingRate] ?? 0,
       feeds: agg[Metric.feedsPerMatch] ?? 0,
       feederType: (scoutReport.feederTypes || []).map(
-        (f) => FeederTypeReverseMap[f]
+        (f) => FeederTypeReverseMap[f],
       ),
       climbResult: EndgameClimbReverseMap[scoutReport.endgameClimb],
       climbStartTime: agg[Metric.l1StartTime] ?? 0,

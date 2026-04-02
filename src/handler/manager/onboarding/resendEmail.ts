@@ -7,7 +7,7 @@ import { DateTime } from "luxon";
 
 export const resendEmail = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
@@ -46,7 +46,7 @@ export const resendEmail = async (
 
 export async function sendVerificationEmail(
   email: string,
-  teamNumber: number
+  teamNumber: number,
 ): Promise<void> {
   const code = randomBytes(8).toString("hex");
 

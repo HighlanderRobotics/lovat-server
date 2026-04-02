@@ -193,35 +193,39 @@ export const getTeamCSV = async (
             },
           },
         );
-        
+
         if (teamsResponse.data && teamsResponse.data.length > 0) {
           const teams = (teamsResponse.data as { team_number: number }[]).map(
-            (t) => t.team_number
+            (t) => t.team_number,
           );
-          
+
           // Build the data source filters
           const parsedTeamRule = dataSourceRuleSchema(z.number()).safeParse(
             req.user?.teamSourceRule,
           );
-          const teamFilter = parsedTeamRule.success 
-            ? dataSourceRuleToPrismaFilter(parsedTeamRule.data) 
+          const teamFilter = parsedTeamRule.success
+            ? dataSourceRuleToPrismaFilter(parsedTeamRule.data)
             : undefined;
-          
-          const parsedTournamentRule = dataSourceRuleSchema(z.string()).safeParse(
-            req.user?.tournamentSourceRule,
-          );
+
+          const parsedTournamentRule = dataSourceRuleSchema(
+            z.string(),
+          ).safeParse(req.user?.tournamentSourceRule);
           const tournamentFilter = parsedTournamentRule.success
             ? dataSourceRuleToPrismaFilter(parsedTournamentRule.data)
             : undefined;
-          
+
           // Fetch all scout reports for these teams from filtered tournaments
           const allReports = await prismaClient.scoutReport.findMany({
             where: {
               teamMatchData: {
                 teamNumber: { in: teams },
-                ...(tournamentFilter ? { tournamentKey: tournamentFilter } : {}),
+                ...(tournamentFilter
+                  ? { tournamentKey: tournamentFilter }
+                  : {}),
               },
-              ...(teamFilter ? { scouter: { sourceTeamNumber: teamFilter } } : {}),
+              ...(teamFilter
+                ? { scouter: { sourceTeamNumber: teamFilter } }
+                : {}),
             },
             select: {
               uuid: true,
@@ -255,15 +259,20 @@ export const getTeamCSV = async (
               },
             },
           });
-          
+
           if (allReports.length === 0) {
-            res.status(400).send("Not enough scouting data from provided sources");
+            res
+              .status(400)
+              .send("Not enough scouting data from provided sources");
             return;
           }
-          
+
           // Group reports by team number
-          const groupedByTeam: Record<number, { reports: PointsReport[]; numMatches: number }> = {};
-          
+          const groupedByTeam: Record<
+            number,
+            { reports: PointsReport[]; numMatches: number }
+          > = {};
+
           for (const report of allReports) {
             const teamNum = report.teamMatchData.teamNumber;
             if (!groupedByTeam[teamNum]) {
@@ -274,15 +283,15 @@ export const getTeamCSV = async (
               weight: 1,
             });
           }
-          
+
           // Count unique matches per team
           const matchCounts = await prismaClient.teamMatchData.groupBy({
-            by: ['teamNumber'],
+            by: ["teamNumber"],
             where: {
               teamNumber: { in: teams },
               ...(tournamentFilter ? { tournamentKey: tournamentFilter } : {}),
               scoutReports: {
-                some: teamFilter 
+                some: teamFilter
                   ? { scouter: { sourceTeamNumber: teamFilter } }
                   : {},
               },
@@ -291,21 +300,25 @@ export const getTeamCSV = async (
               key: true,
             },
           });
-          
+
           for (const count of matchCounts) {
             if (groupedByTeam[count.teamNumber]) {
               groupedByTeam[count.teamNumber].numMatches = count._count.key;
             }
           }
-          
+
           // Aggregate data for teams with reports
-          const teamsWithReports = teams.filter((t: number) => groupedByTeam[t]?.reports?.length > 0);
-          
+          const teamsWithReports = teams.filter(
+            (t: number) => groupedByTeam[t]?.reports?.length > 0,
+          );
+
           if (teamsWithReports.length === 0) {
-            res.status(400).send("Not enough scouting data from provided sources");
+            res
+              .status(400)
+              .send("Not enough scouting data from provided sources");
             return;
           }
-          
+
           // Compute metrics using averageManyFast
           const metrics: Metric[] = [
             Metric.totalPoints,
@@ -351,10 +364,12 @@ export const getTeamCSV = async (
               );
             }),
           );
-          
+
           const csvString = stringify(aggregatedData, {
             header: true,
-            columns: aggregatedData.length ? Object.keys(aggregatedData[0]) : [],
+            columns: aggregatedData.length
+              ? Object.keys(aggregatedData[0])
+              : [],
             bom: true,
             cast: {
               boolean: (b) => (b ? "TRUE" : "FALSE"),
@@ -370,7 +385,7 @@ export const getTeamCSV = async (
       } catch (error) {
         console.error("Error fetching teams from TBA:", error);
       }
-      
+
       res.status(400).send("Not enough scouting data from provided sources");
       return;
     }
