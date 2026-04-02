@@ -126,13 +126,22 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             },
             endgameClimb: true,
             autoClimb: true,
+            accuracy: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
+              const accuracyEnum = (sr as any).accuracy as number | null | undefined;
+              const accuracyPercent =
+                accuracyEnum !== null &&
+                accuracyEnum !== undefined &&
+                accuracyToPercentage[accuracyEnum] !== undefined
+                  ? accuracyToPercentage[accuracyEnum]
+                  : 100;
+              const accuracyMultiplier = accuracyPercent / 100;
               const events = sr.events ?? [];
               events.forEach((e) => {
-                total += e.points ?? 0;
+                total += (e.points ?? 0) * accuracyMultiplier;
               });
               // Include auto climb points (15) when succeeded
               const autoClimb = (sr as any).autoClimb as
@@ -157,13 +166,22 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               select: { points: true },
             },
             endgameClimb: true,
+            accuracy: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
+              const accuracyEnum = (sr as any).accuracy as number | null | undefined;
+              const accuracyPercent =
+                accuracyEnum !== null &&
+                accuracyEnum !== undefined &&
+                accuracyToPercentage[accuracyEnum] !== undefined
+                  ? accuracyToPercentage[accuracyEnum]
+                  : 100;
+              const accuracyMultiplier = accuracyPercent / 100;
               const events = sr.events ?? [];
               events.forEach((e) => {
-                total += e.points ?? 0;
+                total += (e.points ?? 0) * accuracyMultiplier;
               });
             });
             return total / (reports.length || 1);
@@ -176,13 +194,22 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               where: { time: { lte: autoEnd }, action: "STOP_SCORING" },
               select: { points: true },
             },
+            accuracy: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
+              const accuracyEnum = (sr as any).accuracy as number | null | undefined;
+              const accuracyPercent =
+                accuracyEnum !== null &&
+                accuracyEnum !== undefined &&
+                accuracyToPercentage[accuracyEnum] !== undefined
+                  ? accuracyToPercentage[accuracyEnum]
+                  : 100;
+              const accuracyMultiplier = accuracyPercent / 100;
               const events = sr.events ?? [];
               events.forEach((e) => {
-                total += e.points ?? 0;
+                total += (e.points ?? 0) * accuracyMultiplier;
               });
             });
             return total / (reports.length || 1);

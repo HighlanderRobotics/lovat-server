@@ -220,18 +220,20 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
               const tele = r.events
                 .filter((e) => e.time > autoEnd && e.action === "STOP_SCORING")
                 .reduce((a, b) => a + b.points, 0);
+              const accuracyPercent =
+                r.accuracy !== null &&
+                r.accuracy !== undefined &&
+                accuracyToPercentage[r.accuracy as any] !== undefined
+                  ? accuracyToPercentage[r.accuracy as any]
+                  : 100;
+              const accuracyMultiplier = accuracyPercent / 100;
               const aClimb = r.autoClimb === AutoClimb.SUCCEEDED ? 15 : 0;
               const endgame = endgameToPoints[r.endgameClimb];
               if (metric === Metric.autoPoints)
-                return auto * accuracyToPercentage[r.accuracy as any] + aClimb;
+                return auto * accuracyMultiplier + aClimb;
               if (metric === Metric.teleopPoints)
-                return tele * accuracyToPercentage[r.accuracy as any];
-              return (
-                aClimb +
-                auto * accuracyToPercentage[r.accuracy as any] +
-                tele * accuracyToPercentage[r.accuracy as any] +
-                endgame
-              );
+                return tele * accuracyMultiplier;
+              return aClimb + (auto + tele) * accuracyMultiplier + endgame;
             });
             matchValue = avg(perReport);
             break;
