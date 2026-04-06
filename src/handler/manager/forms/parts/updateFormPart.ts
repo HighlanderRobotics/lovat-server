@@ -2,7 +2,7 @@ import z from "zod";
 import { AuthenticatedRequest } from "../../../../lib/middleware/requireAuth";
 import prismaClient from "../../../../prismaClient";
 import { Response } from "express";
-import { FormPartType, Prisma } from "@prisma/client";
+import { FormPartType, Prisma, UserRole } from "@prisma/client";
 
 const updateFormPartParamsSchema = z.object({
   uuid: z.string(),
@@ -17,6 +17,11 @@ export const updateFormPart = async (
   res: Response,
 ): Promise<void> => {
   try {
+    if (req.user.role !== UserRole.SCOUTING_LEAD) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
     const params = updateFormPartParamsSchema.parse({
       uuid: req.params.uuid,
       ...req.body,

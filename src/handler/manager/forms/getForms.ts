@@ -7,7 +7,7 @@ export const getForms = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const form = await prismaClient.form.findMany({
+    const forms = await prismaClient.form.findMany({
       where: {
         teamNumber: req.user.teamNumber,
       },
@@ -18,7 +18,7 @@ export const getForms = async (
       },
     });
 
-    res.status(200).json({ form });
+    res.status(200).json({ forms });
   } catch (error) {
     console.error("Error getting forms:", error);
     res

@@ -20,7 +20,7 @@ export const deleteForm = async (
     const params = deleteFormParamsSchema.parse(req.params);
 
     const form = await prismaClient.form.delete({
-      where: { uuid: params.uuid },
+      where: { uuid: params.uuid, teamNumber: req.user.teamNumber },
     });
 
     res.status(200).json({ form });

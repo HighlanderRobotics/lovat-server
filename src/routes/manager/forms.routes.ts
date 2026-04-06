@@ -330,7 +330,6 @@ router.put("/:formUuid/parts/:uuid", updateFormPart);
 router.put("/:formUuid/parts/:uuid/reorder", reorderFormParts);
 
 // Form responses — submitForm is unauthenticated
-router.use(requireAuth, requireVerifiedTeam);
 router.get("/:formUuid/responses", getFormResponses);
 router.get("/:formUuid/responses/:responseUuid", getFormResponse);
 router.delete("/:formUuid/responses/:responseUuid", deleteFormResponse);

@@ -4,7 +4,7 @@ import prismaClient from "../../../../prismaClient";
 import { Response } from "express";
 
 const getFormPartParamsSchema = z.object({
-  formPartUuid: z.string(),
+  uuid: z.string(),
 });
 
 export const getFormPart = async (
@@ -15,7 +15,7 @@ export const getFormPart = async (
     const params = getFormPartParamsSchema.parse(req.params);
 
     const formPart = await prismaClient.formPart.findUnique({
-      where: { uuid: params.formPartUuid },
+      where: { uuid: params.uuid },
       include: {
         formResponseParts: {
           orderBy: { formResponseUuid: "asc" },

@@ -21,7 +21,10 @@ export const submitForm = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const params = submitFormParamsSchema.parse(req.body);
+    const params = submitFormParamsSchema.parse({
+      formUuid: req.params.formUuid,
+      ...req.body,
+    });
 
     if (!params.matchKey && !params.team) {
       res.status(400).json({ error: "Either matchKey or team is required" });

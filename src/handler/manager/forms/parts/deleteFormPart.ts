@@ -19,11 +19,14 @@ export const deleteFormPart = async (
     }
     const params = deleteFormPartParamsSchema.parse(req.params);
 
-    const form = await prismaClient.formPart.delete({
-      where: { uuid: params.uuid },
+    const formPart = await prismaClient.formPart.delete({
+      where: {
+        uuid: params.uuid,
+        form: { teamNumber: req.user.teamNumber },
+      },
     });
 
-    res.status(200).json({ form });
+    res.status(200).json({ formPart });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: "Invalid input", details: error });
