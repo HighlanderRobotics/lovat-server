@@ -1,7 +1,7 @@
 import z from "zod";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth";
+import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { FormPartType, UserRole } from "@prisma/client";
-import prismaClient from "../../../prismaClient";
+import prismaClient from "../../../prismaClient.js";
 import { Response } from "express";
 
 const createFormParamsSchema = z.object({
