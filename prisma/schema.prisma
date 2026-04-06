@@ -26,14 +26,14 @@ model FeatureToggle {
 }
 
 model TeamMatchData {
-  key           String        @id
+  key           String         @id
   tournamentKey String
-  matchNumber   Int           @db.SmallInt
+  matchNumber   Int            @db.SmallInt
   teamNumber    Int
   matchType     MatchType
   scoutReports  ScoutReport[]
   formResponses FormResponse[]
-  tournament    Tournament    @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
+  tournament    Tournament     @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
 
   @@index([tournamentKey, teamNumber])
 }
@@ -100,7 +100,7 @@ model Scouter {
   scouterReliability Int                    @default(0)
   archived           Boolean                @default(false)
   scoutReports       ScoutReport[]
-  formResponses     FormResponse[]
+  formResponses      FormResponse[]
   sourceTeam         RegisteredTeam         @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
   team1Shifts        ScouterScheduleShift[] @relation("Team1")
   team2Shifts        ScouterScheduleShift[] @relation("Team2")
@@ -236,6 +236,7 @@ model CachedAnalysis {
   teamDependencies       Int[]    @default([])
   tournamentDependencies String[] @default([])
 }
+
 model Form {
   uuid          String         @id @default(uuid())
   name          String
@@ -253,20 +254,20 @@ model FormPart {
   caption           String
   name              String
   options           Json               @default("{}")
-  order             String
+  order             Int
   formResponseParts FormResponsePart[]
 }
 
 model FormResponse {
-  uuid String @id @default(uuid()) 
-  formUuid String 
-  form Form @relation(fields: [formUuid], references: [uuid], onDelete: Cascade) 
-  scouterUuid String 
-  scouter Scouter @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade) 
-  teamNumber Int 
-  team Team @relation(fields: [teamNumber], references: [number], onDelete: Cascade) 
-  teamMatchKey String? 
-  teamMatchData TeamMatchData? @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade) 
+  uuid              String             @id @default(uuid())
+  formUuid          String
+  form              Form               @relation(fields: [formUuid], references: [uuid], onDelete: Cascade)
+  scouterUuid       String
+  scouter           Scouter            @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade)
+  teamNumber        Int?
+  team              Team?              @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
+  teamMatchKey      String?
+  teamMatchData     TeamMatchData?     @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
   formResponseParts FormResponsePart[]
 }
 
@@ -287,7 +288,6 @@ enum FormPartType {
   MULTIPLE_CHOICE_GRID
   IMAGE
 }
-
 
 enum Position {
   LEFT_TRENCH
