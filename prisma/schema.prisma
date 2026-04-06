@@ -32,6 +32,7 @@ model TeamMatchData {
   teamNumber    Int
   matchType     MatchType
   scoutReports  ScoutReport[]
+  formResponses FormResponse[]
   tournament    Tournament    @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
 
   @@index([tournamentKey, teamNumber])
@@ -99,6 +100,7 @@ model Scouter {
   scouterReliability Int                    @default(0)
   archived           Boolean                @default(false)
   scoutReports       ScoutReport[]
+  formResponses     FormResponse[]
   sourceTeam         RegisteredTeam         @relation(fields: [sourceTeamNumber], references: [number], onDelete: Cascade)
   team1Shifts        ScouterScheduleShift[] @relation("Team1")
   team2Shifts        ScouterScheduleShift[] @relation("Team2")
@@ -137,6 +139,7 @@ model Team {
   number         Int             @id
   name           String
   registeredTeam RegisteredTeam?
+  formResponses  FormResponse[]
 }
 
 model RegisteredTeam {
@@ -151,6 +154,7 @@ model RegisteredTeam {
   scouters              Scouter[]
   scouterScheduleShifts ScouterScheduleShift[]
   slackChannels         SlackWorkspace[]
+  customForms           Form[]
   users                 User[]
 }
 
@@ -232,6 +236,58 @@ model CachedAnalysis {
   teamDependencies       Int[]    @default([])
   tournamentDependencies String[] @default([])
 }
+model Form {
+  uuid          String         @id @default(uuid())
+  name          String
+  teamNumber    Int
+  team          RegisteredTeam @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
+  formParts     FormPart[]
+  formResponses FormResponse[]
+}
+
+model FormPart {
+  uuid              String             @id @default(uuid())
+  formUuid          String
+  form              Form               @relation(fields: [formUuid], references: [uuid], onDelete: Cascade)
+  type              FormPartType
+  caption           String
+  name              String
+  options           Json               @default("{}")
+  order             String
+  formResponseParts FormResponsePart[]
+}
+
+model FormResponse {
+  uuid String @id @default(uuid()) 
+  formUuid String 
+  form Form @relation(fields: [formUuid], references: [uuid], onDelete: Cascade) 
+  scouterUuid String 
+  scouter Scouter @relation(fields: [scouterUuid], references: [uuid], onDelete: Cascade) 
+  teamNumber Int 
+  team Team @relation(fields: [teamNumber], references: [number], onDelete: Cascade) 
+  teamMatchKey String? 
+  teamMatchData TeamMatchData? @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade) 
+  formResponseParts FormResponsePart[]
+}
+
+model FormResponsePart {
+  uuid             String       @id @default(uuid())
+  formResponseUuid String
+  formResponse     FormResponse @relation(fields: [formResponseUuid], references: [uuid], onDelete: Cascade)
+  formPartUuid     String
+  formPart         FormPart     @relation(fields: [formPartUuid], references: [uuid], onDelete: Cascade)
+  response         Json
+}
+
+enum FormPartType {
+  RATING
+  SHORT_ANSWER
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  MULTIPLE_CHOICE_GRID
+  IMAGE
+}
+
 
 enum Position {
   LEFT_TRENCH
