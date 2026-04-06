@@ -4,11 +4,11 @@ import { UserRole, Prisma } from "@prisma/client";
 import prismaClient from "../../../../prismaClient";
 import { Response } from "express";
 
-const deleteFormResponseParamsSchema = z.object({
+const deleteFormPartParamsSchema = z.object({
   uuid: z.string(),
 });
 
-export const deleteFormResponse = async (
+export const deleteFormPart = async (
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> => {
@@ -17,9 +17,9 @@ export const deleteFormResponse = async (
       res.status(403).json({ error: "Forbidden" });
       return;
     }
-    const params = deleteFormResponseParamsSchema.parse(req.params);
+    const params = deleteFormPartParamsSchema.parse(req.params);
 
-    const form = await prismaClient.formResponse.delete({
+    const form = await prismaClient.formPart.delete({
       where: { uuid: params.uuid },
     });
 
@@ -30,14 +30,14 @@ export const deleteFormResponse = async (
       return;
     } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2025") {
-        res.status(404).json({ error: "Form response not found" });
+        res.status(404).json({ error: "Form part not found" });
         return;
       }
     } else {
-      console.error("Error deleting form response:", error);
+      console.error("Error deleting form part:", error);
       res
         .status(500)
-        .json({ error: "An error occurred while deleting the form response." });
+        .json({ error: "An error occurred while deleting the form part." });
     }
   }
 };
