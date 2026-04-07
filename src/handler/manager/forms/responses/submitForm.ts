@@ -31,6 +31,15 @@ export const submitForm = async (
       return;
     }
 
+    const scouter = await prismaClient.scouter.findUnique({
+      where: { uuid: params.scouterUuid },
+    });
+
+    if (!scouter) {
+      res.status(404).json({ error: "Scouter not found" });
+      return;
+    }
+
     const formResponseCreateData: Prisma.FormResponseCreateInput =
       params.matchKey
         ? {
