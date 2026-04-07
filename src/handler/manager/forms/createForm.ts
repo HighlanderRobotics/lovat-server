@@ -5,7 +5,6 @@ import prismaClient from "../../../prismaClient.js";
 import { Response } from "express";
 
 const createFormParamsSchema = z.object({
-  team: z.number(),
   name: z.string(),
   parts: z.array(
     z.object({
@@ -30,7 +29,7 @@ export const createForm = async (
 
     const [form, formParts] = await prismaClient.$transaction(async (tx) => {
       const form = await tx.form.create({
-        data: { name: params.name, teamNumber: params.team },
+        data: { name: params.name, teamNumber: req.user.teamNumber },
       });
       const formParts = await tx.formPart.createManyAndReturn({
         data: params.parts.map((part, index) => ({

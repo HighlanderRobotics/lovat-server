@@ -16,6 +16,7 @@ import { deleteFormResponse } from "../../handler/manager/forms/responses/delete
 import { getFormResponse } from "../../handler/manager/forms/responses/getResponse.js";
 import { getFormResponses } from "../../handler/manager/forms/responses/getResponses.js";
 import { submitForm } from "../../handler/manager/forms/responses/submitForm.js";
+import { FormPartType } from "@prisma/client";
 
 // Forms
 registry.registerPath({
@@ -28,12 +29,11 @@ registry.registerPath({
       content: {
         "application/json": {
           schema: z.object({
-            team: z.number(),
             name: z.string(),
             parts: z.array(
               z.object({
                 name: z.string(),
-                type: z.string(),
+                type: z.nativeEnum(FormPartType),
                 caption: z.string(),
                 options: z.record(z.string(), z.unknown()).optional(),
               }),
@@ -47,6 +47,7 @@ registry.registerPath({
     200: { description: "Created" },
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
     500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
@@ -54,10 +55,10 @@ registry.registerPath({
 
 registry.registerPath({
   method: "delete",
-  path: "/v1/manager/forms/{formUuid}",
+  path: "/v1/manager/forms/:uuid",
   tags: ["Manager - Forms"],
   summary: "Delete a form",
-  request: { params: z.object({ formUuid: z.string() }) },
+  request: { params: z.object({ uuid: z.string() }) },
   responses: {
     200: { description: "Deleted" },
     401: { description: "Unauthorized" },
@@ -83,7 +84,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "put",
-  path: "/v1/manager/forms/{formUuid}",
+  path: "/v1/manager/forms/:formUuid",
   tags: ["Manager - Forms"],
   summary: "Update form name",
   request: {
@@ -98,6 +99,7 @@ registry.registerPath({
     200: { description: "Updated" },
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
     404: { description: "Form not found" },
     500: { description: "Server error" },
   },
@@ -107,7 +109,7 @@ registry.registerPath({
 // Form parts
 registry.registerPath({
   method: "post",
-  path: "/v1/manager/forms/{formUuid}/parts",
+  path: "/v1/manager/forms/:formUuid/parts",
   tags: ["Manager - Form Parts"],
   summary: "Add a part to a form",
   request: {
@@ -117,7 +119,7 @@ registry.registerPath({
         "application/json": {
           schema: z.object({
             name: z.string(),
-            type: z.string(),
+            type: z.nativeEnum(FormPartType),
             caption: z.string(),
             options: z.record(z.string(), z.unknown()),
             order: z.number(),
@@ -130,6 +132,8 @@ registry.registerPath({
     201: { description: "Created" },
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
+    404: { description: "Form not found" },
     500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
@@ -137,11 +141,11 @@ registry.registerPath({
 
 registry.registerPath({
   method: "delete",
-  path: "/v1/manager/forms/{formUuid}/parts/{partUuid}",
+  path: "/v1/manager/forms/:formUuid/parts/:uuid",
   tags: ["Manager - Form Parts"],
   summary: "Delete a form part",
   request: {
-    params: z.object({ formUuid: z.string(), partUuid: z.string() }),
+    params: z.object({ formUuid: z.string(), uuid: z.string() }),
   },
   responses: {
     200: { description: "Deleted" },
@@ -155,15 +159,16 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/v1/manager/forms/{formUuid}/parts/{partUuid}",
+  path: "/v1/manager/forms/:formUuid/parts/:uuid",
   tags: ["Manager - Form Parts"],
   summary: "Get a form part with its responses",
   request: {
-    params: z.object({ formUuid: z.string(), partUuid: z.string() }),
+    params: z.object({ formUuid: z.string(), uuid: z.string() }),
   },
   responses: {
     200: { description: "Form part" },
     401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
     404: { description: "Form part not found" },
     500: { description: "Server error" },
   },
@@ -172,17 +177,17 @@ registry.registerPath({
 
 registry.registerPath({
   method: "put",
-  path: "/v1/manager/forms/{formUuid}/parts/{partUuid}",
+  path: "/v1/manager/forms/:formUuid/parts/:uuid",
   tags: ["Manager - Form Parts"],
   summary: "Update a form part",
   request: {
-    params: z.object({ formUuid: z.string(), partUuid: z.string() }),
+    params: z.object({ formUuid: z.string(), uuid: z.string() }),
     body: {
       content: {
         "application/json": {
           schema: z.object({
             name: z.string(),
-            type: z.string(),
+            type: z.nativeEnum(FormPartType),
             caption: z.string(),
             options: z.record(z.string(), z.unknown()),
           }),
@@ -194,6 +199,7 @@ registry.registerPath({
     200: { description: "Updated" },
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
     404: { description: "Form part not found" },
     500: { description: "Server error" },
   },
@@ -202,11 +208,11 @@ registry.registerPath({
 
 registry.registerPath({
   method: "put",
-  path: "/v1/manager/forms/{formUuid}/parts/{partUuid}/reorder",
+  path: "/v1/manager/forms/:formUuid/parts/:uuid/reorder",
   tags: ["Manager - Form Parts"],
   summary: "Reorder a form part",
   request: {
-    params: z.object({ formUuid: z.string(), partUuid: z.string() }),
+    params: z.object({ formUuid: z.string(), uuid: z.string() }),
     body: {
       content: {
         "application/json": { schema: z.object({ order: z.number() }) },
@@ -217,6 +223,7 @@ registry.registerPath({
     200: { description: "Reordered" },
     400: { description: "Invalid request parameters" },
     401: { description: "Unauthorized" },
+    403: { description: "Forbidden" },
     404: { description: "Form part not found" },
     500: { description: "Server error" },
   },
@@ -226,7 +233,7 @@ registry.registerPath({
 // Form responses
 registry.registerPath({
   method: "post",
-  path: "/v1/manager/forms/{formUuid}/responses",
+  path: "/v1/manager/forms/:formUuid/responses",
   tags: ["Manager - Form Responses"],
   summary: "Submit a form response",
   request: {
@@ -262,7 +269,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/v1/manager/forms/{formUuid}/responses",
+  path: "/v1/manager/forms/:formUuid/responses",
   tags: ["Manager - Form Responses"],
   summary: "Get all responses for a form",
   request: { params: z.object({ formUuid: z.string() }) },
@@ -277,7 +284,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/v1/manager/forms/{formUuid}/responses/{responseUuid}",
+  path: "/v1/manager/forms/:formUuid/responses/:responseUuid",
   tags: ["Manager - Form Responses"],
   summary: "Get a single form response",
   request: {
@@ -294,7 +301,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "delete",
-  path: "/v1/manager/forms/{formUuid}/responses/{responseUuid}",
+  path: "/v1/manager/forms/:formUuid/responses/:responseUuid",
   tags: ["Manager - Form Responses"],
   summary: "Delete a form response",
   request: {
@@ -318,7 +325,7 @@ router.use(requireAuth, requireVerifiedTeam);
 
 // Forms
 router.post("/", createForm);
-router.delete("/:formUuid", deleteForm);
+router.delete("/:uuid", deleteForm);
 router.get("/", getForms);
 router.put("/:formUuid", updateFormName);
 

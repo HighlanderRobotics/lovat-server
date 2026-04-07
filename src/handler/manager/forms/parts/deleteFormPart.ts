@@ -18,11 +18,21 @@ export const deleteFormPart = async (
       return;
     }
     const params = deleteFormPartParamsSchema.parse(req.params);
-
-    const formPart = await prismaClient.formPart.delete({
+    const existingFormPart = await prismaClient.formPart.findFirst({
       where: {
         uuid: params.uuid,
         form: { teamNumber: req.user.teamNumber },
+      },
+    });
+
+    if (!existingFormPart) {
+      res.status(404).json({ error: "Form part not found" });
+      return;
+    }
+
+    const formPart = await prismaClient.formPart.delete({
+      where: {
+        uuid: existingFormPart.uuid,
       },
     });
 

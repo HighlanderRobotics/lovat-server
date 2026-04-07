@@ -19,50 +19,58 @@ export const reorderFormParts = async (
       res.status(403).json({ error: "Forbidden" });
       return;
     }
-
     const params = updateFormPartParamsSchema.parse({
       uuid: req.params.uuid,
       formUuid: req.params.formUuid,
       ...req.body,
     });
-
-    const formParts = await prismaClient.formPart.findMany({
-      where: { formUuid: params.formUuid },
-      orderBy: { order: "asc" },
+    const formPart = await prismaClient.$transaction(async (tx) => {
+      const form = await tx.form.findUnique({
+        where: { uuid: params.formUuid },
+      });
+      if (!form) {
+        throw new Error("Form not found");
+      }
+      if (form.teamNumber !== req.user.teamNumber) {
+        throw new Error("Forbidden");
+      }
+      const formParts = await tx.formPart.findMany({
+        where: { formUuid: params.formUuid },
+        orderBy: { order: "asc" },
+      });
+      const target = formParts.find((p) => p.uuid === params.uuid);
+      if (!target) {
+        throw new Error("Form part not found");
+      }
+      const without = formParts.filter((p) => p.uuid !== params.uuid);
+      without.splice(params.order, 0, target);
+      const reordered = without.map((p, index) => ({ ...p, order: index }));
+      const updatedFormParts = await Promise.all(
+        reordered.map((p) =>
+          tx.formPart.update({
+            where: { uuid: p.uuid },
+            data: { order: p.order },
+          }),
+        ),
+      );
+      return updatedFormParts.find((p) => p.uuid === params.uuid);
     });
-
-    const target = formParts.find((p) => p.uuid === params.uuid);
-
-    if (!target) {
-      res.status(404).json({ error: "Form part not found" });
-      return;
-    }
-
-    const reordered = formParts.map((p) => ({
-      ...p,
-      order:
-        p.uuid === params.uuid
-          ? params.order
-          : p.order >= params.order
-            ? p.order + 1
-            : p.order,
-    }));
-
-    const updatedFormParts = await prismaClient.$transaction(
-      reordered.map((formPart) =>
-        prismaClient.formPart.update({
-          where: { uuid: formPart.uuid },
-          data: { order: formPart.order },
-        }),
-      ),
-    );
-    const formPart = updatedFormParts.find((part) => part.uuid === params.uuid);
-
     res.status(200).json({ formPart });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: "Invalid input", details: error });
       return;
+    } else if (error instanceof Error) {
+      if (error.message === "Form not found") {
+        res.status(404).json({ error: "Form not found" });
+        return;
+      } else if (error.message === "Forbidden") {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      } else if (error.message === "Form part not found") {
+        res.status(404).json({ error: "Form part not found" });
+        return;
+      }
     } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2025") {
         res.status(404).json({ error: "Form part not found" });

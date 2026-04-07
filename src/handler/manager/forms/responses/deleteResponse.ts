@@ -5,7 +5,8 @@ import prismaClient from "../../../../prismaClient";
 import { Response } from "express";
 
 const deleteFormResponseParamsSchema = z.object({
-  uuid: z.string(),
+  formUuid: z.string(),
+  responseUuid: z.string(),
 });
 
 export const deleteFormResponse = async (
@@ -19,8 +20,35 @@ export const deleteFormResponse = async (
     }
     const params = deleteFormResponseParamsSchema.parse(req.params);
 
+    const existingFormResponse = await prismaClient.formResponse.findFirst({
+      where: {
+        uuid: params.responseUuid,
+        form: { teamNumber: req.user.teamNumber },
+      },
+      include: {
+        form: true,
+      },
+    });
+
+    if (!existingFormResponse) {
+      res.status(404).json({ error: "Form response not found" });
+      return;
+    }
+
+    if (existingFormResponse.formUuid !== params.formUuid) {
+      res
+        .status(400)
+        .json({ error: "Form response does not belong to the specified form" });
+      return;
+    }
+
+    if (existingFormResponse.form.teamNumber !== req.user.teamNumber) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
     const form = await prismaClient.formResponse.delete({
-      where: { uuid: params.uuid },
+      where: { uuid: params.responseUuid },
     });
 
     res.status(200).json({ form });
@@ -33,11 +61,10 @@ export const deleteFormResponse = async (
         res.status(404).json({ error: "Form response not found" });
         return;
       }
-    } else {
-      console.error("Error deleting form response:", error);
-      res
-        .status(500)
-        .json({ error: "An error occurred while deleting the form response." });
     }
+    console.error("Error deleting form response:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while deleting the form response." });
   }
 };

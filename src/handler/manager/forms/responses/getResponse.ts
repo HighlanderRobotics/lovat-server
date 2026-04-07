@@ -15,7 +15,10 @@ export const getFormResponse = async (
     const params = getResponseParamsSchema.parse(req.params);
 
     const formResponse = await prismaClient.formResponse.findUnique({
-      where: { uuid: params.responseUuid },
+      where: {
+        uuid: params.responseUuid,
+        form: { teamNumber: req.user.teamNumber },
+      },
       include: {
         formResponseParts: {
           orderBy: { formPartUuid: "asc" },

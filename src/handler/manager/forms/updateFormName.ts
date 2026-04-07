@@ -14,6 +14,11 @@ export const updateFormName = async (
   res: Response,
 ): Promise<void> => {
   try {
+    if (req.user.role !== "SCOUTING_LEAD") {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
     const params = updateFormNameParamsSchema.safeParse({
       formUuid: req.params.formUuid,
       name: req.body.name,
@@ -25,7 +30,7 @@ export const updateFormName = async (
     }
 
     const form = await prismaClient.form.update({
-      where: { uuid: params.data.formUuid },
+      where: { uuid: params.data.formUuid, teamNumber: req.user.teamNumber },
       data: { name: params.data.name },
     });
 

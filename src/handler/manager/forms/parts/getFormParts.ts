@@ -20,11 +20,19 @@ export const getFormPart = async (
         formResponseParts: {
           orderBy: { formResponseUuid: "asc" },
         },
+        form: {
+          select: { teamNumber: true },
+        },
       },
     });
 
     if (!formPart) {
       res.status(404).json({ error: "Form part not found" });
+      return;
+    }
+
+    if (formPart.form.teamNumber !== req.user.teamNumber) {
+      res.status(403).json({ error: "Forbidden" });
       return;
     }
 

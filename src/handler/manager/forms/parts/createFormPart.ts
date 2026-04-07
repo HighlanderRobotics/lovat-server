@@ -22,13 +22,22 @@ export const createFormPart = async (
       res.status(403).json({ error: "Forbidden" });
       return;
     }
-
     const params = createFormPartParamsSchema.parse({
       formUuid: req.params.formUuid,
       ...req.body,
     });
-
+    const form = await prismaClient.form.findUnique({
+      where: { uuid: params.formUuid },
+    });
+    if (!form) {
+      res.status(404).json({ error: "Form not found" });
+      return;
+    }
     const formPart = await prismaClient.$transaction(async (tx) => {
+      const existing = await tx.formPart.findMany({
+        where: { formUuid: params.formUuid },
+        orderBy: { order: "asc" },
+      });
       const formPart = await tx.formPart.create({
         data: {
           formUuid: params.formUuid,
@@ -39,19 +48,9 @@ export const createFormPart = async (
           order: params.order,
         },
       });
-      const formParts = await tx.formPart.findMany({
-        where: { formUuid: params.formUuid },
-        orderBy: { order: "asc" },
-      });
-      const reordered = formParts.map((p) => ({
-        ...p,
-        order:
-          p.uuid === formPart.uuid
-            ? params.order
-            : p.order >= params.order
-              ? p.order + 1
-              : p.order,
-      }));
+      const without = existing.filter((p) => p.uuid !== formPart.uuid);
+      without.splice(params.order, 0, formPart);
+      const reordered = without.map((p, index) => ({ ...p, order: index }));
       await Promise.all(
         reordered.map((p) =>
           tx.formPart.update({
@@ -62,7 +61,6 @@ export const createFormPart = async (
       );
       return formPart;
     });
-
     res.status(201).json({ formPart });
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -21,12 +21,22 @@ export const updateFormPart = async (
       res.status(403).json({ error: "Forbidden" });
       return;
     }
-
     const params = updateFormPartParamsSchema.parse({
       uuid: req.params.uuid,
       ...req.body,
     });
-
+    const existing = await prismaClient.formPart.findUnique({
+      where: { uuid: params.uuid },
+      include: { form: true },
+    });
+    if (!existing) {
+      res.status(404).json({ error: "Form part not found" });
+      return;
+    }
+    if (existing.form.teamNumber !== req.user.teamNumber) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
     const formPart = await prismaClient.formPart.update({
       where: { uuid: params.uuid },
       data: {
@@ -36,7 +46,6 @@ export const updateFormPart = async (
         options: params.options,
       },
     });
-
     res.status(200).json({ formPart });
   } catch (error) {
     if (error instanceof z.ZodError) {
