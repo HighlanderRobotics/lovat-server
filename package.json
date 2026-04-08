@@ -60,9 +60,5 @@
   },
   "engines": {
     "node": "22.20.0"
-  },
-  "vitest": {
-    "environment": "node",
-    "include": ["src/**/*.test.ts"]
   }
 }
