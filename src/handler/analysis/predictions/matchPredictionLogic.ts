@@ -136,7 +136,7 @@ export async function matchPredictionLogic(
   return runAnalysis(config, user, args);
 }
 
-function getZPercent(z: number) {
+export function getZPercent(z: number) {
   if (z < -6.5) return 0.0;
   if (z > 6.5) return 1.0;
   let factK = 1;
@@ -158,14 +158,14 @@ function getZPercent(z: number) {
   sum += 0.5;
   return sum;
 }
-function getMean(teamArray: number[]) {
+export function getMean(teamArray: number[]) {
   let total = 0;
   for (const currTeamArray of teamArray) {
     total += currTeamArray;
   }
   return total / teamArray.length;
 }
-function getSDV(arr: number[]) {
+export function getSDV(arr: number[]) {
   const mean = getMean(arr);
   let variance = 0;
   for (const num of arr) {
