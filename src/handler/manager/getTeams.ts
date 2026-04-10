@@ -155,7 +155,6 @@ export const getTeams = async (
         );
         rows.unshift(rows[indexOfTeamNumber]);
         rows.splice(indexOfTeamNumber + 1, 1);
-        console.log(rows);
       }
     }
     res.status(200).send({ teams: rows, count: count });
