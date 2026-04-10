@@ -176,9 +176,17 @@ const generateSchedule = async (
 
 export const superScoutingSchedule = async (req: Request, res: Response) => {
   try {
-    const params = z.object({ tournamentKey: z.string() }).parse(req.query);
+    const params = z
+      .object({
+        tournamentKey: z.string(),
+        shiftScouters: z.array(z.array(z.string())),
+      })
+      .parse(req.query);
 
-    const schedule = await generateSchedule(params.tournamentKey);
+    const schedule = await generateSchedule(
+      params.tournamentKey,
+      params.shiftScouters,
+    );
 
     res.status(200).send(schedule);
   } catch (error) {
@@ -187,6 +195,7 @@ export const superScoutingSchedule = async (req: Request, res: Response) => {
     } else if (error === "NO_SCHEDULE") {
       res.status(404).send("No schedule available");
     } else {
+      console.error(error);
       res.status(500).send("Internal server error");
     }
   }
