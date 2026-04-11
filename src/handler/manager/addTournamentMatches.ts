@@ -29,6 +29,79 @@ export const addTournamentMatches = async (
       headers: { "X-TBA-Auth-Key": process.env.TBA_KEY },
     });
 
+    const nexusResponse = await fetch(
+      `https://frc.nexus/api/v1/event/${tournamentKey}`,
+      {
+        method: "GET",
+        headers: {
+          "Nexus-Api-Key": process.env.NEXUS_KEY ?? "",
+        },
+      },
+    );
+
+    if (!nexusResponse.ok) {
+      const errorMessage = await nexusResponse.text();
+      console.error("Error getting live event status:", errorMessage);
+    } else {
+      const data = await nexusResponse.json();
+
+      for (const match of data.matches) {
+        if (match.label.startsWith("Practice")) {
+          const practiceMatchNumber = parseInt(match.label.split(" ")[1]);
+          if (isNaN(practiceMatchNumber)) {
+            continue;
+          }
+
+          const matchKey = `${tournamentKey}_pr${practiceMatchNumber}`;
+          for (let i = 0; i < match.redTeams.length; i++) {
+            const teamNumber = Number(match.redTeams[i]);
+            const currMatchKey = `${matchKey}_${i}`;
+            await prismaClient.teamMatchData.upsert({
+              where: {
+                key: currMatchKey,
+              },
+              update: {
+                tournamentKey: tournamentKey,
+                matchNumber: practiceMatchNumber,
+                teamNumber: teamNumber,
+                matchType: "PRACTICE",
+              },
+              create: {
+                key: currMatchKey,
+                tournamentKey: tournamentKey,
+                matchNumber: practiceMatchNumber,
+                teamNumber: teamNumber,
+                matchType: "PRACTICE",
+              },
+            });
+          }
+          for (let i = 0; i < match.blueTeams.length; i++) {
+            const teamNumber = Number(match.blueTeams[i]);
+            const currMatchKey = `${matchKey}_${i + 3}`;
+
+            await prismaClient.teamMatchData.upsert({
+              where: {
+                key: currMatchKey,
+              },
+              update: {
+                tournamentKey: tournamentKey,
+                matchNumber: practiceMatchNumber,
+                teamNumber: teamNumber,
+                matchType: "PRACTICE",
+              },
+              create: {
+                key: currMatchKey,
+                tournamentKey: tournamentKey,
+                matchNumber: practiceMatchNumber,
+                teamNumber: teamNumber,
+                matchType: "PRACTICE",
+              },
+            });
+          }
+        }
+      }
+    }
+
     const json = await eventResponse.json();
 
     const { remap_teams } = z

@@ -25,6 +25,7 @@ export const updateSettings = async (
       .object({
         teamSource: z.array(z.number()),
         tournamentSource: z.array(z.string()),
+        includePracticeMatches: z.boolean().optional().default(false),
       })
       .parse(req.body);
 
@@ -38,6 +39,7 @@ export const updateSettings = async (
           params.tournamentSource,
           await allTournaments,
         ),
+        includePracticeMatches: params.includePracticeMatches,
       },
     });
     res.status(200).send("Settings successfully updated");

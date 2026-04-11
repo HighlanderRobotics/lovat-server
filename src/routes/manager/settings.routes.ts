@@ -11,6 +11,8 @@ import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 import { getTeamEmail } from "../../handler/manager/settings/getTeamEmail.js";
 import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
+import { addPracticeSource } from "../../handler/manager/settings/addPracticeSource.js";
+import { getPracticeSource } from "../../handler/manager/settings/getPracticeSource.js";
 
 const updateTeamEmails = rateLimit({
   windowMs: 2 * 60 * 1000,
@@ -34,6 +36,7 @@ registry.registerPath({
           schema: z.object({
             teamSource: z.array(z.number().int()),
             tournamentSource: z.array(z.string()),
+            includePracticeMatches: z.boolean().optional(),
           }),
         },
       },
@@ -102,6 +105,48 @@ registry.registerPath({
     400: { description: "Invalid request" },
     401: { description: "Unauthorized" },
     403: { description: "Not affiliated with a team" },
+    500: { description: "Server error" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/settings/practicesource",
+  tags: ["Manager - Settings"],
+  summary: "Get practice source",
+  responses: {
+    200: {
+      description: "Practice source",
+      content: { "application/json": { schema: z.boolean() } },
+    },
+    401: { description: "Unauthorized" },
+    500: { description: "Server error" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/v1/manager/settings/practicesource",
+  tags: ["Manager - Settings"],
+  summary: "Add practice source",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ includePracticeMatches: z.boolean() }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Added",
+      content: { "text/plain": { schema: z.string() } },
+    },
+    400: { description: "Invalid request" },
+    401: { description: "Unauthorized" },
     500: { description: "Server error" },
   },
   security: [{ bearerAuth: [] }],
@@ -195,6 +240,9 @@ router.put("/", updateSettings);
 
 router.get("/teamsource", getTeamSource);
 router.post("/teamsource", addTeamSource);
+
+router.get("/practicesource", getPracticeSource);
+router.post("/practicesource", addPracticeSource);
 
 router.get("/tournamentsource", getTournamentSource);
 router.post("/tournamentsource", addTournamentSource);

@@ -23,6 +23,7 @@ export const endgamePicklistTeamFast = async (
   team: number,
   sourceTeamFilter: { in?: number[]; notIn?: number[] } | undefined,
   sourceTnmtFilter: { in?: string[]; notIn?: string[] } | undefined,
+  sourcePracticeMatchFilter: boolean | undefined,
 ): Promise<number> => {
   try {
     // Get data
@@ -35,6 +36,11 @@ export const endgamePicklistTeamFast = async (
         teamMatchData: {
           teamNumber: team,
           ...(sourceTnmtFilter && { tournamentKey: sourceTnmtFilter }),
+          matchType: sourcePracticeMatchFilter
+            ? undefined
+            : {
+                not: "PRACTICE",
+              },
         },
         ...(sourceTeamFilter && {
           scouter: { sourceTeamNumber: sourceTeamFilter },
