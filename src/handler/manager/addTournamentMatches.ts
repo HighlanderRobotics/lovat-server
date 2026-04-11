@@ -313,5 +313,3 @@ export const addTournamentMatches = async (
     console.log(error);
   }
 };
-
-addTournamentMatches("2026cancmp");

@@ -78,6 +78,7 @@ const MatchTypeMap: Record<number, MatchType> = {
 const ReverseMatchTypeMap: Record<MatchType, number> = {
   [MatchType.QUALIFICATION]: 0,
   [MatchType.ELIMINATION]: 1,
+  [MatchType.PRACTICE]: 2,
 };
 const ScouterScheduleMap = {
   0: "team1",
