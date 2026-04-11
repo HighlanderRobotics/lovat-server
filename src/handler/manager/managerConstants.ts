@@ -103,6 +103,7 @@ const MatchTypeToAbrivation = {
 const MatchEnumToAbrivation: Record<MatchType, string> = {
   [MatchType.QUALIFICATION]: "qm",
   [MatchType.ELIMINATION]: "em",
+  [MatchType.PRACTICE]: "pr",
 };
 
 export {
