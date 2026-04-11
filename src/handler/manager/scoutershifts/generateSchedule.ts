@@ -4,8 +4,7 @@ import prismaClient from "../../../prismaClient.js";
 // import { writeFileSync } from "fs";
 // import { join } from "path";
 // import { homedir } from "os";
-import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
-import { Response } from "express";
+import { Request, Response } from "express";
 
 const shiftScouterEx = [
   ["Christian", "Oren", "Ben"],
@@ -79,6 +78,10 @@ const generateSchedule = async (
       latestFetchETag: matchesResponse.headers.etag,
     },
   });
+
+  if (!matchesResponse || !teamsResponse) {
+    throw "NO_SCHEDULE";
+  }
 
   matchesResponse.data = matchesResponse.data.filter(
     (match: any) => match.comp_level === "qm",
@@ -171,10 +174,7 @@ const generateSchedule = async (
   return csvRows.join("\n");
 };
 
-export const superScoutingSchedule = async (
-  req: AuthenticatedRequest,
-  res: Response,
-) => {
+export const superScoutingSchedule = async (req: Request, res: Response) => {
   try {
     const params = z.object({ tournamentKey: z.string() }).parse(req.query);
 
@@ -184,6 +184,8 @@ export const superScoutingSchedule = async (
   } catch (error) {
     if (error instanceof ZodError) {
       res.status(400).send("Bad input");
+    } else if (error === "NO_SCHEDULE") {
+      res.status(404).send("No schedule available");
     } else {
       res.status(500).send("Internal server error");
     }

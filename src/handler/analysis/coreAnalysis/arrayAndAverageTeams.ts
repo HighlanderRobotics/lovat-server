@@ -387,15 +387,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
                 .filter((t) => t <= autoEnd)
                 .sort((a, b) => a - b);
               const first = filteredAutoTimes[0];
-              try {
-                console.debug("autoClimbStartTime", {
-                  reportIndex: idx,
-                  autoClimb: ac,
-                  rawClimbTimes,
-                  filteredAutoTimes,
-                  first,
-                });
-              } catch {}
               if (ac === "SUCCEEDED" && first !== undefined) {
                 const remaining = autoEnd - first;
                 const clamped = remaining >= 0 ? remaining : 0;
@@ -437,19 +428,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
                 .filter((t) => t > autoEnd && t <= 158)
                 .sort((a, b) => a - b);
               const firstTeleop = filteredTeleopTimes[0];
-              console.debug("lXStartTime", {
-                reportIndex: idx,
-                endgameClimb: eg,
-                required,
-                scoutReportUuid: (r as any).uuid,
-                events: (r.events ?? []).map((e) => ({
-                  action: e.action,
-                  time: e.time,
-                })),
-                rawClimbTimes,
-                filteredTeleopTimes,
-                firstTeleop,
-              });
               if (eg === required && firstTeleop !== undefined) {
                 const remaining = 158 - firstTeleop;
                 const clamped = remaining >= 0 ? remaining : 0;
@@ -585,23 +563,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           dataPoint: matchValue,
           tournamentName: row.tournament.name,
         });
-        // Debug logging for climb start metrics
-        if (
-          metric === Metric.autoClimbStartTime ||
-          metric === Metric.l1StartTime ||
-          metric === Metric.l2StartTime ||
-          metric === Metric.l3StartTime
-        ) {
-          try {
-            console.debug("timeline", {
-              team,
-              match: row.key,
-              tnmt,
-              reports: row.scoutReports.length,
-              matchValue,
-            });
-          } catch {}
-        }
         // Accumulate per tournament
         perTeamTournamentValues[team][tnmt].push(matchValue);
       }

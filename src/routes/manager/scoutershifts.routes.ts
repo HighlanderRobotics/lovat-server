@@ -59,10 +59,9 @@ registry.registerPath({
   },
   security: [{ bearerAuth: [] }],
 });
+router.get("/generate", superScoutingSchedule);
 
 router.use(requireAuth, requireVerifiedTeam);
-
-router.get("/generate", superScoutingSchedule);
 
 router.post("/:uuid", updateScouterShift);
 
