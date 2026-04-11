@@ -26,6 +26,6 @@ export const addPracticeSource = async (
     res.status(200).send("Settings successfully updated");
   } catch (error) {
     console.error(error);
-    res.status(500).send(error);
+    res.status(500).send({ error: "Internal server error" });
   }
 };
