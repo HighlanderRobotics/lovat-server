@@ -1,7 +1,7 @@
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { UserRole } from "@prisma/client";
 import { createAnalysisHandler } from "../analysisHandler.js";
+import { UserRole } from "@prisma/client";
 
 export const scoutReportForMatch = createAnalysisHandler({
   params: {
@@ -19,20 +19,9 @@ export const scoutReportForMatch = createAnalysisHandler({
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {
-    //comfirm if finding first is ideal
-    if (
-      ctx.user.teamNumber === null ||
-      ctx.user.role !== UserRole.SCOUTING_LEAD
-    ) {
-      throw new Error("Not authorized to access this endpoint.");
-    }
-
     const scoutReports = await prismaClient.scoutReport.findMany({
       where: {
         teamMatchKey: params.match,
-        scouter: {
-          sourceTeamNumber: ctx.user.teamNumber,
-        },
       },
 
       select: {
@@ -44,11 +33,24 @@ export const scoutReportForMatch = createAnalysisHandler({
         scouter: {
           select: {
             name: true,
+            sourceTeamNumber: true,
           },
         },
       },
     });
 
-    return scoutReports;
+    return scoutReports.map((report) => ({
+      ...report,
+      scouter: {
+        ...report.scouter,
+        name:
+          ctx.user.teamNumber === report.scouter.sourceTeamNumber
+            ? report.scouter.name
+            : `Scouter from ${report.scouter.sourceTeamNumber}`,
+      },
+      canModify:
+        ctx.user?.role === UserRole.SCOUTING_LEAD &&
+        ctx.user.teamNumber === report.scouter.sourceTeamNumber,
+    }));
   },
 });

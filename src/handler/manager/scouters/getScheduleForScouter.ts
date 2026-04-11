@@ -63,9 +63,7 @@ export const getScheduleForScouter = async (
         matchNumber: "desc",
       },
     });
-    if (maxQualifierRow === null) {
-      await addTournamentMatches(params.data.tournamentKey);
-    }
+    await addTournamentMatches(params.data.tournamentKey);
     if (maxQualifierRow === null) {
       res.status(400).send({
         error: "Matches are not available for this tournamnet",

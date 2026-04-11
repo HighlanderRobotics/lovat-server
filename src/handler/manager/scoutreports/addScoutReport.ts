@@ -12,6 +12,7 @@ import {
   FieldTraversal,
   Position,
   MatchType,
+  Prisma,
   RobotRole,
   ClimbPosition,
   ClimbSide,
@@ -19,9 +20,32 @@ import {
 } from "@prisma/client";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../../lib/clearCache.js";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-export const checkForInvalidEvents = (events: any[][]): string[] | null => {
+const { PrismaClientKnownRequestError } = Prisma;
+
+const malformedTimelineVersions = new Set(["26.0.3", "26.0.4"]);
+
+export const removeOrphanedStartEvents = (
+  events: number[][],
+  appVersion?: string,
+): number[][] => {
+  if (!malformedTimelineVersions.has(appVersion ?? "")) {
+    return events;
+  }
+
+  return events.filter((event, index) => {
+    const action = EventActionMap[event[1]]?.toString();
+
+    if (!action || !action.startsWith("START_") || action === "START_MATCH") {
+      return true;
+    }
+
+    const nextAction = EventActionMap[events[index + 1]?.[1]]?.toString();
+    return nextAction === action.replace("START_", "STOP_");
+  });
+};
+
+export const checkForInvalidEvents = (events: number[][]): string[] | null => {
   let inEvent: string | null = null;
   const errors: string[] = [];
 
@@ -35,7 +59,7 @@ export const checkForInvalidEvents = (events: any[][]): string[] | null => {
           break;
         } else if (inEvent !== null) {
           errors.push(
-            `Invalid input. Cannot start ${eventType[1]} event while in ${inEvent} event.`
+            `Invalid input. Cannot start ${eventType[1]} event while in ${inEvent} event.`,
           );
           break;
         }
@@ -44,12 +68,12 @@ export const checkForInvalidEvents = (events: any[][]): string[] | null => {
       case "STOP":
         if (inEvent === null) {
           errors.push(
-            `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`
+            `Invalid input. Cannot stop ${eventType[1]} event while not in any event.`,
           );
           break;
         } else if (inEvent !== eventType[1]) {
           errors.push(
-            `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`
+            `Invalid input. Cannot stop ${eventType[1]} event while in ${inEvent} event.`,
           );
           break;
         }
@@ -72,7 +96,7 @@ export const checkForInvalidEvents = (events: any[][]): string[] | null => {
 
 export const addScoutReport = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const paramsScoutReport = z
@@ -102,6 +126,7 @@ export const addScoutReport = async (
         endgameClimb: z.nativeEnum(EndgameClimb),
         scouterUuid: z.string(),
         teamNumber: z.number(),
+        appVersion: z.string().optional(),
       })
       .parse(req.body);
 
@@ -120,7 +145,10 @@ export const addScoutReport = async (
       quantity: number | null;
       scoutReportUuid: string;
     }[] = [];
-    const events = req.body.events;
+    const events = removeOrphanedStartEvents(
+      req.body.events as number[][],
+      paramsScoutReport.appVersion,
+    );
 
     const invalidEventErrors = checkForInvalidEvents(events);
     if (invalidEventErrors) {
@@ -130,18 +158,9 @@ export const addScoutReport = async (
       });
       return;
     }
-    // Add tournament matches if they dont exist
-    const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
-      where: {
-        tournamentKey: paramsScoutReport.tournamentKey,
-      },
-    });
-    if (tournamentMatchRows === null || tournamentMatchRows.length === 0) {
-      await addTournamentMatches(paramsScoutReport.tournamentKey);
-    }
 
     // Get key for relevant TeamMatchData
-    const matchRow = await prismaClient.teamMatchData.findFirst({
+    let matchRow = await prismaClient.teamMatchData.findFirst({
       where: {
         tournamentKey: paramsScoutReport.tournamentKey,
         matchNumber: paramsScoutReport.matchNumber,
@@ -149,13 +168,28 @@ export const addScoutReport = async (
         teamNumber: paramsScoutReport.teamNumber,
       },
     });
+
     if (!matchRow) {
-      res.status(404).send({
-        error: `There are no matches that meet these requirements. ${paramsScoutReport.tournamentKey}, ${paramsScoutReport.matchNumber}, ${paramsScoutReport.matchType}, ${paramsScoutReport.teamNumber}`,
-        displayError: "Match does not exist",
+      await addTournamentMatches(paramsScoutReport.tournamentKey);
+
+      matchRow = await prismaClient.teamMatchData.findFirst({
+        where: {
+          tournamentKey: paramsScoutReport.tournamentKey,
+          matchNumber: paramsScoutReport.matchNumber,
+          matchType: paramsScoutReport.matchType,
+          teamNumber: paramsScoutReport.teamNumber,
+        },
       });
-      return;
+
+      if (!matchRow) {
+        res.status(404).send({
+          error: `There are no matches that meet these requirements. ${paramsScoutReport.tournamentKey}, ${paramsScoutReport.matchNumber}, ${paramsScoutReport.matchType}, ${paramsScoutReport.teamNumber}`,
+          displayError: "Match does not exist",
+        });
+        return;
+      }
     }
+
     const matchKey = matchRow.key;
 
     // Create scout report in database
@@ -190,7 +224,7 @@ export const addScoutReport = async (
     // Collect all affected cached analyses
     invalidateCache(
       paramsScoutReport.teamNumber,
-      paramsScoutReport.tournamentKey
+      paramsScoutReport.tournamentKey,
     );
 
     const scoutReportUuid = paramsScoutReport.uuid;
@@ -230,7 +264,7 @@ export const addScoutReport = async (
         });
 
       if (!paramsEvents.success) {
-        console.log({
+        res.status(400).send({
           error: paramsEvents,
           displayError:
             "Invalid input. Make sure you are using the correct input.",
@@ -254,7 +288,7 @@ export const addScoutReport = async (
         matchRow.matchNumber,
         matchRow.teamNumber,
         matchRow.tournamentKey,
-        paramsScoutReport.uuid
+        paramsScoutReport.uuid,
       );
     }
 

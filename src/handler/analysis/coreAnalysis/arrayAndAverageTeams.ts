@@ -15,10 +15,7 @@ import {
 } from "../dataSourceRule.js";
 import z from "zod";
 import { runAnalysis, AnalysisFunctionConfig } from "../analysisFunction.js";
-import {
-  avg,
-  calculateTimeMetric,
-} from "./averageManyFast.js";
+import { avg, calculateTimeMetric } from "./averageManyFast.js";
 
 // Accurately aggregate an analog metric on multiple teams at once (weighs matches equally regardless of extra scout reports).
 // Provides a timeline of metric value per match.
@@ -126,13 +123,25 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             },
             endgameClimb: true,
             autoClimb: true,
+            accuracy: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
+              const accuracyEnum = (sr as any).accuracy as
+                | number
+                | null
+                | undefined;
+              const accuracyPercent =
+                accuracyEnum !== null &&
+                accuracyEnum !== undefined &&
+                accuracyToPercentage[accuracyEnum] !== undefined
+                  ? accuracyToPercentage[accuracyEnum]
+                  : 100;
+              const accuracyMultiplier = accuracyPercent / 100;
               const events = sr.events ?? [];
               events.forEach((e) => {
-                total += e.points ?? 0;
+                total += (e.points ?? 0) * accuracyMultiplier;
               });
               // Include auto climb points (15) when succeeded
               const autoClimb = (sr as any).autoClimb as
@@ -157,13 +166,25 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               select: { points: true },
             },
             endgameClimb: true,
+            accuracy: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
+              const accuracyEnum = (sr as any).accuracy as
+                | number
+                | null
+                | undefined;
+              const accuracyPercent =
+                accuracyEnum !== null &&
+                accuracyEnum !== undefined &&
+                accuracyToPercentage[accuracyEnum] !== undefined
+                  ? accuracyToPercentage[accuracyEnum]
+                  : 100;
+              const accuracyMultiplier = accuracyPercent / 100;
               const events = sr.events ?? [];
               events.forEach((e) => {
-                total += e.points ?? 0;
+                total += (e.points ?? 0) * accuracyMultiplier;
               });
             });
             return total / (reports.length || 1);
@@ -176,13 +197,25 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               where: { time: { lte: autoEnd }, action: "STOP_SCORING" },
               select: { points: true },
             },
+            accuracy: true,
           };
           matchAggregationFunction = (reports) => {
             let total = 0;
             reports.forEach((sr) => {
+              const accuracyEnum = (sr as any).accuracy as
+                | number
+                | null
+                | undefined;
+              const accuracyPercent =
+                accuracyEnum !== null &&
+                accuracyEnum !== undefined &&
+                accuracyToPercentage[accuracyEnum] !== undefined
+                  ? accuracyToPercentage[accuracyEnum]
+                  : 100;
+              const accuracyMultiplier = accuracyPercent / 100;
               const events = sr.events ?? [];
               events.forEach((e) => {
-                total += e.points ?? 0;
+                total += (e.points ?? 0) * accuracyMultiplier;
               });
             });
             return total / (reports.length || 1);
@@ -298,6 +331,22 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           };
           break;
 
+        case Metric.totalBallsFed:
+          srSelect = {
+            events: {
+              select: { action: true, quantity: true },
+            },
+          } as any;
+          matchAggregationFunction = (reports) => {
+            const perReportTotals = reports.map((r) => {
+              return (r.events ?? [])
+                .filter((e) => e.action === "STOP_FEEDING")
+                .reduce((acc, cur) => acc + (cur.quantity ?? 0), 0);
+            });
+            return avg(perReportTotals);
+          };
+          break;
+
         case Metric.outpostIntakes:
           srSelect = {
             events: {
@@ -338,15 +387,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
                 .filter((t) => t <= autoEnd)
                 .sort((a, b) => a - b);
               const first = filteredAutoTimes[0];
-              try {
-                console.debug("autoClimbStartTime", {
-                  reportIndex: idx,
-                  autoClimb: ac,
-                  rawClimbTimes,
-                  filteredAutoTimes,
-                  first,
-                });
-              } catch {}
               if (ac === "SUCCEEDED" && first !== undefined) {
                 const remaining = autoEnd - first;
                 const clamped = remaining >= 0 ? remaining : 0;
@@ -388,19 +428,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
                 .filter((t) => t > autoEnd && t <= 158)
                 .sort((a, b) => a - b);
               const firstTeleop = filteredTeleopTimes[0];
-              console.debug("lXStartTime", {
-                reportIndex: idx,
-                endgameClimb: eg,
-                required,
-                scoutReportUuid: (r as any).uuid,
-                events: (r.events ?? []).map((e) => ({
-                  action: e.action,
-                  time: e.time,
-                })),
-                rawClimbTimes,
-                filteredTeleopTimes,
-                firstTeleop,
-              });
               if (eg === required && firstTeleop !== undefined) {
                 const remaining = 158 - firstTeleop;
                 const clamped = remaining >= 0 ? remaining : 0;
@@ -516,18 +543,16 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
 
         let matchValue = 0;
         if (metric === Metric.fuelPerSecond) {
-          // Mirror averageManyFast: use total SCORING duration across all reports
+          // Total fuel across all reports / total duration across all reports
+          const totalFuel = (row.scoutReports as any)
+            .flatMap((r: any) => r.events ?? [])
+            .filter((e: any) => e.action === "STOP_SCORING")
+            .reduce((acc: number, cur: any) => acc + (cur.quantity ?? 0), 0);
           const totalDuration = calculateTimeMetric(
             row.scoutReports as any,
             "SCORING",
           ).reduce((a, b) => a + b, 0);
-          const perReportRates = (row.scoutReports as any).map((r: any) => {
-            const totalFuel = (r.events ?? [])
-              .filter((e: any) => e.action === "STOP_SCORING")
-              .reduce((acc: number, cur: any) => acc + (cur.quantity ?? 0), 0);
-            return totalDuration > 0 ? totalFuel / totalDuration : 0;
-          });
-          matchValue = avg(perReportRates);
+          matchValue = totalDuration > 0 ? totalFuel / totalDuration : 0;
         } else {
           matchValue = matchAggregationFunction!(row.scoutReports as any);
         }
@@ -538,23 +563,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
           dataPoint: matchValue,
           tournamentName: row.tournament.name,
         });
-        // Debug logging for climb start metrics
-        if (
-          metric === Metric.autoClimbStartTime ||
-          metric === Metric.l1StartTime ||
-          metric === Metric.l2StartTime ||
-          metric === Metric.l3StartTime
-        ) {
-          try {
-            console.debug("timeline", {
-              team,
-              match: row.key,
-              tnmt,
-              reports: row.scoutReports.length,
-              matchValue,
-            });
-          } catch {}
-        }
         // Accumulate per tournament
         perTeamTournamentValues[team][tnmt].push(matchValue);
       }

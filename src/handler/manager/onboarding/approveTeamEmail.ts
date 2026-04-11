@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
+const { PrismaClientKnownRequestError } = Prisma;
 import { kv } from "../../../redisClient.js";
 
 export const approveTeamEmail = async (
@@ -15,7 +16,7 @@ export const approveTeamEmail = async (
       })
       .parse(req.body);
 
-    const row = await prismaClient.emailVerificationRequest.delete({
+    const row = await prismaClient.emailVerificationRequest.findUnique({
       where: {
         verificationCode: params.code.toLowerCase(),
       },
@@ -23,7 +24,9 @@ export const approveTeamEmail = async (
 
     if (row === null) {
       res.status(404).send("CODE_NOT_RECOGNIZED");
+      return;
     }
+
     if (row.expiresAt.getTime() <= Date.now()) {
       res.status(400).send("CODE_EXPIRED");
     } else {

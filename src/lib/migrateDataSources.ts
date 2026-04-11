@@ -1,7 +1,5 @@
 import { DataSourceRule } from "../handler/analysis/dataSourceRule.js";
 
-
-
 export const arrayToRule = <T extends string | number>(
   sources: T[],
   possibleSources: T[],

@@ -10,13 +10,17 @@ export const addTournamentMatches = async (
       throw "tournament key is undefined";
     }
 
+    if (!tournamentKey.startsWith("2026")) {
+      return;
+    }
+
     const url = "https://www.thebluealliance.com/api/v3";
-    let nonQM = 1;
     const tournamentRow = await prismaClient.tournament.findUnique({
       where: {
         key: tournamentKey,
       },
     });
+
     if (tournamentRow === null) {
       throw "tournament not found when trying to insert tournament matches";
     }
@@ -24,7 +28,9 @@ export const addTournamentMatches = async (
     const eventResponse = await fetch(`${url}/event/${tournamentKey}`, {
       headers: { "X-TBA-Auth-Key": process.env.TBA_KEY },
     });
+
     const json = await eventResponse.json();
+
     const { remap_teams } = z
       .object({
         remap_teams: z
@@ -34,15 +40,56 @@ export const addTournamentMatches = async (
       })
       .parse(json);
 
-    const matchesResponse = await axios.get(
-      `${url}/event/${tournamentKey}/matches`,
-      {
-        headers: { "X-TBA-Auth-Key": process.env.TBA_KEY },
+    let matchesResponse = null;
+    try {
+      matchesResponse = await axios.get(
+        `${url}/event/${tournamentKey}/matches`,
+        {
+          headers: {
+            "X-TBA-Auth-Key": process.env.TBA_KEY,
+            "If-None-Match": tournamentRow.latestFetchETag ?? "",
+          },
+        },
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 304) {
+        return;
+      } else {
+        throw error;
+      }
+    }
+
+    await prismaClient.tournament.update({
+      where: {
+        key: tournamentKey,
       },
-    );
+      data: {
+        latestFetchETag: matchesResponse.headers.etag,
+      },
+    });
+
+    const playoffMatchOrder = new Map<string, number>([
+      ["sf1m1", 1],
+      ["sf2m1", 2],
+      ["sf3m1", 3],
+      ["sf4m1", 4],
+      ["sf5m1", 5],
+      ["sf6m1", 6],
+      ["sf7m1", 7],
+      ["sf8m1", 8],
+      ["sf9m1", 9],
+      ["sf10m1", 10],
+      ["sf11m1", 11],
+      ["sf12m1", 12],
+      ["sf13m1", 13],
+      ["f1m1", 14],
+      ["f1m2", 15],
+    ]);
 
     // For each match in the tournament
-    matchesResponse.data.sort((a, b) => b.actual_time - a.actual_time);
+    matchesResponse.data.sort(
+      (a, b) => (a.actual_time ?? a.time ?? 0) - (b.actual_time ?? b.time ?? 0),
+    );
 
     for (const match of matchesResponse.data) {
       if (match.comp_level == "qm") {
@@ -56,8 +103,8 @@ export const addTournamentMatches = async (
         for (let k = 0; k < teams.length; k++) {
           matchesString =
             matchesString +
-            `('${match.key}_${k}', '${tournamentKey}', ${match.match_number}, '${teams[k]}', '${match.comp_level}'), `;
-          const currMatchKey = `${match.key}_${k}`;
+            `('${tournamentKey}_qm${match.match_number}_${k}', '${tournamentKey}', ${match.match_number}, '${teams[k]}', '${match.comp_level}'), `;
+          const currMatchKey = `${tournamentKey}_qm${match.match_number}_${k}`;
 
           const fakeTeamKey = teams[k]; // The one TBA sends you which is potentially "fake", like frc6418B
           const mapEntry = Object.entries(remap_teams).find(
@@ -110,15 +157,39 @@ export const addTournamentMatches = async (
           ...match.alliances.blue.team_keys,
         ];
 
-        for (let k = 0; k < 6; k++) {
-          const fakeTeamKey = teams[k]; // The one TBA sends you which is potentially "fake", like frc6418B
-          const mapEntry = Object.entries(remap_teams).find(
-            (v) => v[1] === fakeTeamKey,
-          );
-          const realTeamKey = mapEntry ? mapEntry[0] : fakeTeamKey;
-          const currTeam = Number(realTeamKey.substring(3));
+        if (teams.length !== 6) {
+          continue;
+        }
 
-          const currMatchKey = `${tournamentKey}_em${nonQM}_${k}`;
+        const mappedTeams: number[] = [];
+        let allTeamsKnown = true;
+        for (const teamKey of teams) {
+          const mapEntry = Object.entries(remap_teams).find(
+            (v) => v[1] === teamKey,
+          );
+          const realTeamKey = mapEntry ? mapEntry[0] : teamKey;
+          const teamNumber = Number(realTeamKey.substring(3));
+          if (!Number.isFinite(teamNumber) || teamNumber <= 0) {
+            allTeamsKnown = false;
+            break;
+          }
+          mappedTeams.push(teamNumber);
+        }
+
+        if (!allTeamsKnown) {
+          continue;
+        }
+
+        const matchSuffix = match.key.split("_")[1] ?? "";
+        const matchNumber = playoffMatchOrder.get(matchSuffix);
+        if (!matchNumber) {
+          continue;
+        }
+
+        for (let k = 0; k < 6; k++) {
+          const currTeam = mappedTeams[k];
+
+          const currMatchKey = `${tournamentKey}_em${matchNumber}_${k}`;
 
           const params = z
             .object({
@@ -130,7 +201,7 @@ export const addTournamentMatches = async (
             .safeParse({
               key: currMatchKey,
               tournamentKey: tournamentKey,
-              matchNumber: nonQM,
+              matchNumber: matchNumber,
               teamNumber: currTeam,
             });
 
@@ -158,11 +229,9 @@ export const addTournamentMatches = async (
             },
           });
         }
-        nonQM += 1;
       }
     }
   } catch (error) {
     console.log(error);
-    throw error;
   }
 };

@@ -14,6 +14,7 @@ import {
   IntakeType,
   MatchType,
   Position,
+  Prisma,
   RobotRole,
   FieldTraversal,
   ClimbPosition,
@@ -21,8 +22,12 @@ import {
 } from "@prisma/client";
 import { invalidateCache } from "../../../lib/clearCache.js";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { checkForInvalidEvents } from "./addScoutReport.js";
+import {
+  checkForInvalidEvents,
+  removeOrphanedStartEvents,
+} from "./addScoutReport.js";
+
+const { PrismaClientKnownRequestError } = Prisma;
 
 export const addScoutReportDashboard = async (
   req: AuthenticatedRequest,
@@ -30,7 +35,9 @@ export const addScoutReportDashboard = async (
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
-      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      res
+        .status(403)
+        .json({ error: "This action cannot be performed using an API key" });
       return;
     }
 
@@ -61,6 +68,7 @@ export const addScoutReportDashboard = async (
         endgameClimb: z.nativeEnum(EndgameClimb),
         scouterUuid: z.string(),
         teamNumber: z.number(),
+        appVersion: z.string().optional(),
       })
       .parse(req.body);
 
@@ -87,18 +95,8 @@ export const addScoutReportDashboard = async (
       return;
     }
 
-    // Ensure tournament matches exist
-    const tournamentMatchRows = await prismaClient.teamMatchData.findMany({
-      where: {
-        tournamentKey: paramsScoutReport.tournamentKey,
-      },
-    });
-    if (tournamentMatchRows === null || tournamentMatchRows.length === 0) {
-      await addTournamentMatches(paramsScoutReport.tournamentKey);
-    }
-
     // Find target TeamMatchData row
-    const matchRow = await prismaClient.teamMatchData.findFirst({
+    let matchRow = await prismaClient.teamMatchData.findFirst({
       where: {
         tournamentKey: paramsScoutReport.tournamentKey,
         matchNumber: paramsScoutReport.matchNumber,
@@ -106,14 +104,45 @@ export const addScoutReportDashboard = async (
         teamNumber: paramsScoutReport.teamNumber,
       },
     });
+
     if (!matchRow) {
-      res.status(404).send({
-        error: `There are no matches that meet these requirements. ${paramsScoutReport.tournamentKey}, ${paramsScoutReport.matchNumber}, ${paramsScoutReport.matchType}, ${paramsScoutReport.teamNumber}`,
-        displayError: "Match does not exist",
+      await addTournamentMatches(paramsScoutReport.tournamentKey);
+
+      matchRow = await prismaClient.teamMatchData.findFirst({
+        where: {
+          tournamentKey: paramsScoutReport.tournamentKey,
+          matchNumber: paramsScoutReport.matchNumber,
+          matchType: paramsScoutReport.matchType,
+          teamNumber: paramsScoutReport.teamNumber,
+        },
+      });
+
+      if (!matchRow) {
+        res.status(404).send({
+          error: `There are no matches that meet these requirements. ${paramsScoutReport.tournamentKey}, ${paramsScoutReport.matchNumber}, ${paramsScoutReport.matchType}, ${paramsScoutReport.teamNumber}`,
+          displayError: "Match does not exist",
+        });
+        return;
+      }
+    }
+
+    const matchKey = matchRow.key;
+
+    const scoutReportUuid = paramsScoutReport.uuid;
+
+    const events = removeOrphanedStartEvents(
+      req.body.events as number[][],
+      paramsScoutReport.appVersion,
+    );
+
+    const invalidEventErrors = checkForInvalidEvents(events);
+    if (invalidEventErrors) {
+      res.status(400).send({
+        error: invalidEventErrors,
+        displayError: invalidEventErrors.join(" "),
       });
       return;
     }
-    const matchKey = matchRow.key;
 
     // Create scout report using relations to match core handler
     await prismaClient.scoutReport.create({
@@ -146,19 +175,6 @@ export const addScoutReportDashboard = async (
       paramsScoutReport.teamNumber,
       paramsScoutReport.tournamentKey,
     );
-
-    const scoutReportUuid = paramsScoutReport.uuid;
-
-    const events = req.body.events as number[][];
-
-    const invalidEventErrors = checkForInvalidEvents(events);
-    if (invalidEventErrors) {
-      res.status(400).send({
-        error: invalidEventErrors,
-        displayError: invalidEventErrors.join(" "),
-      });
-      return;
-    }
 
     // Build events payload
     const eventDataArray: {

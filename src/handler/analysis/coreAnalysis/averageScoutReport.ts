@@ -27,7 +27,7 @@ function pairedDuration(
   events: { action: string; time: number }[],
   startAction: string,
   stopAction: string,
-  applyMinDuration: boolean = false,
+  applyMinDuration = false,
 ): number {
   const relevant = events
     .filter((e) => e.action === startAction || e.action === stopAction)

@@ -72,6 +72,8 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       metrics,
     });
 
+    const rawAutoClimbStartTime = agg[Metric.autoClimbStartTime];
+
     const output: any = {
       totalPoints: agg[Metric.totalPoints],
       driverAbility: scoutReport.driverAbility,
@@ -82,7 +84,10 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       robotRoles: scoutReport.robotRoles.map((role) => FlippedRoleMap[role]),
       climb: EndgameClimbReverseMap[scoutReport.endgameClimb],
       autoClimb: AutoClimbReverseMap[scoutReport.autoClimb],
-      autoClimbStartTime: agg[Metric.autoClimbStartTime] ?? 0,
+      autoClimbStartTime:
+        rawAutoClimbStartTime !== null && rawAutoClimbStartTime !== undefined
+          ? 2 * 60 + 33 - rawAutoClimbStartTime
+          : 0,
       contactDefenseTime: agg[Metric.contactDefenseTime] ?? 0,
       campingDefenseTime: agg[Metric.campingDefenseTime] ?? 0,
       totalDefenseTime: agg[Metric.totalDefenseTime] ?? 0,

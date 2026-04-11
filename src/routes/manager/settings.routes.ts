@@ -200,11 +200,6 @@ router.get("/tournamentsource", getTournamentSource);
 router.post("/tournamentsource", addTournamentSource);
 
 router.get("/teamemail", requireVerifiedTeam, getTeamEmail);
-router.put(
-  "/teamemail",
-  requireVerifiedTeam,
-  updateTeamEmails,
-  updateTeamEmail,
-);
+router.put("/teamemail", updateTeamEmails, updateTeamEmail);
 
 export default router;

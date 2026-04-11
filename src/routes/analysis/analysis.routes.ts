@@ -1,5 +1,5 @@
-import { alliancePageResponse } from "../../handler/analysis/alliancePredictions/alliancePageResponse.js";
-import { matchPrediction } from "../../handler/analysis/alliancePredictions/matchPrediction.js";
+import { alliancePageResponse } from "../../handler/analysis/predictions/alliancePageResponse.js";
+import { matchPrediction } from "../../handler/analysis/predictions/matchPrediction.js";
 import { picklistShell } from "../../handler/analysis/picklist/picklistShell.js";
 import { pitDisplay } from "../../handler/manager/pitDisplay.js";
 import { requireAuth } from "../../lib/middleware/requireAuth.js";
@@ -9,6 +9,7 @@ import csv from "./csv.routes.js";
 import scoutReport from "./scoutreport.routes.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
+import { qualRankingPrediction } from "../../handler/analysis/predictions/qualRankingPrediction.js";
 
 const router = Router();
 
@@ -20,7 +21,9 @@ const AlliancePathPosition = z.object({
 });
 const AlliancePath = z.object({
   positions: z.array(AlliancePathPosition),
-  matches: z.array(z.object({ matchKey: z.string(), tournamentName: z.string() })),
+  matches: z.array(
+    z.object({ matchKey: z.string(), tournamentName: z.string() }),
+  ),
   score: z.array(z.number()),
   frequency: z.number(),
   maxScore: z.number(),
@@ -55,7 +58,10 @@ registry.registerPath({
     }),
   },
   responses: {
-    200: { description: "Pit display payload", content: { "application/json": { schema: z.any() } } },
+    200: {
+      description: "Pit display payload",
+      content: { "application/json": { schema: z.any() } },
+    },
     400: { description: "Invalid parameters" },
     500: { description: "Error generating display" },
   },
@@ -117,7 +123,36 @@ registry.registerPath({
     }),
   },
   responses: {
-    200: { description: "Prediction and alliance details", content: { "application/json": { schema: MatchPredictionResponseSchema } } },
+    200: {
+      description: "Prediction and alliance details",
+      content: {
+        "application/json": { schema: MatchPredictionResponseSchema },
+      },
+    },
+    400: { description: "Invalid parameters" },
+    401: { description: "Unauthorized" },
+    500: { description: "Internal server error" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/analysis/qualrankingprediction",
+  tags: ["Analysis"],
+  summary: "Predict qual ranking for a tournament",
+  request: {
+    query: z.object({
+      tournamentKey: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Qual ranking prediction",
+      content: {
+        "application/json": { schema: z.array(z.any()) },
+      },
+    },
     400: { description: "Invalid parameters" },
     401: { description: "Unauthorized" },
     500: { description: "Internal server error" },
@@ -162,7 +197,14 @@ registry.registerPath({
     }),
   },
   responses: {
-    200: { description: "Picklist ranking results", content: { "application/json": { schema: z.object({ teams: z.array(PicklistEntrySchema) }) } } },
+    200: {
+      description: "Picklist ranking results",
+      content: {
+        "application/json": {
+          schema: z.object({ teams: z.array(PicklistEntrySchema) }),
+        },
+      },
+    },
     400: { description: "Invalid parameters" },
     500: { description: "Internal server error" },
   },
@@ -180,6 +222,7 @@ router.use(scoutReport);
 router.get("/alliance", alliancePageResponse);
 
 router.get("/matchprediction", matchPrediction);
+router.get("/qualrankingprediction", qualRankingPrediction);
 router.get("/picklist", picklistShell);
 
 export default router;
