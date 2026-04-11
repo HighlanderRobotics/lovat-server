@@ -36,6 +36,7 @@ registry.registerPath({
           schema: z.object({
             teamSource: z.array(z.number().int()),
             tournamentSource: z.array(z.string()),
+            includePracticeMatches: z.boolean().optional(),
           }),
         },
       },

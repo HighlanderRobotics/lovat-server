@@ -39,15 +39,11 @@ export const addTournamentMatches = async (
       },
     );
 
-    console.log(nexusResponse);
-
     if (!nexusResponse.ok) {
       const errorMessage = await nexusResponse.text();
       console.error("Error getting live event status:", errorMessage);
     } else {
       const data = await nexusResponse.json();
-
-      console.log(data);
 
       for (const match of data.matches) {
         if (match.label.startsWith("Practice")) {

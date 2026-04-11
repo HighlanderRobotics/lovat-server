@@ -9,6 +9,6 @@ export const getPracticeSource = async (
     res.status(200).json(req.user.includePracticeMatches);
   } catch (error) {
     console.error(error);
-    res.status(500).send(error);
+    res.status(500).send("Error getting practice source");
   }
 };
