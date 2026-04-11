@@ -25,7 +25,7 @@ export const updateSettings = async (
       .object({
         teamSource: z.array(z.number()),
         tournamentSource: z.array(z.string()),
-        includePracticeMatches: z.boolean(),
+        includePracticeMatches: z.boolean().optional().default(false),
       })
       .parse(req.body);
 
