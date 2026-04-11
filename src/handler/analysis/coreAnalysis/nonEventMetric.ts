@@ -52,6 +52,9 @@ const config = {
         teamRule.mode === "INCLUDE"
           ? `sc."sourceTeamNumber" = ANY($2)`
           : `sc."sourceTeamNumber" != ALL($2)`;
+      const practiceCondition = ctx.user.includePracticeMatches
+        ? "TRUE"
+        : `tmd."matchType" != 'PRACTICE'`;
 
       const ARRAY_METRICS = new Set<MetricsBreakdown>([
         MetricsBreakdown.robotRole,
@@ -71,6 +74,7 @@ const config = {
           WHERE tmd."teamNumber" = $3
             AND ${tournamentCondition}
             AND ${teamCondition}
+            AND ${practiceCondition}
           GROUP BY value
         `
         : `
@@ -82,6 +86,7 @@ const config = {
           WHERE tmd."teamNumber" = $3
             AND ${tournamentCondition}
             AND ${teamCondition}
+            AND ${practiceCondition}
           GROUP BY s."${args.metric}"
         `;
 

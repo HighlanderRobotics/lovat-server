@@ -77,6 +77,11 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
     const tmdWhere: Prisma.TeamMatchDataWhereInput = {
       teamNumber: { in: args.teams },
       ...(tnmtFilter && { tournamentKey: tnmtFilter }),
+      matchType: ctx.user.includePracticeMatches
+        ? undefined
+        : {
+            not: "PRACTICE",
+          },
     };
 
     const srWhere: Prisma.ScoutReportWhereInput = teamFilter

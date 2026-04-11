@@ -462,7 +462,13 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
       }
 
       // Finish setting up filters to decrease server load
-      const tmdFilter: Prisma.TeamMatchDataWhereInput = {};
+      const tmdFilter: Prisma.TeamMatchDataWhereInput = {
+        matchType: ctx.user.includePracticeMatches
+          ? undefined
+          : {
+              not: "PRACTICE",
+            },
+      };
       // Team filter
       tmdFilter.teamNumber = { in: teams };
 
