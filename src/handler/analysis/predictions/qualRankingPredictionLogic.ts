@@ -192,10 +192,10 @@ const config = {
 
           // adjusted for overscouting
 
-          if (redAlliance.totalPoints >= 120) {
+          if (redAlliance.totalPoints >= 240) {
             redRPs += 1;
           }
-          if (blueAlliance.totalPoints >= 120) {
+          if (blueAlliance.totalPoints >= 240) {
             blueRPs += 1;
           }
           if (redAlliance.totalPoints >= 400) {
