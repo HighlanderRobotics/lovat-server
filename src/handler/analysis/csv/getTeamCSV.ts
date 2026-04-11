@@ -222,6 +222,11 @@ export const getTeamCSV = async (
                 ...(tournamentFilter
                   ? { tournamentKey: tournamentFilter }
                   : {}),
+                matchType: req.user.includePracticeMatches
+                  ? undefined
+                  : {
+                      not: "PRACTICE",
+                    },
               },
               ...(teamFilter
                 ? { scouter: { sourceTeamNumber: teamFilter } }

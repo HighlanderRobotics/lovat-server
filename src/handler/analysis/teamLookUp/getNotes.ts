@@ -35,6 +35,11 @@ export const getNotes = createAnalysisHandler({
       where: {
         teamMatchData: {
           teamNumber: params.team,
+          matchType: ctx.user.includePracticeMatches
+            ? undefined
+            : {
+                not: "PRACTICE",
+              },
         },
       },
     });
@@ -63,6 +68,11 @@ export const getNotes = createAnalysisHandler({
         teamMatchData: {
           teamNumber: params.team,
           tournamentKey: sourceTnmtFilter,
+          matchType: ctx.user.includePracticeMatches
+            ? undefined
+            : {
+                not: "PRACTICE",
+              },
         },
         scouter: {
           sourceTeamNumber: sourceTeamFilter,
