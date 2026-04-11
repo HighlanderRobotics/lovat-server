@@ -620,51 +620,105 @@ const config = {
 
       const raw = await prismaClient.$queryRawUnsafe<
         {
+          teamNumber: number;
           tournamentKey: string;
+          teamMatchKey: string;
           scoutReportUuid: string;
-          matchPoints: bigint;
+          points: number;
           endgameClimb: string | null;
           autoClimb: string | null;
         }[]
       >(
-        `SELECT
-           tmd."tournamentKey",
-           sr."uuid" AS "scoutReportUuid",
-           COALESCE(SUM(e."points"), 0) AS "matchPoints",
-           ${
-             metric === Metric.totalPoints
-               ? `sr."endgameClimb", sr."autoClimb"`
-               : `NULL AS "endgameClimb", NULL AS "autoClimb"`
-           }
-         FROM "TeamMatchData" tmd
-         JOIN "ScoutReport" sr  ON sr."teamMatchKey" = tmd."key"
-         LEFT JOIN "Event" e    ON e."scoutReportUuid" = sr."uuid"
-                               AND e."action" = 'STOP_SCORING'::"EventAction"
-                               ${timeFilter}
-         JOIN "Scouter" sct     ON sct."uuid" = sr."scouterUuid"
-         WHERE 1=1 ${t.clause} ${s.clause}
-         GROUP BY tmd."tournamentKey", sr."uuid", sr."endgameClimb", sr."autoClimb"`,
+        `
+  SELECT
+    tmd."teamNumber",
+    tmd."tournamentKey",
+    tmd."key" AS "teamMatchKey",
+    sr."uuid" AS "scoutReportUuid",
+
+    COALESCE(SUM(e."points"), 0) AS points,
+
+    sr."endgameClimb",
+    sr."autoClimb"
+
+  FROM "TeamMatchData" tmd
+  JOIN "ScoutReport" sr ON sr."teamMatchKey" = tmd."key"
+
+  LEFT JOIN "Event" e
+    ON e."scoutReportUuid" = sr."uuid"
+    AND e."action" = 'STOP_SCORING'::"EventAction"
+    ${timeFilter}
+
+  JOIN "Scouter" sct ON sct."uuid" = sr."scouterUuid"
+
+  WHERE 1=1 ${t.clause} ${s.clause}
+
+  GROUP BY
+    tmd."teamNumber",
+    tmd."tournamentKey",
+    tmd."key",
+    sr."uuid",
+    sr."endgameClimb",
+    sr."autoClimb"
+`,
         ...params,
       );
-
       if (raw.length === 0) return 0;
 
-      const perTournamentValues: Record<string, number[]> = {};
+      // -------------------------------
+      // Step 1: dedupe to one entry per team per match
+      // -------------------------------
+      const matchMap: Record<
+        string,
+        {
+          teamNumber: number;
+          tournamentKey: string;
+          points: number;
+        }
+      > = {};
+
       for (const row of raw) {
         let points = Number(row.matchPoints);
+
         if (metric === Metric.totalPoints) {
           const endgame = row.endgameClimb as keyof typeof endgameToPoints;
-          points += endgame ? (endgameToPoints[endgame] ?? 0) : 0;
+          if (endgame) points += endgameToPoints[endgame] ?? 0;
           if (row.autoClimb === "SUCCEEDED") points += 15;
         }
-        (perTournamentValues[row.tournamentKey] ??= []).push(points);
+
+        const key = `${row.teamNumber}_${row.teamMatchKey}`;
+
+        // take max to avoid duplicate scout reports inflating values
+        if (!matchMap[key] || matchMap[key].points < points) {
+          matchMap[key] = {
+            teamNumber: row.teamNumber,
+            tournamentKey: row.tournamentKey,
+            points,
+          };
+        }
       }
 
-      const perTournamentAverages = Object.values(perTournamentValues).map(
+      // -------------------------------
+      // Step 2: group by team
+      // -------------------------------
+      const byTeam: Record<number, number[]> = {};
+
+      for (const { teamNumber, points } of Object.values(matchMap)) {
+        (byTeam[teamNumber] ??= []).push(points);
+      }
+
+      // -------------------------------
+      // Step 3: average per team
+      // -------------------------------
+      const perTeamAverages = Object.values(byTeam).map(
         (arr) => arr.reduce((a, b) => a + b, 0) / arr.length,
       );
-      return perTournamentAverages.length
-        ? weightedTourAvgLeft(perTournamentAverages)
+
+      // -------------------------------
+      // Step 4: final average across teams
+      // -------------------------------
+      return perTeamAverages.length
+        ? perTeamAverages.reduce((a, b) => a + b, 0) / perTeamAverages.length
         : 0;
     }
 
