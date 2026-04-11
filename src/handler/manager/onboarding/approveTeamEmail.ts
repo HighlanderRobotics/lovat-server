@@ -7,7 +7,7 @@ import { kv } from "../../../redisClient.js";
 
 export const approveTeamEmail = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const params = z
@@ -16,7 +16,7 @@ export const approveTeamEmail = async (
       })
       .parse(req.body);
 
-    const row = await prismaClient.emailVerificationRequest.delete({
+    const row = await prismaClient.emailVerificationRequest.findUnique({
       where: {
         verificationCode: params.code.toLowerCase(),
       },
@@ -24,7 +24,9 @@ export const approveTeamEmail = async (
 
     if (row === null) {
       res.status(404).send("CODE_NOT_RECOGNIZED");
+      return;
     }
+
     if (row.expiresAt.getTime() <= Date.now()) {
       res.status(400).send("CODE_EXPIRED");
     } else {

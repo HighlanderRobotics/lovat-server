@@ -11,7 +11,16 @@ export const resendEmail = async (
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
-      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      res
+        .status(403)
+        .json({ error: "This action cannot be performed using an API key" });
+      return;
+    }
+
+    if (req.user.teamNumber === null) {
+      res
+        .status(403)
+        .json({ error: "You must be on a team to perform this action." });
       return;
     }
 
@@ -23,6 +32,7 @@ export const resendEmail = async (
 
     if (teamRow === null) {
       res.status(404).send("team not found");
+      return;
     }
 
     sendVerificationEmail(teamRow.email, teamRow.number);

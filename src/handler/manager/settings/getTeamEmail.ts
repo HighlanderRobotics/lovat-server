@@ -1,7 +1,6 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 
-
 import prismaClient from "../../../prismaClient.js";
 
 export const getTeamEmail = async (

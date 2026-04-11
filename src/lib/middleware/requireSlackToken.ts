@@ -15,13 +15,9 @@ export const requireSlackToken = async (
       return;
     }
 
-    if (req.body.api_app_id !== process.env.SLACK_APP_ID) {
-      res.status(401).send("Unauthorized");
-      return;
-    }
-
     if (!signature || !timestamp) {
       res.status(401).send("Unauthorized");
+      console.warn("Missing Slack signature or timestamp");
       return;
     }
 
@@ -30,11 +26,13 @@ export const requireSlackToken = async (
       60 * 5
     ) {
       res.status(401).send("Stale request");
+      console.warn("Received stale Slack request with timestamp:", timestamp);
       return;
     }
 
     if (process.env.SLACK_VERIFICATION_KEY !== verificationKey) {
       res.status(401).send("Unauthorized");
+      console.warn("Invalid Slack verification token:", verificationKey);
       return;
     }
 

@@ -9,7 +9,9 @@ export const addPicklist = async (
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
-      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      res
+        .status(403)
+        .json({ error: "This action cannot be performed using an API key" });
       return;
     }
 
@@ -54,8 +56,6 @@ export const addPicklist = async (
         estimatedSuccessfulFuelRate: req.body.estimatedSuccessfulFuelRate || 0,
         estimatedTotalFuelScored: req.body.estimatedTotalFuelScored || 0,
       });
-
-    console.log({ addPicklistQuery: req.query, addPicklistBody: req.body });
 
     if (!params.success) {
       res.status(400).send(params);

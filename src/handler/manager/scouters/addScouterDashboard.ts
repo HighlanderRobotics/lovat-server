@@ -5,11 +5,13 @@ import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 
 export const addScouterDashboard = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     if (req.tokenType === "apiKey") {
-      res.status(403).json({ error: "This action cannot be performed using an API key" });
+      res
+        .status(403)
+        .json({ error: "This action cannot be performed using an API key" });
       return;
     }
 

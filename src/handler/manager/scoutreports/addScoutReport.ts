@@ -23,6 +23,28 @@ import { invalidateCache } from "../../../lib/clearCache.js";
 
 const { PrismaClientKnownRequestError } = Prisma;
 
+const malformedTimelineVersions = new Set(["26.0.3", "26.0.4"]);
+
+export const removeOrphanedStartEvents = (
+  events: number[][],
+  appVersion?: string,
+): number[][] => {
+  if (!malformedTimelineVersions.has(appVersion ?? "")) {
+    return events;
+  }
+
+  return events.filter((event, index) => {
+    const action = EventActionMap[event[1]]?.toString();
+
+    if (!action || !action.startsWith("START_") || action === "START_MATCH") {
+      return true;
+    }
+
+    const nextAction = EventActionMap[events[index + 1]?.[1]]?.toString();
+    return nextAction === action.replace("START_", "STOP_");
+  });
+};
+
 export const checkForInvalidEvents = (events: number[][]): string[] | null => {
   let inEvent: string | null = null;
   const errors: string[] = [];
@@ -104,6 +126,7 @@ export const addScoutReport = async (
         endgameClimb: z.nativeEnum(EndgameClimb),
         scouterUuid: z.string(),
         teamNumber: z.number(),
+        appVersion: z.string().optional(),
       })
       .parse(req.body);
 
@@ -122,7 +145,10 @@ export const addScoutReport = async (
       quantity: number | null;
       scoutReportUuid: string;
     }[] = [];
-    const events = req.body.events;
+    const events = removeOrphanedStartEvents(
+      req.body.events as number[][],
+      paramsScoutReport.appVersion,
+    );
 
     const invalidEventErrors = checkForInvalidEvents(events);
     if (invalidEventErrors) {

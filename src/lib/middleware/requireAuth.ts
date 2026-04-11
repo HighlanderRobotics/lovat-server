@@ -20,9 +20,7 @@ export const requireAuth = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  console.log("Authenticating request");
   try {
-    console.log(`${req.method} ${req.path}`);
     // Validate JWT
     const tokenString = req.headers.authorization?.split(" ")[1]; // It would be in the format "Bearer <token>" so we split on the space and take the second part
 
@@ -106,8 +104,6 @@ export const requireAuth = async (
           },
         },
       );
-
-      console.log("Updating");
       // Get JSON
       const authData = authResponse.data;
 
@@ -134,7 +130,6 @@ export const requireAuth = async (
 
       next();
     } catch (error) {
-      console.log("Using existing");
       const user = await prisma.user.findUnique({
         where: {
           id: userId,

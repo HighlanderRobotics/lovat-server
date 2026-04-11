@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { OpenAPIRegistry, extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+import {
+  OpenAPIRegistry,
+  extendZodWithOpenApi,
+} from "@asteasolutions/zod-to-openapi";
 
 // Ensure this module's Zod instance has .openapi
 extendZodWithOpenApi(z);
@@ -36,13 +39,30 @@ export const EventActionSchema = z.enum([
 
 export const FieldTraversalSchema = z.enum(["TRENCH", "BUMP", "BOTH", "NONE"]);
 export const BeachedSchema = z.enum(["ON_FUEL", "ON_BUMP", "BOTH", "NEITHER"]);
-export const EndgameClimbSchema = z.enum(["NOT_ATTEMPTED", "FAILED", "L1", "L2", "L3"]);
+export const EndgameClimbSchema = z.enum([
+  "NOT_ATTEMPTED",
+  "FAILED",
+  "L1",
+  "L2",
+  "L3",
+]);
 export const ClimbPositionSchema = z.enum(["SIDE", "MIDDLE"]);
 export const ClimbSideSchema = z.enum(["FRONT", "BACK"]);
 export const AutoClimbSchema = z.enum(["NOT_ATTEMPTED", "FAILED", "SUCCEEDED"]);
 export const FeederTypeSchema = z.enum(["CONTINUOUS", "STOP_TO_SHOOT", "DUMP"]);
-export const IntakeTypeSchema = z.enum(["GROUND", "OUTPOST", "BOTH", "NEITHER"]);
-export const RobotRoleSchema = z.enum(["CYCLING", "SCORING", "FEEDING", "DEFENDING", "IMMOBILE"]);
+export const IntakeTypeSchema = z.enum([
+  "GROUND",
+  "OUTPOST",
+  "BOTH",
+  "NEITHER",
+]);
+export const RobotRoleSchema = z.enum([
+  "CYCLING",
+  "SCORING",
+  "FEEDING",
+  "DEFENDING",
+  "IMMOBILE",
+]);
 export const WarningTypeSchema = z.enum(["BREAK"]);
 export const UserRoleSchema = z.enum(["ANALYST", "SCOUTING_LEAD"]);
 export const MatchTypeSchema = z.enum(["QUALIFICATION", "ELIMINATION"]);
@@ -184,7 +204,9 @@ export const SlackWorkspaceSchema = z.object({
 });
 
 // Public schema omitting authToken for API responses
-export const SlackWorkspacePublicSchema = SlackWorkspaceSchema.omit({ authToken: true });
+export const SlackWorkspacePublicSchema = SlackWorkspaceSchema.omit({
+  authToken: true,
+});
 
 export const SlackSubscriptionSchema = z.object({
   subscriptionId: z.string(),
