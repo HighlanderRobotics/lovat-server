@@ -479,10 +479,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
 
       // Main query
       const tmd = await prismaClient.teamMatchData.findMany({
-        cacheStrategy: {
-          swr: swrConstant,
-          ttl: ttlConstant,
-        },
         where: tmdFilter,
         select: {
           tournamentKey: true,

@@ -106,10 +106,6 @@ export const getMatches = async (
     }
 
     const rawData = await prismaClient.teamMatchData.findMany({
-      cacheStrategy: {
-        swr: swrConstant,
-        ttl: ttlConstant,
-      },
       where: {
         tournamentKey: params.data.tournamentKey,
       },

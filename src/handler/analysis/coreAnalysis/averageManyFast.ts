@@ -84,7 +84,6 @@ const config: AnalysisFunctionConfig<typeof argsSchema, z.ZodType> = {
       : {};
 
     const tmd = await prismaClient.teamMatchData.findMany({
-      cacheStrategy: { swr: swrConstant, ttl: ttlConstant },
       where: tmdWhere,
       select: {
         teamNumber: true,
