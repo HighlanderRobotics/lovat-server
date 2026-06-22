@@ -1,6 +1,25 @@
 import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import axios from "axios";
+import type { AxiosResponse } from "axios";
+
+interface TbaAlliance {
+  team_keys: string[];
+}
+
+interface TbaMatch {
+  actual_time: number | null;
+  time: number | null;
+  comp_level: string;
+  match_number: number;
+  key: string;
+  alliances: {
+    red: TbaAlliance;
+    blue: TbaAlliance;
+  };
+}
+
+type TbaMatchesResponse = TbaMatch[];
 
 export const addTournamentMatches = async (
   tournamentKey: string,
@@ -26,23 +45,22 @@ export const addTournamentMatches = async (
     }
 
     const eventResponse = await fetch(`${url}/event/${tournamentKey}`, {
-      headers: { "X-TBA-Auth-Key": process.env.TBA_KEY },
+      headers: { "X-TBA-Auth-Key": process.env.TBA_KEY ?? "" },
     });
 
-    const json = await eventResponse.json();
+    const json: unknown = await eventResponse.json();
 
-    const { remap_teams } = z
+    const event = z
       .object({
-        remap_teams: z
-          .record(z.string(), z.string())
-          .or(z.null())
-          .transform((v) => v ?? {}),
+        remap_teams: z.record(z.string(), z.string()).optional(),
       })
+      .passthrough()
       .parse(json);
 
-    let matchesResponse = null;
+    const remap_teams = event.remap_teams ?? {};
+    let matchesResponse: AxiosResponse<TbaMatchesResponse>;
     try {
-      matchesResponse = await axios.get(
+      matchesResponse = await axios.get<TbaMatchesResponse>(
         `${url}/event/${tournamentKey}/matches`,
         {
           headers: {
@@ -88,7 +106,8 @@ export const addTournamentMatches = async (
 
     // For each match in the tournament
     matchesResponse.data.sort(
-      (a, b) => (a.actual_time ?? a.time ?? 0) - (b.actual_time ?? b.time ?? 0),
+      (a: TbaMatch, b: TbaMatch) =>
+        (a.actual_time ?? a.time ?? 0) - (b.actual_time ?? b.time ?? 0),
     );
 
     for (const match of matchesResponse.data) {
