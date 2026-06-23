@@ -50,6 +50,8 @@ export const addTournamentMatches = async (
 
     const json: unknown = await eventResponse.json();
 
+    console.log(JSON.stringify(json, null, 2));
+
     const event = z
       .object({
         remap_teams: z.record(z.string(), z.string()).nullish(),
@@ -86,7 +88,7 @@ export const addTournamentMatches = async (
       },
     });
 
-    const playoffMatchOrder = new Map<string, number>([
+    const eightTeamDoubleElimPlayoffMatchOrder = new Map<string, number>([
       ["sf1m1", 1],
       ["sf2m1", 2],
       ["sf3m1", 3],
@@ -103,6 +105,21 @@ export const addTournamentMatches = async (
       ["f1m1", 14],
       ["f1m2", 15],
     ]);
+
+    const fourTeamDoubleElimPlayoffMatchOrder = new Map<string, number>([
+      ["sf1m1", 1],
+      ["sf2m1", 2],
+      ["sf3m1", 3],
+      ["sf4m1", 4],
+      ["sf5m1", 5],
+      ["f1m1", 6],
+      ["f1m2", 7],
+    ]);
+
+    const playoffMatchOrder =
+      event.playoff_type === 10
+        ? eightTeamDoubleElimPlayoffMatchOrder
+        : fourTeamDoubleElimPlayoffMatchOrder;
 
     // For each match in the tournament
     matchesResponse.data.sort(
