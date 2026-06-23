@@ -52,7 +52,7 @@ export const addTournamentMatches = async (
 
     const event = z
       .object({
-        remap_teams: z.record(z.string(), z.string()).optional(),
+        remap_teams: z.record(z.string(), z.string()).nullish(),
       })
       .passthrough()
       .parse(json);
