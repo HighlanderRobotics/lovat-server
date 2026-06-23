@@ -88,6 +88,11 @@ export const addTournamentMatches = async (
       },
     });
 
+    // playoff formats come from tba's event.playoff_type
+    // Double Elim 8 team is 10
+    // Double Elim 4 team is 11
+    // as per https://github.com/the-blue-alliance/the-blue-alliance/blob/main/src/backend/common/consts/playoff_type.py
+
     const eightTeamDoubleElimPlayoffMatchOrder = new Map<string, number>([
       ["sf1m1", 1],
       ["sf2m1", 2],
