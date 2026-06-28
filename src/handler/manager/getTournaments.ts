@@ -213,6 +213,7 @@ export const getTournaments = async (
     } else {
       count = (await prismaClient.tournament.findMany({})).length;
     }
+    let teamTournamentKeys = new Set<string>();
     if (req.user.teamNumber) {
       const teamTournaments = await prismaClient.teamMatchData.groupBy({
         by: ["tournamentKey"],
@@ -220,15 +221,24 @@ export const getTournaments = async (
           teamNumber: req.user.teamNumber,
         },
       });
+      teamTournamentKeys = new Set(
+        teamTournaments.map((obj) => obj.tournamentKey),
+      );
       const presentTeamTournaments = [];
       for (let i = 0; i < rows.length; i++) {
-        if (teamTournaments.some((obj) => obj.tournamentKey === rows[i].key)) {
+        if (teamTournamentKeys.has(rows[i].key)) {
           presentTeamTournaments.push(rows[i]);
           rows.splice(i, 1);
           i--;
         }
       }
       rows = presentTeamTournaments.concat(rows);
+    }
+    if (req.query.filter == undefined) {
+      rows = rows.map((row) => ({
+        ...row,
+        isParticipant: teamTournamentKeys.has(row.key),
+      }));
     }
     res.status(200).send({ tournaments: rows, count: count });
   } catch (error) {
