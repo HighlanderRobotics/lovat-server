@@ -28,6 +28,12 @@
   "environments": {
     "staging": {
       "deploy": {
+        "limitOverride": {
+          "containers": {
+            "cpu": 2,
+            "memoryBytes": 2147483648
+          }
+        },
         "multiRegionConfig": {
           "us-west2": {
             "numReplicas": 1
