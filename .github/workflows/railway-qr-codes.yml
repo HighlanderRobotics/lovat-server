@@ -1,0 +1,93 @@
+name: Railway PR QR Codes
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: railway-qr-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  post-qr-codes:
+    if: |
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == 'railway-app[bot]' &&
+      contains(github.event.comment.body, 'railway-bot-comment-version') &&
+      contains(github.event.comment.body, 'Success')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Generate QR codes and post comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          python3 << 'PYEOF'
+          import os, re, urllib.parse, urllib.request, urllib.error, json
+
+          body = os.environ['COMMENT_BODY']
+          m = re.search(r'\[Web\]\((https?://[^\s)]+)\)', body)
+          if not m:
+              raise SystemExit('No [Web](url) link found in Railway comment')
+          url = m.group(1).rstrip('/')
+
+          encoded = urllib.parse.quote(url, safe='')
+          collection = f'com.frc8033.lovatcollection://set-url?u={encoded}'
+          dashboard = f'com.frc8033.lovatdashboard:///set-url?u={encoded}'
+
+          def qr(data):
+              return 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + urllib.parse.quote(data, safe='')
+
+          comment = f'''## 📱 Connect your app to this PR deployment
+
+          Scan a QR code with your phone to point the app at this Railway preview:
+
+          **Server URL:** `{url}`
+
+          <details>
+          <summary><b>Lovat Collection</b></summary>
+
+          ![QR code — Lovat Collection]({qr(collection)})
+
+          `{collection}`
+
+          </details>
+
+          <details>
+          <summary><b>Lovat Dashboard</b></summary>
+
+          ![QR code — Lovat Dashboard]({qr(dashboard)})
+
+          `{dashboard}`
+
+          </details>
+          '''
+
+          token = os.environ['GITHUB_TOKEN']
+          repo = os.environ['GITHUB_REPOSITORY']
+          pr = os.environ['PR_NUMBER']
+          api = f'https://api.github.com/repos/{repo}/issues/{pr}/comments'
+          payload = json.dumps({'body': comment}).encode()
+          req = urllib.request.Request(
+              api,
+              data=payload,
+              headers={
+                  'Authorization': f'Bearer {token}',
+                  'Accept': 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+                  'Content-Type': 'application/json',
+              },
+              method='POST',
+          )
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  print(f'Posted QR comment (HTTP {resp.status})')
+          except urllib.error.HTTPError as e:
+              print(f'GitHub API error: {e.code} {e.reason}')
+              print(e.read().decode())
+              raise
+          PYEOF
