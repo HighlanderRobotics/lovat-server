@@ -1,5 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
+import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import "dotenv/config";
@@ -15,6 +16,9 @@ export const app = express();
 
 setupExpressErrorHandler(posthog, app);
 app.set("trust proxy", true);
+
+// Compress responses for clients that advertise support (Accept-Encoding: gzip)
+app.use(compression());
 
 // CORS rules
 app.use(
