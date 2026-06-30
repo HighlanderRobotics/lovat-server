@@ -5,8 +5,6 @@ import {
   Metric,
   metricToEvent,
   minActionDuration,
-  swrConstant,
-  ttlConstant,
   allTournaments,
   accuracyToPercentage,
 } from "../analysisConstants.js";
