@@ -5,8 +5,6 @@ import {
   endgameToPoints,
   Metric,
   metricToEvent,
-  swrConstant,
-  ttlConstant,
 } from "../analysisConstants.js";
 import { Event, Prisma, ScoutReport } from "@prisma/client";
 import {
@@ -129,9 +127,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             let total = 0;
             reports.forEach((sr) => {
               const accuracyEnum = (sr as any).accuracy as
-                | number
-                | null
-                | undefined;
+                number | null | undefined;
               const accuracyPercent =
                 accuracyEnum !== null &&
                 accuracyEnum !== undefined &&
@@ -145,10 +141,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
               });
               // Include auto climb points (15) when succeeded
               const autoClimb = (sr as any).autoClimb as
-                | "SUCCEEDED"
-                | "FAILED"
-                | "N_A"
-                | undefined;
+                "SUCCEEDED" | "FAILED" | "N_A" | undefined;
               if (autoClimb === "SUCCEEDED") {
                 total += 15;
               }
@@ -172,9 +165,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             let total = 0;
             reports.forEach((sr) => {
               const accuracyEnum = (sr as any).accuracy as
-                | number
-                | null
-                | undefined;
+                number | null | undefined;
               const accuracyPercent =
                 accuracyEnum !== null &&
                 accuracyEnum !== undefined &&
@@ -203,9 +194,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             let total = 0;
             reports.forEach((sr) => {
               const accuracyEnum = (sr as any).accuracy as
-                | number
-                | null
-                | undefined;
+                number | null | undefined;
               const accuracyPercent =
                 accuracyEnum !== null &&
                 accuracyEnum !== undefined &&
@@ -376,10 +365,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
             const times: number[] = [];
             reports.forEach((r, idx) => {
               const ac = (r as any).autoClimb as
-                | "SUCCEEDED"
-                | "FAILED"
-                | "N_A"
-                | undefined;
+                "SUCCEEDED" | "FAILED" | "N_A" | undefined;
               const rawClimbTimes = (r.events ?? [])
                 .filter((e) => e.action === "CLIMB")
                 .map((e) => e.time ?? 0);
@@ -415,12 +401,7 @@ const config: AnalysisFunctionConfig<typeof argsSchema, typeof returnSchema> = {
                   : "L3";
             reports.forEach((r, idx) => {
               const eg = (r as any).endgameClimb as
-                | "NOT_ATTEMPTED"
-                | "FAILED"
-                | "L1"
-                | "L2"
-                | "L3"
-                | undefined;
+                "NOT_ATTEMPTED" | "FAILED" | "L1" | "L2" | "L3" | undefined;
               const rawClimbTimes = (r.events ?? [])
                 .filter((e) => e.action === "CLIMB")
                 .map((e) => e.time ?? 0);
