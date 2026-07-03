@@ -147,11 +147,11 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: "Match Data Row",
-      content: { "application/json": { schema: TeamMatchDataSchema } },
+      description: "Match Data Row (or null if not found)",
+      content: { "application/json": { schema: TeamMatchDataSchema.nullable() } },
     },
     400: { description: "Invalid parameters" },
-  },
+    401: { description: "Unauthorized" },
   security: [{ bearerAuth: [] }],
 });
 
