@@ -9,14 +9,21 @@ export const checkMatchExists = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const params = z
+    const parsed = z
       .object({
         tournamentKey: z.string(),
-        teamNumber: z.coerce.number(),
-        matchNumber: z.coerce.number(),
-        matchType: z.enum(MatchType),
+        teamNumber: z.coerce.number().int(),
+        matchNumber: z.coerce.number().int(),
+        matchType: z.nativeEnum(MatchType),
       })
-      .parse(req.query);
+      .safeParse(req.query);
+
+    if (!parsed.success) {
+      res.status(400).send(parsed.error.flatten());
+      return;
+    }
+
+    const params = parsed.data;
 
     await addTournamentMatches(params.tournamentKey);
 
