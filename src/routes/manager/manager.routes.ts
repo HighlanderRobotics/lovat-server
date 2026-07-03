@@ -142,17 +142,20 @@ registry.registerPath({
       tournamentKey: z.string(),
       teamNumber: z.coerce.number().int(),
       matchNumber: z.coerce.number().int(),
-      matchType: z.nativeEnum(MatchType),
+      isElim: z.coerce.boolean(),
     }),
   },
   responses: {
     200: {
       description: "Match Data Row (or null if not found)",
-      content: { "application/json": { schema: TeamMatchDataSchema.nullable() } },
+      content: {
+        "application/json": { schema: TeamMatchDataSchema.nullable() },
+      },
     },
     400: { description: "Invalid parameters" },
     401: { description: "Unauthorized" },
-  security: [{ bearerAuth: [] }],
+  },
+  security: [],
 });
 
 // Profile

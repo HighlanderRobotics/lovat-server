@@ -1,7 +1,7 @@
 import z from "zod";
-import { addTournamentMatches } from "./addTournamentMatches";
+import { addTournamentMatches } from "./addTournamentMatches.js";
 import { Request, Response } from "express";
-import prismaClient from "../../prismaClient";
+import prismaClient from "../../prismaClient.js";
 import { MatchType } from "@prisma/client";
 
 export const checkMatchExists = async (
@@ -14,7 +14,7 @@ export const checkMatchExists = async (
         tournamentKey: z.string(),
         teamNumber: z.coerce.number().int(),
         matchNumber: z.coerce.number().int(),
-        matchType: z.nativeEnum(MatchType),
+        isElim: z.coerce.boolean(),
       })
       .safeParse(req.query);
 
@@ -28,10 +28,23 @@ export const checkMatchExists = async (
     await addTournamentMatches(params.tournamentKey);
 
     const match = await prismaClient.teamMatchData.findFirst({
-      where: params,
+      where: {
+        matchNumber: params.matchNumber,
+        tournamentKey: params.tournamentKey,
+        teamNumber: params.teamNumber,
+        matchType: params.isElim
+          ? MatchType.QUALIFICATION
+          : MatchType.ELIMINATION,
+      },
     });
 
-    res.status(200).send(match);
+    if (match !== null) {
+      res
+        .status(200)
+        .send({ match, alliance: Number(match.key[-1]) < 3 ? "RED" : "BLUE" });
+      return;
+    }
+    res.status(404).send("MATCH_NOT_FOUND");
   } catch (error) {
     console.log(error);
     res.status(500).send(error);
