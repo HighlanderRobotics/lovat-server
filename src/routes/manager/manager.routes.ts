@@ -140,9 +140,9 @@ registry.registerPath({
   request: {
     query: z.object({
       tournamentKey: z.string(),
-      teamNumber: z.number(),
-      matchNumber: z.number(),
-      matchType: z.enum(MatchType),
+      teamNumber: z.coerce.number().int(),
+      matchNumber: z.coerce.number().int(),
+      matchType: z.nativeEnum(MatchType),
     }),
   },
   responses: {
