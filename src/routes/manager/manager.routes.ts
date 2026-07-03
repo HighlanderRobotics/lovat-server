@@ -29,8 +29,14 @@ import { getTeamTournamentStatus } from "../../handler/manager/getTeamTournament
 import { getMatchResults } from "../../handler/manager/getMatchResults.js";
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
-import { TeamSchema, TournamentSchema } from "../../lib/prisma-zod.js";
+import {
+  TeamMatchDataSchema,
+  TeamSchema,
+  TournamentSchema,
+} from "../../lib/prisma-zod.js";
 import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
+import { MatchType } from "@prisma/client";
+import { checkMatchExists } from "../../handler/manager/checkMatchExists.js";
 
 const router = Router();
 
@@ -122,6 +128,29 @@ registry.registerPath({
     },
     400: { description: "Invalid parameters" },
     401: { description: "Unauthorized" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/v1/manager/checkmatch",
+  tags: ["Manager - Matches"],
+  summary: "Check if a match exists and if a team is in the match",
+  request: {
+    query: z.object({
+      tournamentKey: z.string(),
+      teamNumber: z.number(),
+      matchNumber: z.number(),
+      matchType: z.enum(MatchType),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Match Data Row",
+      content: { "application/json": { schema: TeamMatchDataSchema } },
+    },
+    400: { description: "Invalid parameters" },
   },
   security: [{ bearerAuth: [] }],
 });
@@ -417,6 +446,8 @@ router.use("/apikey", apikey);
 
 router.get("/teams", requireAuth, getTeams);
 router.get("/tournaments", requireAuth, getTournaments);
+
+router.get("/checkmatch", checkMatchExists);
 
 router.get(
   "/matches/:tournament",
