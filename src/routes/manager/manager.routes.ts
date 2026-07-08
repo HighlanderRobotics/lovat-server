@@ -148,7 +148,7 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: "Match Data Row (or null if not found)",
+      description: "Match data row and alliance",
       content: {
         "application/json": {
           schema: z.object({
