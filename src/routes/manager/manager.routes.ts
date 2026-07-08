@@ -141,7 +141,9 @@ registry.registerPath({
       tournamentKey: z.string(),
       teamNumber: z.coerce.number().int(),
       matchNumber: z.coerce.number().int(),
-      isElim: z.coerce.boolean(),
+      isElim: z
+        .union([z.literal("true"), z.literal("false"), z.boolean()])
+        .transform((value) => value === true || value === "true"),
     }),
   },
   responses: {
