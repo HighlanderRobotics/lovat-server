@@ -35,7 +35,6 @@ import {
   TournamentSchema,
 } from "../../lib/prisma-zod.js";
 import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
-import { MatchType } from "@prisma/client";
 import { checkMatchExists } from "../../handler/manager/checkMatchExists.js";
 
 const router = Router();
@@ -149,11 +148,16 @@ registry.registerPath({
     200: {
       description: "Match Data Row (or null if not found)",
       content: {
-        "application/json": { schema: TeamMatchDataSchema.nullable() },
+        "application/json": {
+          schema: z.object({
+            match: TeamMatchDataSchema,
+            alliance: z.string(),
+          }),
+        },
       },
     },
     400: { description: "Invalid parameters" },
-    401: { description: "Unauthorized" },
+    404: { description: "Match not found" },
   },
   security: [],
 });

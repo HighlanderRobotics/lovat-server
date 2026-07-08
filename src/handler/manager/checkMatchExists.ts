@@ -14,7 +14,9 @@ export const checkMatchExists = async (
         tournamentKey: z.string(),
         teamNumber: z.coerce.number().int(),
         matchNumber: z.coerce.number().int(),
-        isElim: z.coerce.boolean(),
+        isElim: z
+          .union([z.literal("true"), z.literal("false"), z.boolean()])
+          .transform((value) => value === true || value === "true"),
       })
       .safeParse(req.query);
 
@@ -33,15 +35,16 @@ export const checkMatchExists = async (
         tournamentKey: params.tournamentKey,
         teamNumber: params.teamNumber,
         matchType: params.isElim
-          ? MatchType.QUALIFICATION
-          : MatchType.ELIMINATION,
+          ? MatchType.ELIMINATION
+          : MatchType.QUALIFICATION,
       },
     });
 
     if (match !== null) {
-      res
-        .status(200)
-        .send({ match, alliance: Number(match.key[-1]) < 3 ? "RED" : "BLUE" });
+      res.status(200).send({
+        match,
+        alliance: Number(match.key.at(-1)) < 3 ? "red" : "blue",
+      });
       return;
     }
     res.status(404).send("MATCH_NOT_FOUND");
