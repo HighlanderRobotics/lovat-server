@@ -14,6 +14,8 @@ import {
   ClimbSide,
   FeederType,
   IntakeType,
+  CustomFieldType,
+  User,
 } from "@prisma/client";
 import { autoEnd, endgameToPoints, Metric } from "../analysisConstants.js";
 import { z } from "zod";
@@ -22,6 +24,12 @@ import {
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
 import { averageManyFast } from "../coreAnalysis/averageManyFast.js";
+import { customFieldNumberManyFast } from "../customFields/customFieldNumberAverages.js";
+import {
+  buildCustomColumnLabels,
+  getActiveCustomFields,
+  sanitizeCsv,
+} from "../customFields/customFieldShared.js";
 
 interface AggregatedTeamData {
   teamNumber: number;
@@ -365,11 +373,11 @@ export const getTeamCSV = async (
             }),
           );
 
-          const csvString = stringify(aggregatedData, {
+          const rows = await appendCustomFieldColumns(req.user, aggregatedData);
+
+          const csvString = stringify(rows, {
             header: true,
-            columns: aggregatedData.length
-              ? Object.keys(aggregatedData[0])
-              : [],
+            columns: rows.length ? Object.keys(rows[0]) : [],
             bom: true,
             cast: {
               boolean: (b) => (b ? "TRUE" : "FALSE"),
@@ -459,10 +467,12 @@ export const getTeamCSV = async (
         );
       }),
     );
-    const csvString = stringify(aggregatedData, {
+    const rows = await appendCustomFieldColumns(req.user, aggregatedData);
+
+    const csvString = stringify(rows, {
       header: true,
       // Creates column headers from data properties
-      columns: aggregatedData.length ? Object.keys(aggregatedData[0]) : [],
+      columns: rows.length ? Object.keys(rows[0]) : [],
       // Required for excel viewing
       bom: true,
       // Rename boolean values to TRUE and FALSE
@@ -482,6 +492,50 @@ export const getTeamCSV = async (
     res.status(500).send(error);
   }
 };
+
+/**
+ * Appends one "Avg <name> (Custom)" column per active custom NUMBER field for
+ * the viewer's team, on every row so Object.keys stays stable. Cells are blank
+ * when a team has no answers for the field. Rows are returned unchanged when
+ * the viewer has no team or no active NUMBER fields.
+ */
+async function appendCustomFieldColumns(
+  user: User,
+  aggregatedData: AggregatedTeamData[],
+): Promise<object[]> {
+  if (user?.teamNumber === null || user?.teamNumber === undefined) {
+    return aggregatedData;
+  }
+
+  const customFields = await getActiveCustomFields(user.teamNumber, [
+    CustomFieldType.NUMBER,
+  ]);
+  if (customFields.length === 0) {
+    return aggregatedData;
+  }
+
+  const labels = buildCustomColumnLabels(
+    customFields.map((field) => ({
+      uuid: field.uuid,
+      name: sanitizeCsv(field.name),
+    })),
+  );
+
+  const averages = await customFieldNumberManyFast(user, {
+    viewerTeam: user.teamNumber,
+    teams: aggregatedData.map((row) => row.teamNumber),
+    fieldUuids: customFields.map((field) => field.uuid),
+  });
+
+  return aggregatedData.map((row) => {
+    const withCustom: Record<string, unknown> = { ...row };
+    for (const field of customFields) {
+      const average = averages[field.uuid]?.[String(row.teamNumber)] ?? null;
+      withCustom[`Avg ${labels[field.uuid]} (Custom)`] = average ?? "";
+    }
+    return withCustom;
+  });
+}
 
 async function aggregateTeamReports(
   teamNum: number,

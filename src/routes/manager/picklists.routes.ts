@@ -40,6 +40,9 @@ const PicklistCreateBodySchema = z.object({
   estimatedSuccessfulFuelRate: z.number().default(0).optional(),
   estimatedTotalFuelScored: z.number().default(0).optional(),
   driverAbility: z.number().default(0).optional(),
+  customFieldWeights: z
+    .record(z.string().startsWith("cf_"), z.number())
+    .optional(),
 });
 
 const PicklistSummarySchema = z.object({
@@ -67,6 +70,7 @@ const PicklistDetailSchema = z.object({
   scoringRate: z.number(),
   estimatedSuccessfulFuelRate: z.number(),
   estimatedTotalFuelScored: z.number(),
+  customFieldWeights: z.record(z.string().startsWith("cf_"), z.number()),
 });
 
 const PicklistUpdateBodySchema = PicklistCreateBodySchema;

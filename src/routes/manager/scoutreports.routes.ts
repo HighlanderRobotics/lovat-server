@@ -8,10 +8,24 @@ import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
 
 import {
+  CustomFieldTypeSchema,
   EventSchema,
   ScoutReportSchema as PrismaScoutReportSchema,
 } from "../../lib/prisma-zod.js";
 import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
+import { CustomFieldAnswersInputSchema } from "../../handler/manager/customfields/validateCustomFieldAnswers.js";
+
+const CustomFieldAnswerViewSchema = z.object({
+  fieldUuid: z.string(),
+  name: z.string(),
+  type: CustomFieldTypeSchema,
+  options: z.array(z.string()),
+  order: z.number().int(),
+  archived: z.boolean(),
+  textValue: z.string().nullable(),
+  numberValue: z.number().nullable(),
+  selections: z.array(z.string()),
+});
 
 const ScoutReportCreateSchema = z.object({
   uuid: z.string(),
@@ -47,6 +61,7 @@ const ScoutReportCreateSchema = z.object({
       z.number().int().optional(), // points/quantity (optional)
     ]),
   ),
+  customFieldAnswers: CustomFieldAnswersInputSchema.optional(),
 });
 
 registry.registerPath({
@@ -85,6 +100,7 @@ registry.registerPath({
           schema: z.object({
             scoutReport: PrismaScoutReportSchema,
             events: z.array(EventSchema),
+            customFieldAnswers: z.array(CustomFieldAnswerViewSchema),
           }),
         },
       },

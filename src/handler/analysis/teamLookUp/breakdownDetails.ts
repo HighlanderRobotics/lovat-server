@@ -1,7 +1,9 @@
 import z from "zod";
+import { CustomFieldType } from "@prisma/client";
 import {
   allTeamNumbers,
   allTournaments,
+  AnalysisContext,
   breakdownNeg,
   breakdownPos,
   dashboardToServer,
@@ -12,6 +14,12 @@ import {
   dataSourceRuleToArray,
 } from "../dataSourceRule.js";
 import prismaClient from "../../../prismaClient.js";
+import {
+  getTournamentSourceRule,
+  parseCfKey,
+  teamSourceRuleAllowsOwnTeam,
+  tournamentRuleToSqlCondition,
+} from "../customFields/customFieldShared.js";
 
 export const breakdownDetails = createAnalysisHandler({
   params: {
@@ -22,18 +30,39 @@ export const breakdownDetails = createAnalysisHandler({
   },
   usesDataSource: true,
   shouldCache: true,
-  createKey: async ({ params }) => {
+  createKey: async ({ params }, ctx) => {
+    const key = [
+      "breakdownDetails",
+      params.team.toString(),
+      params.breakdown.toString(),
+    ];
+    const teamDependencies = [params.team];
+
+    // cf_ breakdowns are viewer-scoped: fragment the key by viewer team (no
+    // key change at all for ordinary breakdowns) and depend on the viewer team
+    // so custom field config mutations invalidate the row.
+    if (parseCfKey(params.breakdown) !== null) {
+      key.push(`viewer${ctx.user.teamNumber ?? "none"}`);
+      if (
+        ctx.user.teamNumber !== null &&
+        ctx.user.teamNumber !== undefined &&
+        !teamDependencies.includes(ctx.user.teamNumber)
+      ) {
+        teamDependencies.push(ctx.user.teamNumber);
+      }
+    }
+
     return {
-      key: [
-        "breakdownDetails",
-        params.team.toString(),
-        params.breakdown.toString(),
-      ],
-      teamDependencies: [params.team],
+      key: key,
+      teamDependencies: teamDependencies,
       tournamentDependencies: [],
     };
   },
   calculateAnalysis: async ({ params }, ctx) => {
+    const cfUuid = parseCfKey(params.breakdown);
+    if (cfUuid !== null) {
+      return customFieldBreakdownDetails(cfUuid, params.team, ctx);
+    }
     const queryStr = `
         SELECT "${dashboardToServer[params.breakdown]}" AS breakdown,
             "teamMatchKey" AS key,
@@ -138,3 +167,90 @@ export const breakdownDetails = createAnalysisHandler({
     return result;
   },
 });
+
+/**
+ * cf_ branch of breakdownDetails: expands one row per stored selection of the
+ * viewer's custom select field for the scouted team. Viewer-scoped — only
+ * reports submitted by the viewer's own team count; the field must belong to
+ * the viewer and be a select type (archived allowed so old links keep
+ * working), otherwise empty.
+ */
+async function customFieldBreakdownDetails(
+  fieldUuid: string,
+  team: number,
+  ctx: AnalysisContext,
+): Promise<
+  {
+    key: string;
+    tournamentName: string;
+    breakdown: string;
+    sourceTeam: string;
+    scouter?: string;
+  }[]
+> {
+  const viewerTeam = ctx.user.teamNumber;
+  if (viewerTeam === null || viewerTeam === undefined) return [];
+  if (!teamSourceRuleAllowsOwnTeam(ctx.user)) return [];
+
+  const field = await prismaClient.customField.findUnique({
+    where: { uuid: fieldUuid },
+  });
+  if (
+    !field ||
+    field.teamNumber !== viewerTeam ||
+    (field.type !== CustomFieldType.SINGLE_SELECT &&
+      field.type !== CustomFieldType.MULTI_SELECT)
+  ) {
+    return [];
+  }
+
+  const tournamentRule = getTournamentSourceRule(ctx.user);
+  const tournamentCondition = tournamentRuleToSqlCondition(
+    tournamentRule,
+    `tmd."tournamentKey"`,
+    4,
+  );
+
+  const queryStr = `
+      SELECT sel.value AS breakdown,
+          sr."teamMatchKey" AS key,
+          tmnt."name" AS tournament,
+          sc."sourceTeamNumber" AS sourceteam,
+          sc."name" AS scouter
+      FROM "CustomFieldAnswer" a
+      JOIN "ScoutReport" sr ON sr."uuid" = a."scoutReportUuid"
+      JOIN "Scouter" sc ON sc."uuid" = sr."scouterUuid"
+      JOIN "TeamMatchData" tmd ON tmd."key" = sr."teamMatchKey"
+      JOIN "Tournament" tmnt ON tmnt."key" = tmd."tournamentKey"
+      CROSS JOIN UNNEST(a."selections") AS sel(value)
+      WHERE a."fieldUuid" = $1
+          AND sc."sourceTeamNumber" = $2
+          AND tmd."teamNumber" = $3
+          AND ${tournamentCondition.clause}
+      ORDER BY tmnt."date" DESC, tmd."matchType" DESC, tmd."matchNumber" DESC
+      `;
+
+  interface QueryRow {
+    breakdown: string;
+    key: string;
+    tournament: string;
+    sourceteam: string;
+    scouter: string;
+  }
+
+  const data = await prismaClient.$queryRawUnsafe<QueryRow[]>(
+    queryStr,
+    fieldUuid,
+    viewerTeam,
+    team,
+    tournamentCondition.param,
+  );
+
+  return data.map((match) => ({
+    key: match.key,
+    tournamentName: match.tournament,
+    breakdown: match.breakdown,
+    sourceTeam: match.sourceteam,
+    scouter: match.scouter ?? undefined,
+  }));
+}

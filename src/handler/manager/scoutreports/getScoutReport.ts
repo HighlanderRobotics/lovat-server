@@ -3,6 +3,7 @@ import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { UserRole } from "@prisma/client";
+import { getAnswersForReport } from "../../analysis/customFields/customFieldShared.js";
 
 export const getScoutReport = async (
   req: AuthenticatedRequest,
@@ -53,15 +54,24 @@ export const getScoutReport = async (
 
     const canModify = isOnSameTeam && user.role === UserRole.SCOUTING_LEAD;
 
+    // Custom field answers are scoped to the source team; cross-team viewers
+    // always get an empty array (key always present)
+    const customFieldAnswers = isOnSameTeam
+      ? await getAnswersForReport(params.data.uuid)
+      : [];
+
     const { scouter, ...reportWithoutScouter } = scoutReport;
     const responseReport = {
       ...reportWithoutScouter,
       scouterName: isOnSameTeam ? scouter.name : undefined,
     };
 
-    res
-      .status(200)
-      .send({ scoutReport: responseReport, events: events, canModify });
+    res.status(200).send({
+      scoutReport: responseReport,
+      events: events,
+      canModify,
+      customFieldAnswers,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send(error);

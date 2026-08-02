@@ -14,6 +14,7 @@ import {
 import { autoPathScouter } from "./autoPathScouter.js";
 import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
+import { getAnswersForReport } from "../customFields/customFieldShared.js";
 
 export const matchPageSpecificScouter = createAnalysisHandler({
   params: {
@@ -48,6 +49,11 @@ export const matchPageSpecificScouter = createAnalysisHandler({
         autoClimb: true,
         feederTypes: true,
         accuracy: true,
+        scouter: {
+          select: {
+            sourceTeamNumber: true,
+          },
+        },
       },
     });
 
@@ -116,6 +122,16 @@ export const matchPageSpecificScouter = createAnalysisHandler({
     for (const metric of specificMatchPageMetrics) {
       output[metricToName[metric]] = aggregateData[metric];
     }
+
+    // Custom field answers are only visible to viewers on the report's source
+    // team; everyone else gets an empty array (handler is shouldCache: false,
+    // so this viewer-dependent data is safe to compute inline).
+    output.customFieldAnswers =
+      ctx.user.teamNumber !== null &&
+      ctx.user.teamNumber !== undefined &&
+      scoutReport.scouter?.sourceTeamNumber === ctx.user.teamNumber
+        ? await getAnswersForReport(scoutReport.uuid)
+        : [];
 
     return output;
   },

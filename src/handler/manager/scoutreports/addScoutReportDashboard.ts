@@ -26,6 +26,10 @@ import {
   checkForInvalidEvents,
   removeOrphanedStartEvents,
 } from "./addScoutReport.js";
+import {
+  CustomFieldAnswersInputSchema,
+  validateCustomFieldAnswers,
+} from "../customfields/validateCustomFieldAnswers.js";
 
 const { PrismaClientKnownRequestError } = Prisma;
 
@@ -69,6 +73,7 @@ export const addScoutReportDashboard = async (
         scouterUuid: z.string(),
         teamNumber: z.number(),
         appVersion: z.string().optional(),
+        customFieldAnswers: CustomFieldAnswersInputSchema.optional(),
       })
       .parse(req.body);
 
@@ -144,6 +149,13 @@ export const addScoutReportDashboard = async (
       return;
     }
 
+    // Lenient per-answer validation: invalid custom answers are dropped,
+    // never fail the report (reconciliation decision 4)
+    const customFieldAnswerRows = await validateCustomFieldAnswers(
+      scouter.sourceTeamNumber,
+      paramsScoutReport.customFieldAnswers,
+    );
+
     // Create scout report using relations to match core handler
     await prismaClient.scoutReport.create({
       data: {
@@ -169,6 +181,16 @@ export const addScoutReportDashboard = async (
         disrupts: paramsScoutReport.disrupts,
       },
     });
+
+    if (customFieldAnswerRows.length > 0) {
+      await prismaClient.customFieldAnswer.createMany({
+        data: customFieldAnswerRows.map((row) => ({
+          ...row,
+          scoutReportUuid: paramsScoutReport.uuid,
+        })),
+        skipDuplicates: true,
+      });
+    }
 
     // Invalidate cached analyses
     invalidateCache(
