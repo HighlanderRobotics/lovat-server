@@ -123,15 +123,12 @@ export const matchPageSpecificScouter = createAnalysisHandler({
       output[metricToName[metric]] = aggregateData[metric];
     }
 
-    // Custom field answers are only visible to viewers on the report's source
-    // team; everyone else gets an empty array (handler is shouldCache: false,
-    // so this viewer-dependent data is safe to compute inline).
-    output.customFieldAnswers =
-      ctx.user.teamNumber !== null &&
-      ctx.user.teamNumber !== undefined &&
-      scoutReport.scouter?.sourceTeamNumber === ctx.user.teamNumber
-        ? await getAnswersForReport(scoutReport.uuid)
-        : [];
+    // Custom field answers are shown inline with their question names, so they
+    // read correctly for any viewer who can already see this report — not just
+    // the report's own team. (Aggregate surfaces like categories/breakdowns
+    // stay own-team-scoped because mixing teams' fields there is meaningless.)
+    // Handler is shouldCache: false, so computing per-request is fine.
+    output.customFieldAnswers = await getAnswersForReport(scoutReport.uuid);
 
     return output;
   },

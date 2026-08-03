@@ -54,11 +54,10 @@ export const getScoutReport = async (
 
     const canModify = isOnSameTeam && user.role === UserRole.SCOUTING_LEAD;
 
-    // Custom field answers are scoped to the source team; cross-team viewers
-    // always get an empty array (key always present)
-    const customFieldAnswers = isOnSameTeam
-      ? await getAnswersForReport(params.data.uuid)
-      : [];
+    // Custom field answers display inline with their question names, so they
+    // read correctly for any viewer who can see this report, not just the
+    // source team. (Aggregate surfaces stay own-team-scoped.)
+    const customFieldAnswers = await getAnswersForReport(params.data.uuid);
 
     const { scouter, ...reportWithoutScouter } = scoutReport;
     const responseReport = {
