@@ -54,6 +54,7 @@ export const getActiveCustomFields = async (
 // Shape of a custom field answer as exposed on raw-report responses
 // (reconciliation #6)
 export type CustomFieldAnswerView = {
+  uuid: string;
   fieldUuid: string;
   name: string;
   type: CustomFieldType;
@@ -86,6 +87,7 @@ export const getAnswersForReport = async (
   });
 
   return answers.map((answer) => ({
+    uuid: answer.uuid,
     fieldUuid: answer.fieldUuid,
     name: answer.field.name,
     type: answer.field.type,

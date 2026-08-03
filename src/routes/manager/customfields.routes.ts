@@ -9,6 +9,7 @@ import { reorderCustomFields } from "../../handler/manager/customfields/reorderC
 import { archiveCustomField } from "../../handler/manager/customfields/archiveCustomField.js";
 import { unarchiveCustomField } from "../../handler/manager/customfields/unarchiveCustomField.js";
 import { deleteCustomField } from "../../handler/manager/customfields/deleteCustomField.js";
+import { updateCustomFieldAnswer } from "../../handler/manager/customfields/updateCustomFieldAnswer.js";
 
 import { registry } from "../../lib/openapi.js";
 import { z } from "zod";
@@ -132,6 +133,33 @@ registry.registerPath({
 
 registry.registerPath({
   method: "put",
+  path: "/v1/manager/customfields/answers/{uuid}",
+  tags: ["Manager - Custom Fields"],
+  summary:
+    "Edit a text custom field answer (SCOUTING_LEAD of the field's team)",
+  request: {
+    params: z.object({ uuid: z.string() }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ value: z.string().min(1).max(1000) }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: { description: "Updated" },
+    400: { description: "Invalid request or non-text field" },
+    401: { description: "Unauthorized" },
+    403: { description: "Not a scouting lead of the field's team" },
+    404: { description: "Answer not found" },
+    500: { description: "Server error" },
+  },
+  security: [{ bearerAuth: [] }],
+});
+
+registry.registerPath({
+  method: "put",
   path: "/v1/manager/customfields/{uuid}",
   tags: ["Manager - Custom Fields"],
   summary: "Update custom field (SCOUTING_LEAD; type immutable)",
@@ -228,6 +256,7 @@ router.post("/", addCustomField);
 
 // Must be registered before the /:uuid routes
 router.put("/order", reorderCustomFields);
+router.put("/answers/:uuid", updateCustomFieldAnswer);
 
 router.put("/:uuid", updateCustomField);
 router.post("/:uuid/archive", archiveCustomField);

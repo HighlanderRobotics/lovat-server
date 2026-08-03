@@ -44,6 +44,7 @@ export const getNotes = createAnalysisHandler({
     }
 
     let notesAndMatches: {
+      uuid: string;
       notes: string;
       robotBrokeDescription?: string;
       match: string;
@@ -90,6 +91,7 @@ export const getNotes = createAnalysisHandler({
         ],
       },
       select: {
+        uuid: true,
         notes: true,
         robotBrokeDescription: true,
         teamMatchKey: true,
@@ -154,6 +156,7 @@ export const getNotes = createAnalysisHandler({
 
     if (Boolean(ctx.user.teamNumber)) {
       notesAndMatches = noteData.map((report) => ({
+        uuid: report.uuid,
         notes: report.notes,
         match: report.teamMatchKey,
         robotBrokeDescription: report.robotBrokeDescription,
@@ -167,6 +170,7 @@ export const getNotes = createAnalysisHandler({
       }));
     } else {
       notesAndMatches = noteData.map((report) => ({
+        uuid: report.uuid,
         notes: report.notes,
         match: report.teamMatchKey,
         robotBrokeDescription: report.robotBrokeDescription,
