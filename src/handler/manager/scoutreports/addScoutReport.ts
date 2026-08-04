@@ -21,7 +21,7 @@ import {
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../../lib/clearCache.js";
 import {
-  CustomFieldAnswersInputSchema,
+  CustomFieldAnswersWireSchema,
   validateCustomFieldAnswers,
 } from "../customfields/validateCustomFieldAnswers.js";
 
@@ -131,7 +131,7 @@ export const addScoutReport = async (
         scouterUuid: z.string(),
         teamNumber: z.number(),
         appVersion: z.string().optional(),
-        customFieldAnswers: CustomFieldAnswersInputSchema.optional(),
+        customFieldAnswers: CustomFieldAnswersWireSchema.optional(),
       })
       .parse(req.body);
 

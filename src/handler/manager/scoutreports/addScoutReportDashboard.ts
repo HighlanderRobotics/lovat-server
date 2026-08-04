@@ -27,7 +27,7 @@ import {
   removeOrphanedStartEvents,
 } from "./addScoutReport.js";
 import {
-  CustomFieldAnswersInputSchema,
+  CustomFieldAnswersWireSchema,
   validateCustomFieldAnswers,
 } from "../customfields/validateCustomFieldAnswers.js";
 
@@ -73,7 +73,7 @@ export const addScoutReportDashboard = async (
         scouterUuid: z.string(),
         teamNumber: z.number(),
         appVersion: z.string().optional(),
-        customFieldAnswers: CustomFieldAnswersInputSchema.optional(),
+        customFieldAnswers: CustomFieldAnswersWireSchema.optional(),
       })
       .parse(req.body);
 
