@@ -103,6 +103,7 @@ const MatchEnumToAbrivation: Record<MatchType, string> = {
   [MatchType.QUALIFICATION]: "qm",
   [MatchType.ELIMINATION]: "em",
 };
+const CURRENT_YEAR = "2026";
 
 export {
   EventActionMap,
@@ -118,4 +119,5 @@ export {
   EndgameClimbReverseMap,
   AutoClimbReverseMap,
   FeederTypeReverseMap,
+  CURRENT_YEAR,
 };

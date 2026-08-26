@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
-  engineType   = "binary"
+  provider   = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
@@ -26,16 +26,37 @@ model FeatureToggle {
   enabled Boolean @default(true)
 }
 
+model Match {
+  key           String @id
+  tournamentKey String
+  matchNumber   Int    @db.SmallInt
+
+  red  Int[]
+  blue Int[]
+
+  matchType   MatchType
+  matchStatus MatchStatus
+  matchResult MatchResult
+
+  redScore  Int?
+  blueScore Int?
+
+  // teamMatchData TeamMatchData[]
+
+  tournament Tournament @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
+}
+
 model TeamMatchData {
   key           String        @id
-  tournamentKey String
-  matchNumber   Int           @db.SmallInt
   teamNumber    Int
+  tournamentKey String
+  matchKey      String
+  matchNumber   Int           @db.SmallInt
   matchType     MatchType
-  scoutReports  ScoutReport[]
+  // matchKey      String @default("placeholder")
+  // match         Match @relation(fields: [matchKey], references: [key], onDelete: Cascade)
   tournament    Tournament    @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
-
-  @@index([tournamentKey, teamNumber])
+  scoutReports  ScoutReport[]
 }
 
 model MutablePicklist {
@@ -198,6 +219,7 @@ model Tournament {
   date                  String?
   mutablePicklists      MutablePicklist[]
   scouterScheduleShifts ScouterScheduleShift[]
+  matches               Match[]
   teamMatchData         TeamMatchData[]
   latestFetchETag       String?
 }
@@ -334,4 +356,17 @@ enum UserRole {
 enum MatchType {
   QUALIFICATION
   ELIMINATION
+}
+
+enum MatchStatus {
+  SCHEDULED
+  IN_PROGRESS
+  DONE
+  OFFICIAL
+}
+
+enum MatchResult {
+  RED
+  BLUE
+  TIE
 }

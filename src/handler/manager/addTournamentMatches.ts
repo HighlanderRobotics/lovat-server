@@ -2,8 +2,10 @@ import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import axios from "axios";
 import type { AxiosResponse } from "axios";
+import { CURRENT_YEAR } from "./managerConstants.js";
 
 interface TbaAlliance {
+  score: number;
   team_keys: string[];
 }
 
@@ -13,6 +15,7 @@ interface TbaMatch {
   comp_level: string;
   match_number: number;
   key: string;
+  winning_alliance: string;
   alliances: {
     red: TbaAlliance;
     blue: TbaAlliance;
@@ -21,6 +24,44 @@ interface TbaMatch {
 
 type TbaMatchesResponse = TbaMatch[];
 
+const getMatchStatus = (
+  match: TbaMatch,
+): "SCHEDULED" | "IN_PROGRESS" | "OFFICIAL" => {
+  const played =
+    (match.winning_alliance ?? "") !== "" ||
+    match.alliances.red.score > 0 ||
+    match.alliances.blue.score > 0;
+  if (played) {
+    return "OFFICIAL";
+  }
+  if (match.actual_time !== null) {
+    return "IN_PROGRESS";
+  }
+  return "SCHEDULED";
+};
+
+const getMatchResult = (match: TbaMatch): "RED" | "BLUE" | "TIE" => {
+  if (match.winning_alliance === "red") {
+    return "RED";
+  }
+  if (match.winning_alliance === "blue") {
+    return "BLUE";
+  }
+  return "TIE";
+};
+
+// TBA reports -1 for alliances that haven't scored yet
+const getScore = (score: number): number | null => (score >= 0 ? score : null);
+
+const mapTeamKey = (
+  teamKey: string,
+  remapTeams: Record<string, string>,
+): number => {
+  const mapEntry = Object.entries(remapTeams).find((v) => v[1] === teamKey);
+  const realTeamKey = mapEntry ? mapEntry[0] : teamKey;
+  return Number(realTeamKey.substring(3));
+};
+
 export const addTournamentMatches = async (
   tournamentKey: string,
 ): Promise<void> => {
@@ -28,8 +69,10 @@ export const addTournamentMatches = async (
     if (tournamentKey === undefined) {
       throw "tournament key is undefined";
     }
+    console.log(tournamentKey);
 
-    if (!tournamentKey.startsWith("2026")) {
+    // Old tournaments are bulk-deleted by fetchMatches; don't import their matches
+    if (!tournamentKey.startsWith(CURRENT_YEAR)) {
       return;
     }
 
@@ -50,7 +93,7 @@ export const addTournamentMatches = async (
 
     const json: unknown = await eventResponse.json();
 
-    console.log(JSON.stringify(json, null, 2));
+    //console.log(JSON.stringify(json, null, 2));
 
     const event = z
       .object({
@@ -139,6 +182,42 @@ export const addTournamentMatches = async (
           ...match.alliances.red.team_keys,
           ...match.alliances.blue.team_keys,
         ];
+
+        //console.log(teams);
+
+        const redTeams = match.alliances.red.team_keys.map((teamKey) =>
+          mapTeamKey(teamKey, remap_teams),
+        );
+        const blueTeams = match.alliances.blue.team_keys.map((teamKey) =>
+          mapTeamKey(teamKey, remap_teams),
+        );
+
+        await prismaClient.match.upsert({
+          where: {
+            key: `${tournamentKey}_qm${match.match_number}`,
+          },
+          update: {
+            red: redTeams,
+            blue: blueTeams,
+            matchStatus: getMatchStatus(match),
+            matchResult: getMatchResult(match),
+            redScore: getScore(match.alliances.red.score),
+            blueScore: getScore(match.alliances.blue.score),
+          },
+          create: {
+            key: `${tournamentKey}_qm${match.match_number}`,
+            tournamentKey,
+            matchNumber: match.match_number,
+            red: redTeams,
+            blue: blueTeams,
+            matchType: "QUALIFICATION",
+            matchStatus: getMatchStatus(match),
+            matchResult: getMatchResult(match),
+            redScore: getScore(match.alliances.red.score),
+            blueScore: getScore(match.alliances.blue.score),
+          },
+        });
+
         let matchesString = ``;
         //make matches with trailing _0, _1, _2 etc
         for (let k = 0; k < teams.length; k++) {
@@ -148,11 +227,7 @@ export const addTournamentMatches = async (
           const currMatchKey = `${tournamentKey}_qm${match.match_number}_${k}`;
 
           const fakeTeamKey = teams[k]; // The one TBA sends you which is potentially "fake", like frc6418B
-          const mapEntry = Object.entries(remap_teams).find(
-            (v) => v[1] === fakeTeamKey,
-          );
-          const realTeamKey = mapEntry ? mapEntry[0] : fakeTeamKey;
-          const currTeam = Number(realTeamKey.substring(3));
+          const currTeam = mapTeamKey(fakeTeamKey, remap_teams);
 
           const params = z
             .object({
@@ -182,6 +257,7 @@ export const addTournamentMatches = async (
               matchNumber: params.data.matchNumber,
               teamNumber: params.data.teamNumber,
               matchType: "QUALIFICATION",
+              matchKey: `${tournamentKey}_qm${match.match_number}`,
             },
             create: {
               key: params.data.key,
@@ -189,6 +265,7 @@ export const addTournamentMatches = async (
               matchNumber: params.data.matchNumber,
               teamNumber: params.data.teamNumber,
               matchType: "QUALIFICATION",
+              matchKey: `${tournamentKey}_qm${match.match_number}`,
             },
           });
         }
@@ -205,11 +282,7 @@ export const addTournamentMatches = async (
         const mappedTeams: number[] = [];
         let allTeamsKnown = true;
         for (const teamKey of teams) {
-          const mapEntry = Object.entries(remap_teams).find(
-            (v) => v[1] === teamKey,
-          );
-          const realTeamKey = mapEntry ? mapEntry[0] : teamKey;
-          const teamNumber = Number(realTeamKey.substring(3));
+          const teamNumber = mapTeamKey(teamKey, remap_teams);
           if (!Number.isFinite(teamNumber) || teamNumber <= 0) {
             allTeamsKnown = false;
             break;
@@ -226,6 +299,32 @@ export const addTournamentMatches = async (
         if (!matchNumber) {
           continue;
         }
+
+        await prismaClient.match.upsert({
+          where: {
+            key: `${tournamentKey}_em${matchNumber}`,
+          },
+          update: {
+            red: mappedTeams.slice(0, 3),
+            blue: mappedTeams.slice(3, 6),
+            matchStatus: getMatchStatus(match),
+            matchResult: getMatchResult(match),
+            redScore: getScore(match.alliances.red.score),
+            blueScore: getScore(match.alliances.blue.score),
+          },
+          create: {
+            key: `${tournamentKey}_em${matchNumber}`,
+            tournamentKey,
+            matchNumber,
+            red: mappedTeams.slice(0, 3),
+            blue: mappedTeams.slice(3, 6),
+            matchType: "ELIMINATION",
+            matchStatus: getMatchStatus(match),
+            matchResult: getMatchResult(match),
+            redScore: getScore(match.alliances.red.score),
+            blueScore: getScore(match.alliances.blue.score),
+          },
+        });
 
         for (let k = 0; k < 6; k++) {
           const currTeam = mappedTeams[k];
@@ -260,6 +359,7 @@ export const addTournamentMatches = async (
               matchNumber: params.data.matchNumber,
               teamNumber: params.data.teamNumber,
               matchType: "ELIMINATION",
+              matchKey: `${tournamentKey}_em${matchNumber}`,
             },
             create: {
               key: params.data.key,
@@ -267,6 +367,7 @@ export const addTournamentMatches = async (
               matchNumber: params.data.matchNumber,
               teamNumber: params.data.teamNumber,
               matchType: "ELIMINATION",
+              matchKey: `${tournamentKey}_em${matchNumber}`,
             },
           });
         }
