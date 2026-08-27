@@ -37,7 +37,7 @@ export const requireAuth = async (
       const redisKey = `auth:apikey:${keyHash}:rate`;
 
       const count = Number(await kv.incr(redisKey));
-      if (count === 1) await kv.exp(redisKey);
+      if (count === 1) await kv.exp(redisKey, 3);
 
       if (count > 1) {
         res.status(429).json({

@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { requireAuth } from "../../lib/middleware/requireAuth.js";
 import { getReportCSV } from "../../handler/analysis/csv/getReportCSV.js";
 import { getTeamCSV } from "../../handler/analysis/csv/getTeamCSV.js";
 import { registry } from "../../lib/openapi.js";
@@ -46,7 +45,7 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
 });
 
-router.use(requireAuth, requireVerifiedTeam);
+router.use(requireVerifiedTeam);
 
 router.get("/csvplain", getTeamCSV);
 router.get("/reportcsv", getReportCSV);

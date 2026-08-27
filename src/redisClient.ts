@@ -31,8 +31,9 @@ const incr = async (key: string): ReturnType<Awaited<typeof redis>["incr"]> => {
 
 const exp = async (
   key: string,
+  exp: number,
 ): ReturnType<Awaited<typeof redis>["expire"]> => {
-  return await (await redis).expire(key, 3);
+  return await (await redis).expire(key, exp);
 };
 
 const setEx = async (
