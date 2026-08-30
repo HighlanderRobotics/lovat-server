@@ -37,7 +37,7 @@ model Match {
   actualTime    DateTime?
   redScore      Int?
   blueScore     Int?
-  rawTba        Json
+  rawTba        String
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

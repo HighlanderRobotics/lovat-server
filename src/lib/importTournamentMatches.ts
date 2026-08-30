@@ -151,6 +151,39 @@ export const importTournamentMatches = async (tournamentKey: string) => {
       ...match.alliances.blue.team_keys,
     ];
 
+    // Match
+    await prismaClient.match.upsert({
+      where: {
+        key: match.key,
+      },
+      update: {
+        year: event.year,
+        compLevel: MatchType.QUALIFICATION,
+        setNumber: match.set_number,
+        matchNumber: match.match_number,
+        scheduledTime: new Date(match.time * 1000),
+        actualTime: new Date(match.actual_time * 1000),
+        redScore: match.alliances.red.score,
+        blueScore: match.alliances.blue.score,
+        rawTba: JSON.stringify(match),
+        updatedAt: new Date(),
+      },
+      create: {
+        key: match.key,
+        tournamentKey: event.key,
+        year: event.year,
+        compLevel: MatchType.QUALIFICATION,
+        setNumber: match.set_number,
+        matchNumber: match.match_number,
+        scheduledTime: new Date(match.time * 1000),
+        actualTime: new Date(match.actual_time * 1000),
+        redScore: match.alliances.red.score,
+        blueScore: match.alliances.blue.score,
+        rawTba: JSON.stringify(match),
+        updatedAt: new Date(),
+      },
+    });
+
     for (let t = 0; t < 6; t++) {
       const params = z
         .object({
@@ -167,7 +200,7 @@ export const importTournamentMatches = async (tournamentKey: string) => {
           matchNumber: match.match_number,
           teamNumber: await fixRemappedTeam(matchTeams[t]),
           alliance: t > 2 ? AllianceColor.BLUE : AllianceColor.RED,
-          station: (t + 1) % 3,
+          station: t % 3,
         });
 
       if (!params.success) {
@@ -213,40 +246,9 @@ export const importTournamentMatches = async (tournamentKey: string) => {
         },
       });
     }
-
-    // Match
-    await prismaClient.match.upsert({
-      where: {
-        key: match.key,
-      },
-      update: {
-        year: event.year,
-        compLevel: MatchType.QUALIFICATION,
-        setNumber: match.set_number,
-        matchNumber: match.match_number,
-        scheduledTime: new Date(match.time * 1000),
-        actualTime: new Date(match.actual_time * 1000),
-        redScore: match.alliances.red.score,
-        blueScore: match.alliances.blue.score,
-        rawTba: JSON.stringify(match),
-        updatedAt: new Date(),
-      },
-      create: {
-        key: match.key,
-        tournamentKey: event.key,
-        year: event.year,
-        compLevel: MatchType.QUALIFICATION,
-        setNumber: match.set_number,
-        matchNumber: match.match_number,
-        scheduledTime: new Date(match.time * 1000),
-        actualTime: new Date(match.actual_time * 1000),
-        redScore: match.alliances.red.score,
-        blueScore: match.alliances.blue.score,
-        rawTba: JSON.stringify(match),
-        updatedAt: new Date(),
-      },
-    });
+    console.log(`Q${match.match_number} imported`);
   }
+
   const elims = matches.filter((match) => match.comp_level === "em");
 
   for (const match of elims) {
@@ -283,7 +285,7 @@ export const importTournamentMatches = async (tournamentKey: string) => {
           matchNumber: matchNumber,
           teamNumber: await fixRemappedTeam(matchTeams[t]),
           alliance: t > 2 ? AllianceColor.BLUE : AllianceColor.RED,
-          station: (t + 1) % 3,
+          station: t % 3,
         });
 
       if (!params.success) {
@@ -437,3 +439,6 @@ const validateETag = async (url: string) => {
     },
   });
 };
+
+await importTournamentMatches("2026casnf");
+process.exit(1);
