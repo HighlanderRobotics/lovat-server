@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
-  engineType   = "binary"
+  provider   = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
@@ -26,14 +26,99 @@ model FeatureToggle {
   enabled Boolean @default(true)
 }
 
-model TeamMatchData {
-  key           String        @id
+model Match {
+  key           String    @id
   tournamentKey String
-  matchNumber   Int           @db.SmallInt
-  teamNumber    Int
-  matchType     MatchType
-  scoutReports  ScoutReport[]
-  tournament    Tournament    @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
+  year          Int
+  compLevel     MatchType
+  setNumber     Int
+  matchNumber   Int
+  scheduledTime DateTime?
+  actualTime    DateTime?
+  redScore      Int?
+  blueScore     Int?
+  rawTba        Json
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tournament   Tournament                  @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
+  participants MatchParticipant[]
+  breakdowns   OfficialAllianceBreakdown[]
+  videos       MatchVideo[]
+
+  @@index([tournamentKey, compLevel, matchNumber])
+}
+
+model MatchParticipant {
+  matchKey     String
+  teamNumber   Int
+  alliance     AllianceColor
+  station      Int
+  teamMatchKey String?       @unique
+
+  match         Match          @relation(fields: [matchKey], references: [key], onDelete: Cascade)
+  teamMatchData TeamMatchData? @relation(fields: [teamMatchKey], references: [key])
+
+  @@id([matchKey, teamNumber])
+  @@index([teamNumber])
+}
+
+model OfficialAllianceBreakdown {
+  matchKey String
+  alliance AllianceColor
+
+  // autoCoralCount   Int?
+  // autoCoralPoints  Int?
+  // teleopCoralCount Int?
+  // teleopCoralPoints Int?
+
+  // autoL1 Int?
+  // autoL2 Int?
+  // autoL3 Int?
+  // autoL4 Int?
+
+  // teleopL1 Int?
+  // teleopL2 Int?
+  // teleopL3 Int?
+  // teleopL4 Int?
+
+  isConsistent Boolean?
+  raw          Json
+  fetchedAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  match Match @relation(fields: [matchKey], references: [key], onDelete: Cascade)
+
+  @@id([matchKey, alliance])
+}
+
+model MatchVideo {
+  uuid        String   @id @default(uuid())
+  matchKey    String
+  type        String
+  externalKey String
+  createdAt   DateTime @default(now())
+
+  match Match @relation(fields: [matchKey], references: [key], onDelete: Cascade)
+
+  @@unique([matchKey, type, externalKey])
+  @@index([matchKey])
+}
+
+enum AllianceColor {
+  RED
+  BLUE
+}
+
+model TeamMatchData {
+  key              String            @id
+  tournamentKey    String
+  matchNumber      Int               @db.SmallInt
+  teamNumber       Int
+  matchType        MatchType
+  scoutReports     ScoutReport[]
+  matchParticipant MatchParticipant?
+  tournament       Tournament        @relation(fields: [tournamentKey], references: [key], onDelete: Cascade)
 
   @@index([tournamentKey, teamNumber])
 }
@@ -197,6 +282,7 @@ model Tournament {
   location              String?
   date                  String?
   mutablePicklists      MutablePicklist[]
+  matches               Match[]
   scouterScheduleShifts ScouterScheduleShift[]
   teamMatchData         TeamMatchData[]
   latestFetchETag       String?
@@ -232,6 +318,15 @@ model CachedAnalysis {
   key                    String   @id
   teamDependencies       Int[]    @default([])
   tournamentDependencies String[] @default([])
+}
+
+model DataFetch {
+  key         String    @id
+  etag        String?
+  createdAt   DateTime  @default(now())
+  lastTried   DateTime?
+  lastFetched DateTime?
+  data        String?
 }
 
 enum Position {

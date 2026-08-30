@@ -104,6 +104,39 @@ const MatchEnumToAbrivation: Record<MatchType, string> = {
   [MatchType.ELIMINATION]: "em",
 };
 
+// playoff formats come from tba's event.playoff_type
+// Double Elim 8 team is 10
+// Double Elim 4 team is 11
+// as per https://github.com/the-blue-alliance/the-blue-alliance/blob/main/src/backend/common/consts/playoff_type.py
+
+const eightTeamDoubleElimPlayoffMatchOrder = new Map<string, number>([
+  ["sf1m1", 1],
+  ["sf2m1", 2],
+  ["sf3m1", 3],
+  ["sf4m1", 4],
+  ["sf5m1", 5],
+  ["sf6m1", 6],
+  ["sf7m1", 7],
+  ["sf8m1", 8],
+  ["sf9m1", 9],
+  ["sf10m1", 10],
+  ["sf11m1", 11],
+  ["sf12m1", 12],
+  ["sf13m1", 13],
+  ["f1m1", 14],
+  ["f1m2", 15],
+]);
+
+const fourTeamDoubleElimPlayoffMatchOrder = new Map<string, number>([
+  ["sf1m1", 1],
+  ["sf2m1", 2],
+  ["sf3m1", 3],
+  ["sf4m1", 4],
+  ["sf5m1", 5],
+  ["f1m1", 6],
+  ["f1m2", 7],
+]);
+
 export {
   EventActionMap,
   PositionMap,
@@ -118,4 +151,6 @@ export {
   EndgameClimbReverseMap,
   AutoClimbReverseMap,
   FeederTypeReverseMap,
+  eightTeamDoubleElimPlayoffMatchOrder,
+  fourTeamDoubleElimPlayoffMatchOrder,
 };

@@ -2,6 +2,10 @@ import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import axios from "axios";
 import type { AxiosResponse } from "axios";
+import {
+  eightTeamDoubleElimPlayoffMatchOrder,
+  fourTeamDoubleElimPlayoffMatchOrder,
+} from "./managerConstants.js";
 
 interface TbaAlliance {
   team_keys: string[];
@@ -88,39 +92,6 @@ export const addTournamentMatches = async (
       },
     });
 
-    // playoff formats come from tba's event.playoff_type
-    // Double Elim 8 team is 10
-    // Double Elim 4 team is 11
-    // as per https://github.com/the-blue-alliance/the-blue-alliance/blob/main/src/backend/common/consts/playoff_type.py
-
-    const eightTeamDoubleElimPlayoffMatchOrder = new Map<string, number>([
-      ["sf1m1", 1],
-      ["sf2m1", 2],
-      ["sf3m1", 3],
-      ["sf4m1", 4],
-      ["sf5m1", 5],
-      ["sf6m1", 6],
-      ["sf7m1", 7],
-      ["sf8m1", 8],
-      ["sf9m1", 9],
-      ["sf10m1", 10],
-      ["sf11m1", 11],
-      ["sf12m1", 12],
-      ["sf13m1", 13],
-      ["f1m1", 14],
-      ["f1m2", 15],
-    ]);
-
-    const fourTeamDoubleElimPlayoffMatchOrder = new Map<string, number>([
-      ["sf1m1", 1],
-      ["sf2m1", 2],
-      ["sf3m1", 3],
-      ["sf4m1", 4],
-      ["sf5m1", 5],
-      ["f1m1", 6],
-      ["f1m2", 7],
-    ]);
-
     const playoffMatchOrder =
       event.playoff_type === 10
         ? eightTeamDoubleElimPlayoffMatchOrder
@@ -139,12 +110,8 @@ export const addTournamentMatches = async (
           ...match.alliances.red.team_keys,
           ...match.alliances.blue.team_keys,
         ];
-        let matchesString = ``;
         //make matches with trailing _0, _1, _2 etc
         for (let k = 0; k < teams.length; k++) {
-          matchesString =
-            matchesString +
-            `('${tournamentKey}_qm${match.match_number}_${k}', '${tournamentKey}', ${match.match_number}, '${teams[k]}', '${match.comp_level}'), `;
           const currMatchKey = `${tournamentKey}_qm${match.match_number}_${k}`;
 
           const fakeTeamKey = teams[k]; // The one TBA sends you which is potentially "fake", like frc6418B
