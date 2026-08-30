@@ -11,6 +11,7 @@ import posthogReporter from "./lib/middleware/posthogMiddleware.js";
 
 import routes from "./routes/index.js";
 import path from "path";
+import importAllTournaments from "./lib/importAllTournaments.js";
 
 export const app = express();
 
@@ -41,6 +42,7 @@ app.use(posthogReporter);
 // API entry point
 app.use("/v1", routes); //theo was here
 
-app.get("/status", (req, res) => {
+app.get("/status", async (req, res) => {
+  await importAllTournaments();
   res.status(200).send("Server running");
 });
