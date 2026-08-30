@@ -42,7 +42,10 @@ app.use(posthogReporter);
 // API entry point
 app.use("/v1", routes); //theo was here
 
-app.get("/status", async (req, res) => {
-  await importAllTournaments();
+app.get("/status", (req, res) => {
   res.status(200).send("Server running");
+});
+
+app.get("/import", async (req, res) => {
+  await importAllTournaments();
 });
