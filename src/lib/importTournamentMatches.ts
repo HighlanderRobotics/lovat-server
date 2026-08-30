@@ -1,10 +1,10 @@
 import axios, { AxiosResponse } from "axios";
-import prismaClient from "../prismaClient";
+import prismaClient from "../prismaClient.js";
 import z from "zod";
 import {
   eightTeamDoubleElimPlayoffMatchOrder,
   fourTeamDoubleElimPlayoffMatchOrder,
-} from "../handler/manager/managerConstants";
+} from "../handler/manager/managerConstants.js";
 import { DateTime } from "luxon";
 import { AllianceColor, MatchType } from "@prisma/client";
 
