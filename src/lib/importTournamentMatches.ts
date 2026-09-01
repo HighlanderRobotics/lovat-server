@@ -95,7 +95,9 @@ interface TBAMatch {
   ];
 }
 
-export const importTournamentMatches = async (tournamentKey: string) => {
+export const importTournamentMatches = async (
+  tournamentKey: string,
+): Promise<void> => {
   if (!tournamentKey.startsWith("2026")) {
     return;
   }
@@ -439,6 +441,3 @@ const validateETag = async (url: string) => {
     },
   });
 };
-
-await importTournamentMatches("2026casnf");
-process.exit(1);
