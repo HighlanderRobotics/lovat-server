@@ -35,7 +35,7 @@ export const pitDisplay = async (
       webcasts: null,
       rankingBlocks: null,
     };
-    // await addTournamentMatches(params.data.tournamentKey)
+    // await importTournamentMatches(params.data.tournamentKey)
     const matchesWithTeam = await prismaClient.teamMatchData.findMany({
       where: {
         tournamentKey: params.data.tournamentKey,

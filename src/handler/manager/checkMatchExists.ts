@@ -1,5 +1,5 @@
 import z from "zod";
-import { addTournamentMatches } from "./addTournamentMatches.js";
+import { importTournamentMatches } from "../../lib/importTournamentMatches.js";
 import { Request, Response } from "express";
 import prismaClient from "../../prismaClient.js";
 import { MatchType } from "@prisma/client";
@@ -27,7 +27,7 @@ export const checkMatchExists = async (
 
     const params = parsed.data;
 
-    await addTournamentMatches(params.tournamentKey);
+    await importTournamentMatches(params.tournamentKey);
 
     const match = await prismaClient.teamMatchData.findFirst({
       where: {

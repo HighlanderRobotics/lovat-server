@@ -5,7 +5,6 @@ import {
   eightTeamDoubleElimPlayoffMatchOrder,
   fourTeamDoubleElimPlayoffMatchOrder,
 } from "../handler/manager/managerConstants.js";
-import { DateTime } from "luxon";
 import { AllianceColor, MatchType } from "@prisma/client";
 
 interface TBAEventResponse {
@@ -28,8 +27,8 @@ interface TBAEventResponse {
   city: string;
   state_prov: string;
   country: string;
-  start_date: DateTime;
-  end_date: DateTime;
+  start_date: string;
+  end_date: string;
   year: number;
   short_name: string;
   event_type_string: string;
@@ -118,7 +117,7 @@ export const importTournamentMatches = async (
       .passthrough()
       .parse(event).remap_teams ?? {};
 
-  const fixRemappedTeam = async (team: string): Promise<number> => {
+  const fixRemappedTeam = (team: string): number => {
     const fakeTeamKey = team; // The one TBA sends you which is potentially "fake", like frc6418B
     const mapEntry = Object.entries(remap_teams).find(
       (v) => v[1] === fakeTeamKey,
@@ -200,7 +199,7 @@ export const importTournamentMatches = async (
           key: `${tournamentKey}_qm${match.match_number}`,
           tournamentKey: tournamentKey,
           matchNumber: match.match_number,
-          teamNumber: await fixRemappedTeam(matchTeams[t]),
+          teamNumber: fixRemappedTeam(matchTeams[t]),
           alliance: t > 2 ? AllianceColor.BLUE : AllianceColor.RED,
           station: t % 3,
         });
@@ -248,7 +247,6 @@ export const importTournamentMatches = async (
         },
       });
     }
-    console.log(`Q${match.match_number} imported`);
   }
 
   const elims = matches.filter((match) => match.comp_level === "em");
@@ -285,7 +283,7 @@ export const importTournamentMatches = async (
           key: `${tournamentKey}_em${matchNumber}`,
           tournamentKey: tournamentKey,
           matchNumber: matchNumber,
-          teamNumber: await fixRemappedTeam(matchTeams[t]),
+          teamNumber: fixRemappedTeam(matchTeams[t]),
           alliance: t > 2 ? AllianceColor.BLUE : AllianceColor.RED,
           station: t % 3,
         });
@@ -423,21 +421,20 @@ const fetchFromTBA = async <T>(url: string): Promise<T | undefined> => {
       return JSON.parse(fetchRow?.data ?? "null") as T;
     }
   } catch (error) {
+    // Record the failed attempt
+    await prismaClient.dataFetch.upsert({
+      where: {
+        key: url,
+      },
+      create: {
+        key: url,
+        lastTried: new Date(),
+      },
+      update: {
+        lastTried: new Date(),
+      },
+    });
     console.error(error);
     throw error;
   }
-};
-
-const validateETag = async (url: string) => {
-  const now = new Date();
-
-  await prismaClient.dataFetch.update({
-    where: {
-      key: url,
-    },
-    data: {
-      lastFetched: now,
-      lastTried: now,
-    },
-  });
 };

@@ -3,7 +3,7 @@ import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import { MatchTypeMap, ScouterScheduleMap } from "../managerConstants.js";
 import SHA256 from "crypto-js/sha256.js";
-import { addTournamentMatches } from "../addTournamentMatches.js";
+import { importTournamentMatches } from "../../../lib/importTournamentMatches.js";
 
 export const getScheduleForScouter = async (
   req: Request,
@@ -63,7 +63,7 @@ export const getScheduleForScouter = async (
         matchNumber: "desc",
       },
     });
-    await addTournamentMatches(params.data.tournamentKey);
+    await importTournamentMatches(params.data.tournamentKey);
     if (maxQualifierRow === null) {
       res.status(400).send({
         error: "Matches are not available for this tournamnet",

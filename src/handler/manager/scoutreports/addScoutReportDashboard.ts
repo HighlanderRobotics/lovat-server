@@ -3,7 +3,7 @@ import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { PositionMap, EventActionMap } from "../managerConstants.js";
-import { addTournamentMatches } from "../addTournamentMatches.js";
+import { importTournamentMatches } from "../../../lib/importTournamentMatches.js";
 import { totalPointsScoutingLead } from "../../analysis/scoutingLead/totalPointsScoutingLead.js";
 import {
   AutoClimb,
@@ -106,7 +106,7 @@ export const addScoutReportDashboard = async (
     });
 
     if (!matchRow) {
-      await addTournamentMatches(paramsScoutReport.tournamentKey);
+      await importTournamentMatches(paramsScoutReport.tournamentKey);
 
       matchRow = await prismaClient.teamMatchData.findFirst({
         where: {

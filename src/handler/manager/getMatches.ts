@@ -2,7 +2,7 @@ import { Response } from "express";
 import prismaClient from "../../prismaClient.js";
 import z from "zod";
 import { AuthenticatedRequest } from "../../lib/middleware/requireAuth.js";
-import { addTournamentMatches } from "./addTournamentMatches.js";
+import { importTournamentMatches } from "../../lib/importTournamentMatches.js";
 import { ReverseMatchTypeMap } from "./managerConstants.js";
 import { MatchType, Prisma } from "@prisma/client";
 import {
@@ -45,7 +45,7 @@ export const getMatches = async (
       return;
     }
 
-    await addTournamentMatches(params.data.tournamentKey);
+    await importTournamentMatches(params.data.tournamentKey);
 
     // Assuming all elimination matches are not scouted, find the last scouted match (and pretend it is the last completed one)
     const last = await prismaClient.teamMatchData.findFirst({

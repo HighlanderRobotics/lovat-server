@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import { PositionMap, EventActionMap } from "../managerConstants.js";
-import { addTournamentMatches } from "../addTournamentMatches.js";
+import { importTournamentMatches } from "../../../lib/importTournamentMatches.js";
 import {
   AutoClimb,
   Beached,
@@ -170,7 +170,7 @@ export const addScoutReport = async (
     });
 
     if (!matchRow) {
-      await addTournamentMatches(paramsScoutReport.tournamentKey);
+      await importTournamentMatches(paramsScoutReport.tournamentKey);
 
       matchRow = await prismaClient.teamMatchData.findFirst({
         where: {

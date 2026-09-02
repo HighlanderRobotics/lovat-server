@@ -5,7 +5,7 @@ import { User } from "@prisma/client";
 import { alliancePage } from "./alliancePage.js";
 import z from "zod";
 import { runAnalysis } from "../analysisFunction.js";
-import { addTournamentMatches } from "../../manager/addTournamentMatches.js";
+import { importTournamentMatches } from "../../../lib/importTournamentMatches.js";
 
 type TeamRanking = {
   teamNumber: number;
@@ -46,7 +46,7 @@ const config = {
     let matchesResponse = null;
     let teamsResponse = null;
 
-    await addTournamentMatches(args.tournamentKey);
+    await importTournamentMatches(args.tournamentKey);
 
     const url = "https://www.thebluealliance.com/api/v3";
     try {
