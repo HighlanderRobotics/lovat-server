@@ -1,5 +1,6 @@
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
+import { CustomFieldType } from "@prisma/client";
 import {
   dataSourceRuleSchema,
   dataSourceRuleToPrismaFilter,
@@ -43,12 +44,18 @@ export const getNotes = createAnalysisHandler({
     }
 
     let notesAndMatches: {
+      uuid: string;
       notes: string;
       robotBrokeDescription?: string;
       match: string;
       tournamentName: string;
       sourceTeam: number;
       scouterName?: string;
+      // Free-form ("Text") custom field answers for this report, in canonical
+      // field order. Displayed inline with the note, each labeled with its
+      // question, so they follow the same data-source scoping as notes rather
+      // than the stricter own-team scoping used by aggregate custom surfaces.
+      customTextAnswers: { name: string; value: string }[];
     }[];
 
     const sourceTnmtFilter = dataSourceRuleToPrismaFilter(
@@ -67,11 +74,24 @@ export const getNotes = createAnalysisHandler({
         scouter: {
           sourceTeamNumber: sourceTeamFilter,
         },
-        notes: {
-          not: "",
-        },
+        // Include a report if it has a written note OR at least one answered
+        // text custom field, so text-only reports still get a card.
+        OR: [
+          { notes: { not: "" } },
+          {
+            customFieldAnswers: {
+              some: {
+                // Archived fields included: their answers are historical free
+                // text worth keeping in the notes view, like on raw reports.
+                field: { type: CustomFieldType.TEXT },
+                textValue: { not: null },
+              },
+            },
+          },
+        ],
       },
       select: {
+        uuid: true,
         notes: true,
         robotBrokeDescription: true,
         teamMatchKey: true,
@@ -90,6 +110,23 @@ export const getNotes = createAnalysisHandler({
             name: Boolean(ctx.user.teamNumber),
           },
         },
+        customFieldAnswers: {
+          where: {
+            field: { type: CustomFieldType.TEXT },
+            textValue: { not: null },
+          },
+          select: {
+            textValue: true,
+            field: {
+              select: {
+                name: true,
+                order: true,
+                createdAt: true,
+                uuid: true,
+              },
+            },
+          },
+        },
       },
       orderBy: [
         { teamMatchData: { tournament: { date: "desc" } } },
@@ -98,8 +135,28 @@ export const getNotes = createAnalysisHandler({
       ],
     });
 
+    // Text answers, blank-filtered and sorted into canonical field order.
+    const customTextAnswersFor = (report: (typeof noteData)[number]) =>
+      report.customFieldAnswers
+        .filter((answer) => (answer.textValue ?? "").trim() !== "")
+        .sort(
+          (a, b) =>
+            a.field.order - b.field.order ||
+            a.field.createdAt.getTime() - b.field.createdAt.getTime() ||
+            (a.field.uuid < b.field.uuid
+              ? -1
+              : a.field.uuid > b.field.uuid
+                ? 1
+                : 0),
+        )
+        .map((answer) => ({
+          name: answer.field.name,
+          value: (answer.textValue ?? "").trim(),
+        }));
+
     if (Boolean(ctx.user.teamNumber)) {
       notesAndMatches = noteData.map((report) => ({
+        uuid: report.uuid,
         notes: report.notes,
         match: report.teamMatchKey,
         robotBrokeDescription: report.robotBrokeDescription,
@@ -109,14 +166,17 @@ export const getNotes = createAnalysisHandler({
           report.scouter.sourceTeamNumber === ctx.user.teamNumber
             ? report.scouter.name
             : undefined,
+        customTextAnswers: customTextAnswersFor(report),
       }));
     } else {
       notesAndMatches = noteData.map((report) => ({
+        uuid: report.uuid,
         notes: report.notes,
         match: report.teamMatchKey,
         robotBrokeDescription: report.robotBrokeDescription,
         tournamentName: report.teamMatchData.tournament.name,
         sourceTeam: report.scouter.sourceTeamNumber,
+        customTextAnswers: customTextAnswersFor(report),
       }));
     }
 

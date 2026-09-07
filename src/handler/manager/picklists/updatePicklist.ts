@@ -36,6 +36,9 @@ export const updatePicklist = async (
         estimatedSuccessfulFuelRate: z.number(),
         estimatedTotalFuelScored: z.number(),
         authorId: z.string(),
+        customFieldWeights: z
+          .record(z.string().startsWith("cf_"), z.number())
+          .optional(),
       })
       .safeParse({
         name: req.body.name,
@@ -56,6 +59,7 @@ export const updatePicklist = async (
         estimatedSuccessfulFuelRate: req.body.estimatedSuccessfulFuelRate || 0,
         estimatedTotalFuelScored: req.body.estimatedTotalFuelScored || 0,
         authorId: user.id,
+        customFieldWeights: req.body.customFieldWeights,
       });
 
     if (!params.success) {
@@ -88,6 +92,9 @@ export const updatePicklist = async (
         estimatedSuccessfulFuelRate: params.data.estimatedSuccessfulFuelRate,
         estimatedTotalFuelScored: params.data.estimatedTotalFuelScored,
         authorId: params.data.authorId,
+        ...(params.data.customFieldWeights !== undefined
+          ? { customFieldWeights: params.data.customFieldWeights }
+          : {}),
       },
     });
     if (!row) {

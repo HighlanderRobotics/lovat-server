@@ -35,6 +35,9 @@ export const addPicklist = async (
         estimatedSuccessfulFuelRate: z.number(),
         estimatedTotalFuelScored: z.number(),
         driverAbility: z.number(),
+        customFieldWeights: z
+          .record(z.string().startsWith("cf_"), z.number())
+          .optional(),
       })
       .safeParse({
         authorId: req.user.id,
@@ -55,6 +58,7 @@ export const addPicklist = async (
         scoringRate: req.body.scoringRate || 0,
         estimatedSuccessfulFuelRate: req.body.estimatedSuccessfulFuelRate || 0,
         estimatedTotalFuelScored: req.body.estimatedTotalFuelScored || 0,
+        customFieldWeights: req.body.customFieldWeights,
       });
 
     if (!params.success) {
@@ -89,6 +93,7 @@ export const addPicklist = async (
         scoringRate: params.data.scoringRate,
         estimatedSuccessfulFuelRate: params.data.estimatedSuccessfulFuelRate,
         estimatedTotalFuelScored: params.data.estimatedTotalFuelScored,
+        customFieldWeights: params.data.customFieldWeights ?? {},
       },
     });
     res.status(200).send("picklist added");

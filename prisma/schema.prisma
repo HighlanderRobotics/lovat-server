@@ -74,6 +74,37 @@ model ScoutReport {
   disrupts             Boolean
   endgameClimb         EndgameClimb
   autoClimb            AutoClimb
+
+  customFieldAnswers CustomFieldAnswer[]
+}
+
+model CustomField {
+  uuid       String              @id @default(uuid())
+  teamNumber Int
+  name       String
+  type       CustomFieldType
+  options    String[]            @default([])
+  order      Int
+  archived   Boolean             @default(false)
+  createdAt  DateTime            @default(now())
+  sourceTeam RegisteredTeam      @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
+  answers    CustomFieldAnswer[]
+
+  @@index([teamNumber, archived])
+}
+
+model CustomFieldAnswer {
+  uuid            String      @id @default(uuid())
+  scoutReportUuid String
+  fieldUuid       String
+  textValue       String?
+  numberValue     Float?
+  selections      String[]    @default([])
+  scoutReport     ScoutReport @relation(fields: [scoutReportUuid], references: [uuid], onDelete: Cascade)
+  field           CustomField @relation(fields: [fieldUuid], references: [uuid], onDelete: Cascade)
+
+  @@unique([scoutReportUuid, fieldUuid])
+  @@index([fieldUuid])
 }
 
 model ScouterScheduleShift {
@@ -131,6 +162,7 @@ model SharedPicklist {
   totalDefensiveTime          Float
   totalFuelFed                Float
   totalFuelThroughput         Float
+  customFieldWeights          Json   @default("{}")
   author                      User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
@@ -153,6 +185,7 @@ model RegisteredTeam {
   scouterScheduleShifts ScouterScheduleShift[]
   slackChannels         SlackWorkspace[]
   users                 User[]
+  customFields          CustomField[]
 }
 
 model EmailVerificationRequest {
@@ -334,4 +367,11 @@ enum UserRole {
 enum MatchType {
   QUALIFICATION
   ELIMINATION
+}
+
+enum CustomFieldType {
+  TEXT
+  NUMBER
+  SINGLE_SELECT
+  MULTI_SELECT
 }

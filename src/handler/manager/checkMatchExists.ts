@@ -49,7 +49,9 @@ export const checkMatchExists = async (
     }
     res.status(404).send("MATCH_NOT_FOUND");
   } catch (error) {
-    console.log(error);
-    res.status(500).send(error);
+    console.error(error);
+    // This route is unauthenticated (security: []), so don't return the raw
+    // error object (internal detail disclosure) — log it and send a generic message.
+    res.status(500).send("Internal server error");
   }
 };

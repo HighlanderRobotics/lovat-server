@@ -66,6 +66,12 @@ export const RobotRoleSchema = z.enum([
 export const WarningTypeSchema = z.enum(["BREAK"]);
 export const UserRoleSchema = z.enum(["ANALYST", "SCOUTING_LEAD"]);
 export const MatchTypeSchema = z.enum(["QUALIFICATION", "ELIMINATION"]);
+export const CustomFieldTypeSchema = z.enum([
+  "TEXT",
+  "NUMBER",
+  "SINGLE_SELECT",
+  "MULTI_SELECT",
+]);
 
 // Common JSON rule shapes used in User
 export const DataSourceRuleNumberSchema = z.object({
@@ -131,6 +137,26 @@ export const ScoutReportSchema = z.object({
   disrupts: z.boolean(),
   endgameClimb: EndgameClimbSchema,
   autoClimb: AutoClimbSchema,
+});
+
+export const CustomFieldSchema = z.object({
+  uuid: z.string().uuid(),
+  teamNumber: z.number().int(),
+  name: z.string(),
+  type: CustomFieldTypeSchema,
+  options: z.array(z.string()).default([]),
+  order: z.number().int(),
+  archived: z.boolean(),
+  createdAt: z.string().datetime().optional(),
+});
+
+export const CustomFieldAnswerSchema = z.object({
+  uuid: z.string().uuid(),
+  scoutReportUuid: z.string().uuid(),
+  fieldUuid: z.string().uuid(),
+  textValue: z.string().optional().nullable(),
+  numberValue: z.number().optional().nullable(),
+  selections: z.array(z.string()).default([]),
 });
 
 export const ScouterScheduleShiftSchema = z.object({
@@ -281,12 +307,15 @@ export function registerPrismaSchemas(registry: OpenAPIRegistry) {
   registry.register("WarningType", WarningTypeSchema);
   registry.register("UserRole", UserRoleSchema);
   registry.register("MatchType", MatchTypeSchema);
+  registry.register("CustomFieldType", CustomFieldTypeSchema);
 
   registry.register("Event", EventSchema);
   registry.register("FeatureToggle", FeatureToggleSchema);
   registry.register("TeamMatchData", TeamMatchDataSchema);
   registry.register("MutablePicklist", MutablePicklistSchema);
   registry.register("ScoutReport", ScoutReportSchema);
+  registry.register("CustomField", CustomFieldSchema);
+  registry.register("CustomFieldAnswer", CustomFieldAnswerSchema);
   registry.register("ScouterScheduleShift", ScouterScheduleShiftSchema);
   registry.register("Scouter", ScouterSchema);
   registry.register("SharedPicklist", SharedPicklistSchema);

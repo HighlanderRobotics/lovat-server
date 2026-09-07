@@ -194,6 +194,12 @@ registry.registerPath({
       scoringRate: z.coerce.number().optional(),
       estimatedSuccessfulFuelRate: z.coerce.number().optional(),
       estimatedTotalFuelScored: z.coerce.number().optional(),
+      customWeights: z
+        .string()
+        .optional()
+        .describe(
+          'JSON object string mapping custom field metric keys to numeric weights, e.g. {"cf_<fieldUuid>": 0.5}. Keys must use the cf_<fieldUuid> convention and reference the requesting team\'s active NUMBER custom fields; other entries and non-finite or zero weights are ignored.',
+        ),
     }),
   },
   responses: {
