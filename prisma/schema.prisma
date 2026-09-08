@@ -67,27 +67,36 @@ model OfficialAllianceBreakdown {
   matchKey String
   alliance AllianceColor
 
-  // autoCoralCount   Int?
-  // autoCoralPoints  Int?
-  // teleopCoralCount Int?
-  // teleopCoralPoints Int?
-
-  // autoL1 Int?
-  // autoL2 Int?
-  // autoL3 Int?
-  // autoL4 Int?
-
-  // teleopL1 Int?
-  // teleopL2 Int?
-  // teleopL3 Int?
-  // teleopL4 Int?
-
   isConsistent Boolean?
   raw          Json
   fetchedAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   match Match @relation(fields: [matchKey], references: [key], onDelete: Cascade)
+
+  @@id([matchKey, alliance])
+}
+
+model ReefscapeAllianceBreakdowns {
+  matchKey String 
+  alliance AllianceColor
+  match Match @relation(fields: [matchKey], references: [key], onDelete: Cascade)
+
+autoCoralCount   Int?
+  autoCoralPoints  Int?
+  teleopCoralCount Int?
+  teleopCoralPoints Int?
+
+  autoL1 Int?
+  autoL2 Int?
+  autoL3 Int?
+  autoL4 Int?
+
+  teleopL1 Int?
+  teleopL2 Int?
+  teleopL3 Int?
+  teleopL4 Int?
+
 
   @@id([matchKey, alliance])
 }
