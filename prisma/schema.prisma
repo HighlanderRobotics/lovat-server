@@ -147,6 +147,23 @@ model ScoutReport {
   teamMatchData         TeamMatchData @relation(fields: [teamMatchKey], references: [key], onDelete: Cascade)
 
   // year specific fields
+  reefscape ReefscapeSRFields?
+  rebuilt RebuiltSRFields?
+  biocore BiocoreSRFields?
+
+}
+model ReefscapeSRFields {
+  reportUuid String @id
+  report ScoutReport @relation(fields: [reportUuid], references: [uuid], onDelete: Cascade)
+  algaePickup           AlgaePickup
+  coralPickup           CoralPickup
+  bargeResult           BargeResult
+  knocksAlgae           KnocksAlgae
+  underShallowCage      UnderShallowCage
+}
+model RebuiltSRFields {
+  reportUuid String @id
+  report ScoutReport @relation(fields: [reportUuid], references: [uuid], onDelete: Cascade)
   accuracy             Int?
   beached              Beached
   climbPosition        ClimbPosition?
@@ -161,6 +178,11 @@ model ScoutReport {
   autoClimb            AutoClimb
 }
 
+model BiocoreSRFields {
+  reportUuid String @id
+  report ScoutReport @relation(fields: [reportUuid], references: [uuid], onDelete: Cascade)
+  // TBD
+}
 model ScouterScheduleShift {
   uuid                    String         @id @default(uuid())
   sourceTeamNumber        Int
@@ -329,7 +351,65 @@ model DataFetch {
   data        String?
 }
 
+enum WarningType {
+  LEAVE
+  BREAK
+}
+
+enum UserRole {
+  ANALYST
+  SCOUTING_LEAD
+}
+
+enum MatchType {
+  PRACTICE
+  QUALIFICATION
+  ELIMINATION
+}
+
+enum RobotRole {
+  OFFENSE
+  DEFENSE
+  FEEDER
+  CYCLING
+  SCORING
+  FEEDING
+  DEFENDING
+  IMMOBILE
+}
+
+
+
 enum Position {
+  // SHARED
+  NONE
+  // REEFSCAPE
+  START_ONE
+  START_TWO
+  START_THREE
+  START_FOUR
+  LEVEL_ONE
+  LEVEL_TWO
+  LEVEL_THREE
+  LEVEL_FOUR
+  LEVEL_ONE_A
+  LEVEL_ONE_B
+  LEVEL_ONE_C
+  LEVEL_TWO_A
+  LEVEL_TWO_B
+  LEVEL_TWO_C
+  LEVEL_THREE_A
+  LEVEL_THREE_B
+  LEVEL_THREE_C
+  LEVEL_FOUR_A
+  LEVEL_FOUR_B
+  LEVEL_FOUR_C
+  GROUND_PIECE_A
+  GROUND_PIECE_B
+  GROUND_PIECE_C
+  CORAL_STATION_ONE
+  CORAL_STATION_TWO
+  // REBUILT
   LEFT_TRENCH
   LEFT_BUMP
   HUB
@@ -338,10 +418,23 @@ enum Position {
   NEUTRAL_ZONE
   DEPOT
   OUTPOST
-  NONE
 }
 
 enum EventAction {
+  // REEFSCAPE
+  PICKUP_CORAL
+  PICKUP_ALGAE
+  FEED
+  AUTO_LEAVE
+  DEFEND
+  SCORE_NET
+  FAIL_NET
+  SCORE_PROCESSOR
+  SCORE_CORAL
+  DROP_ALGAE
+  DROP_CORAL
+  START_POSITION
+  // REBUILT
   START_SCORING
   STOP_SCORING
   START_MATCH
@@ -356,7 +449,50 @@ enum EventAction {
   CLIMB
   START_FEEDING
   STOP_FEEDING
+  
 }
+
+// REEFSCAPE
+
+enum AlgaePickup {
+  NONE
+  GROUND
+  REEF
+  BOTH
+}
+
+enum KnocksAlgae {
+  NO
+  YES
+}
+
+enum AutoLeave {
+  NO
+  YES
+}
+
+enum UnderShallowCage {
+  NO
+  YES
+}
+
+enum CoralPickup {
+  NONE
+  GROUND
+  STATION
+  BOTH
+}
+
+enum BargeResult {
+  NOT_ATTEMPTED
+  PARKED
+  SHALLOW
+  FAILED_SHALLOW
+  DEEP
+  FAILED_DEEP
+}
+
+// REBUILT
 
 enum FieldTraversal {
   TRENCH
@@ -407,26 +543,4 @@ enum IntakeType {
   OUTPOST
   BOTH
   NEITHER
-}
-
-enum RobotRole {
-  CYCLING
-  SCORING
-  FEEDING
-  DEFENDING
-  IMMOBILE
-}
-
-enum WarningType {
-  BREAK
-}
-
-enum UserRole {
-  ANALYST
-  SCOUTING_LEAD
-}
-
-enum MatchType {
-  QUALIFICATION
-  ELIMINATION
 }
