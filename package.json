@@ -9,7 +9,8 @@
     "start": "node dist/src/server.js --omit=dev",
     "test": "tsc",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "import-all-matches": "tsx src/runImportAllTournaments.ts"
   },
   "keywords": [],
   "author": "",

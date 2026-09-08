@@ -5,7 +5,7 @@ import prisma from "../prismaClient.js";
 import deleteOldRequests from "./deleteOldRequests.js";
 
 export default async function scheduleJobs(): Promise<void> {
-  const year = 2024;
+  const year = new Date().getFullYear();
 
   // Prevent unnecessary fetching in dev mode which is frequently restarted
   if (

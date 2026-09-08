@@ -1,6 +1,6 @@
 import prismaClient from "../../../prismaClient.js";
 import z from "zod";
-import { addTournamentMatches } from "../../manager/addTournamentMatches.js";
+import { importTournamentMatches } from "../../../lib/importTournamentMatches.js";
 import {
   Metric,
   metricsCategory,
@@ -122,7 +122,7 @@ export const picklistShell = createAnalysisHandler({
       },
     });
     if (!matches) {
-      await addTournamentMatches(query.tournamentKey);
+      await importTournamentMatches(query.tournamentKey);
     }
 
     // Teams to look at
