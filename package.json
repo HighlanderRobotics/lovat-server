@@ -4,9 +4,9 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development tsx watch src/server.ts",
+    "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/src/server.js --omit=dev",
+    "start": "cross-env NODE_ENV=production node dist/src/server.js",
     "test": "tsc",
     "lint": "eslint .",
     "format": "prettier --write ."
@@ -23,6 +23,7 @@
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
+    "cross-env": "^10.1.0",
     "crypto-js": "^4.2.0",
     "csv-stringify": "^6.8.3",
     "dotenv": "^17.4.2",
