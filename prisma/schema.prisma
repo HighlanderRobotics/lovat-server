@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
-  engineType   = "binary"
+  provider   = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
@@ -212,6 +212,7 @@ model User {
   teamSourceRule       Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
   tournamentSourceRule Json              @default("{\"mode\": \"EXCLUDE\", \"items\": []}")
   ApiKeys              ApiKey[]
+  watchlistEntry       WatchlistEntry[]
   mutablePicklists     MutablePicklist[]
   sharedPicklists      SharedPicklist[]
   team                 RegisteredTeam?   @relation(fields: [teamNumber], references: [number], onDelete: Cascade)
@@ -232,6 +233,14 @@ model CachedAnalysis {
   key                    String   @id
   teamDependencies       Int[]    @default([])
   tournamentDependencies String[] @default([])
+}
+
+model WatchlistEntry {
+  id         String @id @default(uuid())
+  note       String
+  teamNumber Int
+  userId     String
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Position {
