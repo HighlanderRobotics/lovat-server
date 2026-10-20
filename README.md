@@ -1,5 +1,5 @@
-# lovat-server
-
+# [DEPRECATED] lovat-server
+## Development has been moved to the [monorepo](https://github.com/HighlanderRobotics/lovat).
 The backend server for [Lovat](https://lovat.app), a scouting system used to scout teams and matches in the First Robotics Competition
 
 Developed by FRC [Team 8033](https://www.frc8033.com/), [@HighlanderRobotics](https://github.com/HighlanderRobotics)
