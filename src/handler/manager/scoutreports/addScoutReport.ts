@@ -20,6 +20,10 @@ import {
 } from "@prisma/client";
 import { sendWarningToSlack } from "../../slack/sendWarningNotification.js";
 import { invalidateCache } from "../../../lib/clearCache.js";
+import {
+  CustomFieldAnswersWireSchema,
+  validateCustomFieldAnswers,
+} from "../customfields/validateCustomFieldAnswers.js";
 
 const { PrismaClientKnownRequestError } = Prisma;
 
@@ -127,11 +131,12 @@ export const addScoutReport = async (
         scouterUuid: z.string(),
         teamNumber: z.number(),
         appVersion: z.string().optional(),
+        customFieldAnswers: CustomFieldAnswersWireSchema.optional(),
       })
       .parse(req.body);
 
     // Check that scouter exists
-    await prismaClient.scouter.findFirstOrThrow({
+    const scouter = await prismaClient.scouter.findFirstOrThrow({
       where: {
         uuid: paramsScoutReport.scouterUuid,
       },
@@ -192,6 +197,13 @@ export const addScoutReport = async (
 
     const matchKey = matchRow.key;
 
+    // Lenient per-answer validation: invalid custom answers are dropped,
+    // never fail the report (reconciliation decision 4)
+    const customFieldAnswerRows = await validateCustomFieldAnswers(
+      scouter.sourceTeamNumber,
+      paramsScoutReport.customFieldAnswers,
+    );
+
     // Create scout report in database
     await prismaClient.scoutReport.create({
       data: {
@@ -220,6 +232,16 @@ export const addScoutReport = async (
         disrupts: paramsScoutReport.disrupts,
       },
     });
+
+    if (customFieldAnswerRows.length > 0) {
+      await prismaClient.customFieldAnswer.createMany({
+        data: customFieldAnswerRows.map((row) => ({
+          ...row,
+          scoutReportUuid: paramsScoutReport.uuid,
+        })),
+        skipDuplicates: true,
+      });
+    }
 
     // Collect all affected cached analyses
     invalidateCache(

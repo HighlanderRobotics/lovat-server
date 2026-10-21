@@ -14,6 +14,8 @@ import {
 import { autoPathScouter } from "./autoPathScouter.js";
 import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
 import { createAnalysisHandler } from "../analysisHandler.js";
+import { getAnswersForReport } from "../customFields/customFieldShared.js";
+import { UserRole } from "@prisma/client";
 
 export const matchPageSpecificScouter = createAnalysisHandler({
   params: {
@@ -48,6 +50,11 @@ export const matchPageSpecificScouter = createAnalysisHandler({
         autoClimb: true,
         feederTypes: true,
         accuracy: true,
+        scouter: {
+          select: {
+            sourceTeamNumber: true,
+          },
+        },
       },
     });
 
@@ -116,6 +123,28 @@ export const matchPageSpecificScouter = createAnalysisHandler({
     for (const metric of specificMatchPageMetrics) {
       output[metricToName[metric]] = aggregateData[metric];
     }
+
+    // Custom field answers are shown inline with their question names, so they
+    // read correctly for any viewer who can already see this report — not just
+    // the report's own team. (Aggregate surfaces like categories/breakdowns
+    // stay own-team-scoped because mixing teams' fields there is meaningless.)
+    // Handler is shouldCache: false, so computing per-request is fine.
+    output.customFieldAnswers = await getAnswersForReport(scoutReport.uuid);
+
+    // Scouting leads of the report's own team may edit its text custom answers.
+    output.canModify =
+      ctx.user.teamNumber !== null &&
+      ctx.user.role === UserRole.SCOUTING_LEAD &&
+      scoutReport.scouter?.sourceTeamNumber === ctx.user.teamNumber;
+
+    // The custom questions belong to the team whose scout answered them, which
+    // may not be the viewer's team (data sharing). The client labels the
+    // section accordingly.
+    output.customFieldsSourceTeam =
+      scoutReport.scouter?.sourceTeamNumber ?? null;
+    output.customFieldsAreOwnTeam =
+      ctx.user.teamNumber !== null &&
+      scoutReport.scouter?.sourceTeamNumber === ctx.user.teamNumber;
 
     return output;
   },

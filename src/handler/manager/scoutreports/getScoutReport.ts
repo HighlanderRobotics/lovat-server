@@ -3,6 +3,7 @@ import prismaClient from "../../../prismaClient.js";
 import z from "zod";
 import { AuthenticatedRequest } from "../../../lib/middleware/requireAuth.js";
 import { UserRole } from "@prisma/client";
+import { getAnswersForReport } from "../../analysis/customFields/customFieldShared.js";
 
 export const getScoutReport = async (
   req: AuthenticatedRequest,
@@ -53,15 +54,23 @@ export const getScoutReport = async (
 
     const canModify = isOnSameTeam && user.role === UserRole.SCOUTING_LEAD;
 
+    // Custom field answers display inline with their question names, so they
+    // read correctly for any viewer who can see this report, not just the
+    // source team. (Aggregate surfaces stay own-team-scoped.)
+    const customFieldAnswers = await getAnswersForReport(params.data.uuid);
+
     const { scouter, ...reportWithoutScouter } = scoutReport;
     const responseReport = {
       ...reportWithoutScouter,
       scouterName: isOnSameTeam ? scouter.name : undefined,
     };
 
-    res
-      .status(200)
-      .send({ scoutReport: responseReport, events: events, canModify });
+    res.status(200).send({
+      scoutReport: responseReport,
+      events: events,
+      canModify,
+      customFieldAnswers,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send(error);

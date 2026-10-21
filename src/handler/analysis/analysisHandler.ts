@@ -34,11 +34,21 @@ export type AnalysisHandlerArgs<
   params: AnalysisHandlerParamsSchema<T, U, V>;
   createKey: (
     params: AnalysisHandlerParams<T, U, V>,
+    ctx: AnalysisContext,
   ) => Promise<CreateKeyResult> | CreateKeyResult;
   calculateAnalysis: (
     params: AnalysisHandlerParams<T, U, V>,
     ctx: AnalysisContext,
   ) => Promise<any>;
+  // Optional hook run after the cache read on both hit and miss paths (and on
+  // the shouldCache:false path) whenever the result has no .error. Its return
+  // value is sent to the client but is NEVER written to the cache — the cache
+  // always stores the raw calculated result.
+  augmentResponse?: (
+    params: AnalysisHandlerParams<T, U, V>,
+    ctx: AnalysisContext,
+    result: any,
+  ) => Promise<any> | any;
   usesDataSource: boolean;
   shouldCache: boolean;
 };
@@ -75,7 +85,16 @@ export const createAnalysisHandler: <
           let calculatedAnalysis = null;
           calculatedAnalysis = await args.calculateAnalysis(params, context);
 
-          res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
+          let responseBody = calculatedAnalysis.error ?? calculatedAnalysis;
+          if (!calculatedAnalysis.error && args.augmentResponse) {
+            responseBody = await args.augmentResponse(
+              params,
+              context,
+              calculatedAnalysis,
+            );
+          }
+
+          res.status(200).send(responseBody);
         } catch (error) {
           res.status(500).send("Error calculating analysis");
           console.error(error);
@@ -89,7 +108,7 @@ export const createAnalysisHandler: <
         key: keyFragments,
         teamDependencies: teamDeps,
         tournamentDependencies: tournamentDeps,
-      } = await args.createKey(params);
+      } = await args.createKey(params, context);
 
       const teamSourceRule = dataSourceRuleSchema(z.number()).parse(
         context.dataSource.teams,
@@ -119,8 +138,17 @@ export const createAnalysisHandler: <
             context,
           );
 
+          let responseBody = calculatedAnalysis.error ?? calculatedAnalysis;
+          if (!calculatedAnalysis.error && args.augmentResponse) {
+            responseBody = await args.augmentResponse(
+              params,
+              context,
+              calculatedAnalysis,
+            );
+          }
+
           res.set("X-Lovat-Cache", "miss");
-          res.status(200).send(calculatedAnalysis.error ?? calculatedAnalysis);
+          res.status(200).send(responseBody);
 
           try {
             await kv.set(key, JSON.stringify(calculatedAnalysis));
@@ -147,13 +175,19 @@ export const createAnalysisHandler: <
           return;
         }
       } else {
-        res.set("X-Lovat-Cache", "hit");
-        res
-          .status(200)
-          .send(
-            JSON.parse(cacheRow.toString()).error ??
-              JSON.parse(cacheRow.toString()),
+        const cachedAnalysis = JSON.parse(cacheRow.toString());
+
+        let responseBody = cachedAnalysis.error ?? cachedAnalysis;
+        if (!cachedAnalysis.error && args.augmentResponse) {
+          responseBody = await args.augmentResponse(
+            params,
+            context,
+            cachedAnalysis,
           );
+        }
+
+        res.set("X-Lovat-Cache", "hit");
+        res.status(200).send(responseBody);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {

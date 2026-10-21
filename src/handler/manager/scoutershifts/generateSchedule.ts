@@ -79,13 +79,18 @@ const generateSchedule = async (
     },
   });
 
-  if (!matchesResponse || !teamsResponse) {
-    throw "NO_SCHEDULE";
-  }
-
   matchesResponse.data = matchesResponse.data.filter(
     (match: any) => match.comp_level === "qm",
   );
+
+  // No qualification matches means there's no schedule to build shifts from, so
+  // surface the intended 404 ("No schedule available") rather than returning an
+  // empty schedule. The previous guard checked matchesResponse/teamsResponse for
+  // null *after* already dereferencing matchesResponse.headers.etag above, so it
+  // could never fire.
+  if (matchesResponse.data.length === 0) {
+    throw "NO_SCHEDULE";
+  }
 
   matchesResponse.data.sort(
     (a: any, b: any) => a.match_number - b.match_number,

@@ -50,8 +50,6 @@ export const addTournamentMatches = async (
 
     const json: unknown = await eventResponse.json();
 
-    console.log(JSON.stringify(json, null, 2));
-
     const event = z
       .object({
         remap_teams: z.record(z.string(), z.string()).nullish(),
@@ -121,10 +119,17 @@ export const addTournamentMatches = async (
       ["f1m2", 7],
     ]);
 
+    // Only the two supported double-elim brackets have a known match ordering
+    // (TBA playoff_type 10 = 8-team, 11 = 4-team). For any other bracket type
+    // (e.g. single elimination) an empty map means the elim branch's
+    // `playoffMatchOrder.get(...)` misses and those matches are skipped, rather
+    // than being mis-numbered by forcing them through the 4-team map.
     const playoffMatchOrder =
       event.playoff_type === 10
         ? eightTeamDoubleElimPlayoffMatchOrder
-        : fourTeamDoubleElimPlayoffMatchOrder;
+        : event.playoff_type === 11
+          ? fourTeamDoubleElimPlayoffMatchOrder
+          : new Map<string, number>();
 
     // For each match in the tournament
     matchesResponse.data.sort(

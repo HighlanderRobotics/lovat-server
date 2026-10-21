@@ -51,6 +51,7 @@ export const getSinglePicklist = async (
       scoringRate: row.scoringRate,
       estimatedSuccessfulFuelRate: row.estimatedSuccessfulFuelRate,
       estimatedTotalFuelScored: row.estimatedTotalFuelScored,
+      customFieldWeights: row.customFieldWeights ?? {},
     };
 
     res.status(200).send(out);

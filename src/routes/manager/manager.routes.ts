@@ -10,6 +10,7 @@ import scoutreports from "./scoutreports.routes.js";
 import scoutershifts from "./scoutershifts.routes.js";
 import settings from "./settings.routes.js";
 import apikey from "./apikey.routes.js";
+import customfields from "./customfields.routes.js";
 
 import { getTournaments } from "../../handler/manager/getTournaments.js";
 import { getTeams } from "../../handler/manager/getTeams.js";
@@ -36,6 +37,7 @@ import {
 } from "../../lib/prisma-zod.js";
 import { requireVerifiedTeam } from "../../lib/middleware/requireVerifiedTeam.js";
 import { checkMatchExists } from "../../handler/manager/checkMatchExists.js";
+import { CustomFieldAnswersInputSchema } from "../../handler/manager/customfields/validateCustomFieldAnswers.js";
 
 const router = Router();
 
@@ -303,6 +305,7 @@ registry.registerPath({
             match: z.number().int(),
             team: z.number().int(),
             notes: z.string().optional(),
+            customFieldAnswers: CustomFieldAnswersInputSchema.optional(),
           }),
         },
       },
@@ -452,6 +455,7 @@ router.use("/tournament", tournaments);
 router.use("/scoutreports", scoutreports);
 router.use("/settings", settings);
 router.use("/apikey", apikey);
+router.use("/customfields", customfields);
 
 router.get("/teams", requireAuth, getTeams);
 router.get("/tournaments", requireAuth, getTournaments);

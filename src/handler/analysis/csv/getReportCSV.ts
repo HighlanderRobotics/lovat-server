@@ -23,6 +23,12 @@ import {
   dataSourceRuleSchema,
 } from "../dataSourceRule.js";
 import { averageScoutReport } from "../coreAnalysis/averageScoutReport.js";
+import {
+  buildCustomColumnLabels,
+  formatAnswerForCsv,
+  getActiveCustomFields,
+  sanitizeCsv,
+} from "../customFields/customFieldShared.js";
 
 // Scouting report condensed into a single dimension that can be pushed to a row in the csv
 export interface CondensedReport {
@@ -238,11 +244,58 @@ export const getReportCSV = async (
       ),
     );
 
+    // Append one column per active custom field (all types) after the notes
+    // key, in field order, on EVERY row so Object.keys stays stable. Values
+    // are blank for reports from other teams or predating the field.
+    let rows: object[] = condensed;
+    if (req.user.teamNumber !== null && req.user.teamNumber !== undefined) {
+      const customFields = await getActiveCustomFields(req.user.teamNumber);
+      if (customFields.length > 0) {
+        const labels = buildCustomColumnLabels(
+          customFields.map((field) => ({
+            uuid: field.uuid,
+            name: sanitizeCsv(field.name),
+          })),
+        );
+
+        const answers = await prismaClient.customFieldAnswer.findMany({
+          where: {
+            scoutReportUuid: { in: datapoints.map((r) => r.uuid) },
+            fieldUuid: { in: customFields.map((field) => field.uuid) },
+          },
+        });
+
+        const answersByReport = new Map<
+          string,
+          Map<string, (typeof answers)[number]>
+        >();
+        for (const answer of answers) {
+          if (!answersByReport.has(answer.scoutReportUuid)) {
+            answersByReport.set(answer.scoutReportUuid, new Map());
+          }
+          answersByReport.get(answer.scoutReportUuid).set(answer.fieldUuid, answer);
+        }
+
+        // condensed is index-parallel to datapoints
+        rows = condensed.map((row, i) => {
+          const reportAnswers = answersByReport.get(datapoints[i].uuid);
+          const withCustom: Record<string, unknown> = { ...row };
+          for (const field of customFields) {
+            withCustom[`${labels[field.uuid]} (Custom)`] = formatAnswerForCsv(
+              field,
+              reportAnswers?.get(field.uuid) ?? null,
+            );
+          }
+          return withCustom;
+        });
+      }
+    }
+
     // Create and send the csv string through express
-    const csvString = stringify(condensed, {
+    const csvString = stringify(rows, {
       header: true,
       // Creates column headers from data properties
-      columns: condensed.length ? Object.keys(condensed[0]) : [],
+      columns: rows.length ? Object.keys(rows[0]) : [],
       // Required for excel viewing
       bom: true,
       // Rename boolean values to TRUE and FALSE
